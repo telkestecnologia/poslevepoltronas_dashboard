@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import {
   ArrowRight, Armchair, Check, ChevronRight, CircleHelp, Home, LogOut,
   MapPin, Menu, Plus, Search, Settings2, ShieldCheck, Sparkles, X,
 } from 'lucide-react'
-import { api, ApiError, localLoginBypass, type Branch, type BranchInput, type Chair, type ChairStatus, type Staff } from './api'
+import { api, ApiError, localLoginBypass, type Branch, type BranchInput, type Chair, type ChairStatus, type ManualBlock, type Municipality, type Staff } from './api'
 
 type Page = 'overview' | 'chairs' | 'branches'
 type Modal = { kind: 'newChair' } | { kind: 'editChair'; chair: Chair } | { kind: 'newBranch' } | { kind: 'editBranch'; branch: Branch } | null
@@ -96,6 +96,8 @@ function App() {
   const [staff, setStaff] = useState<Staff | null>(null)
   const [chairs, setChairs] = useState<Chair[]>([])
   const [branches, setBranches] = useState<Branch[]>([])
+  const [municipalities, setMunicipalities] = useState<Municipality[]>([])
+  const [blocks, setBlocks] = useState<ManualBlock[]>([])
   const [page, setPage] = useState<Page>('overview')
   const [modal, setModal] = useState<Modal>(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -108,9 +110,13 @@ function App() {
   const [statusFilter, setStatusFilter] = useState<ChairStatus | 'ALL'>('ALL')
 
   const refresh = useCallback(async (auth: string) => {
-    const [nextChairs, nextBranches] = await Promise.all([api.chairs(auth), api.branches(auth)])
+    const [nextChairs, nextBranches, nextMunicipalities, nextBlocks] = await Promise.all([
+      api.chairs(auth), api.branches(auth), api.municipalities(auth), api.blocks(auth),
+    ])
     setChairs(nextChairs)
     setBranches(nextBranches)
+    setMunicipalities(nextMunicipalities)
+    setBlocks(nextBlocks)
   }, [])
 
   async function login(email: string, password: string) {
@@ -135,6 +141,8 @@ function App() {
     setStaff(null)
     setChairs([])
     setBranches([])
+    setMunicipalities([])
+    setBlocks([])
     setPage('overview')
     setNotice('')
   }
@@ -210,6 +218,20 @@ function App() {
     }
   }
 
+  async function createBlock(data: { chairId: string; start: string; end: string; reason: string }) {
+    if (credentials === null) return
+    await api.createBlock(credentials, data)
+    await refresh(credentials)
+    showNotice('Período bloqueado para esta poltrona.')
+  }
+
+  async function deleteBlock(id: string) {
+    if (credentials === null) return
+    await api.deleteBlock(credentials, id)
+    await refresh(credentials)
+    showNotice('Bloqueio removido.')
+  }
+
   if (credentials === null || !staff) return <Login onLogin={login} busy={loginBusy} error={loginError} localBypass={localLoginBypass} />
 
   const titles: Record<Page, string> = {
@@ -241,14 +263,16 @@ function App() {
             {chairs.length === 0 ? <EmptyState icon={Armchair} title="Nenhuma poltrona cadastrada" text={branches.length === 0 ? 'Cadastre uma filial antes da primeira poltrona.' : 'Cadastre a primeira poltrona para começar a organizar seu estoque.'} action={branches.length > 0 ? { label: 'Cadastrar poltrona', onClick: () => openModal({ kind: 'newChair' }) } : { label: 'Cadastrar filial', onClick: () => setPage('branches') }} />
               : filteredChairs.length === 0 ? <EmptyState icon={Search} title="Nenhum resultado" text="Tente outro termo ou altere o filtro de estado." />
                 : <div className="table-scroll"><table><thead><tr><th>POLTRONA</th><th>MODELO</th><th>FILIAL</th><th>ESTADO</th><th><span className="sr-only">Ação</span></th></tr></thead><tbody>{filteredChairs.map(chair => <tr key={chair.id}><td><div className="chair-cell"><span className="row-icon"><Armchair size={18} /></span><strong>{chair.code}</strong></div></td><td>{chair.model}</td><td>{branches.find(branch => branch.id === chair.branchId)?.name ?? 'Filial não encontrada'}</td><td><StatusBadge status={chair.status} /></td><td><button className="table-action" onClick={() => openModal({ kind: 'editChair', chair })}>Editar <ChevronRight size={16} /></button></td></tr>)}</tbody></table></div>}
-          </section><p className="hint"><CircleHelp size={16} /> O estado operacional não representa disponibilidade por data de reserva.</p>
+          </section>
+          <BlockManager chairs={chairs} blocks={blocks} onCreate={createBlock} onDelete={deleteBlock} />
+          <p className="hint"><CircleHelp size={16} /> Bloqueie datas já comprometidas ou de manutenção para que o site não ofereça a poltrona nesse período.</p>
         </>}
 
         {page === 'branches' && <>
           <div className="page-heading with-action"><div><span className="eyebrow">FILIAIS • PÓS LEVE</span><h1>Filiais</h1><p>Cadastre as cidades atendidas por cada filial.</p></div><button className="button primary" onClick={() => openModal({ kind: 'newBranch' })}><Plus size={18} /> Nova filial</button></div>
           <section className="panel table-panel">
             {branches.length === 0 ? <EmptyState icon={MapPin} title="Nenhuma filial cadastrada" text="Crie uma filial e informe as cidades que ela atende." action={{ label: 'Criar filial', onClick: () => openModal({ kind: 'newBranch' }) }} />
-              : <div className="table-scroll"><table><thead><tr><th>FILIAL</th><th>CIDADES</th><th>ESTADO</th><th><span className="sr-only">Ação</span></th></tr></thead><tbody>{branches.map(branch => <tr key={branch.id}><td><div className="chair-cell"><span className="row-icon"><MapPin size={18} /></span><strong>{branch.name}</strong></div></td><td>{branch.cities.length} {branch.cities.length === 1 ? 'cidade' : 'cidades'}</td><td>{branch.active ? 'Ativa' : 'Inativa'}</td><td><button className="table-action" onClick={() => openModal({ kind: 'editBranch', branch })}>Editar <ChevronRight size={16} /></button></td></tr>)}</tbody></table></div>}
+              : <div className="table-scroll"><table><thead><tr><th>FILIAL</th><th>MUNICÍPIOS</th><th>POLTRONAS ATIVAS</th><th>ESTADO</th><th><span className="sr-only">Ação</span></th></tr></thead><tbody>{branches.map(branch => <tr key={branch.id}><td><div className="chair-cell"><span className="row-icon"><MapPin size={18} /></span><strong>{branch.name}</strong></div></td><td>{branch.needsReview ? 'Revisar cadastro antigo' : `${branch.municipalities.length} ${branch.municipalities.length === 1 ? 'município' : 'municípios'}`}</td><td>{chairs.filter(chair => chair.branchId === branch.id && chair.status === 'ACTIVE').length}</td><td>{branch.active ? 'Ativa' : 'Inativa'}</td><td><button className="table-action" onClick={() => openModal({ kind: 'editBranch', branch })}>Editar <ChevronRight size={16} /></button></td></tr>)}</tbody></table></div>}
           </section>
         </>}
 
@@ -256,7 +280,7 @@ function App() {
     </div>
 
     {modal && (modal.kind === 'newBranch' || modal.kind === 'editBranch'
-      ? <BranchModal modal={modal} saving={saving} error={formError} onClose={() => { if (!saving) setModal(null) }} onSave={saveBranch} />
+      ? <BranchModal modal={modal} municipalities={municipalities} saving={saving} error={formError} onClose={() => { if (!saving) setModal(null) }} onSave={saveBranch} />
       : <EditModal modal={modal} branches={branches} saving={saving} error={formError} onClose={() => { if (!saving) setModal(null) }} onChairSave={saveChair} />)}
   </div>
 }
@@ -287,40 +311,112 @@ function EditModal({ modal, branches, saving, error, onClose, onChairSave }: {
   </section></div>
 }
 
-function BranchModal({ modal, saving, error, onClose, onSave }: {
+function BranchModal({ modal, municipalities, saving, error, onClose, onSave }: {
   modal: { kind: 'newBranch' } | { kind: 'editBranch'; branch: Branch }
+  municipalities: Municipality[]
   saving: boolean; error: string; onClose: () => void; onSave: (data: BranchInput) => Promise<void>
 }) {
   const branch = modal.kind === 'editBranch' ? modal.branch : null
   const [name, setName] = useState(branch?.name ?? '')
-  const [citiesText, setCitiesText] = useState(branch?.cities.map(city => `${city.city}, ${city.uf}`).join('\n') ?? '')
+  const [codes, setCodes] = useState<string[]>(branch?.municipalities.map(city => city.code) ?? [])
+  const [uf, setUf] = useState(branch?.municipalities[0]?.uf ?? 'CE')
+  const [search, setSearch] = useState('')
   const [active, setActive] = useState(branch?.active ?? true)
   const [localError, setLocalError] = useState('')
+  const searchRef = useRef<HTMLInputElement>(null)
+  const selected = codes.map(code => municipalities.find(city => city.code === code)).filter((city): city is Municipality => Boolean(city))
+  const normalizedSearch = search.trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR')
+  const available = municipalities.filter(city => city.uf === uf && !codes.includes(city.code)
+    && (city.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR').includes(normalizedSearch)
+      || city.code.includes(normalizedSearch)))
+
+  function addMunicipality(code: string) {
+    setCodes(current => current.includes(code) ? current : [...current, code])
+    setSearch('')
+    setLocalError('')
+    searchRef.current?.focus()
+  }
 
   function submit(event: FormEvent) {
     event.preventDefault()
-    const lines = citiesText.split('\n').map(line => line.trim()).filter(Boolean)
-    const cities = lines.map(line => {
-      const match = /^(.+),\s*([a-zA-Z]{2})$/.exec(line)
-      return match ? { city: match[1].trim(), uf: match[2].toUpperCase() } : null
-    })
-    if (cities.length === 0 || cities.some(city => city === null)) {
-      setLocalError('Informe uma cidade por linha no formato Cidade, UF. Ex.: Fortaleza, CE')
+    if (codes.length === 0) {
+      setLocalError('Selecione pelo menos um município do catálogo.')
       return
     }
     setLocalError('')
-    void onSave({ name: name.trim(), cities: cities as BranchInput['cities'], active })
+    void onSave({ name: name.trim(), municipalityCodes: codes, active })
   }
 
   return <div className="modal-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) onClose() }}><section className="modal" role="dialog" aria-modal="true" aria-labelledby="branch-modal-title"><div className="modal-head"><div><span className="eyebrow">PÓS LEVE • FILIAIS</span><h2 id="branch-modal-title">{branch ? 'Editar filial' : 'Nova filial'}</h2></div><button className="icon-button" aria-label="Fechar" onClick={onClose}><X size={20} /></button></div>
     <form onSubmit={submit} className="modal-form">
       <label>Nome da filial<input value={name} onChange={event => setName(event.target.value)} maxLength={100} placeholder="Ex.: Serra da Ibiapaba" required autoFocus /></label>
-      <label>Cidades atendidas<textarea className="cities-input" value={citiesText} onChange={event => setCitiesText(event.target.value)} rows={8} placeholder={'Tianguá, CE\nUbajara, CE'} required /><span className="field-help">Uma cidade por linha, no formato Cidade, UF.</span></label>
+      {branch?.needsReview && <div className="form-error">Este cadastro antigo precisa de revisão. Cidades anteriores: {branch.legacyCities.map(city => `${city.city}/${city.uf}`).join(', ') || 'não identificadas'}.</div>}
+      <div className="municipality-picker">
+        <strong>Municípios atendidos</strong>
+        <div className="municipality-picker-row">
+          <label>UF<select value={uf} onChange={event => { setUf(event.target.value); setSearch('') }}>{[...new Set(municipalities.map(city => city.uf))].sort().map(value => <option key={value} value={value}>{value}</option>)}</select></label>
+          <label>Buscar município<input ref={searchRef} value={search} onChange={event => setSearch(event.target.value)} onKeyDown={event => {
+            if (event.key === 'Enter') {
+              event.preventDefault()
+              if (normalizedSearch && available.length > 0) addMunicipality(available[0].code)
+            }
+          }} placeholder="Digite o nome ou código IBGE" /></label>
+        </div>
+        <div className="municipality-results" role="region" aria-label="Municípios encontrados">
+          {available.length > 0 ? <ul>{available.map(city => <li key={city.code}><button type="button" onClick={() => addMunicipality(city.code)} aria-label={`Adicionar ${city.name}, ${city.uf}`}><span>{city.name} <small>– {city.uf}</small></span><Plus size={16} aria-hidden="true" /></button></li>)}</ul>
+            : <p>Nenhum município encontrado nesta UF.</p>}
+        </div>
+        <div className="municipality-selected">{selected.map(city => <span key={city.code}>{city.name} – {city.uf}<button type="button" aria-label={`Remover ${city.name}`} onClick={() => setCodes(current => current.filter(code => code !== city.code))}><X size={14} /></button></span>)}</div>
+        <small className="field-help">A cobertura inclui todos os CEPs dos municípios escolhidos, inclusive zona rural.</small>
+      </div>
       <label className="branch-option"><input type="checkbox" checked={active} onChange={event => setActive(event.target.checked)} /><span>Filial ativa</span></label>
       {(localError || error) && <div className="form-error" role="alert">{localError || error}</div>}
       <div className="modal-actions"><button type="button" className="button secondary" onClick={onClose} disabled={saving}>Cancelar</button><button type="submit" className="button primary" disabled={saving}>{saving ? 'Salvando...' : branch ? 'Salvar alterações' : 'Criar filial'} <ArrowRight size={17} /></button></div>
     </form>
   </section></div>
+}
+
+function BlockManager({ chairs, blocks, onCreate, onDelete }: {
+  chairs: Chair[]; blocks: ManualBlock[]
+  onCreate: (data: { chairId: string; start: string; end: string; reason: string }) => Promise<void>
+  onDelete: (id: string) => Promise<void>
+}) {
+  const [chairId, setChairId] = useState('')
+  const [start, setStart] = useState('')
+  const [end, setEnd] = useState('')
+  const [reason, setReason] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+
+  async function submit(event: FormEvent) {
+    event.preventDefault()
+    setBusy(true); setError('')
+    try {
+      await onCreate({ chairId, start, end, reason: reason.trim() })
+      setStart(''); setEnd(''); setReason('')
+    } catch (failure) { setError(getMessage(failure)) }
+    finally { setBusy(false) }
+  }
+
+  async function remove(id: string) {
+    setBusy(true); setError('')
+    try { await onDelete(id) }
+    catch (failure) { setError(getMessage(failure)) }
+    finally { setBusy(false) }
+  }
+
+  return <section className="panel block-panel">
+    <h2>Bloqueios por período</h2><p>Registre aluguéis já combinados fora do site, manutenção ou transporte.</p>
+    <form onSubmit={submit} className="block-form">
+      <label>Poltrona<select value={chairId} onChange={event => setChairId(event.target.value)} required><option value="">Selecione</option>{chairs.map(chair => <option key={chair.id} value={chair.id}>{chair.code} · {chair.model}</option>)}</select></label>
+      <label>Início<input type="date" value={start} onChange={event => setStart(event.target.value)} required /></label>
+      <label>Fim<input type="date" value={end} min={start} onChange={event => setEnd(event.target.value)} required /></label>
+      <label>Motivo<input value={reason} onChange={event => setReason(event.target.value)} maxLength={200} placeholder="Ex.: aluguel por WhatsApp" required /></label>
+      <button className="button primary" disabled={busy || chairs.length === 0} type="submit">Bloquear período</button>
+    </form>
+    {error && <div className="form-error" role="alert">{error}</div>}
+    {blocks.length > 0 && <div className="block-list">{blocks.map(block => <div key={block.id}><span><strong>{chairs.find(chair => chair.id === block.chairId)?.code ?? 'Poltrona removida'}</strong> · {block.start} a {block.end} · {block.reason}</span><button className="table-action" type="button" disabled={busy} onClick={() => void remove(block.id)}>Remover</button></div>)}</div>}
+  </section>
 }
 
 export default App

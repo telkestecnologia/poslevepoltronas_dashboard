@@ -13,8 +13,15 @@ export type Chair = {
 
 export type Staff = { slug: string; tenantName: string; displayName: string; email: string }
 
-export type Branch = { id: string; name: string; cities: { city: string; uf: string }[]; active: boolean }
-export type BranchInput = { name: string; cities: { city: string; uf: string }[]; active: boolean }
+export type Municipality = { code: string; name: string; uf: string }
+export type Branch = {
+  id: string; name: string; municipalities: Municipality[]
+  legacyCities: { city: string; uf: string }[]; active: boolean; needsReview: boolean
+}
+export type BranchInput = { name: string; municipalityCodes: string[]; active: boolean }
+export type ManualBlock = {
+  id: string; chairId: string; start: string; end: string; reason: string; createdAt: string
+}
 
 export const localLoginBypass = __DASHBOARD_DEV_LOGIN_BYPASS__
 const baseUrl = localLoginBypass ? '' : (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080').replace(/\/$/, '')
@@ -45,7 +52,8 @@ async function request<T>(credentials: string, path: string, init: RequestInit =
     const message = response.status === 401 ? 'E-mail ou senha inválidos.'
       : response.status === 403 ? 'Sua conta não tem acesso a esta locadora.'
       : response.status === 404 ? 'O registro não foi encontrado.'
-      : response.status === 409 ? 'Já existe um cadastro igual nesta locadora.'
+      : response.status === 409 ? path.startsWith('/blocks')
+        ? 'A poltrona já tem um bloqueio em parte do período.' : 'Já existe um cadastro igual nesta locadora.'
       : 'Não foi possível concluir a operação. Tente novamente.'
     throw new ApiError(response.status, message)
   }
@@ -61,6 +69,12 @@ export const api = {
   updateChair: (credentials: string, id: string, data: { model: string; status: ChairStatus; notes: string; branchId: string }) =>
     request<Chair>(credentials, `/chairs/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(data) }),
   branches: (credentials: string) => request<Branch[]>(credentials, '/branches'),
+  municipalities: (credentials: string) => request<Municipality[]>(credentials, '/municipalities'),
+  blocks: (credentials: string) => request<ManualBlock[]>(credentials, '/blocks'),
+  createBlock: (credentials: string, data: { chairId: string; start: string; end: string; reason: string }) =>
+    request<ManualBlock>(credentials, '/blocks', { method: 'POST', body: JSON.stringify(data) }),
+  deleteBlock: (credentials: string, id: string) =>
+    request<void>(credentials, `/blocks/${encodeURIComponent(id)}`, { method: 'DELETE' }),
   createBranch: (credentials: string, data: BranchInput) =>
     request<Branch>(credentials, '/branches', { method: 'POST', body: JSON.stringify(data) }),
   updateBranch: (credentials: string, id: string, data: BranchInput) =>

@@ -25,7 +25,7 @@ export default defineConfig(({ command }) => {
       strictPort: true,
       proxy: localLoginBypass ? {
         '/api/admin': {
-          target: 'http://127.0.0.1:8080',
+          target: env.DASHBOARD_DEV_API_TARGET || 'http://127.0.0.1:8080',
           changeOrigin: true,
           configure: proxy => {
             proxy.on('proxyReq', proxyRequest => {
