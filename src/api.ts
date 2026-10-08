@@ -16,7 +16,7 @@ export type Staff = { slug: string; tenantName: string; displayName: string; ema
 export type Municipality = { code: string; name: string; uf: string }
 export type Branch = {
   id: string; name: string; municipalities: Municipality[]
-  legacyCities: { city: string; uf: string }[]; active: boolean; needsReview: boolean
+  active: boolean
 }
 export type BranchInput = { name: string; municipalityCodes: string[]; active: boolean }
 export type ManualBlock = {
