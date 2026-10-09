@@ -5,7 +5,7 @@ Painel React, TypeScript e Vite com a identidade visual da Pós Leve. Ele usa a 
 ## Funcionalidades atuais
 
 - Visão geral vazia, reservada para outra etapa.
-- Cadastro de filiais, com seleção de municípios do catálogo IBGE e estado ativo/inativo.
+- Cadastro de filiais, com seleção de municípios do catálogo IBGE, frete de entrega obrigatório para cada município e estado ativo/inativo.
 - Cadastro de poltronas vinculadas a uma filial, com estado operacional.
 - Bloqueios manuais por poltrona e período para aluguel combinado com a equipe, manutenção ou transporte.
 

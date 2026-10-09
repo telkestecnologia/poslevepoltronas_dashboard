@@ -14,11 +14,12 @@ export type Chair = {
 export type Staff = { slug: string; tenantName: string; displayName: string; email: string }
 
 export type Municipality = { code: string; name: string; uf: string }
+export type BranchMunicipality = Municipality & { freightCents: number }
 export type Branch = {
-  id: string; name: string; municipalities: Municipality[]
+  id: string; name: string; municipalities: BranchMunicipality[]
   active: boolean
 }
-export type BranchInput = { name: string; municipalityCodes: string[]; active: boolean }
+export type BranchInput = { name: string; municipalities: { code: string; freightCents: number }[]; active: boolean }
 export type ManualBlock = {
   id: string; chairId: string; start: string; end: string; reason: string; createdAt: string
 }
