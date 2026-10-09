@@ -22,7 +22,7 @@ jobs:
       - run: npm ci
       - run: npm run build
         env:
-          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL_DEV }}
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL_DEV || 'https://poslevepoltronas-backend-dev-868489142786.southamerica-east1.run.app' }}
           VITE_TENANT_SLUG: ${{ vars.VITE_TENANT_SLUG || 'pos-leve' }}
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
