@@ -1,0 +1,13 @@
+{
+  "projects": {
+    "default": "posleve"
+  },
+  "targets": {
+    "posleve": {
+      "hosting": {
+        "prod": ["posleve-dashboard"],
+        "dev": ["posleve-dashboard-dev"]
+      }
+    }
+  }
+}
