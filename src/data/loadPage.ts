@@ -4,6 +4,7 @@ import {
   type Chair,
   type ChairOption,
   type ChairQuery,
+  type Courier,
   type ManualBlock,
   type Municipality,
 } from '../api'
@@ -24,6 +25,7 @@ export type PageData =
       activeCounts: Record<string, number>
       municipalities: Municipality[]
     }
+  | { page: 'couriers'; couriers: Courier[] }
 
 // Each page requests only the data its screen needs. The overview has no API data yet.
 export async function loadPage(
@@ -54,6 +56,9 @@ export async function loadPage(
       api.municipalities(credentials),
     ])
     return { page, branches, activeCounts, municipalities }
+  }
+  if (page === 'couriers') {
+    return { page, couriers: await api.couriers(credentials) }
   }
   return null
 }

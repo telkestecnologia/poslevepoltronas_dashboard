@@ -9,6 +9,8 @@ import {
   type ChairOption,
   type ChairQuery,
   type ChairStatus,
+  type Courier,
+  type CourierInput,
   type ManualBlock,
   type Municipality,
   type Staff,
@@ -28,6 +30,7 @@ export function useDashboard() {
   const [chairOptions, setChairOptions] = useState<ChairOption[]>([])
   const [activeChairCounts, setActiveChairCounts] = useState<Record<string, number>>({})
   const [branches, setBranches] = useState<Branch[]>([])
+  const [couriers, setCouriers] = useState<Courier[]>([])
   const [municipalities, setMunicipalities] = useState<Municipality[]>([])
   const [blocks, setBlocks] = useState<ManualBlock[]>([])
   const [page, setPage] = useState<Page>('overview')
@@ -60,15 +63,18 @@ export function useDashboard() {
   // Apply the response for the active page without clearing data from other pages.
   const applyPageData = useCallback((data: PageData | null) => {
     if (!data) return
-    setBranches(data.branches)
     if (data.page === 'chairs') {
+      setBranches(data.branches)
       setChairs(data.chairs)
       setChairTotal(data.total)
       setChairOptions(data.options)
       setBlocks(data.blocks)
-    } else {
+    } else if (data.page === 'branches') {
+      setBranches(data.branches)
       setActiveChairCounts(data.activeCounts)
       setMunicipalities(data.municipalities)
+    } else {
+      setCouriers(data.couriers)
     }
     setLoadedPage(data.page)
   }, [])
@@ -167,6 +173,7 @@ export function useDashboard() {
     setChairOptions([])
     setActiveChairCounts({})
     setBranches([])
+    setCouriers([])
     setMunicipalities([])
     setBlocks([])
     setPage('overview')
@@ -263,6 +270,28 @@ export function useDashboard() {
     }
   }
 
+  async function saveCourier(data: CourierInput) {
+    if (credentials === null) return
+    setSaving(true)
+    setFormError('')
+    try {
+      if (modal?.kind === 'editCourier') {
+        await api.updateCourier(credentials, modal.courier.id, data)
+        showNotice('Entregador atualizado com sucesso.')
+      } else {
+        await api.createCourier(credentials, data)
+        showNotice('Entregador cadastrado com sucesso.')
+      }
+      applyPageData(await loadPage(credentials, 'couriers', chairQuery))
+      setModal(null)
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) logout()
+      else setFormError(getMessage(error))
+    } finally {
+      setSaving(false)
+    }
+  }
+
   async function createBlock(data: {
     chairId: string
     start: string
@@ -335,6 +364,11 @@ export function useDashboard() {
       onNewBranch: () => openModal({ kind: 'newBranch' }),
       onEditBranch: (branch: Branch) => openModal({ kind: 'editBranch', branch }),
     },
+    couriersPage: {
+      couriers,
+      onNewCourier: () => openModal({ kind: 'newCourier' }),
+      onEditCourier: (courier: Courier) => openModal({ kind: 'editCourier', courier }),
+    },
     dialog: {
       modal,
       branches,
@@ -344,6 +378,7 @@ export function useDashboard() {
       closeModal,
       saveChair,
       saveBranch,
+      saveCourier,
     },
   }
 }

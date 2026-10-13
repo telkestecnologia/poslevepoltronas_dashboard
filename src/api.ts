@@ -21,6 +21,13 @@ export type ChairQuery = {
 }
 
 export type Staff = { slug: string; tenantName: string; displayName: string; email: string }
+export type Courier = {
+  id: string; name: string; email: string; phone: string; vehicle: string
+  active: boolean; createdAt: string; updatedAt: string
+}
+export type CourierInput = {
+  name: string; email: string; phone: string; vehicle: string; password: string; active: boolean
+}
 
 export type Municipality = { code: string; name: string; uf: string }
 export type BranchMunicipality = Municipality & { freightCents: number }
@@ -87,6 +94,8 @@ async function request<T>(credentials: string, path: string, init: RequestInit =
               : response.status === 409
                 ? path.startsWith('/blocks')
                   ? 'A poltrona já tem um bloqueio em parte do período.'
+                  : path.startsWith('/couriers')
+                    ? 'Este e-mail já está cadastrado para um entregador.'
                   : 'Já existe um cadastro igual nesta locadora.'
                 : 'Não foi possível concluir a operação. Tente novamente.'
     throw new ApiError(response.status, message)
@@ -97,6 +106,11 @@ async function request<T>(credentials: string, path: string, init: RequestInit =
 
 export const api = {
   me: (credentials: string) => request<Staff>(credentials, '/me'),
+  couriers: (credentials: string) => request<Courier[]>(credentials, '/couriers'),
+  createCourier: (credentials: string, data: CourierInput) =>
+    request<Courier>(credentials, '/couriers', { method: 'POST', body: JSON.stringify(data) }),
+  updateCourier: (credentials: string, id: string, data: CourierInput) =>
+    request<Courier>(credentials, `/couriers/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(data) }),
   chairs: (credentials: string, query: ChairQuery) => {
     const params = new URLSearchParams({
       page: String(query.page),

@@ -697,6 +697,34 @@ tbody tr:hover {
 .table-action:hover {
   color: var(--teal-dark);
 }
+.courier-identity {
+  display: grid;
+  gap: 4px;
+}
+.courier-identity strong {
+  color: #425a60;
+  font-size: 12px;
+}
+.courier-identity small {
+  color: var(--muted);
+  font-size: 11px;
+}
+.courier-access {
+  display: inline-block;
+  border-radius: 99px;
+  padding: 6px 9px;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.courier-access.active {
+  background: #edf7ee;
+  color: #5c9b73;
+}
+.courier-access.inactive {
+  background: #f0f3f4;
+  color: #71858a;
+}
 .hint {
   display: flex;
   align-items: center;

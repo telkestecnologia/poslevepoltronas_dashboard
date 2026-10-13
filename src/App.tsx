@@ -5,10 +5,12 @@ import { BranchModal } from './features/branches/BranchModal'
 import { BranchesPage } from './features/branches/BranchesPage'
 import { ChairModal } from './features/chairs/ChairModal'
 import { ChairsPage } from './features/chairs/ChairsPage'
+import { CourierModal } from './features/couriers/CourierModal'
+import { CouriersPage } from './features/couriers/CouriersPage'
 import { useDashboard } from './hooks/useDashboard'
 
 function App() {
-  const { session, navigation, feedback, chairsPage, branchesPage, dialog } = useDashboard()
+  const { session, navigation, feedback, chairsPage, branchesPage, couriersPage, dialog } = useDashboard()
 
   if (session.credentials === null || !session.staff) {
     return (
@@ -49,6 +51,7 @@ function App() {
         )}
         {page === 'chairs' && !pageLoading && !pageError && <ChairsPage {...chairsPage} />}
         {page === 'branches' && !pageLoading && !pageError && <BranchesPage {...branchesPage} />}
+        {page === 'couriers' && !pageLoading && !pageError && <CouriersPage {...couriersPage} />}
       </DashboardLayout>
 
       {dialog.modal &&
@@ -61,6 +64,9 @@ function App() {
             onClose={dialog.closeModal}
             onSave={dialog.saveBranch}
           />
+        ) : dialog.modal.kind === 'newCourier' || dialog.modal.kind === 'editCourier' ? (
+          <CourierModal modal={dialog.modal} saving={dialog.saving} error={dialog.error}
+            onClose={dialog.closeModal} onSave={dialog.saveCourier} />
         ) : (
           <ChairModal
             modal={dialog.modal}
