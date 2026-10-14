@@ -4,7 +4,7 @@ Painel React, TypeScript e Vite com a identidade visual da Pós Leve. Ele usa a 
 
 ## Funcionalidades atuais
 
-- Visão geral vazia, reservada para outra etapa.
+- Visão geral com indicadores de poltronas e pedidos reais. A receita de vendas aparece sem valor até os pedidos registrarem total pago.
 - Cadastro de filiais, com seleção de municípios do catálogo IBGE, frete de entrega obrigatório para cada município e estado ativo/inativo.
 - Cadastro de entregadores com nome, e-mail, telefone, veículo opcional e senha inicial. A equipe pode bloquear o acesso ao app e redefinir a senha; sessões anteriores são encerradas nesses casos.
 - Cadastro de poltronas vinculadas a uma filial, com estado operacional.

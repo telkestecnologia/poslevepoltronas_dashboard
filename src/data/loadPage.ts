@@ -10,10 +10,12 @@ import {
   type ManualBlock,
   type Municipality,
   type Order,
+  type Overview,
 } from '../api'
 import type { Page } from '../types'
 
 export type PageData =
+  | { page: 'overview'; overview: Overview }
   | {
       page: 'chairs'
       chairs: Chair[]
@@ -32,12 +34,15 @@ export type PageData =
   | { page: 'orders'; orders: Order[]; couriers: Courier[]; branches: Branch[]; options: ChairOption[] }
   | { page: 'ai'; knowledge: AiKnowledge[]; unanswered: AiUnansweredQuestion[] }
 
-// Each page requests only the data its screen needs. The overview has no API data yet.
+// Each page requests only the data its screen needs.
 export async function loadPage(
   credentials: string,
   page: Page,
   chairQuery: ChairQuery,
 ): Promise<PageData | null> {
+  if (page === 'overview') {
+    return { page, overview: await api.overview(credentials) }
+  }
   if (page === 'chairs') {
     const [result, options, branches, blocks] = await Promise.all([
       api.chairs(credentials, chairQuery),

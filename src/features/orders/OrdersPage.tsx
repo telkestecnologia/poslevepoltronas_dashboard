@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { AlertCircle, ArrowRight, ClipboardList, Plus, RefreshCw, Search, Trash2, X } from 'lucide-react'
-import type { Branch, ChairOption, Courier, Order, OrderStatus, PreviewOrderInput } from '../../api'
+import type { Branch, ChairOption, Courier, Order, OrderSource, OrderStatus, PreviewOrderInput } from '../../api'
 import { EmptyState } from '../../components/common'
 import { getMessage } from '../../utils/errors'
 import { formatPhone } from '../../utils/phone'
@@ -10,6 +10,10 @@ type Props = {
   couriers: Courier[]
   branches: Branch[]
   options: ChairOption[]
+  status: OrderStatus | 'ALL'
+  source: OrderSource | 'ALL'
+  onStatusChange: (status: OrderStatus | 'ALL') => void
+  onSourceChange: (source: OrderSource | 'ALL') => void
   onRefresh: () => Promise<void>
   onCreatePreview: (data: PreviewOrderInput) => Promise<Order>
   onDeletePreview: (id: string) => Promise<void>
@@ -51,10 +55,10 @@ function eventLabel(action: string) {
   return action
 }
 
-export function OrdersPage({ orders, couriers, branches, options, onRefresh, onCreatePreview, onDeletePreview, onChangeStatus,
+export function OrdersPage({ orders, couriers, branches, options, status, source, onStatusChange, onSourceChange,
+  onRefresh, onCreatePreview, onDeletePreview, onChangeStatus,
   onAssignCourier, onOpenIssue, onResolveIssue }: Props) {
   const [search, setSearch] = useState('')
-  const [filter, setFilter] = useState<OrderStatus | 'ALL'>('ALL')
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -69,10 +73,12 @@ export function OrdersPage({ orders, couriers, branches, options, onRefresh, onC
   const followingStatus = statusFlow[currentStep + 1]
   const normalize = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
   const term = normalize(search.trim())
-  const visible = orders.filter(order => (filter === 'ALL' || order.status === filter)
+  const visible = orders.filter(order => (status === 'ALL' || order.status === status)
+    && (source === 'ALL' || order.source === source)
     && normalize(`${order.customerName} ${order.customerPhone} ${order.chairCode} ${order.municipalityName} ${order.branchName}`)
       .includes(term))
-  const openIssues = orders.reduce((total, order) => total + order.issues.filter(issue => issue.status === 'OPEN').length, 0)
+  const sourceOrders = orders.filter(order => source === 'ALL' || order.source === source)
+  const openIssues = sourceOrders.reduce((total, order) => total + order.issues.filter(issue => issue.status === 'OPEN').length, 0)
 
   async function perform(operation: () => Promise<Order>, after?: () => void) {
     setBusy(true)
@@ -146,21 +152,28 @@ export function OrdersPage({ orders, couriers, branches, options, onRefresh, onC
     </div>
     {error && !selected && <div className="form-error order-page-error" role="alert">{error}</div>}
     <div className="order-summary">
-      <div className="panel"><small>Pagamento confirmado</small><strong>{orders.filter(order => order.status === 'PAYMENT_CONFIRMED').length}</strong></div>
-      <div className="panel"><small>Em andamento</small><strong>{orders.filter(order => order.status !== 'PAYMENT_CONFIRMED' && order.status !== 'COMPLETED').length}</strong></div>
+      <div className="panel"><small>Pagamento confirmado</small><strong>{sourceOrders.filter(order => order.status === 'PAYMENT_CONFIRMED').length}</strong></div>
+      <div className="panel"><small>Em andamento</small><strong>{sourceOrders.filter(order => order.status !== 'PAYMENT_CONFIRMED' && order.status !== 'COMPLETED').length}</strong></div>
       <div className="panel"><small>Problemas em aberto</small><strong>{openIssues}</strong></div>
     </div>
     <section className="panel table-panel">
       <div className="table-toolbar order-toolbar">
         <div className="search-field"><Search size={18} /><input aria-label="Buscar pedido"
           placeholder="Cliente, poltrona ou município" value={search} onChange={event => setSearch(event.target.value)} /></div>
-        <div className="select-wrap"><select aria-label="Filtrar status" value={filter}
-          onChange={event => setFilter(event.target.value as OrderStatus | 'ALL')}>
+        <div className="select-wrap"><select aria-label="Filtrar origem" value={source}
+          onChange={event => onSourceChange(event.target.value as OrderSource | 'ALL')}>
+          <option value="ALL">Todas as origens</option>
+          <option value="CHECKOUT">Pedidos reais</option>
+          <option value="MANUAL_PREVIEW">Demonstrações</option>
+        </select></div>
+        <div className="select-wrap"><select aria-label="Filtrar status" value={status}
+          onChange={event => onStatusChange(event.target.value as OrderStatus | 'ALL')}>
           <option value="ALL">Todos os status</option>
           {Object.entries(labels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}
         </select></div>
       </div>
-      {orders.length === 0 ? <EmptyState icon={ClipboardList} title="Nenhum pedido registrado"
+      {orders.length === 0 && source === 'ALL' && status === 'ALL' && !term
+        ? <EmptyState icon={ClipboardList} title="Nenhum pedido registrado"
         text="Crie um pedido de demonstração para visualizar a tela. Pedidos reais aparecerão quando o checkout for integrado."
         action={{ label: 'Criar demonstração', onClick: () => setCreating(true) }} />
         : visible.length === 0 ? <EmptyState icon={Search} title="Nenhum pedido encontrado"

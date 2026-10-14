@@ -92,6 +92,18 @@ export type AiUnansweredQuestion = {
 }
 export type AiKnowledgeInput = { question: string; answer: string }
 
+export type Overview = {
+  totalChairs: number
+  activeChairs: number
+  maintenanceChairs: number
+  inactiveChairs: number
+  paymentConfirmedOrders: number
+  pendingDeliveries: number
+  chairsInUse: number
+  pendingPickups: number
+  completedOrders: number
+}
+
 export const localLoginBypass = __DASHBOARD_DEV_LOGIN_BYPASS__
 const baseUrl = localLoginBypass
   ? ''
@@ -153,6 +165,7 @@ async function request<T>(credentials: string, path: string, init: RequestInit =
 
 export const api = {
   me: (credentials: string) => request<Staff>(credentials, '/me'),
+  overview: (credentials: string) => request<Overview>(credentials, '/overview'),
   aiKnowledge: (credentials: string) => request<AiKnowledge[]>(credentials, '/ai/knowledge'),
   aiUnanswered: (credentials: string) =>
     request<AiUnansweredQuestion[]>(credentials, '/ai/unanswered'),

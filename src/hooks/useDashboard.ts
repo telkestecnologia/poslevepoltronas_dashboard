@@ -17,7 +17,9 @@ import {
   type ManualBlock,
   type Municipality,
   type Order,
+  type OrderSource,
   type OrderStatus,
+  type Overview,
   type PreviewOrderInput,
   type Staff,
 } from '../api'
@@ -38,6 +40,7 @@ export function useDashboard() {
   const [branches, setBranches] = useState<Branch[]>([])
   const [couriers, setCouriers] = useState<Courier[]>([])
   const [orders, setOrders] = useState<Order[]>([])
+  const [overview, setOverview] = useState<Overview | null>(null)
   const [aiKnowledge, setAiKnowledge] = useState<AiKnowledge[]>([])
   const [aiUnanswered, setAiUnanswered] = useState<AiUnansweredQuestion[]>([])
   const [municipalities, setMunicipalities] = useState<Municipality[]>([])
@@ -58,6 +61,8 @@ export function useDashboard() {
   const [appliedSearch, setAppliedSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<ChairStatus | 'ALL'>('ALL')
   const [branchFilter, setBranchFilter] = useState('ALL')
+  const [orderStatusFilter, setOrderStatusFilter] = useState<OrderStatus | 'ALL'>('ALL')
+  const [orderSourceFilter, setOrderSourceFilter] = useState<OrderSource | 'ALL'>('ALL')
   const localLoginStarted = useRef(false)
   const chairRequest =
     page === 'chairs' ? `${chairPage}:${appliedSearch}:${statusFilter}:${branchFilter}` : ''
@@ -72,7 +77,9 @@ export function useDashboard() {
   // Apply the response for the active page without clearing data from other pages.
   const applyPageData = useCallback((data: PageData | null) => {
     if (!data) return
-    if (data.page === 'chairs') {
+    if (data.page === 'overview') {
+      setOverview(data.overview)
+    } else if (data.page === 'chairs') {
       setBranches(data.branches)
       setChairs(data.chairs)
       setChairTotal(data.total)
@@ -105,6 +112,7 @@ export function useDashboard() {
         ? ''
         : btoa(Array.from(bytes, (byte) => String.fromCharCode(byte)).join(''))
       const identity = await api.me(auth)
+      setPageLoading(true)
       setCredentials(auth)
       setStaff(identity)
     } catch (error) {
@@ -131,7 +139,7 @@ export function useDashboard() {
 
   // A page visit loads its supporting data; filter and page changes reload only the chair rows.
   useEffect(() => {
-    if (credentials === null || page === 'overview') {
+    if (credentials === null) {
       setChairLoading(false)
       return
     }
@@ -192,6 +200,7 @@ export function useDashboard() {
     setBranches([])
     setCouriers([])
     setOrders([])
+    setOverview(null)
     setAiKnowledge([])
     setAiUnanswered([])
     setMunicipalities([])
@@ -202,6 +211,8 @@ export function useDashboard() {
     setPageError('')
     setLoadedPage(null)
     setBranchFilter('ALL')
+    setOrderStatusFilter('ALL')
+    setOrderSourceFilter('ALL')
     setNotice('')
   }
 
@@ -391,8 +402,20 @@ export function useDashboard() {
     }
   }
 
-  function navigate(nextPage: Page) {
-    setPageLoading(nextPage !== 'overview')
+  function navigate(nextPage: Page, filters?: { chairStatus?: ChairStatus | 'ALL'; orderStatus?: OrderStatus }) {
+    if (nextPage === 'chairs' && filters?.chairStatus !== undefined) {
+      setSearch('')
+      setAppliedSearch('')
+      setBranchFilter('ALL')
+      setChairPage(0)
+      setStatusFilter(filters.chairStatus)
+    }
+    if (nextPage === 'orders') {
+      setOrderStatusFilter(filters?.orderStatus ?? 'ALL')
+      setOrderSourceFilter(filters?.orderStatus ? 'CHECKOUT' : 'ALL')
+    }
+    if (nextPage === page) return
+    setPageLoading(true)
     setPageError('')
     setPage(nextPage)
   }
@@ -411,6 +434,12 @@ export function useDashboard() {
     session: { credentials, staff, login, loginBusy, loginError, logout },
     navigation: { page, navigate },
     feedback: { pageLoading, pageError, retryPage, notice, dismissNotice: () => setNotice('') },
+    overviewPage: {
+      overview,
+      onRefresh: retryPage,
+      onGoChairs: (status: ChairStatus | 'ALL') => navigate('chairs', { chairStatus: status }),
+      onGoOrders: (status: OrderStatus) => navigate('orders', { orderStatus: status }),
+    },
     chairsPage: {
       chairs,
       total: chairTotal,
@@ -451,6 +480,10 @@ export function useDashboard() {
     },
     ordersPage: {
       orders, couriers, branches, options: chairOptions,
+      status: orderStatusFilter,
+      source: orderSourceFilter,
+      onStatusChange: setOrderStatusFilter,
+      onSourceChange: setOrderSourceFilter,
       onRefresh: refreshOrders,
       onCreatePreview: createOrderPreview,
       onDeletePreview: deleteOrderPreview,

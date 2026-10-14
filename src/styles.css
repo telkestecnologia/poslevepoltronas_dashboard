@@ -528,6 +528,114 @@ img {
 .page-heading.with-action > .button {
   margin-bottom: 2px;
 }
+/* Overview */
+.overview-section + .overview-section {
+  margin-top: 32px;
+}
+.overview-section-head {
+  margin-bottom: 14px;
+}
+.overview-section-head h2 {
+  color: var(--ink);
+  font-size: 20px;
+  font-weight: 650;
+}
+.overview-section-head p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+  margin-top: 4px;
+}
+.overview-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+.overview-finance-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.overview-card {
+  position: relative;
+  display: grid;
+  justify-items: start;
+  align-content: start;
+  gap: 8px;
+  min-height: 164px;
+  width: 100%;
+  padding: 19px 20px;
+  text-align: left;
+  color: var(--ink);
+}
+button.overview-card:hover {
+  border-color: #c9e6e0;
+  box-shadow: 0 10px 25px rgba(41, 95, 91, 0.09);
+}
+.overview-card-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin-bottom: 3px;
+  border-radius: 10px;
+  background: #eaf6f4;
+  color: var(--teal);
+}
+.overview-card.green .overview-card-icon {
+  background: #edf7ee;
+  color: #5c9b73;
+}
+.overview-card.amber .overview-card-icon {
+  background: #fff2e9;
+  color: #b87a4e;
+}
+.overview-card.blue .overview-card-icon {
+  background: #eaf4fc;
+  color: #4e88ac;
+}
+.overview-card.slate .overview-card-icon {
+  background: #eef3f4;
+  color: #738990;
+}
+.overview-card-label {
+  color: #52676d;
+  font-size: 12px;
+  font-weight: 700;
+}
+.overview-card strong {
+  color: var(--ink);
+  font-family: 'Outfit', sans-serif;
+  font-size: 32px;
+  font-weight: 650;
+  line-height: 1;
+}
+.overview-card-detail {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+.overview-card-arrow {
+  position: absolute;
+  top: 23px;
+  right: 20px;
+  color: #a4bbb9;
+}
+@media (max-width: 1150px) {
+  .overview-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  .overview-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .overview-heading .button {
+    align-self: flex-start;
+  }
+  .overview-grid {
+    grid-template-columns: 1fr;
+  }
+}
 /* Shared components */
 .panel {
   background: #fff;
