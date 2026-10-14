@@ -725,6 +725,205 @@ tbody tr:hover {
   background: #f0f3f4;
   color: #71858a;
 }
+.order-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 13px;
+  margin-bottom: 20px;
+}
+.order-summary .panel {
+  display: grid;
+  gap: 7px;
+  padding: 18px 20px;
+}
+.order-summary small, .order-facts small {
+  color: var(--muted);
+  font-size: 11px;
+}
+.order-summary strong {
+  color: var(--ink);
+  font-family: 'Outfit', sans-serif;
+  font-size: 26px;
+}
+.order-toolbar {
+  justify-content: flex-start;
+}
+.order-heading-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+.order-preview-label {
+  color: #b87a4e !important;
+  font-weight: 700;
+}
+.order-preview-note {
+  border: 1px solid #f2dec7;
+  border-radius: 10px;
+  background: #fff8ef;
+  color: #966c40;
+  padding: 11px 13px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.order-delete {
+  justify-self: start;
+}
+.order-page-error {
+  margin-bottom: 18px;
+}
+.orders-table {
+  min-width: 850px;
+}
+.order-status {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 99px;
+  background: #eef4f4;
+  color: #61777c;
+  padding: 6px 10px;
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.order-status.status-new, .order-status.status-in_delivery {
+  background: #fff2e9;
+  color: #b87a4e;
+}
+.order-status.status-confirmed, .order-status.status-pickup_pending {
+  background: #eaf4fc;
+  color: #4e88ac;
+}
+.order-status.status-in_use {
+  background: #e9f7f4;
+  color: #278f85;
+}
+.order-status.status-completed {
+  background: #edf7ee;
+  color: #5c9b73;
+}
+.order-detail, .order-create {
+  width: min(100%, 680px);
+}
+.order-facts, .order-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 17px;
+}
+.order-detail-body {
+  display: grid;
+  gap: 22px;
+  padding: 23px 26px 27px;
+}
+.order-detail-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+.order-detail-top small, .order-issue small, .order-history small {
+  color: var(--muted);
+  font-size: 11px;
+}
+.order-facts {
+  background: #f8fbfa;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+}
+.order-facts > div {
+  display: grid;
+  gap: 5px;
+}
+.order-facts strong {
+  color: #425a60;
+  font-size: 12px;
+  line-height: 1.55;
+}
+.order-field {
+  display: grid;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #40535e;
+}
+.order-field input, .order-field select, .order-issue input, .order-issue-form input, .order-issue-form textarea {
+  width: 100%;
+  min-height: 43px;
+  border: 1px solid #dce6e5;
+  border-radius: 10px;
+  background: white;
+  color: var(--ink);
+  outline: none;
+  padding: 10px 12px;
+}
+.order-field input:focus, .order-field select:focus, .order-issue input:focus,
+.order-issue-form input:focus, .order-issue-form textarea:focus {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px rgba(26, 155, 170, 0.13);
+}
+.order-section {
+  border-top: 1px solid var(--line);
+  padding-top: 19px;
+  display: grid;
+  gap: 13px;
+}
+.order-section h3 {
+  font-size: 17px;
+  color: var(--ink);
+}
+.order-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.order-muted {
+  font-size: 12px;
+  color: var(--muted);
+}
+.order-issue {
+  display: grid;
+  gap: 9px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 13px;
+}
+.order-issue > div:first-child {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.order-issue strong, .order-history strong {
+  color: #40575f;
+  font-size: 12px;
+}
+.order-issue p, .order-history p {
+  color: #657d82;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.order-issue form, .order-issue-form {
+  display: grid;
+  gap: 9px;
+}
+.order-issue form .button, .order-issue-form .button {
+  justify-self: start;
+}
+.order-issue-form textarea {
+  min-height: 78px;
+  resize: vertical;
+}
+.order-history {
+  display: grid;
+  gap: 14px;
+}
+.order-history > div {
+  display: grid;
+  gap: 4px;
+  border-left: 2px solid #d9ece8;
+  padding-left: 12px;
+}
 .hint {
   display: flex;
   align-items: center;
@@ -870,6 +1069,18 @@ tbody tr:hover {
   }
 }
 @media (max-width: 680px) {
+  .order-summary {
+    grid-template-columns: 1fr 1fr;
+  }
+  .order-summary .panel:last-child {
+    grid-column: 1 / -1;
+  }
+  .order-facts, .order-form-grid {
+    grid-template-columns: 1fr;
+  }
+  .order-toolbar {
+    flex-wrap: wrap;
+  }
   .login-layout {
     display: block;
   }

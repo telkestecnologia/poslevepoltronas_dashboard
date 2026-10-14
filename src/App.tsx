@@ -7,10 +7,11 @@ import { ChairModal } from './features/chairs/ChairModal'
 import { ChairsPage } from './features/chairs/ChairsPage'
 import { CourierModal } from './features/couriers/CourierModal'
 import { CouriersPage } from './features/couriers/CouriersPage'
+import { OrdersPage } from './features/orders/OrdersPage'
 import { useDashboard } from './hooks/useDashboard'
 
 function App() {
-  const { session, navigation, feedback, chairsPage, branchesPage, couriersPage, dialog } = useDashboard()
+  const { session, navigation, feedback, chairsPage, branchesPage, couriersPage, ordersPage, dialog } = useDashboard()
 
   if (session.credentials === null || !session.staff) {
     return (
@@ -52,6 +53,7 @@ function App() {
         {page === 'chairs' && !pageLoading && !pageError && <ChairsPage {...chairsPage} />}
         {page === 'branches' && !pageLoading && !pageError && <BranchesPage {...branchesPage} />}
         {page === 'couriers' && !pageLoading && !pageError && <CouriersPage {...couriersPage} />}
+        {page === 'orders' && !pageLoading && !pageError && <OrdersPage {...ordersPage} />}
       </DashboardLayout>
 
       {dialog.modal &&

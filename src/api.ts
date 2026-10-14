@@ -11,7 +11,7 @@ export type Chair = {
   updatedAt: string
 }
 export type ChairPage = { items: Chair[]; total: number; page: number; size: number }
-export type ChairOption = Pick<Chair, 'id' | 'code' | 'model'>
+export type ChairOption = Pick<Chair, 'id' | 'code' | 'model' | 'branchId' | 'status'>
 export type ChairQuery = {
   page: number
   size: number
@@ -49,6 +49,25 @@ export type ManualBlock = {
   end: string
   reason: string
   createdAt: string
+}
+
+export type OrderStatus = 'NEW' | 'CONFIRMED' | 'IN_DELIVERY' | 'IN_USE' | 'PICKUP_PENDING' | 'COMPLETED' | 'CANCELED'
+export type OrderSource = 'CHECKOUT' | 'MANUAL_PREVIEW'
+export type OrderIssue = {
+  id: string; title: string; description: string; status: 'OPEN' | 'RESOLVED'
+  resolution: string; openedBy: string; openedAt: string; resolvedBy: string | null; resolvedAt: string | null
+}
+export type OrderEvent = { action: string; note: string; actor: string; at: string }
+export type Order = {
+  id: string; customerName: string; customerPhone: string; postalCode: string; address: string
+  municipalityCode: string; municipalityName: string; municipalityUf: string
+  branchId: string; branchName: string; chairId: string; chairCode: string
+  start: string; end: string; freightCents: number; source: OrderSource; status: OrderStatus; courierId: string | null
+  issues: OrderIssue[]; history: OrderEvent[]; createdAt: string; updatedAt: string
+}
+export type PreviewOrderInput = {
+  customerName: string; customerPhone: string; postalCode: string; address: string
+  municipalityCode: string; chairId: string; start: string; end: string
 }
 
 export const localLoginBypass = __DASHBOARD_DEV_LOGIN_BYPASS__
@@ -94,6 +113,10 @@ async function request<T>(credentials: string, path: string, init: RequestInit =
               : response.status === 409
                 ? path.startsWith('/blocks')
                   ? 'A poltrona já tem um bloqueio em parte do período.'
+                  : path.startsWith('/orders')
+                    ? 'A operação não é permitida no estado atual do pedido.'
+                  : path.startsWith('/chairs/')
+                    ? 'Não é possível mover uma poltrona com pedido em andamento.'
                   : path.startsWith('/couriers')
                     ? 'Este e-mail já está cadastrado para um entregador.'
                   : 'Já existe um cadastro igual nesta locadora.'
@@ -106,6 +129,27 @@ async function request<T>(credentials: string, path: string, init: RequestInit =
 
 export const api = {
   me: (credentials: string) => request<Staff>(credentials, '/me'),
+  orders: (credentials: string) => request<Order[]>(credentials, '/orders'),
+  createOrderPreview: (credentials: string, data: PreviewOrderInput) =>
+    request<Order>(credentials, '/orders/previews', { method: 'POST', body: JSON.stringify(data) }),
+  deleteOrderPreview: (credentials: string, id: string) =>
+    request<void>(credentials, `/orders/previews/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+  changeOrderStatus: (credentials: string, id: string, status: OrderStatus, note: string) =>
+    request<Order>(credentials, `/orders/${encodeURIComponent(id)}/status`, {
+      method: 'PATCH', body: JSON.stringify({ status, note }),
+    }),
+  assignOrderCourier: (credentials: string, id: string, courierId: string | null) =>
+    request<Order>(credentials, `/orders/${encodeURIComponent(id)}/courier`, {
+      method: 'PATCH', body: JSON.stringify({ courierId }),
+    }),
+  openOrderIssue: (credentials: string, id: string, title: string, description: string) =>
+    request<Order>(credentials, `/orders/${encodeURIComponent(id)}/issues`, {
+      method: 'POST', body: JSON.stringify({ title, description }),
+    }),
+  resolveOrderIssue: (credentials: string, id: string, issueId: string, resolution: string) =>
+    request<Order>(credentials, `/orders/${encodeURIComponent(id)}/issues/${encodeURIComponent(issueId)}/resolve`, {
+      method: 'PATCH', body: JSON.stringify({ resolution }),
+    }),
   couriers: (credentials: string) => request<Courier[]>(credentials, '/couriers'),
   createCourier: (credentials: string, data: CourierInput) =>
     request<Courier>(credentials, '/couriers', { method: 'POST', body: JSON.stringify(data) }),

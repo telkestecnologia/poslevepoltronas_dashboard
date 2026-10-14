@@ -6,6 +6,7 @@ import {
   Home,
   LogOut,
   MapPin,
+  ClipboardList,
   Menu,
   Truck,
   PanelLeftClose,
@@ -21,6 +22,7 @@ const navigation = [
   { page: 'chairs', label: 'Poltronas', icon: Armchair },
   { page: 'branches', label: 'Filiais', icon: MapPin },
   { page: 'couriers', label: 'Entregadores', icon: Truck },
+  { page: 'orders', label: 'Pedidos', icon: ClipboardList },
 ] as const
 
 type Props = {

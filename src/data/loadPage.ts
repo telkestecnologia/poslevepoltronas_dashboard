@@ -7,6 +7,7 @@ import {
   type Courier,
   type ManualBlock,
   type Municipality,
+  type Order,
 } from '../api'
 import type { Page } from '../types'
 
@@ -26,6 +27,7 @@ export type PageData =
       municipalities: Municipality[]
     }
   | { page: 'couriers'; couriers: Courier[] }
+  | { page: 'orders'; orders: Order[]; couriers: Courier[]; branches: Branch[]; options: ChairOption[] }
 
 // Each page requests only the data its screen needs. The overview has no API data yet.
 export async function loadPage(
@@ -59,6 +61,12 @@ export async function loadPage(
   }
   if (page === 'couriers') {
     return { page, couriers: await api.couriers(credentials) }
+  }
+  if (page === 'orders') {
+    const [orders, couriers, branches, options] = await Promise.all([
+      api.orders(credentials), api.couriers(credentials), api.branches(credentials), api.chairOptions(credentials),
+    ])
+    return { page, orders, couriers, branches, options }
   }
   return null
 }

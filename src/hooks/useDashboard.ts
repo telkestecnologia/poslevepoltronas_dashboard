@@ -13,6 +13,9 @@ import {
   type CourierInput,
   type ManualBlock,
   type Municipality,
+  type Order,
+  type OrderStatus,
+  type PreviewOrderInput,
   type Staff,
 } from '../api'
 import { CHAIR_PAGE_SIZE, type Modal, type Page } from '../types'
@@ -31,6 +34,7 @@ export function useDashboard() {
   const [activeChairCounts, setActiveChairCounts] = useState<Record<string, number>>({})
   const [branches, setBranches] = useState<Branch[]>([])
   const [couriers, setCouriers] = useState<Courier[]>([])
+  const [orders, setOrders] = useState<Order[]>([])
   const [municipalities, setMunicipalities] = useState<Municipality[]>([])
   const [blocks, setBlocks] = useState<ManualBlock[]>([])
   const [page, setPage] = useState<Page>('overview')
@@ -73,8 +77,13 @@ export function useDashboard() {
       setBranches(data.branches)
       setActiveChairCounts(data.activeCounts)
       setMunicipalities(data.municipalities)
-    } else {
+    } else if (data.page === 'couriers') {
       setCouriers(data.couriers)
+    } else {
+      setOrders(data.orders)
+      setCouriers(data.couriers)
+      setBranches(data.branches)
+      setChairOptions(data.options)
     }
     setLoadedPage(data.page)
   }, [])
@@ -174,6 +183,7 @@ export function useDashboard() {
     setActiveChairCounts({})
     setBranches([])
     setCouriers([])
+    setOrders([])
     setMunicipalities([])
     setBlocks([])
     setPage('overview')
@@ -311,6 +321,54 @@ export function useDashboard() {
     showNotice('Bloqueio removido.')
   }
 
+  async function mutateOrder(operation: (auth: string) => Promise<Order>) {
+    if (credentials === null) throw new Error('Entre novamente para continuar.')
+    try {
+      const order = await operation(credentials)
+      setOrders(current => current.map(item => item.id === order.id ? order : item))
+      showNotice('Pedido atualizado.')
+      return order
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) logout()
+      throw error
+    }
+  }
+
+  async function refreshOrders() {
+    if (credentials === null) throw new Error('Entre novamente para continuar.')
+    try {
+      applyPageData(await loadPage(credentials, 'orders', chairQuery))
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) logout()
+      throw error
+    }
+  }
+
+  async function createOrderPreview(data: PreviewOrderInput) {
+    if (credentials === null) throw new Error('Entre novamente para continuar.')
+    try {
+      const order = await api.createOrderPreview(credentials, data)
+      setOrders(current => [order, ...current])
+      showNotice('Pedido de demonstração criado.')
+      return order
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) logout()
+      throw error
+    }
+  }
+
+  async function deleteOrderPreview(id: string) {
+    if (credentials === null) throw new Error('Entre novamente para continuar.')
+    try {
+      await api.deleteOrderPreview(credentials, id)
+      setOrders(current => current.filter(order => order.id !== id))
+      showNotice('Pedido de demonstração removido.')
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) logout()
+      throw error
+    }
+  }
+
   function navigate(nextPage: Page) {
     setPageLoading(nextPage !== 'overview')
     setPageError('')
@@ -368,6 +426,20 @@ export function useDashboard() {
       couriers,
       onNewCourier: () => openModal({ kind: 'newCourier' }),
       onEditCourier: (courier: Courier) => openModal({ kind: 'editCourier', courier }),
+    },
+    ordersPage: {
+      orders, couriers, branches, options: chairOptions,
+      onRefresh: refreshOrders,
+      onCreatePreview: createOrderPreview,
+      onDeletePreview: deleteOrderPreview,
+      onChangeStatus: (id: string, status: OrderStatus, note: string) =>
+        mutateOrder(auth => api.changeOrderStatus(auth, id, status, note)),
+      onAssignCourier: (id: string, courierId: string | null) =>
+        mutateOrder(auth => api.assignOrderCourier(auth, id, courierId)),
+      onOpenIssue: (id: string, title: string, description: string) =>
+        mutateOrder(auth => api.openOrderIssue(auth, id, title, description)),
+      onResolveIssue: (id: string, issueId: string, resolution: string) =>
+        mutateOrder(auth => api.resolveOrderIssue(auth, id, issueId, resolution)),
     },
     dialog: {
       modal,
