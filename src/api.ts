@@ -51,7 +51,12 @@ export type ManualBlock = {
   createdAt: string
 }
 
-export type OrderStatus = 'NEW' | 'CONFIRMED' | 'IN_DELIVERY' | 'IN_USE' | 'PICKUP_PENDING' | 'COMPLETED' | 'CANCELED'
+export type OrderStatus =
+  | 'PAYMENT_CONFIRMED'
+  | 'DELIVERY_PENDING'
+  | 'IN_USE'
+  | 'PICKUP_PENDING'
+  | 'COMPLETED'
 export type OrderSource = 'CHECKOUT' | 'MANUAL_PREVIEW'
 export type OrderIssue = {
   id: string; title: string; description: string; status: 'OPEN' | 'RESOLVED'

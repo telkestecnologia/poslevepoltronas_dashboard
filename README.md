@@ -9,7 +9,7 @@ Painel React, TypeScript e Vite com a identidade visual da Pós Leve. Ele usa a 
 - Cadastro de entregadores com nome, e-mail, telefone, veículo opcional e senha inicial. A equipe pode bloquear o acesso ao app e redefinir a senha; sessões anteriores são encerradas nesses casos.
 - Cadastro de poltronas vinculadas a uma filial, com estado operacional.
 - Bloqueios manuais por poltrona e período para aluguel combinado com a equipe, manutenção ou transporte.
-- Gestão de pedidos: lista, detalhes, andamento, entregador atribuído, problemas e resolução. Um cadastro manual de demonstração permite preencher a tela sem reservar estoque; pode ser removido pelo painel.
+- Gestão de pedidos: lista, detalhes, andamento linear (pagamento confirmado → aguardando entrega → em uso → aguardando retirada → concluído), entregador atribuído, problemas e resolução. Um cadastro manual de demonstração permite preencher a tela sem reservar estoque; pode ser removido pelo painel.
 
 O bloqueio é necessário para que o site não apresente uma poltrona já comprometida. Uma poltrona ativa só aparece como disponível se atender ao município e estiver livre durante todo o período consultado.
 

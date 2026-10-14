@@ -787,11 +787,11 @@ tbody tr:hover {
   font-weight: 800;
   white-space: nowrap;
 }
-.order-status.status-new, .order-status.status-in_delivery {
+.order-status.status-delivery_pending, .order-status.status-issue_open {
   background: #fff2e9;
   color: #b87a4e;
 }
-.order-status.status-confirmed, .order-status.status-pickup_pending {
+.order-status.status-payment_confirmed, .order-status.status-pickup_pending {
   background: #eaf4fc;
   color: #4e88ac;
 }
@@ -825,6 +825,46 @@ tbody tr:hover {
 .order-detail-top small, .order-issue small, .order-history small {
   color: var(--muted);
   font-size: 11px;
+}
+.order-progress {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(108px, 1fr));
+  gap: 6px;
+  overflow-x: auto;
+  list-style: none;
+  margin: 0;
+  padding: 0 0 5px;
+}
+.order-progress li {
+  display: grid;
+  align-content: start;
+  gap: 7px;
+  border-top: 3px solid #dce7e7;
+  padding: 9px 5px 0;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+.order-progress li.done {
+  border-color: #84bbb3;
+  color: #578d84;
+}
+.order-progress li.current {
+  border-color: var(--teal);
+  color: var(--teal-dark);
+  font-weight: 800;
+}
+.order-progress-number {
+  display: grid;
+  place-items: center;
+  width: 23px;
+  height: 23px;
+  border-radius: 50%;
+  background: #edf3f2;
+}
+.order-progress li.done .order-progress-number,
+.order-progress li.current .order-progress-number {
+  background: #e5f5f2;
 }
 .order-facts {
   background: #f8fbfa;

@@ -20,16 +20,15 @@ type Props = {
 }
 
 const labels: Record<OrderStatus, string> = {
-  NEW: 'Novo', CONFIRMED: 'Confirmado', IN_DELIVERY: 'Em entrega', IN_USE: 'Em uso',
-  PICKUP_PENDING: 'Aguardando retirada', COMPLETED: 'Concluído', CANCELED: 'Cancelado',
+  PAYMENT_CONFIRMED: 'Pagamento confirmado',
+  DELIVERY_PENDING: 'Aguardando entrega',
+  IN_USE: 'Em uso',
+  PICKUP_PENDING: 'Aguardando retirada',
+  COMPLETED: 'Concluído',
 }
-const nextStatus: Partial<Record<OrderStatus, OrderStatus[]>> = {
-  NEW: ['CONFIRMED', 'CANCELED'],
-  CONFIRMED: ['IN_DELIVERY', 'CANCELED'],
-  IN_DELIVERY: ['IN_USE', 'CONFIRMED'],
-  IN_USE: ['PICKUP_PENDING'],
-  PICKUP_PENDING: ['COMPLETED', 'IN_USE'],
-}
+const statusFlow: OrderStatus[] = [
+  'PAYMENT_CONFIRMED', 'DELIVERY_PENDING', 'IN_USE', 'PICKUP_PENDING', 'COMPLETED',
+]
 
 function dateLabel(value: string) {
   return new Intl.DateTimeFormat('pt-BR').format(new Date(`${value}T12:00:00`))
@@ -66,6 +65,8 @@ export function OrdersPage({ orders, couriers, branches, options, onRefresh, onC
   const [issueDescription, setIssueDescription] = useState('')
   const [resolutions, setResolutions] = useState<Record<string, string>>({})
   const selected = orders.find(order => order.id === selectedId) ?? null
+  const currentStep = selected ? statusFlow.indexOf(selected.status) : -1
+  const followingStatus = statusFlow[currentStep + 1]
   const normalize = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
   const term = normalize(search.trim())
   const visible = orders.filter(order => (filter === 'ALL' || order.status === filter)
@@ -145,8 +146,8 @@ export function OrdersPage({ orders, couriers, branches, options, onRefresh, onC
     </div>
     {error && !selected && <div className="form-error order-page-error" role="alert">{error}</div>}
     <div className="order-summary">
-      <div className="panel"><small>Novos pedidos</small><strong>{orders.filter(order => order.status === 'NEW').length}</strong></div>
-      <div className="panel"><small>Em andamento</small><strong>{orders.filter(order => !['NEW', 'COMPLETED', 'CANCELED'].includes(order.status)).length}</strong></div>
+      <div className="panel"><small>Pagamento confirmado</small><strong>{orders.filter(order => order.status === 'PAYMENT_CONFIRMED').length}</strong></div>
+      <div className="panel"><small>Em andamento</small><strong>{orders.filter(order => order.status !== 'PAYMENT_CONFIRMED' && order.status !== 'COMPLETED').length}</strong></div>
       <div className="panel"><small>Problemas em aberto</small><strong>{openIssues}</strong></div>
     </div>
     <section className="panel table-panel">
@@ -191,8 +192,16 @@ export function OrdersPage({ orders, couriers, branches, options, onRefresh, onC
         <div className="order-detail-body">
           <div className="order-detail-top"><span className={`order-status status-${selected.status.toLowerCase()}`}>{labels[selected.status]}</span>
             <small>Entrada em {timeLabel(selected.createdAt)}</small></div>
+          <ol className="order-progress" aria-label="Etapas do pedido">
+            {statusFlow.map((status, index) => <li key={status}
+              className={index === currentStep ? 'current' : index < currentStep ? 'done' : ''}
+              aria-current={index === currentStep ? 'step' : undefined}>
+              <span className="order-progress-number">{index + 1}</span>
+              <span>{labels[status]}</span>
+            </li>)}
+          </ol>
           {selected.source === 'MANUAL_PREVIEW' && <div className="order-preview-note">
-            Pedido de demonstração. Ele aparece nesta tela, mas não reserva a poltrona nem altera a disponibilidade do site.
+            Pedido de demonstração. O pagamento é apenas simulado; ele não reserva a poltrona nem altera a disponibilidade do site.
           </div>}
           <div className="order-facts">
             <div><small>Contato</small><strong>{formatPhone(selected.customerPhone)}</strong></div>
@@ -202,27 +211,28 @@ export function OrdersPage({ orders, couriers, branches, options, onRefresh, onC
             <div><small>Frete registrado</small><strong>{freightLabel(selected.freightCents)}</strong></div>
           </div>
           <label className="order-field">Entregador
-            <select value={selected.courierId ?? ''} disabled={busy || ['COMPLETED', 'CANCELED'].includes(selected.status)}
+            <select value={selected.courierId ?? ''} disabled={busy || selected.status === 'COMPLETED'}
               onChange={event => void perform(() => onAssignCourier(selected.id, event.target.value || null))}>
               <option value="">Ainda não atribuído</option>
               {couriers.filter(courier => courier.active || courier.id === selected.courierId).map(courier =>
                 <option key={courier.id} value={courier.id}>{courier.name}{courier.active ? '' : ' (inativo)'}</option>)}
             </select>
           </label>
-          {(nextStatus[selected.status]?.length ?? 0) > 0 && <div className="order-section">
+          {followingStatus && <div className="order-section">
             <h3>Andamento</h3>
             <label className="order-field">Observação <span className="optional">(opcional)</span>
               <input value={statusNote} onChange={event => setStatusNote(event.target.value)} maxLength={300}
                 placeholder="Ex.: entrega reagendada com o cliente" /></label>
-            <div className="order-actions">{nextStatus[selected.status]?.map(status =>
-              <button key={status} className={`button ${status === 'CANCELED' ? 'secondary' : 'primary'}`}
-                disabled={busy} onClick={() => void perform(() => onChangeStatus(selected.id, status, statusNote),
-                  () => setStatusNote(''))}>{labels[status]}</button>)}</div>
+            <div className="order-actions">
+              <button className="button primary" disabled={busy}
+                onClick={() => void perform(() => onChangeStatus(selected.id, followingStatus, statusNote),
+                  () => setStatusNote(''))}>Avançar para {labels[followingStatus].toLowerCase()}</button>
+            </div>
           </div>}
           <div className="order-section"><h3>Problemas</h3>
             {selected.issues.length === 0 && <p className="order-muted">Nenhum problema registrado.</p>}
             {selected.issues.map(issue => <div className="order-issue" key={issue.id}>
-              <div><strong>{issue.title}</strong><span className={`order-status ${issue.status === 'OPEN' ? 'status-new' : 'status-completed'}`}>
+              <div><strong>{issue.title}</strong><span className={`order-status ${issue.status === 'OPEN' ? 'status-issue_open' : 'status-completed'}`}>
                 {issue.status === 'OPEN' ? 'Em aberto' : 'Resolvido'}</span></div>
               <p>{issue.description}</p><small>Aberto por {issue.openedBy} em {timeLabel(issue.openedAt)}</small>
               {issue.status === 'RESOLVED' ? <p><strong>Resolução:</strong> {issue.resolution}</p>
@@ -308,7 +318,7 @@ function CreatePreviewModal({ branches, options, busy, error, onClose, onSave }:
         <h2 id="order-create-title">Novo pedido de teste</h2></div>
         <button className="icon-button" aria-label="Fechar" onClick={onClose} disabled={busy}><X size={20} /></button></div>
       <form className="modal-form" onSubmit={submit}>
-        <p className="order-preview-note">Este cadastro serve para visualizar a gestão de pedidos. Ele não reserva estoque.</p>
+        <p className="order-preview-note">Este cadastro serve para visualizar a gestão de pedidos. O pagamento é simulado e não há reserva de estoque.</p>
         <div className="order-form-grid">
           <label>Cliente<input required autoFocus maxLength={100} value={name}
             onChange={event => setName(event.target.value)} placeholder="Nome completo" /></label>
