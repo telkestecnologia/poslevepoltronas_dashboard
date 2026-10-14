@@ -7,6 +7,7 @@ import {
   LogOut,
   MapPin,
   ClipboardList,
+  Sparkles,
   Menu,
   Truck,
   PanelLeftClose,
@@ -23,6 +24,7 @@ const navigation = [
   { page: 'branches', label: 'Filiais', icon: MapPin },
   { page: 'couriers', label: 'Entregadores', icon: Truck },
   { page: 'orders', label: 'Pedidos', icon: ClipboardList },
+  { page: 'ai', label: 'Contexto da IA', icon: Sparkles },
 ] as const
 
 type Props = {

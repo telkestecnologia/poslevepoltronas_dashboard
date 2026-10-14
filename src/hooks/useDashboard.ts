@@ -3,6 +3,9 @@ import {
   api,
   ApiError,
   localLoginBypass,
+  type AiKnowledge,
+  type AiKnowledgeInput,
+  type AiUnansweredQuestion,
   type Branch,
   type BranchInput,
   type Chair,
@@ -35,6 +38,8 @@ export function useDashboard() {
   const [branches, setBranches] = useState<Branch[]>([])
   const [couriers, setCouriers] = useState<Courier[]>([])
   const [orders, setOrders] = useState<Order[]>([])
+  const [aiKnowledge, setAiKnowledge] = useState<AiKnowledge[]>([])
+  const [aiUnanswered, setAiUnanswered] = useState<AiUnansweredQuestion[]>([])
   const [municipalities, setMunicipalities] = useState<Municipality[]>([])
   const [blocks, setBlocks] = useState<ManualBlock[]>([])
   const [page, setPage] = useState<Page>('overview')
@@ -79,11 +84,14 @@ export function useDashboard() {
       setMunicipalities(data.municipalities)
     } else if (data.page === 'couriers') {
       setCouriers(data.couriers)
-    } else {
+    } else if (data.page === 'orders') {
       setOrders(data.orders)
       setCouriers(data.couriers)
       setBranches(data.branches)
       setChairOptions(data.options)
+    } else {
+      setAiKnowledge(data.knowledge)
+      setAiUnanswered(data.unanswered)
     }
     setLoadedPage(data.page)
   }, [])
@@ -184,6 +192,8 @@ export function useDashboard() {
     setBranches([])
     setCouriers([])
     setOrders([])
+    setAiKnowledge([])
+    setAiUnanswered([])
     setMunicipalities([])
     setBlocks([])
     setPage('overview')
@@ -369,6 +379,18 @@ export function useDashboard() {
     }
   }
 
+  async function changeAiContext(operation: (auth: string) => Promise<unknown>, noticeText: string) {
+    if (credentials === null) throw new Error('Entre novamente para continuar.')
+    try {
+      await operation(credentials)
+      applyPageData(await loadPage(credentials, 'ai', chairQuery))
+      showNotice(noticeText)
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) logout()
+      throw error
+    }
+  }
+
   function navigate(nextPage: Page) {
     setPageLoading(nextPage !== 'overview')
     setPageError('')
@@ -440,6 +462,20 @@ export function useDashboard() {
         mutateOrder(auth => api.openOrderIssue(auth, id, title, description)),
       onResolveIssue: (id: string, issueId: string, resolution: string) =>
         mutateOrder(auth => api.resolveOrderIssue(auth, id, issueId, resolution)),
+    },
+    aiPage: {
+      knowledge: aiKnowledge,
+      unanswered: aiUnanswered,
+      onCreateKnowledge: (data: AiKnowledgeInput) =>
+        changeAiContext(auth => api.createAiKnowledge(auth, data), 'Resposta adicionada ao contexto.'),
+      onUpdateKnowledge: (id: string, data: AiKnowledgeInput) =>
+        changeAiContext(auth => api.updateAiKnowledge(auth, id, data), 'Resposta atualizada.'),
+      onDeleteKnowledge: (id: string) =>
+        changeAiContext(auth => api.deleteAiKnowledge(auth, id), 'Resposta removida do contexto.'),
+      onRecordUnanswered: (question: string) =>
+        changeAiContext(auth => api.recordAiUnanswered(auth, question), 'Dúvida registrada.'),
+      onAnswerUnanswered: (id: string, answer: string) =>
+        changeAiContext(auth => api.answerAiUnanswered(auth, id, answer), 'Dúvida respondida e adicionada ao contexto.'),
     },
     dialog: {
       modal,

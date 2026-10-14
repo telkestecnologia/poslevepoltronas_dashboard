@@ -1,5 +1,7 @@
 import {
   api,
+  type AiKnowledge,
+  type AiUnansweredQuestion,
   type Branch,
   type Chair,
   type ChairOption,
@@ -28,6 +30,7 @@ export type PageData =
     }
   | { page: 'couriers'; couriers: Courier[] }
   | { page: 'orders'; orders: Order[]; couriers: Courier[]; branches: Branch[]; options: ChairOption[] }
+  | { page: 'ai'; knowledge: AiKnowledge[]; unanswered: AiUnansweredQuestion[] }
 
 // Each page requests only the data its screen needs. The overview has no API data yet.
 export async function loadPage(
@@ -67,6 +70,12 @@ export async function loadPage(
       api.orders(credentials), api.couriers(credentials), api.branches(credentials), api.chairOptions(credentials),
     ])
     return { page, orders, couriers, branches, options }
+  }
+  if (page === 'ai') {
+    const [knowledge, unanswered] = await Promise.all([
+      api.aiKnowledge(credentials), api.aiUnanswered(credentials),
+    ])
+    return { page, knowledge, unanswered }
   }
   return null
 }

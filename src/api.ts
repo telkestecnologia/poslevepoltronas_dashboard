@@ -75,6 +75,23 @@ export type PreviewOrderInput = {
   municipalityCode: string; chairId: string; start: string; end: string
 }
 
+export type AiKnowledge = {
+  id: string
+  question: string
+  answer: string
+  updatedBy: string
+  createdAt: string
+  updatedAt: string
+}
+export type AiUnansweredQuestion = {
+  id: string
+  question: string
+  occurrences: number
+  firstAskedAt: string
+  lastAskedAt: string
+}
+export type AiKnowledgeInput = { question: string; answer: string }
+
 export const localLoginBypass = __DASHBOARD_DEV_LOGIN_BYPASS__
 const baseUrl = localLoginBypass
   ? ''
@@ -124,6 +141,8 @@ async function request<T>(credentials: string, path: string, init: RequestInit =
                     ? 'Não é possível mover uma poltrona com pedido em andamento.'
                   : path.startsWith('/couriers')
                     ? 'Este e-mail já está cadastrado para um entregador.'
+                  : path.startsWith('/ai/knowledge')
+                    ? 'Esta pergunta já existe no contexto da IA.'
                   : 'Já existe um cadastro igual nesta locadora.'
                 : 'Não foi possível concluir a operação. Tente novamente.'
     throw new ApiError(response.status, message)
@@ -134,6 +153,27 @@ async function request<T>(credentials: string, path: string, init: RequestInit =
 
 export const api = {
   me: (credentials: string) => request<Staff>(credentials, '/me'),
+  aiKnowledge: (credentials: string) => request<AiKnowledge[]>(credentials, '/ai/knowledge'),
+  aiUnanswered: (credentials: string) =>
+    request<AiUnansweredQuestion[]>(credentials, '/ai/unanswered'),
+  createAiKnowledge: (credentials: string, data: AiKnowledgeInput) =>
+    request<AiKnowledge>(credentials, '/ai/knowledge', {
+      method: 'POST', body: JSON.stringify(data),
+    }),
+  updateAiKnowledge: (credentials: string, id: string, data: AiKnowledgeInput) =>
+    request<AiKnowledge>(credentials, `/ai/knowledge/${encodeURIComponent(id)}`, {
+      method: 'PATCH', body: JSON.stringify(data),
+    }),
+  deleteAiKnowledge: (credentials: string, id: string) =>
+    request<void>(credentials, `/ai/knowledge/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+  recordAiUnanswered: (credentials: string, question: string) =>
+    request<AiUnansweredQuestion>(credentials, '/ai/unanswered', {
+      method: 'POST', body: JSON.stringify({ question }),
+    }),
+  answerAiUnanswered: (credentials: string, id: string, answer: string) =>
+    request<AiKnowledge>(credentials, `/ai/unanswered/${encodeURIComponent(id)}/answer`, {
+      method: 'POST', body: JSON.stringify({ answer }),
+    }),
   orders: (credentials: string) => request<Order[]>(credentials, '/orders'),
   createOrderPreview: (credentials: string, data: PreviewOrderInput) =>
     request<Order>(credentials, '/orders/previews', { method: 'POST', body: JSON.stringify(data) }),

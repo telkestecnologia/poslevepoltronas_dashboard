@@ -8,10 +8,11 @@ import { ChairsPage } from './features/chairs/ChairsPage'
 import { CourierModal } from './features/couriers/CourierModal'
 import { CouriersPage } from './features/couriers/CouriersPage'
 import { OrdersPage } from './features/orders/OrdersPage'
+import { AiContextPage } from './features/ai/AiContextPage'
 import { useDashboard } from './hooks/useDashboard'
 
 function App() {
-  const { session, navigation, feedback, chairsPage, branchesPage, couriersPage, ordersPage, dialog } = useDashboard()
+  const { session, navigation, feedback, chairsPage, branchesPage, couriersPage, ordersPage, aiPage, dialog } = useDashboard()
 
   if (session.credentials === null || !session.staff) {
     return (
@@ -54,6 +55,7 @@ function App() {
         {page === 'branches' && !pageLoading && !pageError && <BranchesPage {...branchesPage} />}
         {page === 'couriers' && !pageLoading && !pageError && <CouriersPage {...couriersPage} />}
         {page === 'orders' && !pageLoading && !pageError && <OrdersPage {...ordersPage} />}
+        {page === 'ai' && !pageLoading && !pageError && <AiContextPage {...aiPage} />}
       </DashboardLayout>
 
       {dialog.modal &&
