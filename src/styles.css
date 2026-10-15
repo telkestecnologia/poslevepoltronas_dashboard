@@ -528,6 +528,11 @@ img {
 .page-heading.with-action > .button {
   margin-bottom: 2px;
 }
+.ai-heading-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
 /* Overview */
 .overview-section + .overview-section {
   margin-top: 32px;
@@ -1086,6 +1091,7 @@ tbody tr:hover {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
   margin-bottom: 18px;
+  max-width: 740px;
 }
 .ai-summary .panel {
   display: flex;
@@ -1114,40 +1120,41 @@ tbody tr:hover {
 .ai-navigation {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 18px;
+  gap: 20px;
   border-bottom: 1px solid var(--line);
-  padding: 0 24px;
+  padding: 14px 24px;
 }
 .ai-tabs {
   display: flex;
-  flex: 0 0 auto;
-  gap: 22px;
+  align-items: center;
+  gap: 18px;
+  align-self: stretch;
 }
 .ai-tabs button {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
   border: 0;
   border-bottom: 2px solid transparent;
-  background: none;
-  padding: 18px 2px 15px;
+  background: transparent;
   color: var(--muted);
   font-size: 12px;
   font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
 }
 .ai-tabs button.active {
   border-bottom-color: var(--teal);
   color: var(--teal-dark);
 }
-.ai-tabs button span {
-  border-radius: 99px;
-  background: #eef5f3;
+.ai-tabs span {
+  border-radius: 10px;
+  background: #edf6f5;
   padding: 2px 7px;
-  font-size: 10px;
+  font-size: 11px;
 }
 .ai-navigation .search-field {
-  flex: 0 1 350px;
+  flex: 0 1 310px;
   margin-left: auto;
 }
 .ai-page-error {
@@ -1198,6 +1205,28 @@ tbody tr:hover {
 .ai-entry-actions .button {
   min-height: 36px;
 }
+.ai-occurrences {
+  margin-right: auto;
+  color: var(--muted);
+  font-size: 12px;
+}
+.ai-editor-question {
+  display: grid;
+  gap: 6px;
+  border-radius: 10px;
+  background: #f2f8f7;
+  padding: 14px 16px;
+}
+.ai-editor-question small {
+  color: var(--teal-dark);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+.ai-editor-question strong {
+  color: var(--ink);
+  font-size: 14px;
+}
 .ai-remove {
   display: inline-flex;
   align-items: center;
@@ -1212,44 +1241,16 @@ tbody tr:hover {
 .ai-remove:hover {
   color: #8b4037;
 }
-.ai-occurrences {
-  color: var(--muted);
-  font-size: 11px;
-  margin-right: auto;
-}
 .ai-editor-modal {
   width: min(100%, 580px);
 }
-.ai-editor-question {
-  display: grid;
-  gap: 8px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: #f8fbfa;
-  padding: 14px;
-}
-.ai-editor-question small {
-  color: var(--teal-dark);
-  font-size: 10px;
-  font-weight: 800;
-}
-.ai-editor-question strong {
-  color: var(--ink);
-  font-size: 14px;
-  line-height: 1.5;
-}
 @media (max-width: 900px) {
   .ai-navigation {
+    padding: 14px 16px;
     flex-wrap: wrap;
-    gap: 0;
-    padding-bottom: 16px;
-  }
-  .ai-tabs {
-    width: 100%;
   }
   .ai-navigation .search-field {
     flex: 1 1 100%;
-    margin-left: 0;
   }
 }
 @media (max-width: 680px) {
@@ -1257,19 +1258,15 @@ tbody tr:hover {
     align-items: stretch;
     flex-direction: column;
   }
+  .ai-heading-actions .button {
+    flex: 1 1 auto;
+  }
   .ai-summary {
-    grid-template-columns: 1fr 1fr;
+    max-width: none;
+    grid-template-columns: 1fr;
   }
-  .ai-navigation {
-    padding-right: 16px;
-    padding-left: 16px;
-  }
-  .ai-tabs {
-    gap: 12px;
-  }
-  .ai-tabs button {
-    font-size: 11px;
-  }
+  .ai-tabs { gap: 10px; width: 100%; }
+  .ai-tabs button { font-size: 11px; }
   .ai-entry-list {
     padding: 16px 16px 17px;
   }

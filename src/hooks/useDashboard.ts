@@ -499,16 +499,19 @@ export function useDashboard() {
     aiPage: {
       knowledge: aiKnowledge,
       unanswered: aiUnanswered,
+      onRefresh: () => setReloadKey(key => key + 1),
       onCreateKnowledge: (data: AiKnowledgeInput) =>
         changeAiContext(auth => api.createAiKnowledge(auth, data), 'Resposta adicionada ao contexto.'),
       onUpdateKnowledge: (id: string, data: AiKnowledgeInput) =>
         changeAiContext(auth => api.updateAiKnowledge(auth, id, data), 'Resposta atualizada.'),
       onDeleteKnowledge: (id: string) =>
         changeAiContext(auth => api.deleteAiKnowledge(auth, id), 'Resposta removida do contexto.'),
-      onRecordUnanswered: (question: string) =>
-        changeAiContext(auth => api.recordAiUnanswered(auth, question), 'Dúvida registrada.'),
       onAnswerUnanswered: (id: string, answer: string) =>
         changeAiContext(auth => api.answerAiUnanswered(auth, id, answer), 'Dúvida respondida e adicionada ao contexto.'),
+      onDeleteUnanswered: (id: string) =>
+        changeAiContext(auth => api.deleteAiUnanswered(auth, id), 'Dúvida excluída.'),
+      onRecordUnanswered: (question: string) =>
+        changeAiContext(auth => api.recordAiUnanswered(auth, question), 'Dúvida registrada.'),
     },
     dialog: {
       modal,

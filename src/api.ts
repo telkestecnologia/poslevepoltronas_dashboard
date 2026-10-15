@@ -79,10 +79,11 @@ export type AiKnowledge = {
   id: string
   question: string
   answer: string
-  updatedBy: string
+  status: 'PENDING' | 'PROCESSING' | 'INDEXED' | 'FAILED'
   createdAt: string
   updatedAt: string
 }
+export type AiKnowledgeInput = { question: string; answer: string }
 export type AiUnansweredQuestion = {
   id: string
   question: string
@@ -90,7 +91,6 @@ export type AiUnansweredQuestion = {
   firstAskedAt: string
   lastAskedAt: string
 }
-export type AiKnowledgeInput = { question: string; answer: string }
 
 export type Overview = {
   totalChairs: number
@@ -142,6 +142,8 @@ async function request<T>(credentials: string, path: string, init: RequestInit =
           ? 'Sua conta não tem acesso a esta locadora.'
           : response.status === 404
             ? 'O registro não foi encontrado.'
+            : response.status === 503 && (path.startsWith('/ai/knowledge') || path.endsWith('/answer'))
+              ? 'Configure uma API Key com permissão de conhecimento no backend.'
             : response.status >= 500
               ? 'A API encontrou um erro interno. Confira os logs do backend.'
               : response.status === 409
@@ -167,8 +169,11 @@ export const api = {
   me: (credentials: string) => request<Staff>(credentials, '/me'),
   overview: (credentials: string) => request<Overview>(credentials, '/overview'),
   aiKnowledge: (credentials: string) => request<AiKnowledge[]>(credentials, '/ai/knowledge'),
-  aiUnanswered: (credentials: string) =>
-    request<AiUnansweredQuestion[]>(credentials, '/ai/unanswered'),
+  aiUnanswered: (credentials: string) => request<AiUnansweredQuestion[]>(credentials, '/ai/unanswered'),
+  recordAiUnanswered: (credentials: string, question: string) =>
+    request<AiUnansweredQuestion>(credentials, '/ai/unanswered', {
+      method: 'POST', body: JSON.stringify({ question }),
+    }),
   createAiKnowledge: (credentials: string, data: AiKnowledgeInput) =>
     request<AiKnowledge>(credentials, '/ai/knowledge', {
       method: 'POST', body: JSON.stringify(data),
@@ -179,14 +184,12 @@ export const api = {
     }),
   deleteAiKnowledge: (credentials: string, id: string) =>
     request<void>(credentials, `/ai/knowledge/${encodeURIComponent(id)}`, { method: 'DELETE' }),
-  recordAiUnanswered: (credentials: string, question: string) =>
-    request<AiUnansweredQuestion>(credentials, '/ai/unanswered', {
-      method: 'POST', body: JSON.stringify({ question }),
-    }),
   answerAiUnanswered: (credentials: string, id: string, answer: string) =>
     request<AiKnowledge>(credentials, `/ai/unanswered/${encodeURIComponent(id)}/answer`, {
       method: 'POST', body: JSON.stringify({ answer }),
     }),
+  deleteAiUnanswered: (credentials: string, id: string) =>
+    request<void>(credentials, `/ai/unanswered/${encodeURIComponent(id)}`, { method: 'DELETE' }),
   orders: (credentials: string) => request<Order[]>(credentials, '/orders'),
   createOrderPreview: (credentials: string, data: PreviewOrderInput) =>
     request<Order>(credentials, '/orders/previews', { method: 'POST', body: JSON.stringify(data) }),

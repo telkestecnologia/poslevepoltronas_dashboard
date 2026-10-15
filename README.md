@@ -10,7 +10,7 @@ Painel React, TypeScript e Vite com a identidade visual da Pós Leve. Ele usa a 
 - Cadastro de poltronas vinculadas a uma filial, com estado operacional.
 - Bloqueios manuais por poltrona e período para aluguel combinado com a equipe, manutenção ou transporte.
 - Gestão de pedidos: lista, detalhes, andamento linear (pagamento confirmado → aguardando entrega → em uso → aguardando retirada → concluído), entregador atribuído, problemas e resolução. Um cadastro manual de demonstração permite preencher a tela sem reservar estoque; pode ser removido pelo painel.
-- Contexto da IA: perguntas e respostas editáveis, dúvidas sem resposta agrupadas por ocorrência e resposta administrativa que passa a compor o contexto. Dúvidas podem ser registradas manualmente enquanto a integração com a API interna de IA é preparada.
+- Contexto da IA conectado à base de conhecimento do Meu Assistente pelo backend: perguntas e respostas editáveis e estado de indexação. A aba de dúvidas sem resposta usa a fila manual do dashboard no MongoDB: o administrador pode registrar, responder (publicando a resposta na base da IA) ou excluir uma dúvida. O chat atual do site ainda não envia perguntas automaticamente para essa fila.
 
 O bloqueio é necessário para que o site não apresente uma poltrona já comprometida. Uma poltrona ativa só aparece como disponível se atender ao município e estiver livre durante todo o período consultado.
 

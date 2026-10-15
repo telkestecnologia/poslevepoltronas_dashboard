@@ -4,8 +4,8 @@ import type { AiKnowledge, AiUnansweredQuestion } from '../../api'
 
 export type AiEditor =
   | { kind: 'knowledge'; entry?: AiKnowledge }
-  | { kind: 'unanswered' }
   | { kind: 'answer'; pending: AiUnansweredQuestion }
+  | { kind: 'unanswered' }
 
 type Props = {
   editor: AiEditor
@@ -16,16 +16,8 @@ type Props = {
 }
 
 export function AiEditorModal({ editor, busy, error, onClose, onSave }: Props) {
-  const [question, setQuestion] = useState(
-    editor.kind === 'knowledge'
-      ? (editor.entry?.question ?? '')
-      : editor.kind === 'answer'
-        ? editor.pending.question
-        : '',
-  )
-  const [answer, setAnswer] = useState(
-    editor.kind === 'knowledge' ? (editor.entry?.answer ?? '') : '',
-  )
+  const [question, setQuestion] = useState(editor.kind === 'answer' ? editor.pending.question : editor.kind === 'knowledge' ? editor.entry?.question ?? '' : '')
+  const [answer, setAnswer] = useState(editor.kind === 'knowledge' ? editor.entry?.answer ?? '' : '')
 
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
@@ -35,14 +27,7 @@ export function AiEditorModal({ editor, busy, error, onClose, onSave }: Props) {
     return () => document.removeEventListener('keydown', onKey)
   }, [busy, onClose])
 
-  const title =
-    editor.kind === 'answer'
-      ? 'Responder dúvida'
-      : editor.kind === 'unanswered'
-        ? 'Registrar dúvida'
-        : editor.entry
-          ? 'Editar resposta'
-          : 'Nova pergunta e resposta'
+  const title = editor.kind === 'answer' ? 'Responder dúvida' : editor.kind === 'unanswered' ? 'Registrar dúvida' : editor.entry ? 'Editar resposta' : 'Nova pergunta e resposta'
 
   function submit(event: FormEvent) {
     event.preventDefault()
@@ -89,15 +74,11 @@ export function AiEditorModal({ editor, busy, error, onClose, onSave }: Props) {
               <textarea
                 autoFocus
                 required
-                maxLength={500}
+                maxLength={200}
                 rows={3}
                 value={question}
                 onChange={(event) => setQuestion(event.target.value)}
-                placeholder={
-                  editor.kind === 'unanswered'
-                    ? 'O que o cliente perguntou?'
-                    : 'Ex.: Como funciona a entrega?'
-                }
+                placeholder="Ex.: Como funciona a entrega?"
               />
             </label>
           )}
@@ -125,11 +106,7 @@ export function AiEditorModal({ editor, busy, error, onClose, onSave }: Props) {
               Cancelar
             </button>
             <button className="button primary" disabled={busy} type="submit">
-              {busy
-                ? 'Salvando...'
-                : editor.kind === 'unanswered'
-                  ? 'Registrar dúvida'
-                  : 'Salvar resposta'}
+              {busy ? 'Salvando...' : editor.kind === 'unanswered' ? 'Registrar dúvida' : 'Salvar resposta'}
             </button>
           </div>
         </form>
