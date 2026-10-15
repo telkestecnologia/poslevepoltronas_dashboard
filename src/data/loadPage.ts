@@ -1,6 +1,7 @@
 import {
   api,
   type AiKnowledge,
+  type AiNotificationSettings,
   type AiUnansweredQuestion,
   type Branch,
   type Chair,
@@ -33,6 +34,7 @@ export type PageData =
   | { page: 'couriers'; couriers: Courier[] }
   | { page: 'orders'; orders: Order[]; couriers: Courier[]; branches: Branch[]; options: ChairOption[] }
   | { page: 'ai'; knowledge: AiKnowledge[]; unanswered: AiUnansweredQuestion[] }
+  | { page: 'notifications'; settings: AiNotificationSettings }
 
 // Each page requests only the data its screen needs.
 export async function loadPage(
@@ -81,6 +83,9 @@ export async function loadPage(
       api.aiKnowledge(credentials), api.aiUnanswered(credentials),
     ])
     return { page, knowledge, unanswered }
+  }
+  if (page === 'notifications') {
+    return { page, settings: await api.aiNotificationSettings(credentials) }
   }
   return null
 }

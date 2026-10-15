@@ -91,6 +91,7 @@ export type AiUnansweredQuestion = {
   firstAskedAt: string
   lastAskedAt: string
 }
+export type AiNotificationSettings = { emails: string[]; whatsAppNumbers: string[] }
 
 export type Overview = {
   totalChairs: number
@@ -170,6 +171,12 @@ export const api = {
   overview: (credentials: string) => request<Overview>(credentials, '/overview'),
   aiKnowledge: (credentials: string) => request<AiKnowledge[]>(credentials, '/ai/knowledge'),
   aiUnanswered: (credentials: string) => request<AiUnansweredQuestion[]>(credentials, '/ai/unanswered'),
+  aiNotificationSettings: (credentials: string) =>
+    request<AiNotificationSettings>(credentials, '/ai/notifications'),
+  saveAiNotificationSettings: (credentials: string, data: AiNotificationSettings) =>
+    request<AiNotificationSettings>(credentials, '/ai/notifications', {
+      method: 'PUT', body: JSON.stringify(data),
+    }),
   recordAiUnanswered: (credentials: string, question: string) =>
     request<AiUnansweredQuestion>(credentials, '/ai/unanswered', {
       method: 'POST', body: JSON.stringify({ question }),

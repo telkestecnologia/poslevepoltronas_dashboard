@@ -10,6 +10,7 @@ import { CouriersPage } from './features/couriers/CouriersPage'
 import { OrdersPage } from './features/orders/OrdersPage'
 import { AiContextPage } from './features/ai/AiContextPage'
 import { OverviewPage } from './features/overview/OverviewPage'
+import { NotificationsPage } from './features/notifications/NotificationsPage'
 import { useDashboard } from './hooks/useDashboard'
 
 function App() {
@@ -23,6 +24,7 @@ function App() {
     couriersPage,
     ordersPage,
     aiPage,
+    notificationsPage,
     dialog,
   } = useDashboard()
 
@@ -77,6 +79,9 @@ function App() {
         {page === 'couriers' && !showLoading && !pageError && <CouriersPage {...couriersPage} />}
         {page === 'orders' && !showLoading && !pageError && <OrdersPage {...ordersPage} />}
         {page === 'ai' && !showLoading && !pageError && <AiContextPage {...aiPage} />}
+        {page === 'notifications' && !showLoading && !pageError && notificationsPage.settings && (
+          <NotificationsPage settings={notificationsPage.settings} onSave={notificationsPage.onSave} />
+        )}
       </DashboardLayout>
 
       {dialog.modal &&

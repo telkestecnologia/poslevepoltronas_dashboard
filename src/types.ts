@@ -1,6 +1,6 @@
 import type { Branch, Chair, Courier } from './api'
 
-export type Page = 'overview' | 'chairs' | 'branches' | 'couriers' | 'orders' | 'ai'
+export type Page = 'overview' | 'chairs' | 'branches' | 'couriers' | 'orders' | 'ai' | 'notifications'
 export type Modal =
   | { kind: 'newChair' }
   | { kind: 'editChair'; chair: Chair }

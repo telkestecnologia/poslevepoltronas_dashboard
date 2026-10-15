@@ -9,6 +9,7 @@ import {
   ClipboardList,
   Sparkles,
   Menu,
+  BellRing,
   Truck,
   PanelLeftClose,
   PanelLeftOpen,
@@ -25,6 +26,7 @@ const navigation = [
   { page: 'couriers', label: 'Entregadores', icon: Truck },
   { page: 'orders', label: 'Pedidos', icon: ClipboardList },
   { page: 'ai', label: 'Contexto da IA', icon: Sparkles },
+  { page: 'notifications', label: 'Alertas da IA', icon: BellRing },
 ] as const
 
 type Props = {

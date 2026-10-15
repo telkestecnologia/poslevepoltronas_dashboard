@@ -5,6 +5,7 @@ import {
   localLoginBypass,
   type AiKnowledge,
   type AiKnowledgeInput,
+  type AiNotificationSettings,
   type AiUnansweredQuestion,
   type Branch,
   type BranchInput,
@@ -43,6 +44,7 @@ export function useDashboard() {
   const [overview, setOverview] = useState<Overview | null>(null)
   const [aiKnowledge, setAiKnowledge] = useState<AiKnowledge[]>([])
   const [aiUnanswered, setAiUnanswered] = useState<AiUnansweredQuestion[]>([])
+  const [aiNotificationSettings, setAiNotificationSettings] = useState<AiNotificationSettings | null>(null)
   const [municipalities, setMunicipalities] = useState<Municipality[]>([])
   const [blocks, setBlocks] = useState<ManualBlock[]>([])
   const [page, setPage] = useState<Page>('overview')
@@ -96,9 +98,11 @@ export function useDashboard() {
       setCouriers(data.couriers)
       setBranches(data.branches)
       setChairOptions(data.options)
-    } else {
+    } else if (data.page === 'ai') {
       setAiKnowledge(data.knowledge)
       setAiUnanswered(data.unanswered)
+    } else if (data.page === 'notifications') {
+      setAiNotificationSettings(data.settings)
     }
     setLoadedPage(data.page)
   }, [])
@@ -203,6 +207,7 @@ export function useDashboard() {
     setOverview(null)
     setAiKnowledge([])
     setAiUnanswered([])
+    setAiNotificationSettings(null)
     setMunicipalities([])
     setBlocks([])
     setPage('overview')
@@ -402,6 +407,17 @@ export function useDashboard() {
     }
   }
 
+  async function saveAiNotificationSettings(data: AiNotificationSettings) {
+    if (credentials === null) throw new Error('Entre novamente para continuar.')
+    try {
+      setAiNotificationSettings(await api.saveAiNotificationSettings(credentials, data))
+      showNotice('Contatos de alerta salvos.')
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) logout()
+      throw error
+    }
+  }
+
   function navigate(nextPage: Page, filters?: { chairStatus?: ChairStatus | 'ALL'; orderStatus?: OrderStatus }) {
     if (nextPage === 'chairs' && filters?.chairStatus !== undefined) {
       setSearch('')
@@ -512,6 +528,10 @@ export function useDashboard() {
         changeAiContext(auth => api.deleteAiUnanswered(auth, id), 'Dúvida excluída.'),
       onRecordUnanswered: (question: string) =>
         changeAiContext(auth => api.recordAiUnanswered(auth, question), 'Dúvida registrada.'),
+    },
+    notificationsPage: {
+      settings: aiNotificationSettings,
+      onSave: saveAiNotificationSettings,
     },
     dialog: {
       modal,
