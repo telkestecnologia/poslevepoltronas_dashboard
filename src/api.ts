@@ -53,6 +53,9 @@ export type ManualBlock = {
 }
 
 export type OrderStatus =
+  | 'PENDING_CONTRACT'
+  | 'EXPIRED'
+  | 'CANCELLED'
   | 'PAYMENT_CONFIRMED'
   | 'DELIVERY_PENDING'
   | 'IN_USE'
@@ -68,7 +71,11 @@ export type Order = {
   id: string; customerName: string; customerPhone: string; postalCode: string; address: string
   municipalityCode: string; municipalityName: string; municipalityUf: string
   branchId: string; branchName: string; chairId: string; chairCode: string
-  start: string; end: string; freightCents: number; source: OrderSource; status: OrderStatus; courierId: string | null
+  start: string; end: string; stockStart: string | null; stockEnd: string | null
+  deliveryTime: string | null; pickupTime: string | null; priceVersion: string | null
+  rentalCents: number; freightCents: number; totalCents: number
+  holdId: string | null; expiresAt: string | null
+  source: OrderSource; status: OrderStatus; courierId: string | null
   issues: OrderIssue[]; history: OrderEvent[]; createdAt: string; updatedAt: string
 }
 export type PreviewOrderInput = {
@@ -250,6 +257,10 @@ export const api = {
   changeOrderStatus: (credentials: string, id: string, status: OrderStatus, note: string) =>
     request<Order>(credentials, `/orders/${encodeURIComponent(id)}/status`, {
       method: 'PATCH', body: JSON.stringify({ status, note }),
+    }),
+  expandOrderStock: (credentials: string, id: string, stockStart: string, stockEnd: string, note: string) =>
+    request<Order>(credentials, `/orders/${encodeURIComponent(id)}/logistics`, {
+      method: 'PATCH', body: JSON.stringify({ stockStart, stockEnd, note }),
     }),
   assignOrderCourier: (credentials: string, id: string, courierId: string | null) =>
     request<Order>(credentials, `/orders/${encodeURIComponent(id)}/courier`, {

@@ -18,12 +18,16 @@ type Props = {
   onCreatePreview: (data: PreviewOrderInput) => Promise<Order>
   onDeletePreview: (id: string) => Promise<void>
   onChangeStatus: (id: string, status: OrderStatus, note: string) => Promise<Order>
+  onExpandStock: (id: string, stockStart: string, stockEnd: string, note: string) => Promise<Order>
   onAssignCourier: (id: string, courierId: string | null) => Promise<Order>
   onOpenIssue: (id: string, title: string, description: string) => Promise<Order>
   onResolveIssue: (id: string, issueId: string, resolution: string) => Promise<Order>
 }
 
 const labels: Record<OrderStatus, string> = {
+  PENDING_CONTRACT: 'Aguardando contrato',
+  EXPIRED: 'Expirado',
+  CANCELLED: 'Cancelado',
   PAYMENT_CONFIRMED: 'Pagamento confirmado',
   DELIVERY_PENDING: 'Aguardando entrega',
   IN_USE: 'Em uso',
@@ -49,6 +53,9 @@ function freightLabel(cents: number) {
 function eventLabel(action: string) {
   if (action.startsWith('STATUS_')) return labels[action.slice(7) as OrderStatus] ?? action
   if (action === 'CREATED') return 'Pedido criado'
+  if (action === 'STOCK_EXPANDED') return 'Intervalo de estoque ampliado'
+  if (action === 'EXPIRED') return 'Prazo encerrado'
+  if (action === 'CANCELLED') return 'Pedido cancelado'
   if (action === 'COURIER_ASSIGNED') return 'Entregador alterado'
   if (action === 'ISSUE_OPENED') return 'Problema registrado'
   if (action === 'ISSUE_RESOLVED') return 'Problema resolvido'
@@ -56,7 +63,7 @@ function eventLabel(action: string) {
 }
 
 export function OrdersPage({ orders, couriers, branches, options, status, source, onStatusChange, onSourceChange,
-  onRefresh, onCreatePreview, onDeletePreview, onChangeStatus,
+  onRefresh, onCreatePreview, onDeletePreview, onChangeStatus, onExpandStock,
   onAssignCourier, onOpenIssue, onResolveIssue }: Props) {
   const [search, setSearch] = useState('')
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -68,9 +75,14 @@ export function OrdersPage({ orders, couriers, branches, options, status, source
   const [issueTitle, setIssueTitle] = useState('')
   const [issueDescription, setIssueDescription] = useState('')
   const [resolutions, setResolutions] = useState<Record<string, string>>({})
+  const [stockStart, setStockStart] = useState('')
+  const [stockEnd, setStockEnd] = useState('')
+  const [stockNote, setStockNote] = useState('')
   const selected = orders.find(order => order.id === selectedId) ?? null
   const currentStep = selected ? statusFlow.indexOf(selected.status) : -1
-  const followingStatus = statusFlow[currentStep + 1]
+  const followingStatus = currentStep >= 0 ? statusFlow[currentStep + 1] : undefined
+  const canExpand = selected?.source === 'CHECKOUT' && selected.stockStart && selected.stockEnd
+    && !['EXPIRED', 'CANCELLED', 'COMPLETED'].includes(selected.status)
   const normalize = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
   const term = normalize(search.trim())
   const visible = orders.filter(order => (status === 'ALL' || order.status === status)
@@ -142,7 +154,7 @@ export function OrdersPage({ orders, couriers, branches, options, status, source
   return <>
     <div className="page-heading with-action">
       <div><span className="eyebrow">OPERAÇÃO • PEDIDOS</span><h1>Gestão de pedidos</h1>
-        <p>Acompanhe as entradas do checkout, a entrega e os problemas de cada aluguel.</p></div>
+        <p>Acompanhe pedidos pendentes, entregas e problemas de cada aluguel.</p></div>
       <div className="order-heading-actions">
         <button className="button secondary" disabled={refreshing} onClick={() => void refresh()}>
           <RefreshCw size={16} /> {refreshing ? 'Atualizando...' : 'Atualizar lista'}</button>
@@ -152,8 +164,10 @@ export function OrdersPage({ orders, couriers, branches, options, status, source
     </div>
     {error && !selected && <div className="form-error order-page-error" role="alert">{error}</div>}
     <div className="order-summary">
+      <div className="panel"><small>Aguardando contrato</small><strong>{sourceOrders.filter(order => order.status === 'PENDING_CONTRACT').length}</strong></div>
       <div className="panel"><small>Pagamento confirmado</small><strong>{sourceOrders.filter(order => order.status === 'PAYMENT_CONFIRMED').length}</strong></div>
-      <div className="panel"><small>Em andamento</small><strong>{sourceOrders.filter(order => order.status !== 'PAYMENT_CONFIRMED' && order.status !== 'COMPLETED').length}</strong></div>
+      <div className="panel"><small>Em operação</small><strong>{sourceOrders.filter(order =>
+        ['DELIVERY_PENDING', 'IN_USE', 'PICKUP_PENDING'].includes(order.status)).length}</strong></div>
       <div className="panel"><small>Problemas em aberto</small><strong>{openIssues}</strong></div>
     </div>
     <section className="panel table-panel">
@@ -189,7 +203,8 @@ export function OrdersPage({ orders, couriers, branches, options, status, source
           <td><span className={`order-status status-${order.status.toLowerCase()}`}>{labels[order.status]}</span></td>
           <td>{order.issues.filter(issue => issue.status === 'OPEN').length || '—'}</td>
           <td><button className="table-action" onClick={() => { setError(''); setStatusNote(''); setIssueTitle('');
-            setIssueDescription(''); setResolutions({}); setSelectedId(order.id) }}>
+            setIssueDescription(''); setResolutions({}); setStockStart(order.stockStart ?? '');
+            setStockEnd(order.stockEnd ?? ''); setStockNote(''); setSelectedId(order.id) }}>
             Ver pedido <ArrowRight size={15} /></button></td>
         </tr>)}</tbody></table></div>}
     </section>
@@ -205,26 +220,52 @@ export function OrdersPage({ orders, couriers, branches, options, status, source
         <div className="order-detail-body">
           <div className="order-detail-top"><span className={`order-status status-${selected.status.toLowerCase()}`}>{labels[selected.status]}</span>
             <small>Entrada em {timeLabel(selected.createdAt)}</small></div>
-          <ol className="order-progress" aria-label="Etapas do pedido">
+          {currentStep >= 0 && <ol className="order-progress" aria-label="Etapas do pedido">
             {statusFlow.map((status, index) => <li key={status}
               className={index === currentStep ? 'current' : index < currentStep ? 'done' : ''}
               aria-current={index === currentStep ? 'step' : undefined}>
               <span className="order-progress-number">{index + 1}</span>
               <span>{labels[status]}</span>
             </li>)}
-          </ol>
+          </ol>}
+          {selected.status === 'PENDING_CONTRACT' && <div className="order-preview-note">
+            Pedido ainda sem contrato ou pagamento. Válido até {selected.expiresAt ? timeLabel(selected.expiresAt) : 'o prazo da reserva'};
+            ao expirar, os dias bloqueados são liberados automaticamente.
+          </div>}
           {selected.source === 'MANUAL_PREVIEW' && <div className="order-preview-note">
             Pedido de demonstração. O pagamento é apenas simulado; ele não reserva a poltrona nem altera a disponibilidade do site.
           </div>}
           <div className="order-facts">
             <div><small>Contato</small><strong>{formatPhone(selected.customerPhone)}</strong></div>
-            <div><small>Período</small><strong>{dateLabel(selected.start)} a {dateLabel(selected.end)}</strong></div>
+            <div><small>Período cobrado</small><strong>{dateLabel(selected.start)} a {dateLabel(selected.end)}</strong></div>
+            {selected.stockStart && selected.stockEnd && <div><small>Estoque bloqueado</small>
+              <strong>{dateLabel(selected.stockStart)} a {dateLabel(selected.stockEnd)}</strong></div>}
             <div><small>Local de entrega</small><strong>{selected.address}<br />{selected.municipalityName}/{selected.municipalityUf} • CEP {selected.postalCode}</strong></div>
             <div><small>Poltrona e filial</small><strong>{selected.chairCode} • {selected.branchName}</strong></div>
             <div><small>Frete registrado</small><strong>{freightLabel(selected.freightCents)}</strong></div>
+            {selected.source === 'CHECKOUT' && <div><small>Total previsto</small><strong>{freightLabel(selected.totalCents)}</strong></div>}
           </div>
+          {canExpand && <div className="order-section">
+            <h3>Entrega antecipada ou retirada posterior</h3>
+            <p className="order-muted">Os dias contratados e o preço não mudam. Dias extras só serão confirmados se a poltrona estiver livre.</p>
+            <div className="order-form-grid">
+              <label className="order-field">Primeiro dia de estoque
+                <input type="date" value={stockStart} max={selected.stockStart ?? undefined}
+                  onChange={event => setStockStart(event.target.value)} /></label>
+              <label className="order-field">Último dia de estoque
+                <input type="date" value={stockEnd} min={selected.stockEnd ?? undefined}
+                  onChange={event => setStockEnd(event.target.value)} /></label>
+            </div>
+            <label className="order-field">Observação <span className="optional">(opcional)</span>
+              <input value={stockNote} maxLength={300} onChange={event => setStockNote(event.target.value)}
+                placeholder="Ex.: entrega combinada um dia antes" /></label>
+            <div className="order-actions"><button className="button secondary" disabled={busy || !stockStart || !stockEnd
+              || (stockStart === selected.stockStart && stockEnd === selected.stockEnd)}
+              onClick={() => void perform(() => onExpandStock(selected.id, stockStart, stockEnd, stockNote),
+                () => setStockNote(''))}>Confirmar intervalo logístico</button></div>
+          </div>}
           <label className="order-field">Entregador
-            <select value={selected.courierId ?? ''} disabled={busy || selected.status === 'COMPLETED'}
+            <select value={selected.courierId ?? ''} disabled={busy || currentStep < 0 || selected.status === 'COMPLETED'}
               onChange={event => void perform(() => onAssignCourier(selected.id, event.target.value || null))}>
               <option value="">Ainda não atribuído</option>
               {couriers.filter(courier => courier.active || courier.id === selected.courierId).map(courier =>

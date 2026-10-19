@@ -612,6 +612,8 @@ export function useDashboard() {
       onDeletePreview: deleteOrderPreview,
       onChangeStatus: (id: string, status: OrderStatus, note: string) =>
         mutateOrder(auth => api.changeOrderStatus(auth, id, status, note)),
+      onExpandStock: (id: string, stockStart: string, stockEnd: string, note: string) =>
+        mutateOrder(auth => api.expandOrderStock(auth, id, stockStart, stockEnd, note)),
       onAssignCourier: (id: string, courierId: string | null) =>
         mutateOrder(auth => api.assignOrderCourier(auth, id, courierId)),
       onOpenIssue: (id: string, title: string, description: string) =>

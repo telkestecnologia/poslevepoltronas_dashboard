@@ -1190,7 +1190,7 @@ tbody tr:hover {
 }
 .order-summary {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 13px;
   margin-bottom: 20px;
 }
@@ -1265,6 +1265,14 @@ tbody tr:hover {
 .order-status.status-completed {
   background: #edf7ee;
   color: #5c9b73;
+}
+.order-status.status-pending_contract {
+  background: #fff2e9;
+  color: #a86736;
+}
+.order-status.status-expired, .order-status.status-cancelled {
+  background: #f3f3f3;
+  color: #68727a;
 }
 .order-detail, .order-create {
   width: min(100%, 680px);
@@ -1760,9 +1768,6 @@ tbody tr:hover {
 @media (max-width: 680px) {
   .order-summary {
     grid-template-columns: 1fr 1fr;
-  }
-  .order-summary .panel:last-child {
-    grid-column: 1 / -1;
   }
   .order-facts, .order-form-grid {
     grid-template-columns: 1fr;

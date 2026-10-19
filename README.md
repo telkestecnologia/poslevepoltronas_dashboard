@@ -10,12 +10,12 @@ Painel React, TypeScript e Vite com a identidade visual da Pós Leve. Ele usa a 
 - Cadastro de entregadores com nome, e-mail, telefone, veículo opcional e senha inicial. A equipe pode bloquear o acesso ao app e redefinir a senha; sessões anteriores são encerradas nesses casos.
 - Cadastro de poltronas vinculadas a uma filial, com estado operacional.
 - Bloqueios manuais por poltrona e período para aluguel combinado com a equipe, manutenção ou transporte.
-- Gestão de pedidos: lista, detalhes, andamento linear (pagamento confirmado → aguardando entrega → em uso → aguardando retirada → concluído), entregador atribuído, problemas e resolução. Um cadastro manual de demonstração permite preencher a tela sem reservar estoque; pode ser removido pelo painel.
+- Gestão de pedidos: pedidos do site aparecem como pendentes de contrato e expiram sem pagamento, com liberação automática do estoque. O painel mostra as datas cobradas e os dias fisicamente bloqueados; o administrador pode confirmar entrega antecipada ou retirada posterior somente se os dias extras estiverem livres, sem alterar o valor. O andamento operacional (pagamento confirmado → aguardando entrega → em uso → aguardando retirada → concluído) continua indisponível para pedidos pendentes. Um cadastro manual de demonstração permite preencher a tela sem reservar estoque; pode ser removido pelo painel.
 - Contexto da IA conectado à base de conhecimento do Meu Assistente pelo backend: perguntas e respostas editáveis e estado de indexação. A aba de dúvidas sem resposta usa a fila manual do dashboard no MongoDB: o administrador pode registrar, responder (publicando a resposta na base da IA) ou excluir uma dúvida. O chat atual do site ainda não envia perguntas automaticamente para essa fila.
 
 O bloqueio é necessário para que o site não apresente uma poltrona já comprometida. Uma poltrona ativa só aparece como disponível se atender ao município e estiver livre durante todo o período consultado.
 
-O site ainda não cria pedidos no backend. O cadastro manual serve apenas para visualizar e testar a tela, sem afetar a disponibilidade de poltronas. O app do entregador continua independente nesta etapa.
+O site cria pedidos pendentes a partir de reservas verificadas por WhatsApp. Eles não entram no faturamento nem representam aluguel confirmado. O cadastro manual serve apenas para visualizar e testar a tela, sem afetar a disponibilidade de poltronas. O app do entregador continua independente nesta etapa.
 
 ## Executar localmente
 
