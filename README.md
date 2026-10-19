@@ -5,6 +5,7 @@ Painel React, TypeScript e Vite com a identidade visual da Pós Leve. Ele usa a 
 ## Funcionalidades atuais
 
 - Visão geral com gráficos de poltronas alugadas por filial e faturamento dos últimos 12 períodos, alternando entre semanas e meses. O faturamento fica sem dados até os pedidos registrarem total pago e data do pagamento.
+- Financeiro com saldo acumulado, entradas e saídas por período, fluxo mensal, resultado por filial e extrato paginado. A tela lê `financial_entries` do backend e sinaliza quando os valores são apenas de demonstração; lançamentos reais têm prioridade automática sobre os fictícios.
 - Cadastro de filiais, com seleção de municípios do catálogo IBGE, frete de entrega obrigatório para cada município e estado ativo/inativo.
 - Cadastro de entregadores com nome, e-mail, telefone, veículo opcional e senha inicial. A equipe pode bloquear o acesso ao app e redefinir a senha; sessões anteriores são encerradas nesses casos.
 - Cadastro de poltronas vinculadas a uma filial, com estado operacional.

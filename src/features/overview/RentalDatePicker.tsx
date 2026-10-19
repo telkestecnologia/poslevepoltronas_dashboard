@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
 
-type Props = { date: string; onChange: (date: string) => void }
+type Props = { date: string; onChange: (date: string) => void; label?: string; minDate?: string; maxDate?: string }
 
 function parts(iso: string) {
   const [year, month, day] = iso.split('-').map(Number)
@@ -12,7 +12,8 @@ function isoDate(year: number, month: number, day: number) {
   return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 }
 
-export function RentalDatePicker({ date, onChange }: Props) {
+export function RentalDatePicker({ date, onChange, label = 'Data do aluguel', minDate, maxDate }: Props) {
+  const id = useId()
   const selected = parts(date)
   const [open, setOpen] = useState(false)
   const [visibleMonth, setVisibleMonth] = useState(() => new Date(selected.year, selected.month - 1, 1))
@@ -47,7 +48,7 @@ export function RentalDatePicker({ date, onChange }: Props) {
   const cells = Array.from({ length: firstWeekday + days }, (_, index) =>
     index < firstWeekday ? null : index - firstWeekday + 1)
   const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Fortaleza' })
-  const label = new Intl.DateTimeFormat('pt-BR').format(
+  const displayDate = new Intl.DateTimeFormat('pt-BR').format(
     new Date(selected.year, selected.month - 1, selected.day, 12))
 
   function choose(nextDate: string) {
@@ -58,19 +59,19 @@ export function RentalDatePicker({ date, onChange }: Props) {
 
   return (
     <div className="overview-rentals-date" ref={root}>
-      <span id="overview-rentals-date-label">Data do aluguel</span>
+      <span id={`${id}-label`}>{label}</span>
       <button type="button" className="overview-rentals-date-trigger" ref={trigger}
-        aria-labelledby="overview-rentals-date-label overview-rentals-date-value"
+        aria-labelledby={`${id}-label ${id}-value`}
         aria-haspopup="dialog" aria-expanded={open}
         onClick={() => {
           setVisibleMonth(new Date(selected.year, selected.month - 1, 1))
           setOpen(value => !value)
         }}>
         <CalendarDays size={16} aria-hidden="true" />
-        <span id="overview-rentals-date-value">{label}</span>
+        <span id={`${id}-value`}>{displayDate}</span>
       </button>
       {open && (
-        <div className="overview-rentals-calendar" role="dialog" aria-label="Escolher data do aluguel">
+        <div className="overview-rentals-calendar" role="dialog" aria-label={`Escolher ${label.toLowerCase()}`}>
           <div className="overview-rentals-calendar-header">
             <button type="button" aria-label="Mês anterior"
               onClick={() => setVisibleMonth(new Date(year, month - 1, 1))}>
@@ -92,12 +93,14 @@ export function RentalDatePicker({ date, onChange }: Props) {
               return <button type="button" key={value} ref={isSelected ? selectedDay : undefined}
                 className={isSelected ? 'selected' : ''} aria-pressed={isSelected}
                 aria-current={value === today ? 'date' : undefined}
+                disabled={(minDate !== undefined && value < minDate) || (maxDate !== undefined && value > maxDate)}
                 aria-label={new Intl.DateTimeFormat('pt-BR', { dateStyle: 'full' })
                   .format(new Date(year, month, day, 12))}
                 onClick={() => choose(value)}>{day}</button>
             })}
           </div>
           <button type="button" className="overview-rentals-calendar-today"
+            disabled={(minDate !== undefined && today < minDate) || (maxDate !== undefined && today > maxDate)}
             onClick={() => choose(today)}>Ir para hoje</button>
         </div>
       )}

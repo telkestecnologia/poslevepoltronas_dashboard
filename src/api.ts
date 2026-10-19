@@ -109,6 +109,35 @@ export type RevenueOverview = {
   hasData: boolean
   buckets: { start: string; totalPaidCents: number }[]
 }
+export type FinancialEntry = {
+  id: string
+  branchId: string
+  branchName: string
+  kind: 'INFLOW' | 'OUTFLOW'
+  category: string
+  amountCents: number
+  paymentMethod: string
+  description: string
+  reference: string
+  occurredAt: string
+  demo: boolean
+}
+export type FinancialReport = {
+  mode: 'REAL' | 'DEMO' | 'EMPTY'
+  from: string
+  to: string
+  balanceCents: number
+  inflowCents: number
+  outflowCents: number
+  netCents: number
+  total: number
+  page: number
+  size: number
+  monthly: { start: string; inflowCents: number; outflowCents: number }[]
+  branches: { branchId: string; branchName: string; inflowCents: number; outflowCents: number }[]
+  entries: FinancialEntry[]
+}
+export type FinanceQuery = { from: string; to: string; branchId: string; page: number; size: number }
 
 export const localLoginBypass = __DASHBOARD_DEV_LOGIN_BYPASS__
 const baseUrl = localLoginBypass
@@ -181,6 +210,10 @@ export const api = {
     request<RentalOverview>(credentials, `/overview/rentals?date=${encodeURIComponent(date)}`),
   overviewRevenue: (credentials: string, period: RevenuePeriod) =>
     request<RevenueOverview>(credentials, `/overview/revenue?period=${period}`),
+  finance: (credentials: string, query: FinanceQuery) =>
+    request<FinancialReport>(credentials, `/finance?${new URLSearchParams({
+      from: query.from, to: query.to, branchId: query.branchId, page: String(query.page), size: String(query.size),
+    })}`),
   aiKnowledge: (credentials: string) => request<AiKnowledge[]>(credentials, '/ai/knowledge'),
   aiUnanswered: (credentials: string) => request<AiUnansweredQuestion[]>(credentials, '/ai/unanswered'),
   aiNotificationSettings: (credentials: string) =>

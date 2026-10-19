@@ -161,6 +161,12 @@ export function useDashboard() {
       setChairLoading(false)
       return
     }
+    if (page === 'finance') {
+      setChairLoading(false)
+      setPageLoading(false)
+      setPageError('')
+      return
+    }
     let active = true
     if (page === 'chairs' && loadedPage === 'chairs' && !pageLoading) {
       setChairLoading(true)

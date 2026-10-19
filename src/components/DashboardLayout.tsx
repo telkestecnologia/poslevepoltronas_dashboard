@@ -11,6 +11,7 @@ import {
   Menu,
   BellRing,
   Truck,
+  Wallet,
   PanelLeftClose,
   PanelLeftOpen,
   X,
@@ -21,6 +22,7 @@ import { Brand } from './common'
 
 const navigation = [
   { page: 'overview', label: 'Visão geral', icon: Home },
+  { page: 'finance', label: 'Financeiro', icon: Wallet },
   { page: 'chairs', label: 'Poltronas', icon: Armchair },
   { page: 'branches', label: 'Filiais', icon: MapPin },
   { page: 'couriers', label: 'Entregadores', icon: Truck },

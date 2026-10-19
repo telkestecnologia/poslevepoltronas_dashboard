@@ -11,6 +11,7 @@ import { OrdersPage } from './features/orders/OrdersPage'
 import { AiContextPage } from './features/ai/AiContextPage'
 import { OverviewPage } from './features/overview/OverviewPage'
 import { NotificationsPage } from './features/notifications/NotificationsPage'
+import { FinancePage } from './features/finance/FinancePage'
 import { useDashboard } from './hooks/useDashboard'
 
 function App() {
@@ -41,7 +42,8 @@ function App() {
 
   const { page, navigate } = navigation
   const { pageLoading, pageError, retryPage, notice, dismissNotice } = feedback
-  const showLoading = pageLoading || (page === 'overview' && (!overviewPage.rentals || !overviewPage.revenue) && !pageError)
+  const showLoading = page !== 'finance' && (pageLoading
+    || (page === 'overview' && (!overviewPage.rentals || !overviewPage.revenue) && !pageError))
 
   return (
     <>
@@ -81,6 +83,7 @@ function App() {
             onRefresh={overviewPage.onRefresh}
           />
         )}
+        {page === 'finance' && <FinancePage credentials={session.credentials} />}
         {page === 'chairs' && !showLoading && !pageError && <ChairsPage {...chairsPage} />}
         {page === 'branches' && !showLoading && !pageError && <BranchesPage {...branchesPage} />}
         {page === 'couriers' && !showLoading && !pageError && <CouriersPage {...couriersPage} />}
