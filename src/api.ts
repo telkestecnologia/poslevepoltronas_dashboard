@@ -36,6 +36,7 @@ export type Branch = {
   name: string
   municipalities: BranchMunicipality[]
   active: boolean
+  freeShipping: boolean
 }
 export type BranchInput = {
   name: string
@@ -103,7 +104,15 @@ export type Overview = {
   chairsInUse: number
   pendingPickups: number
   completedOrders: number
+  rentalDate: string
+  rentedChairsByBranch: {
+    branchId: string
+    branchName: string
+    totalChairs: number
+    rentedChairs: number
+  }[]
 }
+export type RentalOverview = Pick<Overview, 'rentalDate' | 'rentedChairsByBranch'>
 
 export const localLoginBypass = __DASHBOARD_DEV_LOGIN_BYPASS__
 const baseUrl = localLoginBypass
@@ -168,7 +177,10 @@ async function request<T>(credentials: string, path: string, init: RequestInit =
 
 export const api = {
   me: (credentials: string) => request<Staff>(credentials, '/me'),
-  overview: (credentials: string) => request<Overview>(credentials, '/overview'),
+  overview: (credentials: string, date: string) =>
+    request<Overview>(credentials, `/overview?date=${encodeURIComponent(date)}`),
+  overviewRentals: (credentials: string, date: string) =>
+    request<RentalOverview>(credentials, `/overview/rentals?date=${encodeURIComponent(date)}`),
   aiKnowledge: (credentials: string) => request<AiKnowledge[]>(credentials, '/ai/knowledge'),
   aiUnanswered: (credentials: string) => request<AiUnansweredQuestion[]>(credentials, '/ai/unanswered'),
   aiNotificationSettings: (credentials: string) =>
@@ -264,5 +276,10 @@ export const api = {
     request<Branch>(credentials, `/branches/${encodeURIComponent(id)}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
+    }),
+  setBranchFreeShipping: (credentials: string, id: string, enabled: boolean) =>
+    request<Branch>(credentials, `/branches/${encodeURIComponent(id)}/free-shipping`, {
+      method: 'PATCH',
+      body: JSON.stringify({ enabled }),
     }),
 }

@@ -42,6 +42,10 @@ export function useDashboard() {
   const [couriers, setCouriers] = useState<Courier[]>([])
   const [orders, setOrders] = useState<Order[]>([])
   const [overview, setOverview] = useState<Overview | null>(null)
+  const [rentalDate, setRentalDate] = useState(() =>
+    new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Fortaleza' }))
+  const [rentalLoading, setRentalLoading] = useState(false)
+  const [rentalError, setRentalError] = useState('')
   const [aiKnowledge, setAiKnowledge] = useState<AiKnowledge[]>([])
   const [aiUnanswered, setAiUnanswered] = useState<AiUnansweredQuestion[]>([])
   const [aiNotificationSettings, setAiNotificationSettings] = useState<AiNotificationSettings | null>(null)
@@ -66,6 +70,7 @@ export function useDashboard() {
   const [orderStatusFilter, setOrderStatusFilter] = useState<OrderStatus | 'ALL'>('ALL')
   const [orderSourceFilter, setOrderSourceFilter] = useState<OrderSource | 'ALL'>('ALL')
   const localLoginStarted = useRef(false)
+  const rentalRequestId = useRef(0)
   const chairRequest =
     page === 'chairs' ? `${chairPage}:${appliedSearch}:${statusFilter}:${branchFilter}` : ''
   const chairQuery: ChairQuery = {
@@ -141,7 +146,8 @@ export function useDashboard() {
     return () => window.clearTimeout(timer)
   }, [search])
 
-  // A page visit loads its supporting data; filter and page changes reload only the chair rows.
+  // A page visit loads its supporting data; the rental calendar requests only its chart.
+  // Chair filters and pagination reload only the chair rows.
   useEffect(() => {
     if (credentials === null) {
       setChairLoading(false)
@@ -175,7 +181,7 @@ export function useDashboard() {
     setChairLoading(false)
     setPageLoading(true)
     setPageError('')
-    void loadPage(credentials, page, chairQuery)
+    void loadPage(credentials, page, chairQuery, rentalDate)
       .then((data) => {
         if (!active) return
         if (data?.page === 'chairs' && data.chairs.length === 0 && chairPage > 0) {
@@ -193,7 +199,32 @@ export function useDashboard() {
     }
   }, [credentials, page, reloadKey, chairRequest, applyPageData])
 
+  async function selectRentalDate(date: string) {
+    if (credentials === null || !overview || date === rentalDate) return
+    const requestId = ++rentalRequestId.current
+    const previousDate = overview.rentalDate
+    setRentalDate(date)
+    setRentalLoading(true)
+    setRentalError('')
+    try {
+      const result = await api.overviewRentals(credentials, date)
+      if (requestId !== rentalRequestId.current) return
+      setOverview(current => current ? { ...current, ...result } : current)
+    } catch (error) {
+      if (requestId !== rentalRequestId.current) return
+      if (error instanceof ApiError && error.status === 401) {
+        logout()
+        return
+      }
+      setRentalDate(previousDate)
+      setRentalError(getMessage(error))
+    } finally {
+      if (requestId === rentalRequestId.current) setRentalLoading(false)
+    }
+  }
+
   function logout() {
+    rentalRequestId.current += 1
     setCredentials(null)
     setStaff(null)
     setChairs([])
@@ -205,6 +236,9 @@ export function useDashboard() {
     setCouriers([])
     setOrders([])
     setOverview(null)
+    setRentalDate(new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Fortaleza' }))
+    setRentalLoading(false)
+    setRentalError('')
     setAiKnowledge([])
     setAiUnanswered([])
     setAiNotificationSettings(null)
@@ -274,7 +308,7 @@ export function useDashboard() {
         })
         showNotice('Poltrona cadastrada com sucesso.')
       }
-      applyPageData(await loadPage(credentials, 'chairs', chairQuery))
+      applyPageData(await loadPage(credentials, 'chairs', chairQuery, rentalDate))
       setModal(null)
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) logout()
@@ -296,13 +330,25 @@ export function useDashboard() {
         await api.createBranch(credentials, data)
         showNotice('Filial cadastrada com sucesso.')
       }
-      applyPageData(await loadPage(credentials, 'branches', chairQuery))
+      applyPageData(await loadPage(credentials, 'branches', chairQuery, rentalDate))
       setModal(null)
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) logout()
       else setFormError(getMessage(error))
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function toggleBranchFreeShipping(branch: Branch) {
+    if (credentials === null) throw new Error('Entre novamente para continuar.')
+    try {
+      const updated = await api.setBranchFreeShipping(credentials, branch.id, !branch.freeShipping)
+      setBranches(current => current.map(item => item.id === updated.id ? updated : item))
+      showNotice(updated.freeShipping ? 'Frete grátis ativado para a filial.' : 'Frete grátis desativado para a filial.')
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) logout()
+      throw error
     }
   }
 
@@ -318,7 +364,7 @@ export function useDashboard() {
         await api.createCourier(credentials, data)
         showNotice('Entregador cadastrado com sucesso.')
       }
-      applyPageData(await loadPage(credentials, 'couriers', chairQuery))
+      applyPageData(await loadPage(credentials, 'couriers', chairQuery, rentalDate))
       setModal(null)
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) logout()
@@ -363,7 +409,7 @@ export function useDashboard() {
   async function refreshOrders() {
     if (credentials === null) throw new Error('Entre novamente para continuar.')
     try {
-      applyPageData(await loadPage(credentials, 'orders', chairQuery))
+      applyPageData(await loadPage(credentials, 'orders', chairQuery, rentalDate))
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) logout()
       throw error
@@ -399,7 +445,7 @@ export function useDashboard() {
     if (credentials === null) throw new Error('Entre novamente para continuar.')
     try {
       await operation(credentials)
-      applyPageData(await loadPage(credentials, 'ai', chairQuery))
+      applyPageData(await loadPage(credentials, 'ai', chairQuery, rentalDate))
       showNotice(noticeText)
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) logout()
@@ -431,12 +477,17 @@ export function useDashboard() {
       setOrderSourceFilter(filters?.orderStatus ? 'CHECKOUT' : 'ALL')
     }
     if (nextPage === page) return
+    rentalRequestId.current += 1
+    setRentalLoading(false)
     setPageLoading(true)
     setPageError('')
     setPage(nextPage)
   }
 
   function retryPage() {
+    rentalRequestId.current += 1
+    setRentalLoading(false)
+    setRentalError('')
     setPageLoading(true)
     setReloadKey((key) => key + 1)
   }
@@ -452,6 +503,10 @@ export function useDashboard() {
     feedback: { pageLoading, pageError, retryPage, notice, dismissNotice: () => setNotice('') },
     overviewPage: {
       overview,
+      rentalDate,
+      rentalLoading,
+      rentalError,
+      onRentalDateChange: (date: string) => { void selectRentalDate(date) },
       onRefresh: retryPage,
       onGoChairs: (status: ChairStatus | 'ALL') => navigate('chairs', { chairStatus: status }),
       onGoOrders: (status: OrderStatus) => navigate('orders', { orderStatus: status }),
@@ -488,6 +543,7 @@ export function useDashboard() {
       activeCounts: activeChairCounts,
       onNewBranch: () => openModal({ kind: 'newBranch' }),
       onEditBranch: (branch: Branch) => openModal({ kind: 'editBranch', branch }),
+      onToggleFreeShipping: toggleBranchFreeShipping,
     },
     couriersPage: {
       couriers,

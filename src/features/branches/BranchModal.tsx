@@ -216,8 +216,8 @@ export function BranchModal({
               </div>
             )}
             <small className="field-help">
-              A cobertura inclui todos os CEPs dos municípios escolhidos, inclusive zona rural. Use
-              0,00 para frete grátis.
+              A cobertura inclui todos os CEPs dos municípios escolhidos, inclusive zona rural.
+              Use 0,00 para zerar apenas este município; o botão na lista de filiais zera todos temporariamente.
             </small>
           </div>
           <label className="branch-option">

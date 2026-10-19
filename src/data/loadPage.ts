@@ -41,9 +41,10 @@ export async function loadPage(
   credentials: string,
   page: Page,
   chairQuery: ChairQuery,
+  rentalDate: string,
 ): Promise<PageData | null> {
   if (page === 'overview') {
-    return { page, overview: await api.overview(credentials) }
+    return { page, overview: await api.overview(credentials, rentalDate) }
   }
   if (page === 'chairs') {
     const [result, options, branches, blocks] = await Promise.all([

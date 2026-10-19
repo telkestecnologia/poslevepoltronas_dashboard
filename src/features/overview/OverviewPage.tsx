@@ -14,9 +14,14 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import type { ChairStatus, OrderStatus, Overview } from '../../api'
+import { RentalsByBranchChart } from './RentalsByBranchChart'
 
 type Props = {
   overview: Overview
+  rentalDate: string
+  onRentalDateChange: (date: string) => void
+  rentalLoading: boolean
+  rentalError: string
   onRefresh: () => void
   onGoChairs: (status: ChairStatus | 'ALL') => void
   onGoOrders: (status: OrderStatus) => void
@@ -46,7 +51,8 @@ function MetricCard<Status>({ metric, onClick }: { metric: Metric<Status>; onCli
   )
 }
 
-export function OverviewPage({ overview, onRefresh, onGoChairs, onGoOrders }: Props) {
+export function OverviewPage({ overview, rentalDate, onRentalDateChange, rentalLoading, rentalError,
+  onRefresh, onGoChairs, onGoOrders }: Props) {
   const activePercent =
     overview.totalChairs === 0
       ? 0
@@ -140,6 +146,10 @@ export function OverviewPage({ overview, onRefresh, onGoChairs, onGoOrders }: Pr
           <RefreshCw size={16} /> Atualizar
         </button>
       </div>
+
+      <RentalsByBranchChart data={overview.rentedChairsByBranch}
+        date={rentalDate} onDateChange={onRentalDateChange}
+        loading={rentalLoading} error={rentalError} />
 
       <section className="overview-section" aria-labelledby="overview-chairs-title">
         <div className="overview-section-head">

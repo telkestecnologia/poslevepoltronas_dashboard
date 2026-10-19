@@ -69,6 +69,10 @@ function App() {
         {page === 'overview' && !showLoading && !pageError && overviewPage.overview && (
           <OverviewPage
             overview={overviewPage.overview}
+            rentalDate={overviewPage.rentalDate}
+            onRentalDateChange={overviewPage.onRentalDateChange}
+            rentalLoading={overviewPage.rentalLoading}
+            rentalError={overviewPage.rentalError}
             onRefresh={overviewPage.onRefresh}
             onGoChairs={overviewPage.onGoChairs}
             onGoOrders={overviewPage.onGoOrders}
