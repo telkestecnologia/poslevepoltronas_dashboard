@@ -1,9 +1,9 @@
 import { Armchair } from 'lucide-react'
-import type { Overview } from '../../api'
+import type { RentalOverview } from '../../api'
 import { RentalDatePicker } from './RentalDatePicker'
 
 type Props = {
-  data: Overview['rentedChairsByBranch']
+  data: RentalOverview['rentedChairsByBranch']
   date: string
   onDateChange: (date: string) => void
   loading: boolean

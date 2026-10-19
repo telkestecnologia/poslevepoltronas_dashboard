@@ -20,7 +20,9 @@ import {
   type Order,
   type OrderSource,
   type OrderStatus,
-  type Overview,
+  type RentalOverview,
+  type RevenueOverview,
+  type RevenuePeriod,
   type PreviewOrderInput,
   type Staff,
 } from '../api'
@@ -41,11 +43,15 @@ export function useDashboard() {
   const [branches, setBranches] = useState<Branch[]>([])
   const [couriers, setCouriers] = useState<Courier[]>([])
   const [orders, setOrders] = useState<Order[]>([])
-  const [overview, setOverview] = useState<Overview | null>(null)
+  const [rentals, setRentals] = useState<RentalOverview | null>(null)
   const [rentalDate, setRentalDate] = useState(() =>
     new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Fortaleza' }))
   const [rentalLoading, setRentalLoading] = useState(false)
   const [rentalError, setRentalError] = useState('')
+  const [revenue, setRevenue] = useState<RevenueOverview | null>(null)
+  const [revenuePeriod, setRevenuePeriod] = useState<RevenuePeriod>('MONTH')
+  const [revenueLoading, setRevenueLoading] = useState(false)
+  const [revenueError, setRevenueError] = useState('')
   const [aiKnowledge, setAiKnowledge] = useState<AiKnowledge[]>([])
   const [aiUnanswered, setAiUnanswered] = useState<AiUnansweredQuestion[]>([])
   const [aiNotificationSettings, setAiNotificationSettings] = useState<AiNotificationSettings | null>(null)
@@ -71,6 +77,7 @@ export function useDashboard() {
   const [orderSourceFilter, setOrderSourceFilter] = useState<OrderSource | 'ALL'>('ALL')
   const localLoginStarted = useRef(false)
   const rentalRequestId = useRef(0)
+  const revenueRequestId = useRef(0)
   const chairRequest =
     page === 'chairs' ? `${chairPage}:${appliedSearch}:${statusFilter}:${branchFilter}` : ''
   const chairQuery: ChairQuery = {
@@ -85,7 +92,8 @@ export function useDashboard() {
   const applyPageData = useCallback((data: PageData | null) => {
     if (!data) return
     if (data.page === 'overview') {
-      setOverview(data.overview)
+      setRentals(data.rentals)
+      setRevenue(data.revenue)
     } else if (data.page === 'chairs') {
       setBranches(data.branches)
       setChairs(data.chairs)
@@ -181,7 +189,7 @@ export function useDashboard() {
     setChairLoading(false)
     setPageLoading(true)
     setPageError('')
-    void loadPage(credentials, page, chairQuery, rentalDate)
+    void loadPage(credentials, page, chairQuery, rentalDate, revenuePeriod)
       .then((data) => {
         if (!active) return
         if (data?.page === 'chairs' && data.chairs.length === 0 && chairPage > 0) {
@@ -200,16 +208,16 @@ export function useDashboard() {
   }, [credentials, page, reloadKey, chairRequest, applyPageData])
 
   async function selectRentalDate(date: string) {
-    if (credentials === null || !overview || date === rentalDate) return
+    if (credentials === null || !rentals || date === rentalDate) return
     const requestId = ++rentalRequestId.current
-    const previousDate = overview.rentalDate
+    const previousDate = rentals.rentalDate
     setRentalDate(date)
     setRentalLoading(true)
     setRentalError('')
     try {
       const result = await api.overviewRentals(credentials, date)
       if (requestId !== rentalRequestId.current) return
-      setOverview(current => current ? { ...current, ...result } : current)
+      setRentals(result)
     } catch (error) {
       if (requestId !== rentalRequestId.current) return
       if (error instanceof ApiError && error.status === 401) {
@@ -223,8 +231,33 @@ export function useDashboard() {
     }
   }
 
+  async function selectRevenuePeriod(period: RevenuePeriod) {
+    if (credentials === null || !revenue || period === revenuePeriod) return
+    const requestId = ++revenueRequestId.current
+    const previousPeriod = revenue.period
+    setRevenuePeriod(period)
+    setRevenueLoading(true)
+    setRevenueError('')
+    try {
+      const result = await api.overviewRevenue(credentials, period)
+      if (requestId !== revenueRequestId.current) return
+      setRevenue(result)
+    } catch (error) {
+      if (requestId !== revenueRequestId.current) return
+      if (error instanceof ApiError && error.status === 401) {
+        logout()
+        return
+      }
+      setRevenuePeriod(previousPeriod)
+      setRevenueError(getMessage(error))
+    } finally {
+      if (requestId === revenueRequestId.current) setRevenueLoading(false)
+    }
+  }
+
   function logout() {
     rentalRequestId.current += 1
+    revenueRequestId.current += 1
     setCredentials(null)
     setStaff(null)
     setChairs([])
@@ -235,10 +268,14 @@ export function useDashboard() {
     setBranches([])
     setCouriers([])
     setOrders([])
-    setOverview(null)
+    setRentals(null)
     setRentalDate(new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Fortaleza' }))
     setRentalLoading(false)
     setRentalError('')
+    setRevenue(null)
+    setRevenuePeriod('MONTH')
+    setRevenueLoading(false)
+    setRevenueError('')
     setAiKnowledge([])
     setAiUnanswered([])
     setAiNotificationSettings(null)
@@ -478,7 +515,9 @@ export function useDashboard() {
     }
     if (nextPage === page) return
     rentalRequestId.current += 1
+    revenueRequestId.current += 1
     setRentalLoading(false)
+    setRevenueLoading(false)
     setPageLoading(true)
     setPageError('')
     setPage(nextPage)
@@ -486,8 +525,11 @@ export function useDashboard() {
 
   function retryPage() {
     rentalRequestId.current += 1
+    revenueRequestId.current += 1
     setRentalLoading(false)
     setRentalError('')
+    setRevenueLoading(false)
+    setRevenueError('')
     setPageLoading(true)
     setReloadKey((key) => key + 1)
   }
@@ -502,14 +544,17 @@ export function useDashboard() {
     navigation: { page, navigate },
     feedback: { pageLoading, pageError, retryPage, notice, dismissNotice: () => setNotice('') },
     overviewPage: {
-      overview,
+      rentals,
       rentalDate,
       rentalLoading,
       rentalError,
       onRentalDateChange: (date: string) => { void selectRentalDate(date) },
+      revenue,
+      revenuePeriod,
+      revenueLoading,
+      revenueError,
+      onRevenuePeriodChange: (period: RevenuePeriod) => { void selectRevenuePeriod(period) },
       onRefresh: retryPage,
-      onGoChairs: (status: ChairStatus | 'ALL') => navigate('chairs', { chairStatus: status }),
-      onGoOrders: (status: OrderStatus) => navigate('orders', { orderStatus: status }),
     },
     chairsPage: {
       chairs,

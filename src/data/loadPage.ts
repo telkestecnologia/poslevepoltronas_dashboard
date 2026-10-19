@@ -11,12 +11,14 @@ import {
   type ManualBlock,
   type Municipality,
   type Order,
-  type Overview,
+  type RentalOverview,
+  type RevenueOverview,
+  type RevenuePeriod,
 } from '../api'
 import type { Page } from '../types'
 
 export type PageData =
-  | { page: 'overview'; overview: Overview }
+  | { page: 'overview'; rentals: RentalOverview; revenue: RevenueOverview }
   | {
       page: 'chairs'
       chairs: Chair[]
@@ -42,9 +44,14 @@ export async function loadPage(
   page: Page,
   chairQuery: ChairQuery,
   rentalDate: string,
+  revenuePeriod: RevenuePeriod = 'MONTH',
 ): Promise<PageData | null> {
   if (page === 'overview') {
-    return { page, overview: await api.overview(credentials, rentalDate) }
+    const [rentals, revenue] = await Promise.all([
+      api.overviewRentals(credentials, rentalDate),
+      api.overviewRevenue(credentials, revenuePeriod),
+    ])
+    return { page, rentals, revenue }
   }
   if (page === 'chairs') {
     const [result, options, branches, blocks] = await Promise.all([

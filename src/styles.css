@@ -741,104 +741,106 @@ img {
   font-size: 12px;
 }
 .overview-rentals-empty svg { flex: none; color: var(--teal); }
-.overview-section + .overview-section {
-  margin-top: 32px;
+.overview-revenue {
+  padding: 25px 28px 28px;
+  background: linear-gradient(120deg, #f8fafc, #fff 48%);
 }
-.overview-section-head {
-  margin-bottom: 14px;
+.overview-revenue-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
 }
-.overview-section-head h2 {
+.overview-revenue-header h2 {
+  margin-top: 7px;
   color: var(--ink);
-  font-size: 20px;
+  font-size: 23px;
   font-weight: 650;
 }
-.overview-section-head p {
+.overview-revenue-header p {
+  margin-top: 5px;
   color: var(--muted);
   font-size: 12px;
   line-height: 1.5;
-  margin-top: 4px;
 }
-.overview-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
-}
-.overview-finance-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-.overview-card {
-  position: relative;
-  display: grid;
-  justify-items: start;
-  align-content: start;
-  gap: 8px;
-  min-height: 164px;
-  width: 100%;
-  padding: 19px 20px;
-  text-align: left;
-  color: var(--ink);
-}
-button.overview-card:hover {
-  border-color: #c9e6e0;
-  box-shadow: 0 10px 25px rgba(41, 95, 91, 0.09);
-}
-.overview-card-icon {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  margin-bottom: 3px;
+.overview-revenue-period-selector {
+  display: inline-flex;
+  gap: 3px;
+  padding: 4px;
+  border: 1px solid var(--line);
   border-radius: 10px;
-  background: #eaf6f4;
-  color: var(--teal);
+  background: #f4f8f8;
 }
-.overview-card.green .overview-card-icon {
-  background: #edf7ee;
-  color: #5c9b73;
-}
-.overview-card.amber .overview-card-icon {
-  background: #fff2e9;
-  color: #b87a4e;
-}
-.overview-card.blue .overview-card-icon {
-  background: #eaf4fc;
-  color: #4e88ac;
-}
-.overview-card.slate .overview-card-icon {
-  background: #eef3f4;
-  color: #738990;
-}
-.overview-card-label {
-  color: #52676d;
+.overview-revenue-period-selector button {
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--muted);
   font-size: 12px;
   font-weight: 700;
 }
-.overview-card strong {
+.overview-revenue-period-selector button[aria-pressed="true"] {
+  background: #fff;
+  color: var(--teal-dark);
+  box-shadow: 0 1px 5px rgba(38, 54, 67, 0.1);
+}
+.overview-revenue-period-selector button:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
+.overview-revenue-empty { min-height: 216px; }
+.overview-revenue-empty.is-loading,
+.overview-revenue-scroll.is-loading { opacity: 0.5; }
+.overview-revenue-scroll {
+  margin-top: 24px;
+  overflow-x: auto;
+}
+.overview-revenue-columns {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(66px, 1fr));
+  gap: 10px;
+  min-width: 860px;
+}
+.overview-revenue-column {
+  display: grid;
+  grid-template-rows: auto 170px auto;
+  gap: 8px;
+  min-width: 0;
+  text-align: center;
+}
+.overview-revenue-value {
   color: var(--ink);
-  font-family: 'Outfit', sans-serif;
-  font-size: 32px;
-  font-weight: 650;
-  line-height: 1;
-}
-.overview-card-detail {
-  color: var(--muted);
   font-size: 11px;
-  line-height: 1.4;
+  font-weight: 700;
+  white-space: nowrap;
 }
-.overview-card-arrow {
-  position: absolute;
-  top: 23px;
-  right: 20px;
-  color: #a4bbb9;
+.overview-revenue-plot {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  border-bottom: 1px solid #cbdcd8;
+}
+.overview-revenue-bar {
+  display: block;
+  width: min(36px, 100%);
+  border-radius: 7px 7px 0 0;
+  background: linear-gradient(180deg, #54b7a8, #1599a6);
+}
+.overview-revenue-label {
+  padding-bottom: 3px;
+  color: #60767a;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
 }
 @media (max-width: 1150px) {
-  .overview-rentals-header { flex-direction: column; }
-  .overview-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+  .overview-rentals-header,
+  .overview-revenue-header { flex-direction: column; }
 }
 @media (max-width: 640px) {
-  .overview-rentals { padding: 21px 18px; }
+  .overview-rentals,
+  .overview-revenue { padding: 21px 18px; }
   .overview-rentals-header { flex-direction: column; gap: 14px; }
   .overview-rentals-controls { flex-wrap: wrap; }
   .overview-rentals-calendar { left: 0; right: auto; }
@@ -850,9 +852,6 @@ button.overview-card:hover {
   }
   .overview-heading .button {
     align-self: flex-start;
-  }
-  .overview-grid {
-    grid-template-columns: 1fr;
   }
 }
 /* Shared components */

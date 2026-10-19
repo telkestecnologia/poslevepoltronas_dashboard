@@ -94,16 +94,7 @@ export type AiUnansweredQuestion = {
 }
 export type AiNotificationSettings = { emails: string[]; whatsAppNumbers: string[] }
 
-export type Overview = {
-  totalChairs: number
-  activeChairs: number
-  maintenanceChairs: number
-  inactiveChairs: number
-  paymentConfirmedOrders: number
-  pendingDeliveries: number
-  chairsInUse: number
-  pendingPickups: number
-  completedOrders: number
+export type RentalOverview = {
   rentalDate: string
   rentedChairsByBranch: {
     branchId: string
@@ -112,7 +103,12 @@ export type Overview = {
     rentedChairs: number
   }[]
 }
-export type RentalOverview = Pick<Overview, 'rentalDate' | 'rentedChairsByBranch'>
+export type RevenuePeriod = 'WEEK' | 'MONTH'
+export type RevenueOverview = {
+  period: RevenuePeriod
+  hasData: boolean
+  buckets: { start: string; totalPaidCents: number }[]
+}
 
 export const localLoginBypass = __DASHBOARD_DEV_LOGIN_BYPASS__
 const baseUrl = localLoginBypass
@@ -147,11 +143,15 @@ async function request<T>(credentials: string, path: string, init: RequestInit =
   if (!response.ok) {
     const message =
       response.status === 401
-        ? 'E-mail ou senha inválidos.'
+        ? localLoginBypass
+          ? 'A conta local configurada no backend não foi aceita. Confira o arquivo .admin.local e reinicie o ambiente local.'
+          : 'E-mail ou senha inválidos.'
         : response.status === 403
           ? 'Sua conta não tem acesso a esta locadora.'
           : response.status === 404
             ? 'O registro não foi encontrado.'
+            : response.status === 503 && localLoginBypass && path === '/me'
+              ? 'A autenticação local está indisponível. Confira a conexão do backend com o MongoDB de desenvolvimento e tente novamente.'
             : response.status === 503 && (path.startsWith('/ai/knowledge') || path.endsWith('/answer'))
               ? 'Configure uma API Key com permissão de conhecimento no backend.'
             : response.status >= 500
@@ -177,10 +177,10 @@ async function request<T>(credentials: string, path: string, init: RequestInit =
 
 export const api = {
   me: (credentials: string) => request<Staff>(credentials, '/me'),
-  overview: (credentials: string, date: string) =>
-    request<Overview>(credentials, `/overview?date=${encodeURIComponent(date)}`),
   overviewRentals: (credentials: string, date: string) =>
     request<RentalOverview>(credentials, `/overview/rentals?date=${encodeURIComponent(date)}`),
+  overviewRevenue: (credentials: string, period: RevenuePeriod) =>
+    request<RevenueOverview>(credentials, `/overview/revenue?period=${period}`),
   aiKnowledge: (credentials: string) => request<AiKnowledge[]>(credentials, '/ai/knowledge'),
   aiUnanswered: (credentials: string) => request<AiUnansweredQuestion[]>(credentials, '/ai/unanswered'),
   aiNotificationSettings: (credentials: string) =>

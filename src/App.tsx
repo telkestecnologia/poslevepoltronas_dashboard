@@ -41,7 +41,7 @@ function App() {
 
   const { page, navigate } = navigation
   const { pageLoading, pageError, retryPage, notice, dismissNotice } = feedback
-  const showLoading = pageLoading || (page === 'overview' && !overviewPage.overview && !pageError)
+  const showLoading = pageLoading || (page === 'overview' && (!overviewPage.rentals || !overviewPage.revenue) && !pageError)
 
   return (
     <>
@@ -66,16 +66,19 @@ function App() {
             </button>
           </div>
         )}
-        {page === 'overview' && !showLoading && !pageError && overviewPage.overview && (
+        {page === 'overview' && !showLoading && !pageError && overviewPage.rentals && overviewPage.revenue && (
           <OverviewPage
-            overview={overviewPage.overview}
+            rentals={overviewPage.rentals}
             rentalDate={overviewPage.rentalDate}
             onRentalDateChange={overviewPage.onRentalDateChange}
             rentalLoading={overviewPage.rentalLoading}
             rentalError={overviewPage.rentalError}
+            revenue={overviewPage.revenue}
+            revenuePeriod={overviewPage.revenuePeriod}
+            onRevenuePeriodChange={overviewPage.onRevenuePeriodChange}
+            revenueLoading={overviewPage.revenueLoading}
+            revenueError={overviewPage.revenueError}
             onRefresh={overviewPage.onRefresh}
-            onGoChairs={overviewPage.onGoChairs}
-            onGoOrders={overviewPage.onGoOrders}
           />
         )}
         {page === 'chairs' && !showLoading && !pageError && <ChairsPage {...chairsPage} />}
