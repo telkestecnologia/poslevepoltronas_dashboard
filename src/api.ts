@@ -78,6 +78,12 @@ export type Order = {
   source: OrderSource; status: OrderStatus; courierId: string | null
   issues: OrderIssue[]; history: OrderEvent[]; createdAt: string; updatedAt: string
 }
+export type OrderEvidence = {
+  id: string; phase: 'DELIVERY' | 'PICKUP'; kind: 'PHOTO' | 'VIDEO'
+  courierId: string; installationId: string; deviceManufacturer: string | null
+  deviceModel: string | null; platform: string; osVersion: string | null
+  sizeBytes: number; capturedAt: string; uploadedAt: string; readUrl: string
+}
 export type PreviewOrderInput = {
   customerName: string; customerPhone: string; postalCode: string; address: string
   municipalityCode: string; chairId: string; start: string; end: string
@@ -250,6 +256,8 @@ export const api = {
   deleteAiUnanswered: (credentials: string, id: string) =>
     request<void>(credentials, `/ai/unanswered/${encodeURIComponent(id)}`, { method: 'DELETE' }),
   orders: (credentials: string) => request<Order[]>(credentials, '/orders'),
+  orderEvidence: (credentials: string, id: string) =>
+    request<OrderEvidence[]>(credentials, `/orders/${encodeURIComponent(id)}/evidence`),
   createOrderPreview: (credentials: string, data: PreviewOrderInput) =>
     request<Order>(credentials, '/orders/previews', { method: 'POST', body: JSON.stringify(data) }),
   deleteOrderPreview: (credentials: string, id: string) =>

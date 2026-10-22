@@ -87,7 +87,7 @@ function App() {
         {page === 'chairs' && !showLoading && !pageError && <ChairsPage {...chairsPage} />}
         {page === 'branches' && !showLoading && !pageError && <BranchesPage {...branchesPage} />}
         {page === 'couriers' && !showLoading && !pageError && <CouriersPage {...couriersPage} />}
-        {page === 'orders' && !showLoading && !pageError && <OrdersPage {...ordersPage} />}
+        {page === 'orders' && !showLoading && !pageError && <OrdersPage {...ordersPage} credentials={session.credentials} />}
         {page === 'ai' && !showLoading && !pageError && <AiContextPage {...aiPage} />}
         {page === 'notifications' && !showLoading && !pageError && notificationsPage.settings && (
           <NotificationsPage settings={notificationsPage.settings} onSave={notificationsPage.onSave} />

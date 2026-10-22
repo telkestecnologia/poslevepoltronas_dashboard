@@ -1,11 +1,12 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { AlertCircle, ArrowRight, ClipboardList, Plus, RefreshCw, Search, Trash2, X } from 'lucide-react'
-import type { Branch, ChairOption, Courier, Order, OrderSource, OrderStatus, PreviewOrderInput } from '../../api'
+import { api, type Branch, type ChairOption, type Courier, type Order, type OrderEvidence, type OrderSource, type OrderStatus, type PreviewOrderInput } from '../../api'
 import { EmptyState } from '../../components/common'
 import { getMessage } from '../../utils/errors'
 import { formatPhone } from '../../utils/phone'
 
 type Props = {
+  credentials: string
   orders: Order[]
   couriers: Courier[]
   branches: Branch[]
@@ -62,7 +63,7 @@ function eventLabel(action: string) {
   return action
 }
 
-export function OrdersPage({ orders, couriers, branches, options, status, source, onStatusChange, onSourceChange,
+export function OrdersPage({ credentials, orders, couriers, branches, options, status, source, onStatusChange, onSourceChange,
   onRefresh, onCreatePreview, onDeletePreview, onChangeStatus, onExpandStock,
   onAssignCourier, onOpenIssue, onResolveIssue }: Props) {
   const [search, setSearch] = useState('')
@@ -272,6 +273,7 @@ export function OrdersPage({ orders, couriers, branches, options, status, source
                 <option key={courier.id} value={courier.id}>{courier.name}{courier.active ? '' : ' (inativo)'}</option>)}
             </select>
           </label>
+          <OrderEvidencePanel key={selected.id} credentials={credentials} orderId={selected.id} couriers={couriers} />
           {followingStatus && <div className="order-section">
             <h3>Andamento</h3>
             <label className="order-field">Observação <span className="optional">(opcional)</span>
@@ -320,6 +322,49 @@ export function OrdersPage({ orders, couriers, branches, options, status, source
       </section>
     </div>}
   </>
+}
+
+function OrderEvidencePanel({ credentials, orderId, couriers }: {
+  credentials: string; orderId: string; couriers: Courier[]
+}) {
+  const [items, setItems] = useState<OrderEvidence[]>([])
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [version, setVersion] = useState(0)
+
+  useEffect(() => {
+    let active = true
+    setLoading(true)
+    api.orderEvidence(credentials, orderId).then(result => {
+      if (active) { setItems(result); setError('') }
+    }).catch(cause => {
+      if (active) setError(getMessage(cause))
+    }).finally(() => { if (active) setLoading(false) })
+    return () => { active = false }
+  }, [credentials, orderId, version])
+
+  return <div className="order-section">
+    <h3>Fotos e vídeos da entrega e da devolução</h3>
+    <p className="order-muted">Arquivos privados. O link de visualização expira em 5 minutos.</p>
+    <button className="button secondary" type="button" disabled={loading} onClick={() => setVersion(value => value + 1)}>
+      <RefreshCw size={15} /> {loading ? 'Carregando...' : 'Atualizar registros'}
+    </button>
+    {error && <p className="form-error" role="alert">{error}</p>}
+    {!loading && !error && items.length === 0 && <p className="order-muted">Nenhuma mídia enviada ainda.</p>}
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))', gap: 16, marginTop: 16 }}>
+      {items.map(item => <div key={item.id} className="panel" style={{ padding: 12 }}>
+        {item.kind === 'PHOTO'
+          ? <a href={item.readUrl} target="_blank" rel="noreferrer"><img src={item.readUrl} alt={`Registro da ${item.phase === 'DELIVERY' ? 'entrega' : 'devolução'}`}
+            style={{ display: 'block', width: '100%', height: 150, objectFit: 'cover', borderRadius: 8 }} /></a>
+          : <video src={item.readUrl} controls preload="metadata" style={{ width: '100%', height: 150 }} />}
+        <strong>{item.phase === 'DELIVERY' ? 'Entrega' : 'Devolução'} · {item.kind === 'PHOTO' ? 'Foto' : 'Vídeo'}</strong>
+        <small style={{ display: 'block' }}>{timeLabel(item.uploadedAt)} · {(item.sizeBytes / 1024 / 1024).toFixed(1)} MB</small>
+        <small style={{ display: 'block' }}>Entregador: {couriers.find(c => c.id === item.courierId)?.name || item.courierId}</small>
+        <small style={{ display: 'block' }}>Celular: {[item.deviceManufacturer, item.deviceModel].filter(Boolean).join(' ') || 'Modelo não informado'} · {item.platform} {item.osVersion || ''}</small>
+        <small style={{ display: 'block', overflowWrap: 'anywhere' }}>Instalação: {item.installationId}</small>
+      </div>)}
+    </div>
+  </div>
 }
 
 function todayLocal() {
