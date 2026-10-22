@@ -31,3 +31,4 @@ jobs:
           projectId: posleve
           target: dev
           channelId: live
+          firebaseToolsVersion: '15.34.0'
