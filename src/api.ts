@@ -86,11 +86,6 @@ export type OrderEvidence = {
   deviceModel: string | null; platform: string; osVersion: string | null
   sizeBytes: number; capturedAt: string; uploadedAt: string; readUrl: string
 }
-export type PreviewOrderInput = {
-  customerName: string; customerPhone: string; postalCode: string; address: string
-  municipalityCode: string; chairId: string; start: string; end: string
-}
-
 export type AiKnowledge = {
   id: string
   question: string
@@ -154,10 +149,7 @@ export type FinancialReport = {
 }
 export type FinanceQuery = { from: string; to: string; branchId: string; page: number; size: number }
 
-export const localLoginBypass = __DASHBOARD_DEV_LOGIN_BYPASS__
-const baseUrl = localLoginBypass
-  ? ''
-  : (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080').replace(/\/$/, '')
+const baseUrl = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
 export const tenantSlug = import.meta.env.VITE_TENANT_SLUG || 'pos-leve'
 
 export class ApiError extends Error {
@@ -187,15 +179,11 @@ async function request<T>(credentials: string, path: string, init: RequestInit =
   if (!response.ok) {
     const message =
       response.status === 401
-        ? localLoginBypass
-          ? 'A conta local configurada no backend não foi aceita. Confira o arquivo .admin.local e reinicie o ambiente local.'
-          : 'E-mail ou senha inválidos.'
+        ? 'E-mail ou senha inválidos.'
         : response.status === 403
           ? 'Sua conta não tem acesso a esta locadora.'
           : response.status === 404
             ? 'O registro não foi encontrado.'
-            : response.status === 503 && localLoginBypass && path === '/me'
-              ? 'A autenticação local está indisponível. Confira a conexão do backend com o MongoDB de desenvolvimento e tente novamente.'
             : response.status === 503 && (path.startsWith('/ai/knowledge') || path.endsWith('/answer'))
               ? 'Configure uma API Key com permissão de conhecimento no backend.'
             : response.status >= 500
@@ -260,10 +248,6 @@ export const api = {
   orders: (credentials: string) => request<Order[]>(credentials, '/orders'),
   orderEvidence: (credentials: string, id: string) =>
     request<OrderEvidence[]>(credentials, `/orders/${encodeURIComponent(id)}/evidence`),
-  createOrderPreview: (credentials: string, data: PreviewOrderInput) =>
-    request<Order>(credentials, '/orders/previews', { method: 'POST', body: JSON.stringify(data) }),
-  deleteOrderPreview: (credentials: string, id: string) =>
-    request<void>(credentials, `/orders/previews/${encodeURIComponent(id)}`, { method: 'DELETE' }),
   changeOrderStatus: (credentials: string, id: string, status: OrderStatus, note: string) =>
     request<Order>(credentials, `/orders/${encodeURIComponent(id)}/status`, {
       method: 'PATCH', body: JSON.stringify({ status, note }),

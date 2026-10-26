@@ -6,12 +6,10 @@ export function Login({
   onLogin,
   busy,
   error,
-  localBypass,
 }: {
   onLogin: (email: string, password: string) => Promise<void>
   busy: boolean
   error: string
-  localBypass: boolean
 }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -53,14 +51,8 @@ export function Login({
           </div>
           <span className="eyebrow">ÁREA RESTRITA</span>
           <h2>Bem-vindo de volta</h2>
-          <p>
-            {localBypass
-              ? 'Acesse o painel no ambiente local sem informar e-mail ou senha.'
-              : 'Acesse o painel para acompanhar a operação da Pós Leve.'}
-          </p>
+          <p>Acesse o painel para acompanhar a operação da Pós Leve.</p>
           <form onSubmit={submit} className="login-form">
-            {!localBypass && (
-              <>
                 <label>
                   E-mail
                   <input
@@ -83,8 +75,6 @@ export function Login({
                     required
                   />
                 </label>
-              </>
-            )}
             {error && (
               <div className="form-error" role="alert">
                 {error}
@@ -96,9 +86,7 @@ export function Login({
           </form>
           <div className="login-help">
             <CircleHelp size={16} />{' '}
-            {localBypass
-              ? 'Acesso local de desenvolvimento.'
-              : 'Acesso exclusivo à equipe autorizada.'}
+            Acesso exclusivo à equipe autorizada.
           </div>
         </div>
         <small className="login-footnote">© {new Date().getFullYear()} Pós Leve Poltronas</small>

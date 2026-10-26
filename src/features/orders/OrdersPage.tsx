@@ -1,6 +1,6 @@
-import { useState, type FormEvent } from 'react'
-import { AlertCircle, ArrowRight, ClipboardList, Plus, RefreshCw, Search, Trash2, X } from 'lucide-react'
-import { type Branch, type ChairOption, type Courier, type Order, type OrderSource, type OrderStatus, type PreviewOrderInput } from '../../api'
+import { useState } from 'react'
+import { AlertCircle, ArrowRight, ClipboardList, RefreshCw, Search, X } from 'lucide-react'
+import { type Courier, type Order, type OrderSource, type OrderStatus } from '../../api'
 import { EmptyState } from '../../components/common'
 import { getMessage } from '../../utils/errors'
 import { formatPhone } from '../../utils/phone'
@@ -10,15 +10,11 @@ type Props = {
   credentials: string
   orders: Order[]
   couriers: Courier[]
-  branches: Branch[]
-  options: ChairOption[]
   status: OrderStatus | 'ALL'
   source: OrderSource | 'ALL'
   onStatusChange: (status: OrderStatus | 'ALL') => void
   onSourceChange: (source: OrderSource | 'ALL') => void
   onRefresh: () => Promise<void>
-  onCreatePreview: (data: PreviewOrderInput) => Promise<Order>
-  onDeletePreview: (id: string) => Promise<void>
   onChangeStatus: (id: string, status: OrderStatus, note: string) => Promise<Order>
   onExpandStock: (id: string, stockStart: string, stockEnd: string, note: string) => Promise<Order>
   onAssignCourier: (id: string, courierId: string | null) => Promise<Order>
@@ -66,12 +62,11 @@ function eventLabel(action: string) {
   return action
 }
 
-export function OrdersPage({ credentials, orders, couriers, branches, options, status, source, onStatusChange, onSourceChange,
-  onRefresh, onCreatePreview, onDeletePreview, onChangeStatus, onExpandStock,
+export function OrdersPage({ credentials, orders, couriers, status, source, onStatusChange, onSourceChange,
+  onRefresh, onChangeStatus, onExpandStock,
   onAssignCourier, onOpenIssue, onResolveIssue }: Props) {
   const [search, setSearch] = useState('')
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [creating, setCreating] = useState(false)
   const [busy, setBusy] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState('')
@@ -111,7 +106,6 @@ export function OrdersPage({ credentials, orders, couriers, branches, options, s
 
   function close() {
     if (!busy) {
-      setCreating(false)
       setSelectedId(null)
       setError('')
       setStatusNote('')
@@ -119,28 +113,6 @@ export function OrdersPage({ credentials, orders, couriers, branches, options, s
       setIssueDescription('')
       setResolutions({})
     }
-  }
-
-  async function removePreview(id: string) {
-    if (!window.confirm('Remover este pedido de demonstração?')) return
-    setBusy(true)
-    setError('')
-    try {
-      await onDeletePreview(id)
-      closeAfterDelete()
-    } catch (cause) {
-      setError(getMessage(cause))
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  function closeAfterDelete() {
-    setSelectedId(null)
-    setStatusNote('')
-    setIssueTitle('')
-    setIssueDescription('')
-    setResolutions({})
   }
 
   async function refresh() {
@@ -162,8 +134,6 @@ export function OrdersPage({ credentials, orders, couriers, branches, options, s
       <div className="order-heading-actions">
         <button className="button secondary" disabled={refreshing} onClick={() => void refresh()}>
           <RefreshCw size={16} /> {refreshing ? 'Atualizando...' : 'Atualizar lista'}</button>
-        <button className="button primary" onClick={() => { setError(''); setCreating(true) }}>
-          <Plus size={16} /> Pedido de demonstração</button>
       </div>
     </div>
     {error && !selected && <div className="form-error order-page-error" role="alert">{error}</div>}
@@ -194,8 +164,7 @@ export function OrdersPage({ credentials, orders, couriers, branches, options, s
       </div>
       {orders.length === 0 && source === 'ALL' && status === 'ALL' && !term
         ? <EmptyState icon={ClipboardList} title="Nenhum pedido registrado"
-        text="Crie um pedido de demonstração para visualizar a tela. Pedidos reais aparecerão quando o checkout for integrado."
-        action={{ label: 'Criar demonstração', onClick: () => setCreating(true) }} />
+        text="Os pedidos do site aparecerão aqui após a reserva e o aceite do contrato." />
         : visible.length === 0 ? <EmptyState icon={Search} title="Nenhum pedido encontrado"
           text="Ajuste a busca ou o filtro de status." />
         : <div className="table-scroll"><table className="orders-table"><thead><tr>
@@ -214,9 +183,6 @@ export function OrdersPage({ credentials, orders, couriers, branches, options, s
             Ver pedido <ArrowRight size={15} /></button></td>
         </tr>)}</tbody></table></div>}
     </section>
-
-    {creating && <CreatePreviewModal branches={branches} options={options} busy={busy} error={error}
-      onClose={close} onSave={data => void perform(() => onCreatePreview(data), () => setCreating(false))} />}
 
     {selected && <div className="modal-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) close() }}>
       <section className="modal order-detail" role="dialog" aria-modal="true" aria-labelledby="order-detail-title">
@@ -327,102 +293,9 @@ export function OrdersPage({ credentials, orders, couriers, branches, options, s
                 <small>{timeLabel(event.at)} • {event.actor}</small>{event.note && <p>{event.note}</p>}</div>)}</div>
           </div>
           {error && <div className="form-error" role="alert">{error}</div>}
-          {selected.source === 'MANUAL_PREVIEW' && <button className="button secondary order-delete" disabled={busy}
-            onClick={() => void removePreview(selected.id)}><Trash2 size={15} /> Remover demonstração</button>}
         </div>
       </section>
     </div>}
   </>
-}
-
-function todayLocal() {
-  const now = new Date()
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
-}
-
-function CreatePreviewModal({ branches, options, busy, error, onClose, onSave }: {
-  branches: Branch[]
-  options: ChairOption[]
-  busy: boolean
-  error: string
-  onClose: () => void
-  onSave: (data: PreviewOrderInput) => void
-}) {
-  const [name, setName] = useState('')
-  const [phone, setPhone] = useState('')
-  const [postalCode, setPostalCode] = useState('')
-  const [address, setAddress] = useState('')
-  const [branchId, setBranchId] = useState('')
-  const [municipalityCode, setMunicipalityCode] = useState('')
-  const [chairId, setChairId] = useState('')
-  const [start, setStart] = useState('')
-  const [end, setEnd] = useState('')
-  const [localError, setLocalError] = useState('')
-  const branch = branches.find(item => item.id === branchId)
-  const activeBranches = branches.filter(item => item.active)
-  const chairs = options.filter(item => item.branchId === branchId && item.status === 'ACTIVE')
-
-  function submit(event: FormEvent) {
-    event.preventDefault()
-    const phoneDigits = phone.replace(/\D/g, '')
-    if (phoneDigits.length !== 10 && phoneDigits.length !== 11) {
-      setLocalError('Informe um telefone com DDD.')
-      return
-    }
-    if (postalCode.replace(/\D/g, '').length !== 8 || !municipalityCode || !chairId || !start || !end || end < start) {
-      setLocalError('Confira o CEP, o município, a poltrona e o período.')
-      return
-    }
-    setLocalError('')
-    onSave({ customerName: name.trim(), customerPhone: phoneDigits,
-      postalCode: postalCode.replace(/\D/g, ''), address: address.trim(),
-      municipalityCode, chairId, start, end })
-  }
-
-  return <div className="modal-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) onClose() }}>
-    <section className="modal order-create" role="dialog" aria-modal="true" aria-labelledby="order-create-title">
-      <div className="modal-head"><div><span className="eyebrow">PEDIDOS • DEMONSTRAÇÃO</span>
-        <h2 id="order-create-title">Novo pedido de teste</h2></div>
-        <button className="icon-button" aria-label="Fechar" onClick={onClose} disabled={busy}><X size={20} /></button></div>
-      <form className="modal-form" onSubmit={submit}>
-        <p className="order-preview-note">Este cadastro serve para visualizar a gestão de pedidos. O pagamento é simulado e não há reserva de estoque.</p>
-        <div className="order-form-grid">
-          <label>Cliente<input required autoFocus maxLength={100} value={name}
-            onChange={event => setName(event.target.value)} placeholder="Nome completo" /></label>
-          <label>Celular com DDD<input required type="tel" inputMode="numeric" maxLength={15} value={phone}
-            onChange={event => setPhone(formatPhone(event.target.value))} placeholder="(85) 99999-9999" /></label>
-          <label>CEP<input required inputMode="numeric" maxLength={9} value={postalCode}
-            onChange={event => { const digits = event.target.value.replace(/\D/g, '').slice(0, 8)
-              setPostalCode(digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits) }}
-            placeholder="00000-000" /></label>
-          <label>Filial<select required value={branchId} onChange={event => {
-            setBranchId(event.target.value); setMunicipalityCode(''); setChairId('') }}>
-            <option value="">Selecione</option>
-            {activeBranches.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
-          </select></label>
-          <label>Município<select required value={municipalityCode} disabled={!branch} onChange={event => setMunicipalityCode(event.target.value)}>
-            <option value="">Selecione</option>
-            {branch?.municipalities.map(item => <option key={item.code} value={item.code}>{item.name}/{item.uf}</option>)}
-          </select></label>
-          <label>Poltrona<select required value={chairId} disabled={!branchId} onChange={event => setChairId(event.target.value)}>
-            <option value="">Selecione</option>
-            {chairs.map(item => <option key={item.id} value={item.id}>{item.code} • {item.model}</option>)}
-          </select></label>
-          <label>Início<input required type="date" min={todayLocal()} value={start} onChange={event => {
-            setStart(event.target.value); if (end && end < event.target.value) setEnd('') }} /></label>
-          <label>Fim<input required type="date" min={start || todayLocal()} value={end}
-            onChange={event => setEnd(event.target.value)} /></label>
-        </div>
-        <label>Endereço completo<input required maxLength={300} value={address}
-          onChange={event => setAddress(event.target.value)} placeholder="Rua, número, bairro e complemento" /></label>
-        {activeBranches.length === 0 && <small className="field-help">Cadastre uma filial ativa e uma poltrona antes de criar a demonstração.</small>}
-        {branchId && chairs.length === 0 && <small className="field-help">Esta filial não tem poltronas ativas.</small>}
-        {(localError || error) && <div className="form-error" role="alert">{localError || error}</div>}
-        <div className="modal-actions"><button type="button" className="button secondary" disabled={busy} onClick={onClose}>Cancelar</button>
-          <button className="button primary" disabled={busy || activeBranches.length === 0}>
-            {busy ? 'Salvando...' : 'Criar demonstração'} <ArrowRight size={17} /></button></div>
-      </form>
-    </section>
-  </div>
 }
 

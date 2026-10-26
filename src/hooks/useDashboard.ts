@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   api,
   ApiError,
-  localLoginBypass,
   type AiKnowledge,
   type AiKnowledgeInput,
   type AiNotificationSettings,
@@ -23,7 +22,6 @@ import {
   type RentalOverview,
   type RevenueOverview,
   type RevenuePeriod,
-  type PreviewOrderInput,
   type Staff,
 } from '../api'
 import { CHAIR_PAGE_SIZE, type Modal, type Page } from '../types'
@@ -75,7 +73,6 @@ export function useDashboard() {
   const [branchFilter, setBranchFilter] = useState('ALL')
   const [orderStatusFilter, setOrderStatusFilter] = useState<OrderStatus | 'ALL'>('ALL')
   const [orderSourceFilter, setOrderSourceFilter] = useState<OrderSource | 'ALL'>('ALL')
-  const localLoginStarted = useRef(false)
   const rentalRequestId = useRef(0)
   const revenueRequestId = useRef(0)
   const chairRequest =
@@ -125,9 +122,7 @@ export function useDashboard() {
     setLoginError('')
     try {
       const bytes = new TextEncoder().encode(`${email}:${password}`)
-      const auth = localLoginBypass
-        ? ''
-        : btoa(Array.from(bytes, (byte) => String.fromCharCode(byte)).join(''))
+      const auth = btoa(Array.from(bytes, (byte) => String.fromCharCode(byte)).join(''))
       const identity = await api.me(auth)
       setPageLoading(true)
       setCredentials(auth)
@@ -138,13 +133,6 @@ export function useDashboard() {
       setLoginBusy(false)
     }
   }
-
-  useEffect(() => {
-    if (localLoginBypass && !localLoginStarted.current) {
-      localLoginStarted.current = true
-      void login('', '')
-    }
-  }, [])
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -459,31 +447,6 @@ export function useDashboard() {
     }
   }
 
-  async function createOrderPreview(data: PreviewOrderInput) {
-    if (credentials === null) throw new Error('Entre novamente para continuar.')
-    try {
-      const order = await api.createOrderPreview(credentials, data)
-      setOrders(current => [order, ...current])
-      showNotice('Pedido de demonstração criado.')
-      return order
-    } catch (error) {
-      if (error instanceof ApiError && error.status === 401) logout()
-      throw error
-    }
-  }
-
-  async function deleteOrderPreview(id: string) {
-    if (credentials === null) throw new Error('Entre novamente para continuar.')
-    try {
-      await api.deleteOrderPreview(credentials, id)
-      setOrders(current => current.filter(order => order.id !== id))
-      showNotice('Pedido de demonstração removido.')
-    } catch (error) {
-      if (error instanceof ApiError && error.status === 401) logout()
-      throw error
-    }
-  }
-
   async function changeAiContext(operation: (auth: string) => Promise<unknown>, noticeText: string) {
     if (credentials === null) throw new Error('Entre novamente para continuar.')
     try {
@@ -608,8 +571,6 @@ export function useDashboard() {
       onStatusChange: setOrderStatusFilter,
       onSourceChange: setOrderSourceFilter,
       onRefresh: refreshOrders,
-      onCreatePreview: createOrderPreview,
-      onDeletePreview: deleteOrderPreview,
       onChangeStatus: (id: string, status: OrderStatus, note: string) =>
         mutateOrder(auth => api.changeOrderStatus(auth, id, status, note)),
       onExpandStock: (id: string, stockStart: string, stockEnd: string, note: string) =>

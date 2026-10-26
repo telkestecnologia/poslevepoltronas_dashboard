@@ -1,4 +1,3 @@
-import { localLoginBypass } from './api'
 import { DashboardLayout } from './components/DashboardLayout'
 import { Login } from './components/Login'
 import { BranchModal } from './features/branches/BranchModal'
@@ -35,7 +34,6 @@ function App() {
         onLogin={session.login}
         busy={session.loginBusy}
         error={session.loginError}
-        localBypass={localLoginBypass}
       />
     )
   }

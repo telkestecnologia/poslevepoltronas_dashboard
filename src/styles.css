@@ -1230,9 +1230,6 @@ tbody tr:hover {
   font-size: 12px;
   line-height: 1.5;
 }
-.order-delete {
-  justify-self: start;
-}
 .order-page-error {
   margin-bottom: 18px;
 }
@@ -1274,7 +1271,7 @@ tbody tr:hover {
   background: #f3f3f3;
   color: #68727a;
 }
-.order-detail, .order-create {
+.order-detail {
   width: min(100%, 680px);
 }
 .order-facts, .order-form-grid {
