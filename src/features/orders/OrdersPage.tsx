@@ -28,6 +28,8 @@ type Props = {
 
 const labels: Record<OrderStatus, string> = {
   PENDING_CONTRACT: 'Aguardando contrato',
+  PENDING_PAYMENT: 'Aguardando PIX',
+  PAYMENT_REVIEW: 'PIX em análise',
   EXPIRED: 'Expirado',
   CANCELLED: 'Cancelado',
   PAYMENT_CONFIRMED: 'Pagamento confirmado',
@@ -84,7 +86,7 @@ export function OrdersPage({ credentials, orders, couriers, branches, options, s
   const currentStep = selected ? statusFlow.indexOf(selected.status) : -1
   const followingStatus = currentStep >= 0 ? statusFlow[currentStep + 1] : undefined
   const canExpand = selected?.source === 'CHECKOUT' && selected.stockStart && selected.stockEnd
-    && !['EXPIRED', 'CANCELLED', 'COMPLETED'].includes(selected.status)
+    && !['EXPIRED', 'CANCELLED', 'COMPLETED', 'PAYMENT_REVIEW'].includes(selected.status)
   const normalize = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
   const term = normalize(search.trim())
   const visible = orders.filter(order => (status === 'ALL' || order.status === status)
@@ -167,6 +169,8 @@ export function OrdersPage({ credentials, orders, couriers, branches, options, s
     {error && !selected && <div className="form-error order-page-error" role="alert">{error}</div>}
     <div className="order-summary">
       <div className="panel"><small>Aguardando contrato</small><strong>{sourceOrders.filter(order => order.status === 'PENDING_CONTRACT').length}</strong></div>
+      <div className="panel"><small>Aguardando PIX</small><strong>{sourceOrders.filter(order => order.status === 'PENDING_PAYMENT').length}</strong></div>
+      <div className="panel"><small>PIX em análise</small><strong>{sourceOrders.filter(order => order.status === 'PAYMENT_REVIEW').length}</strong></div>
       <div className="panel"><small>Pagamento confirmado</small><strong>{sourceOrders.filter(order => order.status === 'PAYMENT_CONFIRMED').length}</strong></div>
       <div className="panel"><small>Em operação</small><strong>{sourceOrders.filter(order =>
         ['DELIVERY_PENDING', 'IN_USE', 'PICKUP_PENDING'].includes(order.status)).length}</strong></div>
@@ -231,8 +235,14 @@ export function OrdersPage({ credentials, orders, couriers, branches, options, s
             </li>)}
           </ol>}
           {selected.status === 'PENDING_CONTRACT' && <div className="order-preview-note">
-            Pedido ainda sem contrato ou pagamento. Válido até {selected.expiresAt ? timeLabel(selected.expiresAt) : 'o prazo da reserva'};
+            Pedido ainda sem pagamento confirmado. Válido até {selected.expiresAt ? timeLabel(selected.expiresAt) : 'o prazo da reserva'};
             ao expirar, os dias bloqueados são liberados automaticamente.
+          </div>}
+          {selected.status === 'PENDING_PAYMENT' && <div className="order-preview-note">
+            Aguardando confirmação do PIX pelo Inter. Reserva válida até {selected.expiresAt ? timeLabel(selected.expiresAt) : 'o prazo informado'}.
+          </div>}
+          {selected.status === 'PAYMENT_REVIEW' && <div className="order-preview-note">
+            Confira a ocorrência e o recebimento no Inter antes de orientar o cliente. A poltrona foi liberada; este pedido não está confirmado. Não há devolução automática.
           </div>}
           {selected.source === 'MANUAL_PREVIEW' && <div className="order-preview-note">
             Pedido de demonstração. O pagamento é apenas simulado; ele não reserva a poltrona nem altera a disponibilidade do site.

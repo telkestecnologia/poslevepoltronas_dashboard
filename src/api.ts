@@ -54,6 +54,8 @@ export type ManualBlock = {
 
 export type OrderStatus =
   | 'PENDING_CONTRACT'
+  | 'PENDING_PAYMENT'
+  | 'PAYMENT_REVIEW'
   | 'EXPIRED'
   | 'CANCELLED'
   | 'PAYMENT_CONFIRMED'
