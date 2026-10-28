@@ -75,6 +75,7 @@ export function useDashboard() {
   const [orderSourceFilter, setOrderSourceFilter] = useState<OrderSource | 'ALL'>('ALL')
   const rentalRequestId = useRef(0)
   const revenueRequestId = useRef(0)
+  const ordersRevision = useRef(0)
   const chairRequest =
     page === 'chairs' ? `${chairPage}:${appliedSearch}:${statusFilter}:${branchFilter}` : ''
   const chairQuery: ChairQuery = {
@@ -200,6 +201,35 @@ export function useDashboard() {
       active = false
     }
   }, [credentials, page, reloadKey, chairRequest, applyPageData])
+
+  // Confirmações feitas pelo entregador chegam pela API. Atualiza a lista aberta na gestão
+  // e consulta novamente quando o navegador volta ao primeiro plano.
+  useEffect(() => {
+    if (credentials === null || page !== 'orders') return
+    let active = true
+    let inFlight = false
+    const refresh = async () => {
+      if (document.visibilityState !== 'visible' || inFlight) return
+      inFlight = true
+      const revision = ordersRevision.current
+      try {
+        const latest = await api.orders(credentials)
+        if (active && revision === ordersRevision.current) setOrders(latest)
+      } catch {
+        // O botão "Atualizar lista" continua exibindo erros de consulta ao operador.
+      } finally {
+        inFlight = false
+      }
+    }
+    const onVisibility = () => { if (document.visibilityState === 'visible') void refresh() }
+    const interval = window.setInterval(() => { void refresh() }, 30_000)
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      active = false
+      window.clearInterval(interval)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
+  }, [credentials, page])
 
   async function selectRentalDate(date: string) {
     if (credentials === null || !rentals || date === rentalDate) return
@@ -426,8 +456,10 @@ export function useDashboard() {
 
   async function mutateOrder(operation: (auth: string) => Promise<Order>) {
     if (credentials === null) throw new Error('Entre novamente para continuar.')
+    ordersRevision.current += 1
     try {
       const order = await operation(credentials)
+      ordersRevision.current += 1
       setOrders(current => current.map(item => item.id === order.id ? order : item))
       showNotice('Pedido atualizado.')
       return order

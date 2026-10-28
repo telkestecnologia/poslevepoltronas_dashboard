@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Image as ImageIcon, Play, RefreshCw, X } from 'lucide-react'
-import { api, type Courier, type OrderEvidence } from '../../api'
+import { api, type Courier, type OrderEvidence, type OrderStatus } from '../../api'
 import { getMessage } from '../../utils/errors'
 
-type Props = { credentials: string; orderId: string; couriers: Courier[] }
+type Props = { credentials: string; orderId: string; status: OrderStatus; couriers: Courier[] }
 
 const phases = [
   { value: 'DELIVERY', label: 'Na entrega', empty: 'Nenhuma foto ou vídeo da entrega enviado.' },
@@ -23,7 +23,7 @@ function mediaLabel(item: OrderEvidence) {
   return `${item.kind === 'PHOTO' ? 'Foto' : 'Vídeo'} da ${item.phase === 'DELIVERY' ? 'entrega' : 'devolução'}`
 }
 
-export function OrderEvidencePanel({ credentials, orderId, couriers }: Props) {
+export function OrderEvidencePanel({ credentials, orderId, status, couriers }: Props) {
   const [items, setItems] = useState<OrderEvidence[]>([])
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
@@ -44,7 +44,7 @@ export function OrderEvidencePanel({ credentials, orderId, couriers }: Props) {
       if (active) { setItems([]); setError(getMessage(cause)) }
     }).finally(() => { if (active) setLoading(false) })
     return () => { active = false }
-  }, [credentials, orderId, version])
+  }, [credentials, orderId, status, version])
 
   useEffect(() => {
     if (!viewerId) return

@@ -250,7 +250,8 @@ export function OrdersPage({ credentials, orders, couriers, status, source, onSt
                 <option key={courier.id} value={courier.id}>{courier.name}{courier.active ? '' : ' (inativo)'}</option>)}
             </select>
           </label>
-          <OrderEvidencePanel key={selected.id} credentials={credentials} orderId={selected.id} couriers={couriers} />
+          <OrderEvidencePanel key={selected.id} credentials={credentials} orderId={selected.id}
+            status={selected.status} couriers={couriers} />
           {followingStatus && <div className="order-section">
             <h3>Andamento</h3>
             <label className="order-field">Observação <span className="optional">(opcional)</span>
