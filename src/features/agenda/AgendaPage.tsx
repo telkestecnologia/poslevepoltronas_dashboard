@@ -1,13 +1,13 @@
 import { useMemo, useState } from 'react'
 import { ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react'
-import type { Courier, Order, OrderStatus } from '../../api'
+import type { Branch, Courier, Order, OrderStatus } from '../../api'
 import { getMessage } from '../../utils/errors'
 import { formatPhone } from '../../utils/phone'
 
 type Kind = 'delivery' | 'pickup'
 type View = 'week' | 'month'
 type AgendaItem = { key: string; kind: Kind; date: string; time: string | null; done: boolean; order: Order }
-type Props = { orders: Order[]; couriers: Courier[]; onRefresh: () => Promise<void> }
+type Props = { orders: Order[]; couriers: Courier[]; branches: Branch[]; onRefresh: () => Promise<void> }
 
 const operationalStatuses = new Set<OrderStatus>([
   'PAYMENT_CONFIRMED', 'DELIVERY_PENDING', 'IN_USE', 'PICKUP_PENDING', 'COMPLETED',
@@ -54,7 +54,7 @@ function itemStatus(item: AgendaItem, today: string) {
   return item.order.status === 'PICKUP_PENDING' ? 'Aguardando retirada' : 'Prevista'
 }
 
-export function AgendaPage({ orders, couriers, onRefresh }: Props) {
+export function AgendaPage({ orders, couriers, branches, onRefresh }: Props) {
   const [selectedDate, setSelectedDate] = useState(todayInFortaleza)
   const [view, setView] = useState<View>('week')
   const [city, setCity] = useState('ALL')
@@ -66,12 +66,10 @@ export function AgendaPage({ orders, couriers, onRefresh }: Props) {
 
   const realOrders = useMemo(() => orders.filter(order => order.source === 'CHECKOUT'
     && operationalStatuses.has(order.status)), [orders])
-  const cities = useMemo(() => [...new Map(realOrders.map(order =>
-    [order.municipalityCode, { code: order.municipalityCode, label: cityLabel(order) }])).values()]
-    .sort((a, b) => a.label.localeCompare(b.label, 'pt-BR')), [realOrders])
-  const branches = useMemo(() => [...new Map(realOrders.map(order =>
-    [order.branchId, { id: order.branchId, name: order.branchName }])).values()]
-    .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')), [realOrders])
+  const sortedBranches = useMemo(() => [...branches].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')), [branches])
+  const selectedBranch = branches.find(item => item.id === branch)
+  const cities = useMemo(() => [...(selectedBranch?.municipalities ?? [])]
+    .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')), [selectedBranch])
   const courierNames = useMemo(() => new Map(couriers.map(item => [item.id, item.name])), [couriers])
 
   const items = useMemo(() => realOrders
@@ -146,16 +144,16 @@ export function AgendaPage({ orders, couriers, onRefresh }: Props) {
     <p className="agenda-explanation panel">As datas e os horários vêm dos pedidos. Dias extras de estoque bloqueado não alteram esta agenda. Pedidos sem pagamento confirmado e demonstrações não aparecem.</p>
 
     <div className="agenda-filters panel" role="group" aria-label="Filtros da agenda">
-      <label>Cidade
-        <select value={city} onChange={event => setCity(event.target.value)}>
-          <option value="ALL">Todas as cidades</option>
-          {cities.map(item => <option key={item.code} value={item.code}>{item.label}</option>)}
+      <label>Filial
+        <select value={branch} onChange={event => { setBranch(event.target.value); setCity('ALL') }}>
+          <option value="ALL">Todas as filiais</option>
+          {sortedBranches.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
         </select>
       </label>
-      <label>Filial
-        <select value={branch} onChange={event => setBranch(event.target.value)}>
-          <option value="ALL">Todas as filiais</option>
-          {branches.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
+      <label>Cidade da filial
+        <select value={city} disabled={!selectedBranch} onChange={event => setCity(event.target.value)}>
+          <option value="ALL">{selectedBranch ? 'Todas as cidades da filial' : 'Selecione uma filial'}</option>
+          {cities.map(item => <option key={item.code} value={item.code}>{item.name}/{item.uf}</option>)}
         </select>
       </label>
       <label>Entregador

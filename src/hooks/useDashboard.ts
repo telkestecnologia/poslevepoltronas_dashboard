@@ -107,6 +107,7 @@ export function useDashboard() {
     } else if (data.page === 'agenda') {
       setOrders(data.orders)
       setCouriers(data.couriers)
+      setBranches(data.branches)
     } else if (data.page === 'orders') {
       setOrders(data.orders)
       setCouriers(data.couriers)
@@ -609,7 +610,7 @@ export function useDashboard() {
       onNewCourier: () => openModal({ kind: 'newCourier' }),
       onEditCourier: (courier: Courier) => openModal({ kind: 'editCourier', courier }),
     },
-    agendaPage: { orders, couriers, onRefresh: refreshAgenda },
+    agendaPage: { orders, couriers, branches, onRefresh: refreshAgenda },
     ordersPage: {
       orders, couriers, branches, options: chairOptions,
       status: orderStatusFilter,

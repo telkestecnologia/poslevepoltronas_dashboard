@@ -34,7 +34,7 @@ export type PageData =
       municipalities: Municipality[]
     }
   | { page: 'couriers'; couriers: Courier[] }
-  | { page: 'agenda'; orders: Order[]; couriers: Courier[] }
+  | { page: 'agenda'; orders: Order[]; couriers: Courier[]; branches: Branch[] }
   | { page: 'orders'; orders: Order[]; couriers: Courier[]; branches: Branch[]; options: ChairOption[] }
   | { page: 'ai'; knowledge: AiKnowledge[]; unanswered: AiUnansweredQuestion[] }
   | { page: 'notifications'; settings: AiNotificationSettings }
@@ -82,8 +82,10 @@ export async function loadPage(
     return { page, couriers: await api.couriers(credentials) }
   }
   if (page === 'agenda') {
-    const [orders, couriers] = await Promise.all([api.orders(credentials), api.couriers(credentials)])
-    return { page, orders, couriers }
+    const [orders, couriers, branches] = await Promise.all([
+      api.orders(credentials), api.couriers(credentials), api.branches(credentials),
+    ])
+    return { page, orders, couriers, branches }
   }
   if (page === 'orders') {
     const [orders, couriers, branches, options] = await Promise.all([
