@@ -104,6 +104,9 @@ export function useDashboard() {
       setMunicipalities(data.municipalities)
     } else if (data.page === 'couriers') {
       setCouriers(data.couriers)
+    } else if (data.page === 'agenda') {
+      setOrders(data.orders)
+      setCouriers(data.couriers)
     } else if (data.page === 'orders') {
       setOrders(data.orders)
       setCouriers(data.couriers)
@@ -205,7 +208,7 @@ export function useDashboard() {
   // Confirmações feitas pelo entregador chegam pela API. Atualiza a lista aberta na gestão
   // e consulta novamente quando o navegador volta ao primeiro plano.
   useEffect(() => {
-    if (credentials === null || page !== 'orders') return
+    if (credentials === null || (page !== 'orders' && page !== 'agenda')) return
     let active = true
     let inFlight = false
     const refresh = async () => {
@@ -479,6 +482,16 @@ export function useDashboard() {
     }
   }
 
+  async function refreshAgenda() {
+    if (credentials === null) throw new Error('Entre novamente para continuar.')
+    try {
+      applyPageData(await loadPage(credentials, 'agenda', chairQuery, rentalDate))
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) logout()
+      throw error
+    }
+  }
+
   async function changeAiContext(operation: (auth: string) => Promise<unknown>, noticeText: string) {
     if (credentials === null) throw new Error('Entre novamente para continuar.')
     try {
@@ -596,6 +609,7 @@ export function useDashboard() {
       onNewCourier: () => openModal({ kind: 'newCourier' }),
       onEditCourier: (courier: Courier) => openModal({ kind: 'editCourier', courier }),
     },
+    agendaPage: { orders, couriers, onRefresh: refreshAgenda },
     ordersPage: {
       orders, couriers, branches, options: chairOptions,
       status: orderStatusFilter,

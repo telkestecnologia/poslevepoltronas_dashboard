@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import {
   Armchair,
+  CalendarDays,
   Check,
   ChevronRight,
   Home,
@@ -26,6 +27,7 @@ const navigation = [
   { page: 'chairs', label: 'Poltronas', icon: Armchair },
   { page: 'branches', label: 'Filiais', icon: MapPin },
   { page: 'couriers', label: 'Entregadores', icon: Truck },
+  { page: 'agenda', label: 'Agenda', icon: CalendarDays },
   { page: 'orders', label: 'Pedidos', icon: ClipboardList },
   { page: 'ai', label: 'Contexto da IA', icon: Sparkles },
   { page: 'notifications', label: 'Alertas da IA', icon: BellRing },

@@ -7,6 +7,7 @@ import { ChairsPage } from './features/chairs/ChairsPage'
 import { CourierModal } from './features/couriers/CourierModal'
 import { CouriersPage } from './features/couriers/CouriersPage'
 import { OrdersPage } from './features/orders/OrdersPage'
+import { AgendaPage } from './features/agenda/AgendaPage'
 import { AiContextPage } from './features/ai/AiContextPage'
 import { OverviewPage } from './features/overview/OverviewPage'
 import { NotificationsPage } from './features/notifications/NotificationsPage'
@@ -22,6 +23,7 @@ function App() {
     chairsPage,
     branchesPage,
     couriersPage,
+    agendaPage,
     ordersPage,
     aiPage,
     notificationsPage,
@@ -85,6 +87,7 @@ function App() {
         {page === 'chairs' && !showLoading && !pageError && <ChairsPage {...chairsPage} />}
         {page === 'branches' && !showLoading && !pageError && <BranchesPage {...branchesPage} />}
         {page === 'couriers' && !showLoading && !pageError && <CouriersPage {...couriersPage} />}
+        {page === 'agenda' && !showLoading && !pageError && <AgendaPage {...agendaPage} />}
         {page === 'orders' && !showLoading && !pageError && <OrdersPage {...ordersPage} credentials={session.credentials} />}
         {page === 'ai' && !showLoading && !pageError && <AiContextPage {...aiPage} />}
         {page === 'notifications' && !showLoading && !pageError && notificationsPage.settings && (
