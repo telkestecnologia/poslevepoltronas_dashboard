@@ -311,6 +311,28 @@ img {
 .modal-form textarea::placeholder {
   color: #a6b4b5;
 }
+.password-field {
+  position: relative;
+  display: block;
+}
+.login-form .password-field input { padding-right: 46px; }
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  transform: translateY(-50%);
+  transition: background 0.2s, color 0.2s;
+}
+.password-toggle:hover { background: #eaf5f2; color: var(--teal-dark); }
+.password-toggle:focus-visible { outline: 2px solid var(--teal); outline-offset: 1px; }
 .login-submit {
   margin-top: 5px;
   width: 100%;
@@ -667,68 +689,173 @@ img {
   font-size: 12px;
 }
 .overview-rentals-feedback.error { color: #b65a48; }
-.overview-rentals-total {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 8px;
-  flex: none;
-  padding: 11px 15px;
-  border-radius: 12px;
-  background: #e6f5f1;
-  color: var(--teal-dark);
+.overview-rentals-body {
+  display: grid;
+  grid-template-columns: minmax(230px, 280px) minmax(0, 1fr);
+  gap: 22px;
+  margin-top: 22px;
+  transition: opacity 0.2s;
 }
-.overview-rentals-total strong {
+.overview-rentals-body.is-loading { opacity: 0.45; }
+.overview-rentals-summary {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 16px;
+  padding: 22px 20px;
+  border-radius: 14px;
+  background: linear-gradient(160deg, #e6f5f1, #f5fbf9 70%);
+}
+.overview-rentals-donut {
+  position: relative;
+  width: 148px;
+  aspect-ratio: 1;
+}
+.overview-rentals-donut svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+.overview-rentals-donut circle {
+  fill: none;
+  stroke-width: 11;
+}
+.overview-rentals-donut-track { stroke: #d3e9e4; }
+.overview-rentals-donut-value {
+  stroke: var(--teal);
+  stroke-linecap: round;
+}
+.overview-rentals-donut div {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  text-align: center;
+}
+.overview-rentals-donut strong {
+  color: var(--teal-dark);
   font-family: 'Outfit', sans-serif;
-  font-size: 27px;
+  font-size: 32px;
   line-height: 1;
 }
-.overview-rentals-total span {
+.overview-rentals-donut span {
+  margin-top: 3px;
+  color: #60767a;
   font-size: 11px;
   font-weight: 700;
 }
-.overview-rentals-rows {
-  display: grid;
-  gap: 13px;
-  margin-top: 22px;
-  max-height: 430px;
-  overflow-y: auto;
-  padding-right: 4px;
-}
-.overview-rentals-rows.is-loading { opacity: 0.45; }
-.overview-rentals-row {
-  display: grid;
-  grid-template-columns: minmax(115px, 190px) minmax(0, 1fr) 130px;
-  align-items: center;
-  gap: 16px;
-}
-.overview-rentals-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: #465e63;
+.overview-rentals-legend {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  list-style: none;
+  color: #526a6f;
   font-size: 12px;
-  font-weight: 700;
 }
-.overview-rentals-plot {
-  min-width: 0;
-  padding: 5px 0;
+.overview-rentals-legend li { display: flex; align-items: center; gap: 6px; }
+.overview-rentals-legend i { width: 10px; height: 10px; border-radius: 3px; }
+.overview-rentals-legend i.rented { background: var(--teal); }
+.overview-rentals-legend i.free { background: #c5e0da; }
+.overview-rentals-legend strong { color: var(--ink); }
+.overview-rentals-reading {
+  color: #526a6f;
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: center;
 }
-.overview-rentals-bar {
-  height: 19px;
-  border-radius: 99px;
-  background: linear-gradient(90deg, #1599a6, #54b7a8);
-}
-.overview-rentals-count {
+.overview-rentals-branches {
   display: grid;
-  gap: 2px;
-  color: var(--ink);
-  text-align: right;
-  font-size: 13px;
-  white-space: nowrap;
+  gap: 12px;
+  align-content: center;
 }
-.overview-rentals-count strong span { color: var(--muted); font-weight: 500; }
-.overview-rentals-stock { color: var(--muted); font-size: 11px; }
+.overview-rentals-branch {
+  display: grid;
+  gap: 11px;
+  padding: 15px 17px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  animation: overview-rise 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+  animation-delay: calc(var(--i) * 90ms);
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+.overview-rentals-branch:hover {
+  border-color: #bfe0da;
+  box-shadow: 0 8px 22px rgba(41, 95, 91, 0.09);
+  transform: translateY(-2px);
+}
+.overview-rentals-branch header {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+.overview-rentals-branch h3 {
+  flex: 1;
+  min-width: 0;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 650;
+}
+.overview-rentals-branch header strong {
+  color: var(--teal-dark);
+  font-family: 'Outfit', sans-serif;
+  font-size: 20px;
+}
+.overview-rentals-chairs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.overview-rentals-chairs svg {
+  color: #bcd6d1;
+  animation: overview-pop 0.35s cubic-bezier(0.2, 0.8, 0.2, 1.2) both;
+  animation-delay: calc(var(--chair) * 35ms + 150ms);
+  transition: color 0.3s;
+}
+.overview-rentals-chairs svg.rented { color: var(--teal); fill: #bfe6e4; }
+.overview-rentals-meter {
+  height: 12px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: #e2efec;
+}
+.overview-rentals-meter span {
+  display: block;
+  height: 100%;
+  border-radius: 99px;
+  background: var(--teal);
+  transition: width 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.overview-rentals-branch p {
+  color: var(--muted);
+  font-size: 12px;
+}
+.overview-rentals-branch p b { color: var(--ink); }
+@keyframes overview-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes overview-pop {
+  from { opacity: 0; transform: scale(0.6); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes overview-value-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes chart-grow-y {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+@keyframes chart-grow-x {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@keyframes count-pop {
+  from { opacity: 0.3; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 .overview-rentals-empty {
   display: flex;
   align-items: center;
@@ -792,41 +919,134 @@ img {
 .overview-revenue-empty { min-height: 216px; }
 .overview-revenue-empty.is-loading,
 .overview-revenue-scroll.is-loading { opacity: 0.5; }
+.overview-revenue-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 20px;
+}
+.overview-revenue-stats div {
+  padding: 13px 16px;
+  border-radius: 11px;
+  background: #f1f8f7;
+}
+.overview-revenue-stats dt {
+  color: #60767a;
+  font-size: 11px;
+  font-weight: 700;
+}
+.overview-revenue-stats dd {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  margin-top: 5px;
+  color: var(--teal-dark);
+  font-family: 'Outfit', sans-serif;
+  font-size: 21px;
+  font-weight: 600;
+}
+.overview-revenue-stats small {
+  color: #60767a;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+}
 .overview-revenue-scroll {
-  margin-top: 24px;
+  padding-top: 40px;
   overflow-x: auto;
 }
-.overview-revenue-columns {
-  display: grid;
-  grid-template-columns: repeat(12, minmax(66px, 1fr));
-  gap: 10px;
+.overview-revenue-chart {
+  position: relative;
   min-width: 860px;
+  padding: 0 40px 0 58px;
+}
+.overview-revenue-grid {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 190px;
+}
+.overview-revenue-grid span {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 1px solid #e8f0ee;
+  color: #71878a;
+  font-size: 10px;
+  line-height: 0;
+}
+.overview-revenue-grid span:first-child { border-top-color: #cbdcd8; }
+.overview-revenue-columns {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 2px;
 }
 .overview-revenue-column {
   display: grid;
-  grid-template-rows: auto 170px auto;
+  grid-template-rows: 190px auto;
   gap: 8px;
   min-width: 0;
+  border-radius: 8px;
+  outline: none;
   text-align: center;
+}
+.overview-revenue-plot {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.overview-revenue-bar {
+  display: block;
+  width: min(26px, 100%);
+  height: var(--height);
+  border-radius: 4px 4px 0 0;
+  background: var(--teal);
+  transform-origin: bottom;
+  animation: chart-grow-y 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: calc(var(--i) * 45ms);
+  transition: height 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), background 0.2s, opacity 0.2s;
+}
+.overview-revenue-column.best .overview-revenue-bar { background: var(--teal-dark); }
+.overview-revenue-columns:hover .overview-revenue-bar { opacity: 0.45; }
+.overview-revenue-column:hover .overview-revenue-bar,
+.overview-revenue-column:focus-visible .overview-revenue-bar { opacity: 1; }
+.overview-revenue-value,
+.overview-revenue-tooltip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--height) + 6px);
+  transform: translateX(-50%);
+  white-space: nowrap;
 }
 .overview-revenue-value {
   color: var(--ink);
   font-size: 11px;
   font-weight: 700;
-  white-space: nowrap;
+  animation: overview-value-in 0.3s ease-out backwards;
+  animation-delay: calc(var(--i) * 45ms + 500ms);
+  transition: opacity 0.15s;
 }
-.overview-revenue-plot {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  border-bottom: 1px solid #cbdcd8;
+.overview-revenue-tooltip {
+  z-index: 2;
+  display: grid;
+  gap: 1px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 12px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
 }
-.overview-revenue-bar {
-  display: block;
-  width: min(36px, 100%);
-  border-radius: 7px 7px 0 0;
-  background: linear-gradient(180deg, #54b7a8, #1599a6);
-}
+.overview-revenue-tooltip small { color: #c3d3d6; font-size: 10px; }
+.overview-revenue-column:hover .overview-revenue-tooltip,
+.overview-revenue-column:focus-visible .overview-revenue-tooltip { opacity: 1; }
+.overview-revenue-column:hover .overview-revenue-value,
+.overview-revenue-column:focus-visible .overview-revenue-value { opacity: 0; }
 .overview-revenue-label {
   padding-bottom: 3px;
   color: #60767a;
@@ -899,13 +1119,26 @@ img {
 .finance-chart-legend span::before { content: ''; display: inline-block; width: 9px; height: 9px; margin-right: 6px; border-radius: 2px; }
 .finance-chart-legend .inflow::before { background: #1a9baa; }
 .finance-chart-legend .outflow::before { background: #e69a75; }
-.finance-chart-scroll { overflow-x: auto; }
-.finance-chart-bars { display: flex; gap: 12px; min-width: max-content; height: 210px; }
-.finance-chart-month { width: 60px; display: grid; grid-template-rows: 180px auto; gap: 8px; text-align: center; color: #6c8185; font-size: 11px; font-weight: 700; }
-.finance-chart-plot { display: flex; align-items: flex-end; justify-content: center; gap: 5px; border-bottom: 1px solid #d5e4e1; }
-.finance-chart-bar { display: block; width: 17px; min-height: 0; border-radius: 5px 5px 0 0; }
-.finance-chart-bar.inflow { background: linear-gradient(#5bb9ae, #1599a6); }
-.finance-chart-bar.outflow { background: linear-gradient(#edb797, #df8f71); }
+.finance-chart-scroll { padding-top: 62px; margin-top: -40px; overflow-x: auto; }
+.finance-chart-bars { display: flex; gap: 4px; min-width: max-content; height: 210px; }
+.finance-chart-month { flex: 1 0 60px; display: grid; grid-template-rows: 180px auto; gap: 8px; border-radius: 8px; outline: none; text-align: center; color: #6c8185; font-size: 11px; font-weight: 700; }
+.finance-chart-plot { position: relative; display: flex; align-items: flex-end; justify-content: center; gap: 2px; border-bottom: 1px solid #d5e4e1; }
+.finance-chart-bar { display: block; width: 17px; min-height: 0; border-radius: 4px 4px 0 0; transform-origin: bottom; animation: chart-grow-y 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both; animation-delay: calc(var(--i) * 50ms); transition: height 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.2s; }
+.finance-chart-bar.inflow { background: var(--teal); }
+.finance-chart-bar.outflow { background: var(--coral); }
+.finance-chart-bars:hover .finance-chart-bar { opacity: 0.45; }
+.finance-chart-month:hover .finance-chart-bar,
+.finance-chart-month:focus-visible .finance-chart-bar { opacity: 1; }
+.finance-chart-tooltip { position: absolute; left: 50%; top: 0; z-index: 2; display: grid; gap: 2px; padding: 7px 10px; border-radius: 8px; background: var(--ink); color: #dce7e9; font-size: 11px; font-weight: 500; text-align: left; white-space: nowrap; opacity: 0; pointer-events: none; transform: translate(-50%, -30%); transition: opacity 0.15s; }
+.finance-chart-month:nth-last-child(-n + 2) .finance-chart-tooltip { left: auto; right: 0; transform: translateY(-30%); }
+.finance-chart-tooltip small { color: #c3d3d6; font-size: 10px; }
+.finance-chart-tooltip strong { color: #fff; }
+.finance-chart-month:hover .finance-chart-tooltip,
+.finance-chart-month:focus-visible .finance-chart-tooltip { opacity: 1; }
+.finance-branch-meter { grid-column: 1 / -1; display: flex; gap: 2px; height: 6px; margin-top: 5px; overflow: hidden; border-radius: 99px; background: #edf4f2; }
+.finance-branch-meter i { display: block; height: 100%; transform-origin: left; animation: chart-grow-x 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.finance-branch-meter i.inflow { background: var(--teal); }
+.finance-branch-meter i.outflow { background: var(--coral); }
 .finance-branch-list { display: grid; gap: 0; max-height: 210px; overflow-y: auto; }
 .finance-branch-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 11px; }
 .finance-branch-row:first-child { padding-top: 0; }
@@ -954,14 +1187,25 @@ img {
   .overview-rentals-header,
   .overview-revenue-header { flex-direction: column; }
 }
+@media (max-width: 860px) {
+  .overview-rentals-body { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .overview-rentals-branch,
+  .overview-rentals-chairs svg,
+  .overview-revenue-bar,
+  .overview-revenue-value,
+  .finance-chart-bar,
+  .finance-branch-meter i,
+  .order-summary strong { animation: none; }
+}
 @media (max-width: 640px) {
   .overview-rentals,
   .overview-revenue { padding: 21px 18px; }
   .overview-rentals-header { flex-direction: column; gap: 14px; }
   .overview-rentals-controls { flex-wrap: wrap; }
   .overview-rentals-calendar { left: 0; right: auto; }
-  .overview-rentals-row { grid-template-columns: minmax(0, 1fr) auto; gap: 6px 10px; }
-  .overview-rentals-plot { grid-column: 1 / -1; grid-row: 2; }
+  .overview-revenue-stats { grid-template-columns: 1fr; }
   .overview-heading {
     align-items: stretch;
     flex-direction: column;
@@ -1207,6 +1451,7 @@ tbody tr:hover {
   color: var(--ink);
   font-family: 'Outfit', sans-serif;
   font-size: 26px;
+  animation: count-pop 0.35s ease-out both;
 }
 .order-toolbar {
   justify-content: flex-start;

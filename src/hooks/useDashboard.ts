@@ -25,6 +25,7 @@ import {
   type Staff,
 } from '../api'
 import { CHAIR_PAGE_SIZE, type Modal, type Page } from '../types'
+import { onlyOfficialBranches } from '../utils/branches'
 import { getMessage } from '../utils/errors'
 import { loadPage, type PageData } from '../data/loadPage'
 
@@ -599,7 +600,7 @@ export function useDashboard() {
       onDeleteBlock: deleteBlock,
     },
     branchesPage: {
-      branches,
+      branches: onlyOfficialBranches(branches, branch => branch.name),
       activeCounts: activeChairCounts,
       onNewBranch: () => openModal({ kind: 'newBranch' }),
       onEditBranch: (branch: Branch) => openModal({ kind: 'editBranch', branch }),
@@ -610,7 +611,11 @@ export function useDashboard() {
       onNewCourier: () => openModal({ kind: 'newCourier' }),
       onEditCourier: (courier: Courier) => openModal({ kind: 'editCourier', courier }),
     },
-    agendaPage: { orders, couriers, branches, onRefresh: refreshAgenda },
+    agendaPage: {
+      orders, couriers,
+      branches: onlyOfficialBranches(branches, branch => branch.name),
+      onRefresh: refreshAgenda,
+    },
     ordersPage: {
       orders, couriers, branches, options: chairOptions,
       status: orderStatusFilter,

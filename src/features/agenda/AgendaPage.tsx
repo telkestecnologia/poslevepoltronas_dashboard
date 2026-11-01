@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react'
 import type { Branch, Courier, Order, OrderStatus } from '../../api'
+import { branchLabel } from '../../utils/branches'
 import { getMessage } from '../../utils/errors'
 import { formatPhone } from '../../utils/phone'
 
@@ -147,7 +148,7 @@ export function AgendaPage({ orders, couriers, branches, onRefresh }: Props) {
       <label>Filial
         <select value={branch} onChange={event => { setBranch(event.target.value); setCity('ALL') }}>
           <option value="ALL">Todas as filiais</option>
-          {sortedBranches.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
+          {sortedBranches.map(item => <option key={item.id} value={item.id}>{branchLabel(item.name)}</option>)}
         </select>
       </label>
       <label>Cidade da filial
@@ -229,7 +230,7 @@ export function AgendaPage({ orders, couriers, branches, onRefresh }: Props) {
                   {itemStatus(item, today)}</span>
               </div>
               <h4>{item.order.customerName}</h4>
-              <p>{item.order.chairCode} • {item.order.branchName}</p>
+              <p>{item.order.chairCode} • {branchLabel(item.order.branchName)}</p>
               <p>{item.order.address}, {group.label}</p>
               <div className="agenda-item-footer">
                 <span>{item.order.courierId ? courierNames.get(item.order.courierId) ?? 'Entregador não encontrado' : 'Sem entregador'}</span>

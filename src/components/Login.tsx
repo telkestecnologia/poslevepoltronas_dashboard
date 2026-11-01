@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { ArrowRight, CircleHelp, ShieldCheck, Sparkles } from 'lucide-react'
+import { ArrowRight, CircleHelp, Eye, EyeOff, ShieldCheck, Sparkles } from 'lucide-react'
 import { Brand } from './common'
 
 export function Login({
@@ -13,6 +13,7 @@ export function Login({
 }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   function submit(event: FormEvent) {
     event.preventDefault()
     void onLogin(email.trim(), password)
@@ -66,14 +67,26 @@ export function Login({
                 </label>
                 <label>
                   Senha
-                  <input
-                    type="password"
-                    autoComplete="current-password"
-                    placeholder="Digite sua senha"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
+                  <span className="password-field">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      autoComplete="current-password"
+                      placeholder="Digite sua senha"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle"
+                      aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                      aria-pressed={showPassword}
+                      title={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                      onClick={() => setShowPassword((value) => !value)}
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </span>
                 </label>
             {error && (
               <div className="form-error" role="alert">

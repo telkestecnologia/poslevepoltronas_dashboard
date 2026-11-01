@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { AlertCircle, ArrowRight, ClipboardList, RefreshCw, Search, X } from 'lucide-react'
 import { type Courier, type Order, type OrderSource, type OrderStatus } from '../../api'
 import { EmptyState } from '../../components/common'
+import { branchLabel } from '../../utils/branches'
 import { getMessage } from '../../utils/errors'
 import { formatPhone } from '../../utils/phone'
 import { OrderEvidencePanel } from './OrderEvidencePanel'
@@ -86,10 +87,20 @@ export function OrdersPage({ credentials, orders, couriers, status, source, onSt
   const term = normalize(search.trim())
   const visible = orders.filter(order => (status === 'ALL' || order.status === status)
     && (source === 'ALL' || order.source === source)
-    && normalize(`${order.customerName} ${order.customerPhone} ${order.chairCode} ${order.municipalityName} ${order.branchName}`)
+    && normalize(`${order.customerName} ${order.customerPhone} ${order.chairCode} ${order.municipalityName} ${order.branchName} ${branchLabel(order.branchName)}`)
       .includes(term))
-  const sourceOrders = orders.filter(order => source === 'ALL' || order.source === source)
-  const openIssues = sourceOrders.reduce((total, order) => total + order.issues.filter(issue => issue.status === 'OPEN').length, 0)
+  // Os cartões resumem exatamente as linhas da lista: busca, filtros e ações mudam os dois juntos.
+  const countByStatus = (...statuses: OrderStatus[]) => visible.filter(order => statuses.includes(order.status)).length
+  const summary = [
+    { label: 'Aguardando contrato', value: countByStatus('PENDING_CONTRACT') },
+    { label: 'Aguardando PIX', value: countByStatus('PENDING_PAYMENT') },
+    { label: 'PIX em análise', value: countByStatus('PAYMENT_REVIEW') },
+    { label: 'Pagamento confirmado', value: countByStatus('PAYMENT_CONFIRMED') },
+    { label: 'Em operação', value: countByStatus('DELIVERY_PENDING', 'IN_USE', 'PICKUP_PENDING') },
+    { label: 'Concluídos', value: countByStatus('COMPLETED') },
+    { label: 'Expirados ou cancelados', value: countByStatus('EXPIRED', 'CANCELLED') },
+    { label: 'Problemas em aberto', value: visible.reduce((total, order) => total + order.issues.filter(issue => issue.status === 'OPEN').length, 0) },
+  ]
 
   async function perform(operation: () => Promise<Order>, after?: () => void) {
     setBusy(true)
@@ -138,13 +149,8 @@ export function OrdersPage({ credentials, orders, couriers, status, source, onSt
     </div>
     {error && !selected && <div className="form-error order-page-error" role="alert">{error}</div>}
     <div className="order-summary">
-      <div className="panel"><small>Aguardando contrato</small><strong>{sourceOrders.filter(order => order.status === 'PENDING_CONTRACT').length}</strong></div>
-      <div className="panel"><small>Aguardando PIX</small><strong>{sourceOrders.filter(order => order.status === 'PENDING_PAYMENT').length}</strong></div>
-      <div className="panel"><small>PIX em análise</small><strong>{sourceOrders.filter(order => order.status === 'PAYMENT_REVIEW').length}</strong></div>
-      <div className="panel"><small>Pagamento confirmado</small><strong>{sourceOrders.filter(order => order.status === 'PAYMENT_CONFIRMED').length}</strong></div>
-      <div className="panel"><small>Em operação</small><strong>{sourceOrders.filter(order =>
-        ['DELIVERY_PENDING', 'IN_USE', 'PICKUP_PENDING'].includes(order.status)).length}</strong></div>
-      <div className="panel"><small>Problemas em aberto</small><strong>{openIssues}</strong></div>
+      {summary.map(card => <div className="panel" key={card.label}>
+        <small>{card.label}</small><strong key={card.value}>{card.value}</strong></div>)}
     </div>
     <section className="panel table-panel">
       <div className="table-toolbar order-toolbar">
@@ -171,7 +177,7 @@ export function OrdersPage({ credentials, orders, couriers, status, source, onSt
           <th>CLIENTE</th><th>PERÍODO</th><th>POLTRONA</th><th>STATUS</th><th>PROBLEMAS</th><th><span className="sr-only">Ação</span></th>
         </tr></thead><tbody>{visible.map(order => <tr key={order.id}>
           <td><div className="courier-identity"><strong>{order.customerName}</strong>
-            <small>{order.municipalityName} • {order.branchName}</small>
+            <small>{order.municipalityName} • {branchLabel(order.branchName)}</small>
             {order.source === 'MANUAL_PREVIEW' && <small className="order-preview-label">Demonstração</small>}</div></td>
           <td>{dateLabel(order.start)} a {dateLabel(order.end)}</td>
           <td>{order.chairCode}</td>
@@ -219,7 +225,7 @@ export function OrdersPage({ credentials, orders, couriers, status, source, onSt
             {selected.stockStart && selected.stockEnd && <div><small>Estoque bloqueado</small>
               <strong>{dateLabel(selected.stockStart)} a {dateLabel(selected.stockEnd)}</strong></div>}
             <div><small>Local de entrega</small><strong>{selected.address}<br />{selected.municipalityName}/{selected.municipalityUf} • CEP {selected.postalCode}</strong></div>
-            <div><small>Poltrona e filial</small><strong>{selected.chairCode} • {selected.branchName}</strong></div>
+            <div><small>Poltrona e filial</small><strong>{selected.chairCode} • {branchLabel(selected.branchName)}</strong></div>
             <div><small>Frete registrado</small><strong>{freightLabel(selected.freightCents)}</strong></div>
             {selected.source === 'CHECKOUT' && <div><small>Total previsto</small><strong>{freightLabel(selected.totalCents)}</strong></div>}
           </div>

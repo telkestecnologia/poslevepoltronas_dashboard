@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { ArrowRight, X } from 'lucide-react'
 import type { Branch, Chair, ChairStatus } from '../../api'
+import { branchLabel, isOfficialBranch } from '../../utils/branches'
 
 export function ChairModal({
   modal,
@@ -88,9 +89,9 @@ export function ChairModal({
               Filial
               <select value={branchId} onChange={(e) => setBranchId(e.target.value)} required>
                 <option value="">Selecione uma filial</option>
-                {branches.map((branch) => (
+                {branches.filter((branch) => isOfficialBranch(branch.name) || branch.id === chair?.branchId).map((branch) => (
                   <option key={branch.id} value={branch.id}>
-                    {branch.name}
+                    {branchLabel(branch.name)}
                     {!branch.active ? ' (inativa)' : ''}
                   </option>
                 ))}

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ChevronRight, MapPin, Plus } from 'lucide-react'
 import type { Branch } from '../../api'
 import { EmptyState } from '../../components/common'
+import { branchLabel, OFFICIAL_BRANCH_COUNT } from '../../utils/branches'
 import { getMessage } from '../../utils/errors'
 
 type Props = {
@@ -36,9 +37,11 @@ export function BranchesPage({ branches, activeCounts, onNewBranch, onEditBranch
           <h1>Filiais</h1>
           <p>Cadastre as cidades atendidas e ative frete grátis por filial. Os valores normais ficam salvos.</p>
         </div>
-        <button className="button primary" onClick={onNewBranch}>
-          <Plus size={18} /> Nova filial
-        </button>
+        {branches.length < OFFICIAL_BRANCH_COUNT && (
+          <button className="button primary" onClick={onNewBranch}>
+            <Plus size={18} /> Nova filial
+          </button>
+        )}
       </div>
       {error && <div className="form-error branch-page-error" role="alert">{error}</div>}
       <section className="panel table-panel">
@@ -72,7 +75,7 @@ export function BranchesPage({ branches, activeCounts, onNewBranch, onEditBranch
                         <span className="row-icon">
                           <MapPin size={18} />
                         </span>
-                        <strong>{branch.name}</strong>
+                        <strong>{branchLabel(branch.name)}</strong>
                       </div>
                     </td>
                     <td>

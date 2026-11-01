@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ArrowDownLeft, ArrowUpRight, RefreshCw, Wallet } from 'lucide-react'
 import { api, type Branch, type FinancialReport } from '../../api'
+import { branchLabel, onlyOfficialBranches } from '../../utils/branches'
 import { getMessage } from '../../utils/errors'
 import { RentalDatePicker } from '../overview/RentalDatePicker'
 
@@ -65,6 +66,8 @@ export function FinancePage({ credentials }: { credentials: string }) {
   const maxChart = Math.max(1, ...(report?.monthly.map(bucket =>
     Math.max(bucket.inflowCents, bucket.outflowCents)) ?? []))
   const pages = report ? Math.max(1, Math.ceil(report.total / pageSize)) : 1
+  const visibleBranchResults = onlyOfficialBranches(report?.branches ?? [], branch => branch.branchName)
+  const maxBranchFlow = Math.max(1, ...visibleBranchResults.map(branch => branch.inflowCents + branch.outflowCents))
 
   return <>
     <div className="page-heading with-action finance-heading">
@@ -101,7 +104,8 @@ export function FinancePage({ credentials }: { credentials: string }) {
         <label className="finance-branch-filter">Filial
           <select value={branchId} onChange={event => { setBranchId(event.target.value); setPage(0) }}>
             <option value="">Todas as filiais</option>
-            {branches.map(branch => <option value={branch.id} key={branch.id}>{branch.name}</option>)}
+            {onlyOfficialBranches(branches, branch => branch.name).map(branch =>
+              <option value={branch.id} key={branch.id}>{branchLabel(branch.name)}</option>)}
           </select>
         </label>
       </div>
@@ -138,12 +142,17 @@ export function FinancePage({ credentials }: { credentials: string }) {
           </div>
           <div className="finance-chart-scroll">
             <div className="finance-chart-bars">
-              {report.monthly.map(bucket => <div className="finance-chart-month" key={bucket.start}
-                role="img" title={`Entradas: ${currency(bucket.inflowCents)} • Saídas: ${currency(bucket.outflowCents)}`}
+              {report.monthly.map((bucket, index) => <div className="finance-chart-month" key={bucket.start}
+                role="img" tabIndex={0} style={{ '--i': index } as React.CSSProperties}
                 aria-label={`${monthName.format(new Date(`${bucket.start}T12:00:00Z`))}: entradas ${currency(bucket.inflowCents)}, saídas ${currency(bucket.outflowCents)}`}>
                 <div className="finance-chart-plot">
                   <span className="finance-chart-bar inflow" style={{ height: `${bucket.inflowCents / maxChart * 100}%` }} />
                   <span className="finance-chart-bar outflow" style={{ height: `${bucket.outflowCents / maxChart * 100}%` }} />
+                  <span className="finance-chart-tooltip" aria-hidden="true">
+                    <small>{monthName.format(new Date(`${bucket.start}T12:00:00Z`))}</small>
+                    <span>Entradas <strong>{currency(bucket.inflowCents)}</strong></span>
+                    <span>Saídas <strong>{currency(bucket.outflowCents)}</strong></span>
+                  </span>
                 </div>
                 <span>{monthName.format(new Date(`${bucket.start}T12:00:00Z`))}</span>
               </div>)}
@@ -153,14 +162,18 @@ export function FinancePage({ credentials }: { credentials: string }) {
         <section className="panel finance-branches" aria-labelledby="finance-branches-title">
           <div className="finance-panel-heading"><div><span className="eyebrow">FILIAIS</span>
             <h2 id="finance-branches-title">Resultado por filial</h2></div></div>
-          {report.branches.length === 0
+          {visibleBranchResults.length === 0
             ? <div className="finance-branch-empty"><Wallet size={22} /> Sem movimentações no período.</div>
-            : <div className="finance-branch-list">{report.branches.map(branch =>
+            : <div className="finance-branch-list">{visibleBranchResults.map(branch =>
               <div className="finance-branch-row" key={branch.branchId}>
-                <strong>{branch.branchName}</strong>
+                <strong>{branchLabel(branch.branchName)}</strong>
                 <span>Entradas {currency(branch.inflowCents)}</span>
                 <span>Saídas {currency(branch.outflowCents)}</span>
                 <b>{currency(branch.inflowCents - branch.outflowCents)}</b>
+                <div className="finance-branch-meter" aria-hidden="true">
+                  <i className="inflow" style={{ width: `${branch.inflowCents / maxBranchFlow * 100}%` }} />
+                  <i className="outflow" style={{ width: `${branch.outflowCents / maxBranchFlow * 100}%` }} />
+                </div>
               </div>)}</div>}
         </section>
       </div>
@@ -180,7 +193,7 @@ export function FinancePage({ credentials }: { credentials: string }) {
                 {entry.kind === 'INFLOW' ? <ArrowDownLeft size={16} /> : <ArrowUpRight size={16} />}</span>
                 <span className="finance-entry-description"><strong>{entry.description}</strong>
                   <small>{entry.category}{entry.reference ? ` • Ref. ${entry.reference}` : ''}</small></span></td>
-              <td>{entry.branchName}</td><td>{entry.paymentMethod}</td>
+              <td>{branchLabel(entry.branchName)}</td><td>{entry.paymentMethod}</td>
               <td className={entry.kind === 'INFLOW' ? 'finance-positive' : 'finance-negative'}>
                 {entry.kind === 'INFLOW' ? '+' : '−'} {currency(entry.amountCents)}</td>
             </tr>)}</tbody>

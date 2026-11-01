@@ -2,6 +2,7 @@ import { Armchair, ChevronRight, CircleHelp, MapPin, Plus, Search, Settings2 } f
 import type { Branch, Chair, ChairOption, ChairStatus, ManualBlock } from '../../api'
 import { EmptyState, StatusBadge } from '../../components/common'
 import { CHAIR_PAGE_SIZE } from '../../types'
+import { branchLabel, onlyOfficialBranches } from '../../utils/branches'
 import { BlockManager } from './BlockManager'
 
 type Props = {
@@ -88,9 +89,9 @@ export function ChairsPage(props: Props) {
               onChange={(event) => onBranchChange(event.target.value)}
             >
               <option value="ALL">Todas as filiais</option>
-              {branches.map((branch) => (
+              {onlyOfficialBranches(branches, (branch) => branch.name).map((branch) => (
                 <option key={branch.id} value={branch.id}>
-                  {branch.name}
+                  {branchLabel(branch.name)}
                 </option>
               ))}
             </select>
@@ -164,8 +165,10 @@ export function ChairsPage(props: Props) {
                     </td>
                     <td>{chair.model}</td>
                     <td>
-                      {branches.find((branch) => branch.id === chair.branchId)?.name ??
-                        'Filial não encontrada'}
+                      {branchLabel(
+                        branches.find((branch) => branch.id === chair.branchId)?.name ??
+                          'Filial não encontrada',
+                      )}
                     </td>
                     <td>
                       <StatusBadge status={chair.status} />
