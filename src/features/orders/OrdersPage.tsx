@@ -35,6 +35,11 @@ const labels: Record<OrderStatus, string> = {
   PICKUP_PENDING: 'Aguardando retirada',
   COMPLETED: 'Concluído',
 }
+
+const orderStatusLabel = (order: Order) => order.paymentMock
+  ? order.status === 'PENDING_PAYMENT' ? 'Aguardando simulação'
+    : order.status === 'PAYMENT_CONFIRMED' ? 'Teste confirmado' : labels[order.status]
+  : labels[order.status]
 const statusFlow: OrderStatus[] = [
   'PAYMENT_CONFIRMED', 'DELIVERY_PENDING', 'IN_USE', 'PICKUP_PENDING', 'COMPLETED',
 ]
@@ -95,7 +100,8 @@ export function OrdersPage({ credentials, orders, couriers, status, source, onSt
     { label: 'Aguardando contrato', value: countByStatus('PENDING_CONTRACT') },
     { label: 'Aguardando PIX', value: countByStatus('PENDING_PAYMENT') },
     { label: 'PIX em análise', value: countByStatus('PAYMENT_REVIEW') },
-    { label: 'Pagamento confirmado', value: countByStatus('PAYMENT_CONFIRMED') },
+    { label: 'Pagamento confirmado', value: visible.filter(order => order.status === 'PAYMENT_CONFIRMED' && !order.paymentMock).length },
+    { label: 'Teste confirmado', value: visible.filter(order => order.status === 'PAYMENT_CONFIRMED' && !!order.paymentMock).length },
     { label: 'Em operação', value: countByStatus('DELIVERY_PENDING', 'IN_USE', 'PICKUP_PENDING') },
     { label: 'Concluídos', value: countByStatus('COMPLETED') },
     { label: 'Expirados ou cancelados', value: countByStatus('EXPIRED', 'CANCELLED') },
@@ -178,10 +184,11 @@ export function OrdersPage({ credentials, orders, couriers, status, source, onSt
         </tr></thead><tbody>{visible.map(order => <tr key={order.id}>
           <td><div className="courier-identity"><strong>{order.customerName}</strong>
             <small>{order.municipalityName} • {branchLabel(order.branchName)}</small>
-            {order.source === 'MANUAL_PREVIEW' && <small className="order-preview-label">Demonstração</small>}</div></td>
+            {order.source === 'MANUAL_PREVIEW' && <small className="order-preview-label">Demonstração</small>}
+            {order.paymentMock && <small className="order-preview-label">Pagamento fictício</small>}</div></td>
           <td>{dateLabel(order.start)} a {dateLabel(order.end)}</td>
           <td>{order.chairCode}</td>
-          <td><span className={`order-status status-${order.status.toLowerCase()}`}>{labels[order.status]}</span></td>
+          <td><span className={`order-status status-${order.status.toLowerCase()}`}>{orderStatusLabel(order)}</span></td>
           <td>{order.issues.filter(issue => issue.status === 'OPEN').length || '—'}</td>
           <td><button className="table-action" onClick={() => { setError(''); setStatusNote(''); setIssueTitle('');
             setIssueDescription(''); setResolutions({}); setStockStart(order.stockStart ?? '');
@@ -196,22 +203,26 @@ export function OrdersPage({ credentials, orders, couriers, status, source, onSt
           <h2 id="order-detail-title">{selected.customerName}</h2></div>
           <button className="icon-button" aria-label="Fechar" onClick={close} disabled={busy}><X size={20} /></button></div>
         <div className="order-detail-body">
-          <div className="order-detail-top"><span className={`order-status status-${selected.status.toLowerCase()}`}>{labels[selected.status]}</span>
+          <div className="order-detail-top"><span className={`order-status status-${selected.status.toLowerCase()}`}>{orderStatusLabel(selected)}</span>
             <small>Entrada em {timeLabel(selected.createdAt)}</small></div>
           {currentStep >= 0 && <ol className="order-progress" aria-label="Etapas do pedido">
             {statusFlow.map((status, index) => <li key={status}
               className={index === currentStep ? 'current' : index < currentStep ? 'done' : ''}
               aria-current={index === currentStep ? 'step' : undefined}>
               <span className="order-progress-number">{index + 1}</span>
-              <span>{labels[status]}</span>
+              <span>{selected.paymentMock && status === 'PAYMENT_CONFIRMED' ? 'Teste confirmado' : labels[status]}</span>
             </li>)}
           </ol>}
           {selected.status === 'PENDING_CONTRACT' && <div className="order-preview-note">
             Pedido ainda sem pagamento confirmado. Válido até {selected.expiresAt ? timeLabel(selected.expiresAt) : 'o prazo da reserva'};
             ao expirar, os dias bloqueados são liberados automaticamente.
           </div>}
-          {selected.status === 'PENDING_PAYMENT' && <div className="order-preview-note">
+          {selected.status === 'PENDING_PAYMENT' && !selected.paymentMock && <div className="order-preview-note">
             Aguardando confirmação do PIX pelo Inter. Reserva válida até {selected.expiresAt ? timeLabel(selected.expiresAt) : 'o prazo informado'}.
+          </div>}
+          {selected.paymentMock && <div className="order-preview-note">
+            Pedido de homologação com pagamento fictício. Nenhum PIX foi criado e nenhum valor foi recebido.
+            {selected.status === 'PENDING_PAYMENT' && <> A simulação deve ser confirmada antes de {selected.expiresAt ? timeLabel(selected.expiresAt) : 'o vencimento da reserva'}.</>}
           </div>}
           {selected.status === 'PAYMENT_REVIEW' && <div className="order-preview-note">
             Confira a ocorrência e o recebimento no Inter antes de orientar o cliente. A poltrona foi liberada; este pedido não está confirmado. Não há devolução automática.

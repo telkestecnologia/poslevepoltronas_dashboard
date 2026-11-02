@@ -77,6 +77,7 @@ export type Order = {
   deliveryTime: string | null; pickupTime: string | null; priceVersion: string | null
   rentalCents: number; freightCents: number; totalCents: number
   holdId: string | null; expiresAt: string | null
+  paymentMock?: boolean | null
   source: OrderSource; status: OrderStatus; courierId: string | null
   issues: OrderIssue[]; history: OrderEvent[]; createdAt: string; updatedAt: string
 }
