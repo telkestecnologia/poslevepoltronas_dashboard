@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { ArrowDownLeft, ArrowUpRight, RefreshCw, Wallet } from 'lucide-react'
-import { api, type Branch, type FinancialReport } from '../../api'
+import { ArrowDownLeft, ArrowUpRight, ChevronDown, RefreshCw, Search, Wallet, X } from 'lucide-react'
+import { api, type Branch, type FinanceQuery, type FinancialEntry, type FinancialReport } from '../../api'
 import { branchLabel, onlyOfficialBranches } from '../../utils/branches'
 import { getMessage } from '../../utils/errors'
 import { RentalDatePicker } from '../overview/RentalDatePicker'
@@ -23,6 +23,23 @@ function monthStart(monthsBack: number) {
 
 function currency(cents: number) {
   return money.format(cents / 100)
+}
+
+function normalize(text: string) {
+  return text.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+}
+
+// The backend has no text search and caps each page at 50 entries, so the statement search
+// loads every entry of the chosen period and filters it here.
+async function loadAllEntries(credentials: string, query: Omit<FinanceQuery, 'page' | 'size'>) {
+  const size = 50
+  const entries: FinancialEntry[] = []
+  for (let page = 0; page < 100; page++) {
+    const report = await api.finance(credentials, { ...query, page, size })
+    entries.push(...report.entries)
+    if (entries.length >= report.total || report.entries.length < size) break
+  }
+  return entries
 }
 
 export function FinancePage({ credentials }: { credentials: string }) {
@@ -57,6 +74,45 @@ export function FinancePage({ credentials }: { credentials: string }) {
     return () => { active = false }
   }, [credentials, from, to, branchId, page, reloadKey])
 
+  const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [statementFrom, setStatementFrom] = useState(from)
+  const [statementTo, setStatementTo] = useState(to)
+  const [statementPage, setStatementPage] = useState(0)
+  const [allEntries, setAllEntries] = useState<FinancialEntry[] | null>(null)
+  const [statementLoading, setStatementLoading] = useState(false)
+
+  // The statement dates follow the period filter until the user narrows them.
+  useEffect(() => {
+    setStatementFrom(from)
+    setStatementTo(to)
+  }, [from, to])
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search.trim()), 300)
+    return () => clearTimeout(timer)
+  }, [search])
+
+  useEffect(() => { setStatementPage(0) }, [debouncedSearch, statementFrom, statementTo, branchId])
+
+  const statementFiltered = debouncedSearch !== '' || statementFrom !== from || statementTo !== to
+
+  useEffect(() => {
+    if (!statementFiltered) { setAllEntries(null); return }
+    let active = true
+    setStatementLoading(true)
+    void loadAllEntries(credentials, { from: statementFrom, to: statementTo, branchId })
+      .then(entries => { if (active) setAllEntries(entries) })
+      .catch(error => { if (active) { setAllEntries([]); setError(getMessage(error)) } })
+      .finally(() => { if (active) setStatementLoading(false) })
+    return () => { active = false }
+  }, [credentials, statementFiltered, statementFrom, statementTo, branchId, reloadKey])
+
+  const term = normalize(debouncedSearch)
+  const matches = allEntries?.filter(entry => term === '' || normalize([
+    entry.description, entry.category, entry.reference, entry.paymentMethod, branchLabel(entry.branchName),
+  ].join(' ')).includes(term)) ?? []
+
   function selectPreset(months: number) {
     setFrom(monthStart(months - 1))
     setTo(today())
@@ -65,7 +121,13 @@ export function FinancePage({ credentials }: { credentials: string }) {
 
   const maxChart = Math.max(1, ...(report?.monthly.map(bucket =>
     Math.max(bucket.inflowCents, bucket.outflowCents)) ?? []))
-  const pages = report ? Math.max(1, Math.ceil(report.total / pageSize)) : 1
+  const statementTotal = statementFiltered ? matches.length : report?.total ?? 0
+  const pages = Math.max(1, Math.ceil(statementTotal / pageSize))
+  const currentPage = statementFiltered ? statementPage : page
+  const setCurrentPage = statementFiltered ? setStatementPage : setPage
+  const visibleEntries = statementFiltered
+    ? matches.slice(statementPage * pageSize, (statementPage + 1) * pageSize)
+    : report?.entries ?? []
   const visibleBranchResults = onlyOfficialBranches(report?.branches ?? [], branch => branch.branchName)
   const maxBranchFlow = Math.max(1, ...visibleBranchResults.map(branch => branch.inflowCents + branch.outflowCents))
 
@@ -181,13 +243,30 @@ export function FinancePage({ credentials }: { credentials: string }) {
       <section className="panel finance-statement" aria-labelledby="finance-statement-title">
         <div className="finance-panel-heading"><div><span className="eyebrow">EXTRATO</span>
           <h2 id="finance-statement-title">Movimentações</h2></div>
-          <span className="finance-entry-count">{report.total.toLocaleString('pt-BR')} lançamentos</span>
+          <span className="finance-entry-count">{statementTotal.toLocaleString('pt-BR')} lançamentos</span>
         </div>
-        {report.entries.length === 0
-          ? <div className="finance-statement-empty">Nenhuma movimentação neste período.</div>
-          : <div className="finance-table-scroll"><table className="finance-table">
+        <div className="finance-statement-tools" role="search" aria-label="Buscar movimentações">
+          <label className="finance-search">
+            <span className="sr-only">Buscar por nome</span>
+            <Search size={16} aria-hidden="true" />
+            <input type="search" value={search} onChange={event => setSearch(event.target.value)}
+              placeholder="Buscar por nome" />
+            {search && <button type="button" aria-label="Limpar busca" onClick={() => setSearch('')}>
+              <X size={14} /></button>}
+          </label>
+          <RentalDatePicker date={statementFrom} onChange={setStatementFrom}
+            label="De" maxDate={statementTo} />
+          <RentalDatePicker date={statementTo} onChange={setStatementTo}
+            label="Até" minDate={statementFrom} maxDate={today()} />
+        </div>
+        {statementLoading && <span className="finance-loading" role="status">Buscando movimentações...</span>}
+        {visibleEntries.length === 0
+          ? <div className="finance-statement-empty">{statementLoading ? 'Carregando...'
+            : debouncedSearch ? `Nenhuma movimentação encontrada para "${debouncedSearch}".`
+              : 'Nenhuma movimentação neste período.'}</div>
+          : <><div className="finance-table-scroll"><table className="finance-table">
             <thead><tr><th>Data</th><th>Descrição</th><th>Filial</th><th>Meio</th><th>Valor</th></tr></thead>
-            <tbody>{report.entries.map(entry => <tr key={entry.id}>
+            <tbody>{visibleEntries.map(entry => <tr key={entry.id}>
               <td>{dateTime.format(new Date(entry.occurredAt))}</td>
               <td><span className={`finance-entry-icon ${entry.kind.toLowerCase()}`}>
                 {entry.kind === 'INFLOW' ? <ArrowDownLeft size={16} /> : <ArrowUpRight size={16} />}</span>
@@ -197,13 +276,32 @@ export function FinancePage({ credentials }: { credentials: string }) {
               <td className={entry.kind === 'INFLOW' ? 'finance-positive' : 'finance-negative'}>
                 {entry.kind === 'INFLOW' ? '+' : '−'} {currency(entry.amountCents)}</td>
             </tr>)}</tbody>
-          </table></div>}
+          </table></div>
+          <ul className="finance-entry-list">{visibleEntries.map(entry => <li key={entry.id}>
+            <details>
+              <summary>
+                <span className={`finance-entry-icon ${entry.kind.toLowerCase()}`}>
+                  {entry.kind === 'INFLOW' ? <ArrowDownLeft size={16} /> : <ArrowUpRight size={16} />}</span>
+                <span className="finance-entry-description"><strong>{entry.description}</strong>
+                  <small>{dateTime.format(new Date(entry.occurredAt))}</small></span>
+                <b className={entry.kind === 'INFLOW' ? 'finance-positive' : 'finance-negative'}>
+                  {entry.kind === 'INFLOW' ? '+' : '−'} {currency(entry.amountCents)}</b>
+                <ChevronDown size={16} className="finance-entry-chevron" aria-hidden="true" />
+              </summary>
+              <dl>
+                <div><dt>Filial</dt><dd>{branchLabel(entry.branchName)}</dd></div>
+                <div><dt>Meio</dt><dd>{entry.paymentMethod}</dd></div>
+                <div><dt>Categoria</dt><dd>{entry.category}</dd></div>
+                {entry.reference && <div><dt>Referência</dt><dd>{entry.reference}</dd></div>}
+              </dl>
+            </details>
+          </li>)}</ul></>}
         {pages > 1 && <div className="finance-pagination">
-          <span>Página {page + 1} de {pages}</span>
-          <div><button type="button" className="button secondary" disabled={page === 0}
-            onClick={() => setPage(value => value - 1)}>Anterior</button>
-            <button type="button" className="button secondary" disabled={page + 1 >= pages}
-              onClick={() => setPage(value => value + 1)}>Próxima</button></div>
+          <span>Página {currentPage + 1} de {pages}</span>
+          <div><button type="button" className="button secondary" disabled={currentPage === 0}
+            onClick={() => setCurrentPage(value => value - 1)}>Anterior</button>
+            <button type="button" className="button secondary" disabled={currentPage + 1 >= pages}
+              onClick={() => setCurrentPage(value => value + 1)}>Próxima</button></div>
         </div>}
       </section>
     </div>}

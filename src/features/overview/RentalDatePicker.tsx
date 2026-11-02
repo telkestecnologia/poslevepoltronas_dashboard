@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
 
 type Props = { date: string; onChange: (date: string) => void; label?: string; minDate?: string; maxDate?: string }
@@ -20,6 +20,25 @@ export function RentalDatePicker({ date, onChange, label = 'Data do aluguel', mi
   const root = useRef<HTMLDivElement>(null)
   const trigger = useRef<HTMLButtonElement>(null)
   const selectedDay = useRef<HTMLButtonElement>(null)
+  const popover = useRef<HTMLDivElement>(null)
+
+  // Keep the calendar inside the visible content area (never under the sidebar or past the screen edge).
+  useLayoutEffect(() => {
+    const calendar = popover.current
+    if (!open || !calendar) return
+    const fit = () => {
+      calendar.style.transform = ''
+      const area = root.current?.closest('.main-area')?.getBoundingClientRect()
+      const left = Math.max(area?.left ?? 0, 0) + 8
+      const right = Math.min(area?.right ?? window.innerWidth, window.innerWidth) - 8
+      const rect = calendar.getBoundingClientRect()
+      const shift = rect.left < left ? left - rect.left : rect.right > right ? Math.max(right - rect.right, left - rect.left) : 0
+      if (shift) calendar.style.transform = `translateX(${shift}px)`
+    }
+    fit()
+    window.addEventListener('resize', fit)
+    return () => window.removeEventListener('resize', fit)
+  }, [open])
 
   useEffect(() => {
     if (!open) return
@@ -71,7 +90,7 @@ export function RentalDatePicker({ date, onChange, label = 'Data do aluguel', mi
         <span id={`${id}-value`}>{displayDate}</span>
       </button>
       {open && (
-        <div className="overview-rentals-calendar" role="dialog" aria-label={`Escolher ${label.toLowerCase()}`}>
+        <div className="overview-rentals-calendar" ref={popover} role="dialog" aria-label={`Escolher ${label.toLowerCase()}`}>
           <div className="overview-rentals-calendar-header">
             <button type="button" aria-label="Mês anterior"
               onClick={() => setVisibleMonth(new Date(year, month - 1, 1))}>
