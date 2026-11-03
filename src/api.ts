@@ -117,12 +117,14 @@ export type Conversation = {
   lastMessagePreview: string; lastMessageRole: ConversationRole; messageCount: number
   needsAttention: boolean; staffName: string | null; lastCustomerMessage?: string | null
   customerPhone?: string | null; windowOpen?: boolean | null
+  customerName?: string | null; stage?: string | null
 }
 export type ConversationPage = {
   items: Conversation[]; total: number; page: number; size: number; whatsApp?: 'OK' | 'NOT_CONFIGURED' | 'ERROR' | null
 }
 export type ConversationMessage = {
   id: string; role: ConversationRole; content: string; status: string | null; staffName: string | null; createdAt: string
+  images?: { url: string; caption?: string | null }[] | null
 }
 export type AiKnowledge = {
   id: string

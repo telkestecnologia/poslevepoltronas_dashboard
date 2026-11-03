@@ -8,8 +8,15 @@ export function whatsAppNumber(phone: string) {
   return phone
 }
 
+/** Nome do contrato quando existe; senão o número do WhatsApp ou "Visitante do site". */
 export function customerLabel(item: Conversation) {
-  return item.channel === 'WHATSAPP' && item.customerPhone ? whatsAppNumber(item.customerPhone) : 'Visitante do site'
+  if (item.channel !== 'WHATSAPP') return 'Visitante do site'
+  return item.customerName ?? (item.customerPhone ? whatsAppNumber(item.customerPhone) : 'Cliente do WhatsApp')
+}
+
+/** Número ao lado do nome, quando o nome é conhecido. */
+export function customerNumber(item: Conversation) {
+  return item.channel === 'WHATSAPP' && item.customerName && item.customerPhone ? whatsAppNumber(item.customerPhone) : null
 }
 
 export function conversationState(item: Conversation): { label: string; tone: 'ai' | 'help' | 'human' | 'closed' } {
@@ -36,7 +43,7 @@ export function helpTitle(item: Conversation) {
 export function helpDetail(item: Conversation) {
   const message = item.lastCustomerMessage ?? item.lastMessagePreview
   return item.channel === 'WHATSAPP'
-    ? `${item.customerPhone ? whatsAppNumber(item.customerPhone) : 'Cliente'} escreveu: “${message}”`
+    ? `${[item.customerName, item.customerPhone ? whatsAppNumber(item.customerPhone) : null].filter(Boolean).join(' • ') || 'Cliente'} escreveu: “${message}”`
     : `Cliente do site perguntou: “${message}”`
 }
 

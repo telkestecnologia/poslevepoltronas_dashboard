@@ -180,3 +180,11 @@
 .wa-state.closed { color: #8696a0; }
 .wa-error { background: #fde8e4; color: #a3392a; }
 .wa-assign:disabled { opacity: 0.6; }
+.wa-number { color: #667781; font-weight: 400; font-size: 13px; }
+.wa-stage { display: block; color: #54656f; font-size: 12px; }
+.wa-text { margin: 0; white-space: pre-wrap; word-break: break-word; }
+.wa-text a { color: #027eb5; text-decoration: underline; }
+.wa-text code { font-family: ui-monospace, monospace; }
+.wa-photo { display: block; margin-bottom: 6px; color: inherit; text-decoration: none; }
+.wa-photo img { display: block; width: 260px; max-width: 100%; border-radius: 8px; }
+.wa-photo span { display: block; margin-top: 4px; font-size: 14px; }

@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ArrowLeft, Globe, MessageCircle, RefreshCw, Send } from 'lucide-react'
 import { api, type Conversation, type ConversationMessage } from '../../api'
-import { conversationState, customerLabel, nameColor } from '../../utils/conversations'
+import { conversationState, customerLabel, customerNumber, nameColor } from '../../utils/conversations'
+import { MessageImages, WhatsAppText } from './WhatsAppText'
 import { getMessage } from '../../utils/errors'
 import './conversations.css'
 
@@ -134,13 +135,14 @@ export function ConversationsPage({ credentials }: { credentials: string }) {
             <span className="wa-avatar" style={{ background: whatsAppRow ? '#25d366' : '#dfe5e7' }}>
               {whatsAppRow ? <MessageCircle size={22} color="#fff" /> : <Globe size={22} color="#667781" />}</span>
             <span className="wa-row-body">
-              <span className="wa-row-top"><strong>{customerLabel(item)}</strong>
+              <span className="wa-row-top"><strong>{customerLabel(item)}{customerNumber(item) && <small className="wa-number"> {customerNumber(item)}</small>}</strong>
                 <small className={item.needsAttention ? 'unread' : ''}>{timeLabel(item.lastMessageAt)}</small></span>
               <span className="wa-row-top"><span className="wa-preview">
                 {item.lastMessageRole !== 'CUSTOMER' && <span className="wa-ticks">✓✓ </span>}
                 {`${item.lastMessageRole === 'AI' ? 'Isa: ' : item.lastMessageRole === 'STAFF' ? `${item.staffName ?? 'Equipe'}: ` : ''}${item.lastMessagePreview ?? ''}`}</span>
                 {item.needsAttention && <span className="wa-badge">!</span>}</span>
               <span className={`wa-state ${rowState.tone}`}>{rowState.label} • {whatsAppRow ? 'WhatsApp' : 'Site'}</span>
+              {item.stage && <span className="wa-stage">📋 {item.stage}</span>}
             </span>
           </button>
         })}
@@ -150,7 +152,8 @@ export function ConversationsPage({ credentials }: { credentials: string }) {
         {!selected || !state ? <div className="wa-placeholder"><p>Escolha uma conversa para ler.</p></div> : <>
           <header className="wa-chat-head">
             <button type="button" className="wa-back" aria-label="Voltar para a lista" onClick={() => { setSelectedId(null); setSelected(null) }}><ArrowLeft size={20} /></button>
-            <div className="wa-chat-title"><strong>{customerLabel(selected)}</strong>
+            <div className="wa-chat-title"><strong>{customerLabel(selected)}{customerNumber(selected) && <small className="wa-number"> {customerNumber(selected)}</small>}</strong>
+              {selected.stage && <span className="wa-stage">📋 Etapa: {selected.stage}</span>}
               <small>{selected.channel === 'WHATSAPP' ? 'WhatsApp' : 'Chat do site'} • desde {new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(selected.startedAt))}</small></div>
             <span className={`wa-state ${state.tone}`}>{state.label}</span>
             <button type="button" className={`wa-assign${selected.state === 'HUMAN' ? ' outline' : ''}`} disabled={busy} onClick={() => void toggleAssignment(selected)}>
@@ -164,7 +167,8 @@ export function ConversationsPage({ credentials }: { credentials: string }) {
               return <div key={message.id} className={`wa-bubble ${customer ? 'in' : 'out'}${first ? ' first' : ''}`}>
                 {!customer && first && <span className="wa-author" style={{ color: message.role === 'AI' ? '#06cf9c' : nameColor(message.staffName ?? '') }}>
                   {message.role === 'AI' ? 'Isa (assistente)' : message.staffName ?? 'Equipe Pós Leve'}</span>}
-                <p>{message.content}</p>
+                <MessageImages images={message.images} />
+                {message.content && <WhatsAppText text={message.content} />}
                 <span className="wa-meta">{hour(message.createdAt)}{!customer && <span className="wa-ticks"> ✓✓</span>}</span>
               </div>
             })}
@@ -172,7 +176,9 @@ export function ConversationsPage({ credentials }: { credentials: string }) {
           <footer className="wa-composer">
             {chatError && <p className="wa-note wa-error">{chatError}</p>}
             {windowClosed ? <p className="wa-note">Passaram 24 horas desde a última mensagem do cliente. O WhatsApp só libera nova mensagem quando ele escrever de novo.</p>
-              : selected.state !== 'HUMAN' && <p className="wa-note">A Isa está respondendo. Ao enviar uma mensagem, você assume a conversa.</p>}
+              : <p className="wa-note">{selected.state === 'HUMAN'
+                ? 'Você está atendendo: a Isa não responde. Ao enviar, a conversa volta para a Isa.'
+                : 'Sua resposta vai para o cliente e a conversa volta para a Isa. Para ela não responder, clique em “Assumir conversa”.'}</p>}
             <form className="wa-input" onSubmit={event => void send(event)}>
               <input value={draft} onChange={event => setDraft(event.target.value)} placeholder="Mensagem" maxLength={2000} aria-label="Mensagem" />
               <button type="submit" disabled={!draft.trim() || busy} aria-label="Enviar mensagem"><Send size={18} /></button>
