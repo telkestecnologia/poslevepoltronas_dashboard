@@ -1,5 +1,6 @@
 import { DashboardLayout } from './components/DashboardLayout'
 import { Login } from './components/Login'
+import { MemberHome } from './components/MemberHome'
 import { BranchModal } from './features/branches/BranchModal'
 import { BranchesPage } from './features/branches/BranchesPage'
 import { ChairModal } from './features/chairs/ChairModal'
@@ -41,6 +42,12 @@ function App() {
         error={session.loginError}
       />
     )
+  }
+
+  // "Começa do zero": entra, mas não vê dados até um administrador liberar o acesso.
+  if (session.staff.role === 'MEMBER') {
+    return <MemberHome staff={session.staff} credentials={session.credentials} onLogout={session.logout}
+      onCredentialsChanged={session.login} />
   }
 
   const { page, navigate } = navigation

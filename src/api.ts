@@ -20,7 +20,7 @@ export type ChairQuery = {
   branchId: string
 }
 
-export type Staff = { slug: string; tenantName: string; displayName: string; email: string }
+export type Staff = { slug: string; tenantName: string; displayName: string; email: string; role?: 'ADMIN' | 'MEMBER' }
 export type Courier = {
   id: string; name: string; email: string; phone: string; vehicle: string
   active: boolean; createdAt: string; updatedAt: string

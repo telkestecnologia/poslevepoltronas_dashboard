@@ -1,0 +1,10 @@
+/* Tela de quem "começa do zero" (sem dados liberados). */
+.member-home { display: grid; place-items: center; min-height: 100vh; padding: 24px 16px; background: #f6f5f2; }
+.member-card { display: grid; gap: 16px; width: 100%; max-width: 520px; padding: 32px; border-radius: 20px; background: #fff; box-shadow: 0 12px 40px rgba(20, 60, 70, 0.08); }
+.member-card h1 { margin: 8px 0 0; font-size: 28px; }
+.member-email { margin: -8px 0 0; color: #6b7378; }
+.member-info { display: flex; gap: 14px; padding: 16px; border-radius: 14px; background: #f1f8f8; }
+.member-info p { margin: 4px 0 0; color: #5d686d; line-height: 1.5; }
+.member-icon { display: grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 50%; background: #e5f4f5; color: #127a84; }
+.member-notice { padding: 10px 12px; border-radius: 10px; background: #e5f4f5; color: #0f5e66; }
+.member-logout { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 8px; border: 0; background: none; color: #6b7378; font: inherit; cursor: pointer; }
