@@ -1,0 +1,5 @@
+/* Envio de fotos e vídeos pela equipe no painel. */
+.evidence-upload { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 6px 0 14px; }
+.evidence-upload small { flex-basis: 100%; }
+.evidence-viewer-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.evidence-delete { background: #fde8e4; color: #b03a2e; }

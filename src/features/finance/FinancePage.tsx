@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
-import { ArrowDownLeft, ArrowUpRight, ChevronDown, RefreshCw, Search, Wallet, X } from 'lucide-react'
+import { ArrowDownLeft, ArrowUpRight, ChevronDown, FileText, RefreshCw, Search, Wallet, X } from 'lucide-react'
 import { api, type Branch, type FinanceQuery, type FinancialEntry, type FinancialReport } from '../../api'
 import { branchLabel, onlyOfficialBranches } from '../../utils/branches'
 import { getMessage } from '../../utils/errors'
 import { RentalDatePicker } from '../overview/RentalDatePicker'
+import { openFinanceReport } from './financeReport'
+import './financeReport.css'
 
 const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 const monthName = new Intl.DateTimeFormat('pt-BR', { month: 'short', year: '2-digit', timeZone: 'UTC' })
@@ -52,6 +54,8 @@ export function FinancePage({ credentials }: { credentials: string }) {
   const [report, setReport] = useState<FinancialReport | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [reportBusy, setReportBusy] = useState(false)
+  const [reportError, setReportError] = useState('')
 
   useEffect(() => {
     let active = true
@@ -131,6 +135,23 @@ export function FinancePage({ credentials }: { credentials: string }) {
   const visibleBranchResults = onlyOfficialBranches(report?.branches ?? [], branch => branch.branchName)
   const maxBranchFlow = Math.max(1, ...visibleBranchResults.map(branch => branch.inflowCents + branch.outflowCents))
 
+  // Relatório geral (o mesmo do app): todos os lançamentos do período e da filial escolhidos.
+  async function generateReport() {
+    if (!report) return
+    setReportBusy(true)
+    setReportError('')
+    try {
+      const entries = await loadAllEntries(credentials, { from, to, branchId })
+      const branch = branches.find(item => item.id === branchId)
+      const opened = openFinanceReport({ report, entries, from, to, branch: branch ? branchLabel(branch.name) : 'Todas as filiais' })
+      if (!opened) setReportError('O navegador bloqueou a janela do relatório. Permita pop-ups para este site e tente de novo.')
+    } catch (failure) {
+      setReportError(getMessage(failure))
+    } finally {
+      setReportBusy(false)
+    }
+  }
+
   return <>
     <div className="page-heading with-action finance-heading">
       <div>
@@ -138,9 +159,14 @@ export function FinancePage({ credentials }: { credentials: string }) {
         <h1>Financeiro</h1>
         <p>Acompanhe as entradas e saídas registradas no caixa por período e filial.</p>
       </div>
-      <button type="button" className="button secondary" onClick={() => setReloadKey(key => key + 1)}
-        disabled={loading}><RefreshCw size={16} /> Atualizar</button>
+      <div className="finance-actions">
+        <button type="button" className="button secondary" onClick={() => void generateReport()}
+          disabled={!report || reportBusy}><FileText size={16} /> {reportBusy ? 'Gerando...' : 'Relatório geral em PDF'}</button>
+        <button type="button" className="button secondary" onClick={() => setReloadKey(key => key + 1)}
+          disabled={loading}><RefreshCw size={16} /> Atualizar</button>
+      </div>
     </div>
+    {reportError && <div className="form-error" role="alert">{reportError}</div>}
 
     {report?.mode === 'DEMO' && <div className="finance-demo" role="note">
       <strong>Dados de demonstração</strong>

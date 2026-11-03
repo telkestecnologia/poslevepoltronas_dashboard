@@ -1,0 +1,30 @@
+/* Perfil e equipe (só desta página). */
+.profile-grid { display: grid; grid-template-columns: minmax(260px, 340px) minmax(0, 1fr); gap: 20px; align-items: start; }
+.profile-card { display: grid; gap: 16px; padding: 22px; }
+.profile-card h2, .profile-team h2 { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 17px; }
+.profile-me { display: flex; align-items: center; gap: 14px; }
+.profile-me div { display: grid; gap: 3px; }
+.profile-me small { color: var(--muted, #6b7378); }
+.profile-avatar {
+  display: grid; place-items: center; width: 58px; height: 58px; border-radius: 50%;
+  background: #127a84; color: #fff; font-size: 21px; font-weight: 600;
+}
+.profile-pill {
+  justify-self: start; margin-top: 4px; padding: 3px 10px; border-radius: 99px;
+  background: #e5f4f5; color: #127a84; font-size: 12px; font-weight: 600;
+}
+.profile-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.profile-team-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 20px; }
+.profile-loading { padding: 24px; color: #6b7378; }
+.profile-city { display: flex; gap: 8px; }
+.profile-city input { flex: 1; }
+.profile-link { justify-self: start; padding: 0; border: 0; background: none; color: #127a84; font-weight: 600; cursor: pointer; }
+.profile-remove { margin-right: auto; background: #fde8e4; color: #b03a2e; }
+.profile-notice {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px;
+  padding: 12px 16px; border-radius: 12px; background: #e5f4f5; color: #0f5e66;
+}
+.profile-notice button { border: 0; background: none; color: inherit; cursor: pointer; }
+@media (max-width: 900px) {
+  .profile-grid { grid-template-columns: 1fr; }
+}

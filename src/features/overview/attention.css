@@ -1,0 +1,40 @@
+/* Notificações da Visão geral com efeito de vidro (mesmo visual do app). */
+.glass-backdrop {
+  position: relative; display: grid; gap: 14px; margin-bottom: 22px; padding: 18px; overflow: hidden;
+  border-radius: 22px; background: linear-gradient(135deg, #cdeef0, #fbe3d8 55%, #dff2ee);
+}
+.glass-blob { position: absolute; width: 240px; height: 240px; border-radius: 50%; opacity: 0.55; pointer-events: none; }
+.glass-blob.teal { top: -90px; right: -60px; background: #7cc9cf; }
+.glass-blob.coral { bottom: -110px; left: -70px; background: #f6a487; }
+.glass-card {
+  position: relative; border: 1px solid rgba(255, 255, 255, 0.85); border-radius: 16px;
+  background: rgba(255, 255, 255, 0.55); backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%); box-shadow: 0 8px 24px rgba(20, 60, 70, 0.08);
+}
+.notify-toggle { display: flex; align-items: center; gap: 14px; width: 100%; padding: 16px 18px; text-align: left; cursor: pointer; font: inherit; color: inherit; }
+.notify-icon { display: grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 50%; background: #e5f4f5; color: #127a84; }
+.notify-toggle.on .notify-icon { background: #127a84; color: #fff; }
+.notify-text { display: grid; gap: 2px; flex: 1; }
+.notify-text small, .attention-text small, .attention-empty small { color: #5d686d; line-height: 1.4; }
+.notify-switch { position: relative; flex: none; width: 46px; height: 26px; border-radius: 99px; background: #d9d3c7; transition: background 0.2s; }
+.notify-switch i { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: transform 0.2s; }
+.notify-switch.on { background: #1a9baa; }
+.notify-switch.on i { transform: translateX(20px); }
+.attention-head { position: relative; display: flex; align-items: center; gap: 10px; }
+.attention-head h2 { margin: 0; font-size: 18px; }
+.attention-count { min-width: 24px; padding: 2px 8px; border-radius: 99px; background: #127a84; color: #fff; font-size: 13px; font-weight: 700; text-align: center; }
+.attention-count.urgent { background: #f47a52; }
+.attention-list { display: grid; overflow: hidden; }
+.attention-row {
+  display: flex; align-items: center; gap: 14px; width: 100%; padding: 14px 18px; border: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.7); background: transparent; text-align: left; cursor: pointer; font: inherit; color: inherit;
+}
+.attention-row:hover { background: rgba(255, 255, 255, 0.45); }
+.attention-icon { display: grid; place-items: center; flex: none; width: 36px; height: 36px; border-radius: 50%; }
+.attention-icon.urgent { background: #fde5dc; color: #d4552d; }
+.attention-icon.warning { background: #fdf1d6; color: #a06a00; }
+.attention-text { display: grid; gap: 2px; flex: 1; }
+.attention-more { padding: 12px; border: 0; background: transparent; color: #127a84; font-weight: 600; cursor: pointer; }
+.attention-empty { display: flex; align-items: center; gap: 14px; padding: 16px 18px; }
+.attention-empty div { display: grid; gap: 2px; }
+.attention-ok { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: #e5f4f5; color: #127a84; }

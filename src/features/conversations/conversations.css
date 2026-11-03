@@ -177,3 +177,6 @@
   .wa-thread { padding: 12px 10px; }
   .wa-bubble { max-width: 85%; }
 }
+.wa-state.closed { color: #8696a0; }
+.wa-error { background: #fde8e4; color: #a3392a; }
+.wa-assign:disabled { opacity: 0.6; }

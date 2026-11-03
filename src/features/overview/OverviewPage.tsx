@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { RefreshCw } from 'lucide-react'
 import type { RentalOverview, RevenueOverview, RevenuePeriod } from '../../api'
 import { RentalsByBranchChart } from './RentalsByBranchChart'
@@ -15,10 +16,12 @@ type Props = {
   revenueLoading: boolean
   revenueError: string
   onRefresh: () => void
+  /** Avisos e notificações, logo abaixo do título. */
+  children?: ReactNode
 }
 
 export function OverviewPage({ rentals, rentalDate, onRentalDateChange, rentalLoading, rentalError,
-  revenue, revenuePeriod, onRevenuePeriodChange, revenueLoading, revenueError, onRefresh }: Props) {
+  revenue, revenuePeriod, onRevenuePeriodChange, revenueLoading, revenueError, onRefresh, children }: Props) {
   return (
     <>
       <div className="page-heading with-action overview-heading">
@@ -31,6 +34,8 @@ export function OverviewPage({ rentals, rentalDate, onRentalDateChange, rentalLo
           <RefreshCw size={16} /> Atualizar
         </button>
       </div>
+
+      {children}
 
       <RentalsByBranchChart data={rentals.rentedChairsByBranch}
         date={rentalDate} onDateChange={onRentalDateChange}

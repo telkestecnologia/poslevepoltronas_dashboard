@@ -87,6 +87,42 @@ export type OrderEvidence = {
   courierId: string; installationId: string; deviceManufacturer: string | null
   deviceModel: string | null; platform: string; osVersion: string | null
   sizeBytes: number; capturedAt: string; uploadedAt: string; readUrl: string
+  contentType?: string; uploadedByName?: string | null; uploadedByStaff?: boolean
+}
+export type EvidenceUploadStart = {
+  evidenceId: string; status: 'PENDING' | 'UPLOADED'; uploadUrl: string | null
+  headers: Record<string, string>; expiresInSeconds: number
+}
+export type EvidenceUploadInput = {
+  phase: 'DELIVERY' | 'PICKUP'; kind: 'PHOTO' | 'VIDEO'; clientMediaId: string; installationId: string
+  platform: 'android' | 'ios'; contentType: string; sizeBytes: number; capturedAt: string
+}
+
+export type AccessLevel = 'ALL' | 'NONE'
+export type TeamMember = {
+  id: string; name: string; email: string; phone: string | null; area: string | null; jobTitle: string | null
+  access: AccessLevel; enabled: boolean; self: boolean
+}
+export type TeamMemberInput = {
+  name: string; email: string; phone: string; area: string; jobTitle: string; access: AccessLevel; password: string; enabled?: boolean
+}
+export type Account = {
+  id: string; name: string; email: string; phone: string | null; area: string | null; jobTitle: string | null; access: AccessLevel
+}
+
+export type ConversationState = 'AI' | 'HUMAN' | 'PAUSED' | 'CLOSED'
+export type ConversationRole = 'CUSTOMER' | 'AI' | 'STAFF'
+export type Conversation = {
+  id: string; channel: 'SITE' | 'WHATSAPP'; state: ConversationState; startedAt: string; lastMessageAt: string
+  lastMessagePreview: string; lastMessageRole: ConversationRole; messageCount: number
+  needsAttention: boolean; staffName: string | null; lastCustomerMessage?: string | null
+  customerPhone?: string | null; windowOpen?: boolean | null
+}
+export type ConversationPage = {
+  items: Conversation[]; total: number; page: number; size: number; whatsApp?: 'OK' | 'NOT_CONFIGURED' | 'ERROR' | null
+}
+export type ConversationMessage = {
+  id: string; role: ConversationRole; content: string; status: string | null; staffName: string | null; createdAt: string
 }
 export type AiKnowledge = {
   id: string
@@ -190,8 +226,18 @@ async function request<T>(credentials: string, path: string, init: RequestInit =
               ? 'Configure uma API Key com permissão de conhecimento no backend.'
             : response.status >= 500
               ? 'A API encontrou um erro interno. Confira os logs do backend.'
+              : response.status === 400 && path.startsWith('/account')
+                ? 'Senha atual incorreta, ou a nova senha não tem de 12 a 72 caracteres.'
               : response.status === 409
-                ? path.startsWith('/blocks')
+                ? path.startsWith('/team/areas')
+                  ? 'Essa cidade já está na lista.'
+                  : path.startsWith('/team')
+                    ? 'Já existe um usuário com este e-mail ou celular, ou a alteração deixaria a locadora sem administrador.'
+                  : path.startsWith('/account')
+                    ? 'Já existe um usuário com este e-mail.'
+                  : path.startsWith('/conversations')
+                    ? 'Passaram 24 horas desde a última mensagem do cliente. O WhatsApp só libera nova mensagem quando ele escrever de novo.'
+                  : path.startsWith('/blocks')
                   ? 'A poltrona já tem um bloqueio em parte do período.'
                   : path.startsWith('/orders')
                     ? 'A operação não é permitida no estado atual do pedido.'
@@ -207,6 +253,53 @@ async function request<T>(credentials: string, path: string, init: RequestInit =
   }
   if (response.status === 204) return undefined as T
   return response.json() as Promise<T>
+}
+
+/** Rotas públicas (sem login) do "Esqueci minha senha": código pelo WhatsApp cadastrado no perfil. */
+async function publicPost(path: string, body: unknown) {
+  try {
+    return await fetch(`${baseUrl}/api/public/${encodeURIComponent(tenantSlug)}${path}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+    })
+  } catch {
+    throw new ApiError(0, 'Não foi possível conectar à API. Confira sua internet.')
+  }
+}
+
+/** Envio de foto ou vídeo pelo painel: o arquivo vai ao backend, que grava no armazenamento. */
+export async function uploadEvidenceFile(credentials: string, orderId: string, phase: 'DELIVERY' | 'PICKUP', file: Blob, fileName: string) {
+  const body = new FormData()
+  body.append('phase', phase)
+  body.append('capturedAt', new Date().toISOString())
+  body.append('file', file, fileName)
+  let response: Response
+  try {
+    response = await fetch(`${baseUrl}/api/admin/${encodeURIComponent(tenantSlug)}/orders/${encodeURIComponent(orderId)}/evidence/files`, {
+      method: 'POST', headers: { Authorization: `Basic ${credentials}` }, body,
+    })
+  } catch {
+    throw new ApiError(0, 'Não foi possível conectar à API. Confira sua internet.')
+  }
+  if (response.status === 413) throw new ApiError(413, 'Arquivo grande demais: fotos até 5 MB e vídeos até 30 MB.')
+  if (response.status === 415) throw new ApiError(415, 'Formato não aceito. Envie foto JPG ou vídeo MP4/MOV.')
+  if (response.status === 409) throw new ApiError(409, 'Esta etapa do pedido não aceita registros agora.')
+  if (response.status === 503) throw new ApiError(503, 'O armazenamento de mídias não está configurado no servidor.')
+  if (!response.ok) throw new ApiError(response.status, 'Não foi possível enviar o arquivo agora. Tente novamente.')
+  return response.json() as Promise<OrderEvidence>
+}
+
+export async function requestPasswordReset(phone: string) {
+  const response = await publicPost('/staff/password-reset', { phone })
+  if (response.status === 400) throw new ApiError(400, 'Informe o celular com DDD, o mesmo cadastrado no seu perfil.')
+  if (response.status === 503) throw new ApiError(503, 'O envio pelo WhatsApp está indisponível no momento. Fale com o administrador.')
+  if (!response.ok) throw new ApiError(response.status, 'Não foi possível enviar o código agora. Tente novamente.')
+}
+
+export async function confirmPasswordReset(phone: string, code: string, newPassword: string): Promise<string> {
+  const response = await publicPost('/staff/password-reset/confirm', { phone, code, newPassword })
+  if (response.status === 400) throw new ApiError(400, 'Código inválido ou vencido. Confira os números ou peça outro código.')
+  if (!response.ok) throw new ApiError(response.status, 'Não foi possível trocar a senha agora. Tente novamente.')
+  return ((await response.json()) as { email: string }).email
 }
 
 export const api = {
@@ -254,6 +347,42 @@ export const api = {
     request<void>(credentials, `/orders/${encodeURIComponent(id)}/pix/sandbox/check`, { method: 'POST' }),
   orderEvidence: (credentials: string, id: string) =>
     request<OrderEvidence[]>(credentials, `/orders/${encodeURIComponent(id)}/evidence`),
+  startEvidenceUpload: (credentials: string, id: string, data: EvidenceUploadInput) =>
+    request<EvidenceUploadStart>(credentials, `/orders/${encodeURIComponent(id)}/evidence/uploads`, {
+      method: 'POST', body: JSON.stringify(data),
+    }),
+  completeEvidenceUpload: (credentials: string, id: string, evidenceId: string) =>
+    request<OrderEvidence>(credentials, `/orders/${encodeURIComponent(id)}/evidence/${encodeURIComponent(evidenceId)}/complete`,
+      { method: 'POST' }),
+  deleteEvidence: (credentials: string, id: string, evidenceId: string) =>
+    request<void>(credentials, `/orders/${encodeURIComponent(id)}/evidence/${encodeURIComponent(evidenceId)}`, { method: 'DELETE' }),
+  team: (credentials: string) => request<TeamMember[]>(credentials, '/team'),
+  createTeamMember: (credentials: string, data: TeamMemberInput) =>
+    request<TeamMember>(credentials, '/team', { method: 'POST', body: JSON.stringify(data) }),
+  updateTeamMember: (credentials: string, id: string, data: TeamMemberInput) =>
+    request<TeamMember>(credentials, `/team/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  removeTeamMember: (credentials: string, id: string) =>
+    request<void>(credentials, `/team/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+  teamAreas: (credentials: string) => request<string[]>(credentials, '/team/areas'),
+  addTeamArea: (credentials: string, name: string) =>
+    request<string[]>(credentials, '/team/areas', { method: 'POST', body: JSON.stringify({ name }) }),
+  account: (credentials: string) => request<Account>(credentials, '/account'),
+  changePassword: (credentials: string, currentPassword: string, newPassword: string) =>
+    request<void>(credentials, '/account/password', { method: 'PUT', body: JSON.stringify({ currentPassword, newPassword }) }),
+  changeEmail: (credentials: string, currentPassword: string, newEmail: string) =>
+    request<Account>(credentials, '/account/email', { method: 'PUT', body: JSON.stringify({ currentPassword, newEmail }) }),
+  conversations: (credentials: string) => request<ConversationPage>(credentials, '/conversations?page=0&size=50'),
+  conversation: (credentials: string, id: string) => request<Conversation>(credentials, `/conversations/${encodeURIComponent(id)}`),
+  conversationMessages: (credentials: string, id: string) =>
+    request<ConversationMessage[]>(credentials, `/conversations/${encodeURIComponent(id)}/messages`),
+  replyConversation: (credentials: string, id: string, content: string) =>
+    request<ConversationMessage>(credentials, `/conversations/${encodeURIComponent(id)}/messages`, {
+      method: 'POST', body: JSON.stringify({ content }),
+    }),
+  setConversationState: (credentials: string, id: string, state: ConversationState) =>
+    request<Conversation>(credentials, `/conversations/${encodeURIComponent(id)}/state`, {
+      method: 'POST', body: JSON.stringify({ state }),
+    }),
   changeOrderStatus: (credentials: string, id: string, status: OrderStatus, note: string) =>
     request<Order>(credentials, `/orders/${encodeURIComponent(id)}/status`, {
       method: 'PATCH', body: JSON.stringify({ status, note }),

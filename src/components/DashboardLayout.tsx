@@ -13,6 +13,7 @@ import {
   Menu,
   BellRing,
   Truck,
+  Users,
   Wallet,
   PanelLeftClose,
   PanelLeftOpen,
@@ -33,6 +34,7 @@ const navigation = [
   { page: 'conversations', label: 'Conversas', icon: MessagesSquare },
   { page: 'ai', label: 'Contexto da IA', icon: Sparkles },
   { page: 'notifications', label: 'Alertas da IA', icon: BellRing },
+  { page: 'profile', label: 'Perfil e equipe', icon: Users },
 ] as const
 
 type Props = {

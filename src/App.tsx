@@ -13,6 +13,8 @@ import { OverviewPage } from './features/overview/OverviewPage'
 import { NotificationsPage } from './features/notifications/NotificationsPage'
 import { FinancePage } from './features/finance/FinancePage'
 import { ConversationsPage } from './features/conversations/ConversationsPage'
+import { AttentionPanel } from './features/overview/AttentionPanel'
+import { ProfilePage } from './features/profile/ProfilePage'
 import { useDashboard } from './hooks/useDashboard'
 
 function App() {
@@ -43,7 +45,7 @@ function App() {
 
   const { page, navigate } = navigation
   const { pageLoading, pageError, retryPage, notice, dismissNotice } = feedback
-  const showLoading = page !== 'finance' && page !== 'conversations' && (pageLoading
+  const showLoading = page !== 'finance' && page !== 'conversations' && page !== 'profile' && (pageLoading
     || (page === 'overview' && (!overviewPage.rentals || !overviewPage.revenue) && !pageError))
 
   return (
@@ -82,7 +84,9 @@ function App() {
             revenueLoading={overviewPage.revenueLoading}
             revenueError={overviewPage.revenueError}
             onRefresh={overviewPage.onRefresh}
-          />
+          >
+            <AttentionPanel credentials={session.credentials} onNavigate={navigate} />
+          </OverviewPage>
         )}
         {page === 'finance' && <FinancePage credentials={session.credentials} />}
         {page === 'chairs' && !showLoading && !pageError && <ChairsPage {...chairsPage} />}
@@ -90,7 +94,8 @@ function App() {
         {page === 'couriers' && !showLoading && !pageError && <CouriersPage {...couriersPage} />}
         {page === 'agenda' && !showLoading && !pageError && <AgendaPage {...agendaPage} />}
         {page === 'orders' && !showLoading && !pageError && <OrdersPage {...ordersPage} credentials={session.credentials} />}
-        {page === 'conversations' && <ConversationsPage />}
+        {page === 'conversations' && <ConversationsPage credentials={session.credentials} />}
+        {page === 'profile' && <ProfilePage credentials={session.credentials} onCredentialsChanged={session.login} />}
         {page === 'ai' && !showLoading && !pageError && <AiContextPage {...aiPage} />}
         {page === 'notifications' && !showLoading && !pageError && notificationsPage.settings && (
           <NotificationsPage settings={notificationsPage.settings} onSave={notificationsPage.onSave} />

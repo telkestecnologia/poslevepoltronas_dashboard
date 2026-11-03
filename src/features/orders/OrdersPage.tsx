@@ -101,6 +101,8 @@ export function OrdersPage({ credentials, orders, couriers, status, source, onSt
   // Os cartões resumem exatamente as linhas da lista: busca, filtros e ações mudam os dois juntos.
   const countByStatus = (...statuses: OrderStatus[]) => visible.filter(order => statuses.includes(order.status)).length
   const summary = [
+    { label: 'Entregar poltronas', value: countByStatus('PAYMENT_CONFIRMED', 'DELIVERY_PENDING') },
+    { label: 'Retirar poltronas', value: countByStatus('PICKUP_PENDING') },
     { label: 'Aguardando contrato', value: countByStatus('PENDING_CONTRACT') },
     { label: 'Aguardando PIX', value: countByStatus('PENDING_PAYMENT') },
     { label: 'PIX em análise', value: countByStatus('PAYMENT_REVIEW') },

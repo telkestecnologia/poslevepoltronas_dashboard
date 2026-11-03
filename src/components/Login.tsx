@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { ArrowRight, CircleHelp, Eye, EyeOff, ShieldCheck, Sparkles } from 'lucide-react'
 import { Brand } from './common'
+import { ForgotPassword } from './ForgotPassword'
 
 export function Login({
   onLogin,
@@ -14,6 +15,7 @@ export function Login({
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [forgotOpen, setForgotOpen] = useState(false)
   function submit(event: FormEvent) {
     event.preventDefault()
     void onLogin(email.trim(), password)
@@ -88,6 +90,7 @@ export function Login({
                     </button>
                   </span>
                 </label>
+            <button type="button" className="login-forgot" onClick={() => setForgotOpen(true)}>Esqueci minha senha</button>
             {error && (
               <div className="form-error" role="alert">
                 {error}
@@ -102,6 +105,8 @@ export function Login({
             Acesso exclusivo à equipe autorizada.
           </div>
         </div>
+        {forgotOpen && <ForgotPassword onClose={() => setForgotOpen(false)}
+          onDone={newEmail => { setEmail(newEmail); setPassword(''); setForgotOpen(false) }} />}
         <small className="login-footnote">© {new Date().getFullYear()} Pós Leve Poltronas</small>
       </section>
     </main>
