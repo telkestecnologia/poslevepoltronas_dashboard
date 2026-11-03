@@ -57,7 +57,7 @@ export function ForgotPassword({ onClose, onDone }: { onClose: () => void; onDon
   function submitCode(event: FormEvent) {
     event.preventDefault()
     void run(async () => {
-      if (password.length < 12) throw new Error('A nova senha deve ter pelo menos 12 caracteres.')
+      if (password.length < 6) throw new Error('A nova senha deve ter pelo menos 6 caracteres.')
       if (password !== confirm) throw new Error('A confirmação não é igual à nova senha.')
       setEmail(await confirmPasswordReset(digits, code, password))
       setStep('done')
@@ -85,7 +85,7 @@ export function ForgotPassword({ onClose, onDone }: { onClose: () => void; onDon
         <label>Código de 6 dígitos<input className="forgot-code" inputMode="numeric" autoComplete="one-time-code" value={code}
           onChange={event => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="000000" autoFocus required /></label>
         <label>Nova senha<input type="password" value={password} onChange={event => setPassword(event.target.value)} autoComplete="new-password"
-          minLength={12} maxLength={72} placeholder="De 12 a 72 caracteres" required /></label>
+          minLength={6} maxLength={72} placeholder="De 6 a 72 caracteres" required /></label>
         <label>Confirmar nova senha<input type="password" value={confirm} onChange={event => setConfirm(event.target.value)} autoComplete="new-password" required /></label>
         {error && <div className="form-error" role="alert">{error}</div>}
         <button className="button primary" type="submit" disabled={busy || code.length !== 6}>

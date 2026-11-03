@@ -114,7 +114,7 @@ function PasswordDialog({ credentials, email, onClose, onDone, onCredentialsChan
   const [busy, setBusy] = useState(false)
   async function submit(event: FormEvent) {
     event.preventDefault()
-    if (next.length < 12) return setError('A nova senha deve ter pelo menos 12 caracteres.')
+    if (next.length < 6) return setError('A nova senha deve ter pelo menos 6 caracteres.')
     if (next !== confirm) return setError('A confirmação não é igual à nova senha.')
     setBusy(true)
     try {
@@ -130,7 +130,7 @@ function PasswordDialog({ credentials, email, onClose, onDone, onCredentialsChan
   return <Modal title="Alterar senha" eyebrow="MEUS DADOS" onClose={onClose} busy={busy}>
     <form className="modal-form" onSubmit={event => void submit(event)}>
       <label>Senha atual<input type="password" value={current} onChange={event => setCurrent(event.target.value)} required autoComplete="current-password" autoFocus /></label>
-      <label>Nova senha<input type="password" value={next} onChange={event => setNext(event.target.value)} required minLength={12} maxLength={72} autoComplete="new-password" placeholder="De 12 a 72 caracteres" /></label>
+      <label>Nova senha<input type="password" value={next} onChange={event => setNext(event.target.value)} required minLength={6} maxLength={72} autoComplete="new-password" placeholder="De 6 a 72 caracteres" /></label>
       <label>Confirmar nova senha<input type="password" value={confirm} onChange={event => setConfirm(event.target.value)} required autoComplete="new-password" /></label>
       {error && <div className="form-error" role="alert">{error}</div>}
       <div className="modal-actions"><button type="button" className="button secondary" onClick={onClose} disabled={busy}>Cancelar</button>
@@ -207,7 +207,7 @@ function MemberDialog({ credentials, member, areas, onAreas, onClose, onSaved }:
     if (form.name.trim().split(' ').length < 2) return setError('Informe o nome completo.')
     if (!/^[1-9][0-9]9[0-9]{8}$/.test(digits)) return setError('Informe o celular com DDD (11 dígitos), o mesmo do WhatsApp.')
     if (!member || form.password) {
-      if (form.password.length < 12) return setError('A senha deve ter pelo menos 12 caracteres.')
+      if (form.password.length < 6) return setError('A senha deve ter pelo menos 6 caracteres.')
       if (form.password !== confirm) return setError('A confirmação não é igual à senha.')
     }
     setBusy(true)
@@ -257,7 +257,7 @@ function MemberDialog({ credentials, member, areas, onAreas, onClose, onSaved }:
         onChange={event => set('enabled', event.target.checked)} /><span>Acesso ativo</span></label>}
       <label>{member ? 'Nova senha' : 'Senha'} {member && <span className="optional">(opcional)</span>}
         <input type="password" value={form.password} onChange={event => set('password', event.target.value)} autoComplete="new-password"
-          placeholder={member ? 'Deixe vazio para manter a atual' : 'Pelo menos 12 caracteres'} /></label>
+          placeholder={member ? 'Deixe vazio para manter a atual' : 'Pelo menos 6 caracteres'} /></label>
       <label>Confirmar senha<input type="password" value={confirm} onChange={event => setConfirm(event.target.value)} autoComplete="new-password" /></label>
       {error && <div className="form-error" role="alert">{error}</div>}
       <div className="modal-actions">

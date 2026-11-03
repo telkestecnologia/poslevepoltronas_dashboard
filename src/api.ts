@@ -229,7 +229,7 @@ async function request<T>(credentials: string, path: string, init: RequestInit =
             : response.status >= 500
               ? 'A API encontrou um erro interno. Confira os logs do backend.'
               : response.status === 400 && path.startsWith('/account')
-                ? 'Senha atual incorreta, ou a nova senha não tem de 12 a 72 caracteres.'
+                ? 'Senha atual incorreta, ou a nova senha não tem de 6 a 72 caracteres.'
               : response.status === 409
                 ? path.startsWith('/team/areas')
                   ? 'Essa cidade já está na lista.'

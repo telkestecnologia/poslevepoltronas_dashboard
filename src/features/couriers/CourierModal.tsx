@@ -28,8 +28,8 @@ export function CourierModal({ modal, saving, error, onClose, onSave }: Props) {
       setLocalError('Informe um telefone com DDD.')
       return
     }
-    if ((!courier || password) && (password.length < 12 || new TextEncoder().encode(password).length > 72)) {
-      setLocalError('A senha deve ter pelo menos 12 caracteres e até 72 bytes.')
+    if ((!courier || password) && (password.length < 6 || new TextEncoder().encode(password).length > 72)) {
+      setLocalError('A senha deve ter pelo menos 6 caracteres e até 72 bytes.')
       return
     }
     setLocalError('')
@@ -54,8 +54,8 @@ export function CourierModal({ modal, saving, error, onClose, onSave }: Props) {
         onChange={event => setVehicle(event.target.value)} maxLength={100} placeholder="Ex.: Fiorino • ABC-1D23" /></label>
       <label>{courier ? 'Nova senha' : 'Senha inicial'} {courier && <span className="optional">(opcional)</span>}
         <input type="password" value={password} onChange={event => setPassword(event.target.value)}
-          minLength={12} maxLength={72} required={!courier} autoComplete="new-password"
-          placeholder={courier ? 'Deixe vazio para manter a senha atual' : 'Mínimo de 12 caracteres'} /></label>
+          minLength={6} maxLength={72} required={!courier} autoComplete="new-password"
+          placeholder={courier ? 'Deixe vazio para manter a senha atual' : 'Mínimo de 6 caracteres'} /></label>
       <small className="field-help">{courier
         ? 'Ao definir uma nova senha, os acessos já concedidos serão encerrados.'
         : 'Informe a senha ao entregador por um canal seguro. Ela não será exibida novamente.'}</small>
