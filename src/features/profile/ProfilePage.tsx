@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { ArrowRight, ChevronRight, KeyRound, Mail, Plus, UserRound, Users, X } from 'lucide-react'
-import { api, type AccessLevel, type Account, type TeamMember, type TeamMemberInput } from '../../api'
+import { api, type AccessLevel, type Account, type Branch, type TeamMember, type TeamMemberInput } from '../../api'
+import { branchLabel } from '../../utils/branches'
 import { EmptyState } from '../../components/common'
 import { getMessage } from '../../utils/errors'
 import { formatPhone } from '../../utils/phone'
@@ -15,19 +16,28 @@ const accessLabels: Record<AccessLevel, { label: string; hint: string }> = {
 type Dialog = { kind: 'password' } | { kind: 'email' } | { kind: 'member'; member: TeamMember | null } | null
 
 /** Meus dados e equipe do painel: as mesmas funções da tela Perfil e equipe do app. */
-export function ProfilePage({ credentials, onCredentialsChanged }: {
+export function ProfilePage({ credentials, onCredentialsChanged, partner = false }: {
   credentials: string; onCredentialsChanged: (email: string, password: string) => Promise<void>
+  /** Parceiro ("Começa do zero") vê só os próprios dados; a equipe é do administrador. */
+  partner?: boolean
 }) {
   const [account, setAccount] = useState<Account | null>(null)
   const [team, setTeam] = useState<TeamMember[] | null>(null)
   const [areas, setAreas] = useState<string[]>([])
+  const [branches, setBranches] = useState<Branch[]>([])
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [dialog, setDialog] = useState<Dialog>(null)
 
-  const load = useCallback(() => Promise.all([api.account(credentials), api.team(credentials), api.teamAreas(credentials)])
-    .then(([me, members, areaList]) => { setAccount(me); setTeam(members); setAreas(areaList); setError('') },
-      failure => { setTeam(current => current ?? []); setError(getMessage(failure)) }), [credentials])
+  const load = useCallback(() => (partner
+    ? api.account(credentials).then(me => { setAccount(me); setError('') })
+    : Promise.all([api.account(credentials), api.team(credentials), api.teamAreas(credentials), api.branches(credentials)])
+      .then(([me, members, areaList, branchList]) => { setAccount(me); setTeam(members); setAreas(areaList); setBranches(branchList); setError('') }))
+    .catch(failure => { setTeam(current => current ?? []); setError(getMessage(failure)) }), [credentials, partner])
+  const branchName = (id?: string | null) => {
+    const branch = branches.find(item => item.id === id)
+    return branch ? branchLabel(branch.name) : 'sem filial'
+  }
 
   useEffect(() => { void load() }, [load])
 
@@ -50,7 +60,7 @@ export function ProfilePage({ credentials, onCredentialsChanged }: {
             <strong>{account?.name ?? '—'}</strong>
             <small>{account?.email}</small>
             {account?.phone && <small>WhatsApp {formatPhone(account.phone)}</small>}
-            <span className="profile-pill">{account ? accessLabels[account.access].label : ''}</span>
+            <span className="profile-pill">{partner ? 'Parceiro • vê os dados da sua filial' : account ? accessLabels[account.access].label : ''}</span>
           </div>
         </div>
         <div className="profile-actions">
@@ -60,7 +70,7 @@ export function ProfilePage({ credentials, onCredentialsChanged }: {
         {account && !account.phone && <p className="field-help">Cadastre seu celular com WhatsApp na lista da equipe (toque no seu nome). É para ele que vai o código de “Esqueci minha senha”.</p>}
       </section>
 
-      <section className="panel table-panel profile-team">
+      {!partner && <section className="panel table-panel profile-team">
         <div className="profile-team-head">
           <h2><Users size={18} /> Equipe</h2>
           <button className="button primary" onClick={() => setDialog({ kind: 'member', member: null })}><Plus size={18} /> Cadastrar usuário</button>
@@ -74,10 +84,10 @@ export function ProfilePage({ credentials, onCredentialsChanged }: {
               <td>{[member.jobTitle, member.area].filter(Boolean).join(' • ') || '—'}</td>
               <td>{member.phone ? formatPhone(member.phone) : '—'}</td>
               <td><span className={`courier-access ${member.enabled && member.access === 'ALL' ? 'active' : 'inactive'}`}>
-                {!member.enabled ? 'Desativado' : accessLabels[member.access].label}</span></td>
+                {!member.enabled ? 'Desativado' : member.access === 'ALL' ? accessLabels.ALL.label : `Parceiro • ${branchName(member.branchId)}`}</span></td>
               <td><button className="table-action" onClick={() => setDialog({ kind: 'member', member })}>Editar <ChevronRight size={16} /></button></td>
             </tr>)}</tbody></table></div>}
-      </section>
+      </section>}
     </div>
 
     {dialog?.kind === 'password' && <PasswordDialog credentials={credentials} email={account?.email ?? ''} onClose={() => setDialog(null)}
@@ -86,7 +96,7 @@ export function ProfilePage({ credentials, onCredentialsChanged }: {
     {dialog?.kind === 'email' && <EmailDialog credentials={credentials} current={account?.email ?? ''} onClose={() => setDialog(null)}
       onCredentialsChanged={onCredentialsChanged}
       onDone={() => { setDialog(null); setNotice('E-mail alterado. Use o novo e-mail para entrar, aqui e no app.') }} />}
-    {dialog?.kind === 'member' && <MemberDialog credentials={credentials} member={dialog.member} areas={areas} onAreas={setAreas}
+    {dialog?.kind === 'member' && <MemberDialog credentials={credentials} member={dialog.member} areas={areas} branches={branches} onAreas={setAreas}
       onClose={() => setDialog(null)} onSaved={() => { setDialog(null); void load() }} />}
   </>
 }
@@ -173,13 +183,14 @@ function EmailDialog({ credentials, current, onClose, onDone, onCredentialsChang
   </Modal>
 }
 
-function MemberDialog({ credentials, member, areas, onAreas, onClose, onSaved }: {
-  credentials: string; member: TeamMember | null; areas: string[]; onAreas: (areas: string[]) => void
+function MemberDialog({ credentials, member, areas, branches, onAreas, onClose, onSaved }: {
+  credentials: string; member: TeamMember | null; areas: string[]; branches: Branch[]; onAreas: (areas: string[]) => void
   onClose: () => void; onSaved: () => void
 }) {
   const [form, setForm] = useState<TeamMemberInput>({
     name: member?.name ?? '', email: member?.email ?? '', phone: member?.phone ?? '', area: member?.area ?? areas[0] ?? '',
     jobTitle: member?.jobTitle ?? roles[2], access: member?.access ?? 'NONE', password: '', enabled: member?.enabled ?? true,
+    branchId: member?.branchId ?? '',
   })
   const [confirm, setConfirm] = useState('')
   const [newCity, setNewCity] = useState('')
@@ -212,7 +223,8 @@ function MemberDialog({ credentials, member, areas, onAreas, onClose, onSaved }:
     }
     setBusy(true)
     try {
-      const data = { ...form, name: form.name.trim(), email: form.email.trim(), phone: digits }
+      const data = { ...form, name: form.name.trim(), email: form.email.trim(), phone: digits,
+        branchId: form.access === 'NONE' && form.branchId ? form.branchId : null }
       if (member) await api.updateTeamMember(credentials, member.id, data)
       else await api.createTeamMember(credentials, data)
       onSaved()
@@ -253,6 +265,12 @@ function MemberDialog({ credentials, member, areas, onAreas, onClose, onSaved }:
       <label>Nível de acesso<select value={form.access} onChange={event => set('access', event.target.value as AccessLevel)}>
         {(Object.keys(accessLabels) as AccessLevel[]).map(level => <option key={level} value={level}>{accessLabels[level].label}</option>)}</select></label>
       <small className="field-help">{accessLabels[form.access].hint}</small>
+      {form.access === 'NONE' && <>
+        <label>Filial do parceiro<select value={form.branchId ?? ''} onChange={event => set('branchId', event.target.value)}>
+          <option value="">Nenhuma ainda (não vê nada)</option>
+          {branches.map(branch => <option key={branch.id} value={branch.id}>{branchLabel(branch.name)}</option>)}</select></label>
+        <small className="field-help">O parceiro vê só os pedidos, poltronas, agenda, financeiro e conversas do WhatsApp desta filial.</small>
+      </>}
       {member && !member.self && <label className="branch-option"><input type="checkbox" checked={form.enabled ?? true}
         onChange={event => set('enabled', event.target.checked)} /><span>Acesso ativo</span></label>}
       <label>{member ? 'Nova senha' : 'Senha'} {member && <span className="optional">(opcional)</span>}

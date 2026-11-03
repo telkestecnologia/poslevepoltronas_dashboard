@@ -64,7 +64,7 @@ export function ChairsPage(props: Props) {
           <h1>Poltronas</h1>
           <p>Cadastre equipamentos e acompanhe sua condição operacional.</p>
         </div>
-        <button className="button primary" onClick={onNewChair} disabled={branches.length === 0}>
+        <button className="button primary admin-only" onClick={onNewChair} disabled={branches.length === 0}>
           <Plus size={18} /> Nova poltrona
         </button>
       </div>
@@ -174,7 +174,7 @@ export function ChairsPage(props: Props) {
                       <StatusBadge status={chair.status} />
                     </td>
                     <td>
-                      <button className="table-action" onClick={() => onEditChair(chair)}>
+                      <button className="table-action admin-only" onClick={() => onEditChair(chair)}>
                         Editar <ChevronRight size={16} />
                       </button>
                     </td>

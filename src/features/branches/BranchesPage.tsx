@@ -38,7 +38,7 @@ export function BranchesPage({ branches, activeCounts, onNewBranch, onEditBranch
           <p>Cadastre as cidades atendidas e ative frete grátis por filial. Os valores normais ficam salvos.</p>
         </div>
         {branches.length < OFFICIAL_BRANCH_COUNT && (
-          <button className="button primary" onClick={onNewBranch}>
+          <button className="button primary admin-only" onClick={onNewBranch}>
             <Plus size={18} /> Nova filial
           </button>
         )}
@@ -86,7 +86,7 @@ export function BranchesPage({ branches, activeCounts, onNewBranch, onEditBranch
                     <td>{branch.active ? 'Ativa' : 'Inativa'}</td>
                     <td>
                       <button type="button"
-                        className={`branch-freight-toggle${branch.freeShipping ? ' active' : ''}`}
+                        className={`branch-freight-toggle admin-lock${branch.freeShipping ? ' active' : ''}`}
                         aria-pressed={branch.freeShipping}
                         disabled={busyId !== null}
                         onClick={() => void toggleFreeShipping(branch)}>
@@ -94,7 +94,7 @@ export function BranchesPage({ branches, activeCounts, onNewBranch, onEditBranch
                       </button>
                     </td>
                     <td>
-                      <button className="table-action" disabled={busyId !== null} onClick={() => onEditBranch(branch)}>
+                      <button className="table-action admin-only" disabled={busyId !== null} onClick={() => onEditBranch(branch)}>
                         Editar <ChevronRight size={16} />
                       </button>
                     </td>

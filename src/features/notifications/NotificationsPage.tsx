@@ -123,7 +123,7 @@ export function NotificationsPage({ settings, onSave }: Props) {
 
       <div className="notification-footer">
         {error && <div className="form-error" role="alert">{error}</div>}
-        <button className="button primary" type="submit" disabled={busy}>
+        <button className="button primary admin-only" type="submit" disabled={busy}>
           <Save size={17} /> {busy ? 'Salvando...' : 'Salvar contatos'}
         </button>
       </div>

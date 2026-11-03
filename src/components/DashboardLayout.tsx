@@ -12,7 +12,6 @@ import {
   Sparkles,
   Menu,
   BellRing,
-  Truck,
   Users,
   Wallet,
   PanelLeftClose,
@@ -28,7 +27,6 @@ const navigation = [
   { page: 'finance', label: 'Financeiro', icon: Wallet },
   { page: 'chairs', label: 'Poltronas', icon: Armchair },
   { page: 'branches', label: 'Filiais', icon: MapPin },
-  { page: 'couriers', label: 'Entregadores', icon: Truck },
   { page: 'agenda', label: 'Agenda', icon: CalendarDays },
   { page: 'orders', label: 'Pedidos', icon: ClipboardList },
   { page: 'conversations', label: 'Conversas', icon: MessagesSquare },
@@ -119,7 +117,7 @@ export function DashboardLayout({
           <span className="avatar">{staff.displayName.charAt(0)}</span>
           <span>
             <strong>{staff.displayName}</strong>
-            <small>Administrador</small>
+            <small>{staff.role === 'MEMBER' ? 'Parceiro' : 'Administrador'}</small>
           </span>
           <LogOut size={18} />
         </button>

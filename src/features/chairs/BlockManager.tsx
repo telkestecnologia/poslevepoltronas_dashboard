@@ -52,7 +52,7 @@ export function BlockManager({
     <section className="panel block-panel">
       <h2>Bloqueios por período</h2>
       <p>Registre aluguéis já combinados fora do site, manutenção ou transporte.</p>
-      <form onSubmit={submit} className="block-form">
+      <form onSubmit={submit} className="block-form admin-only">
         <label>
           Poltrona
           <select value={chairId} onChange={(event) => setChairId(event.target.value)} required>
@@ -113,7 +113,7 @@ export function BlockManager({
                 · {block.start} a {block.end} · {block.reason}
               </span>
               <button
-                className="table-action"
+                className="table-action admin-only"
                 type="button"
                 disabled={busy}
                 onClick={() => void remove(block.id)}

@@ -1,6 +1,5 @@
 import { DashboardLayout } from './components/DashboardLayout'
 import { Login } from './components/Login'
-import { MemberHome } from './components/MemberHome'
 import { BranchModal } from './features/branches/BranchModal'
 import { BranchesPage } from './features/branches/BranchesPage'
 import { ChairModal } from './features/chairs/ChairModal'
@@ -44,19 +43,15 @@ function App() {
     )
   }
 
-  // "Começa do zero": entra, mas não vê dados até um administrador liberar o acesso.
-  if (session.staff.role === 'MEMBER') {
-    return <MemberHome staff={session.staff} credentials={session.credentials} onLogout={session.logout}
-      onCredentialsChanged={session.login} />
-  }
-
   const { page, navigate } = navigation
   const { pageLoading, pageError, retryPage, notice, dismissNotice } = feedback
   const showLoading = page !== 'finance' && page !== 'conversations' && page !== 'profile' && (pageLoading
     || (page === 'overview' && (!overviewPage.rentals || !overviewPage.revenue) && !pageError))
 
+  const partner = session.staff.role === 'MEMBER'
+
   return (
-    <>
+    <div className={partner ? 'is-partner' : undefined}>
       <DashboardLayout
         staff={session.staff}
         page={page}
@@ -102,7 +97,7 @@ function App() {
         {page === 'agenda' && !showLoading && !pageError && <AgendaPage {...agendaPage} />}
         {page === 'orders' && !showLoading && !pageError && <OrdersPage {...ordersPage} credentials={session.credentials} />}
         {page === 'conversations' && <ConversationsPage credentials={session.credentials} />}
-        {page === 'profile' && <ProfilePage credentials={session.credentials} onCredentialsChanged={session.login} />}
+        {page === 'profile' && <ProfilePage credentials={session.credentials} onCredentialsChanged={session.login} partner={partner} />}
         {page === 'ai' && !showLoading && !pageError && <AiContextPage {...aiPage} />}
         {page === 'notifications' && !showLoading && !pageError && notificationsPage.settings && (
           <NotificationsPage settings={notificationsPage.settings} onSave={notificationsPage.onSave} />
@@ -137,7 +132,7 @@ function App() {
             onChairSave={dialog.saveChair}
           />
         ))}
-    </>
+    </div>
   )
 }
 

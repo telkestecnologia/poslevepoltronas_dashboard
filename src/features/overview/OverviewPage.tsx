@@ -35,6 +35,7 @@ export function OverviewPage({ rentals, rentalDate, onRentalDateChange, rentalLo
         </button>
       </div>
 
+      <div className="partner-only partner-banner">Você vê só os dados da sua filial. Os cadastros de filiais, poltronas e equipe são feitos pelo administrador.</div>
       {children}
 
       <RentalsByBranchChart data={rentals.rentedChairsByBranch}

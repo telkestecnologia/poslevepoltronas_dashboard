@@ -107,7 +107,7 @@ export function AiContextPage({ knowledge, unanswered, onCreateKnowledge, onUpda
           <button className="button secondary" type="button" onClick={onRefresh}>
             <RefreshCw size={17} /> Atualizar
           </button>
-          <button className="button primary" type="button" onClick={() => openEditor(tab === 'knowledge' ? { kind: 'knowledge' } : { kind: 'unanswered' })}>
+          <button className="button primary admin-only" type="button" onClick={() => openEditor(tab === 'knowledge' ? { kind: 'knowledge' } : { kind: 'unanswered' })}>
             <Plus size={18} /> {tab === 'knowledge' ? 'Nova pergunta e resposta' : 'Registrar dúvida'}
           </button>
         </div>
@@ -165,10 +165,10 @@ export function AiContextPage({ knowledge, unanswered, onCreateKnowledge, onUpda
                 <h3>{entry.question}</h3>
                 <p>{entry.answer}</p>
                 <div className="ai-entry-actions">
-                  <button type="button" className="button secondary" disabled={busy} onClick={() => openEditor({ kind: 'knowledge', entry })}>
+                  <button type="button" className="button secondary admin-only" disabled={busy} onClick={() => openEditor({ kind: 'knowledge', entry })}>
                     <Pencil size={15} /> Editar
                   </button>
-                  <button type="button" className="ai-remove" disabled={busy} onClick={() => void remove(entry)}>
+                  <button type="button" className="ai-remove admin-only" disabled={busy} onClick={() => void remove(entry)}>
                     <Trash2 size={15} /> Remover
                   </button>
                 </div>

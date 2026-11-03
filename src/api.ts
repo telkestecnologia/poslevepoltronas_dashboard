@@ -20,7 +20,8 @@ export type ChairQuery = {
   branchId: string
 }
 
-export type Staff = { slug: string; tenantName: string; displayName: string; email: string; role?: 'ADMIN' | 'MEMBER' }
+/** role MEMBER = parceiro ("Começa do zero"): vê só os dados da filial branchId. */
+export type Staff = { slug: string; tenantName: string; displayName: string; email: string; role?: 'ADMIN' | 'MEMBER'; branchId?: string | null }
 export type Courier = {
   id: string; name: string; email: string; phone: string; vehicle: string
   active: boolean; createdAt: string; updatedAt: string
@@ -102,10 +103,11 @@ export type EvidenceUploadInput = {
 export type AccessLevel = 'ALL' | 'NONE'
 export type TeamMember = {
   id: string; name: string; email: string; phone: string | null; area: string | null; jobTitle: string | null
-  access: AccessLevel; enabled: boolean; self: boolean
+  access: AccessLevel; enabled: boolean; self: boolean; branchId?: string | null
 }
 export type TeamMemberInput = {
   name: string; email: string; phone: string; area: string; jobTitle: string; access: AccessLevel; password: string; enabled?: boolean
+  branchId?: string | null
 }
 export type Account = {
   id: string; name: string; email: string; phone: string | null; area: string | null; jobTitle: string | null; access: AccessLevel

@@ -227,7 +227,7 @@ export function OrdersPage({ credentials, orders, couriers, status, source, onSt
           {selected.status === 'PENDING_PAYMENT' && !selected.paymentMock && <div className="order-preview-note">
             Aguardando confirmação do PIX pelo Inter. Reserva válida até {selected.expiresAt ? timeLabel(selected.expiresAt) : 'o prazo informado'}.
           </div>}
-          {selected.status === 'PENDING_PAYMENT' && selected.paymentSandbox && !selected.paymentMock && <div className="order-section">
+          {selected.status === 'PENDING_PAYMENT' && selected.paymentSandbox && !selected.paymentMock && <div className="order-section admin-only">
             <h3>Teste do Pix no Inter</h3>
             <p className="order-muted">Solicita ao sandbox do Inter a confirmação desta cobrança. O pedido só será confirmado após a consulta ao banco.</p>
             <div className="order-actions"><button className="button secondary" disabled={busy || simulationRequestedId === selected.id}
@@ -282,7 +282,7 @@ export function OrdersPage({ credentials, orders, couriers, status, source, onSt
               onClick={() => void perform(() => onExpandStock(selected.id, stockStart, stockEnd, stockNote),
                 () => setStockNote(''))}>Confirmar intervalo logístico</button></div>
           </div>}
-          <label className="order-field">Entregador
+          <label className="order-field admin-only">Entregador
             <select value={selected.courierId ?? ''} disabled={busy || currentStep < 0 || selected.status === 'COMPLETED'}
               onChange={event => void perform(() => onAssignCourier(selected.id, event.target.value || null))}>
               <option value="">Ainda não atribuído</option>
