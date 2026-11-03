@@ -12,6 +12,7 @@ import { AiContextPage } from './features/ai/AiContextPage'
 import { OverviewPage } from './features/overview/OverviewPage'
 import { NotificationsPage } from './features/notifications/NotificationsPage'
 import { FinancePage } from './features/finance/FinancePage'
+import { ConversationsPage } from './features/conversations/ConversationsPage'
 import { useDashboard } from './hooks/useDashboard'
 
 function App() {
@@ -42,7 +43,7 @@ function App() {
 
   const { page, navigate } = navigation
   const { pageLoading, pageError, retryPage, notice, dismissNotice } = feedback
-  const showLoading = page !== 'finance' && (pageLoading
+  const showLoading = page !== 'finance' && page !== 'conversations' && (pageLoading
     || (page === 'overview' && (!overviewPage.rentals || !overviewPage.revenue) && !pageError))
 
   return (
@@ -89,6 +90,7 @@ function App() {
         {page === 'couriers' && !showLoading && !pageError && <CouriersPage {...couriersPage} />}
         {page === 'agenda' && !showLoading && !pageError && <AgendaPage {...agendaPage} />}
         {page === 'orders' && !showLoading && !pageError && <OrdersPage {...ordersPage} credentials={session.credentials} />}
+        {page === 'conversations' && <ConversationsPage />}
         {page === 'ai' && !showLoading && !pageError && <AiContextPage {...aiPage} />}
         {page === 'notifications' && !showLoading && !pageError && notificationsPage.settings && (
           <NotificationsPage settings={notificationsPage.settings} onSave={notificationsPage.onSave} />

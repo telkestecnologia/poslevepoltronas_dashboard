@@ -7,6 +7,7 @@ import {
   Home,
   LogOut,
   MapPin,
+  MessagesSquare,
   ClipboardList,
   Sparkles,
   Menu,
@@ -29,6 +30,7 @@ const navigation = [
   { page: 'couriers', label: 'Entregadores', icon: Truck },
   { page: 'agenda', label: 'Agenda', icon: CalendarDays },
   { page: 'orders', label: 'Pedidos', icon: ClipboardList },
+  { page: 'conversations', label: 'Conversas', icon: MessagesSquare },
   { page: 'ai', label: 'Contexto da IA', icon: Sparkles },
   { page: 'notifications', label: 'Alertas da IA', icon: BellRing },
 ] as const

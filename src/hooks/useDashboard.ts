@@ -155,7 +155,7 @@ export function useDashboard() {
       setChairLoading(false)
       return
     }
-    if (page === 'finance') {
+    if (page === 'finance' || page === 'conversations') {
       setChairLoading(false)
       setPageLoading(false)
       setPageError('')
