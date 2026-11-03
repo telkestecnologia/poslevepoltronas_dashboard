@@ -221,7 +221,7 @@ async function request<T>(credentials: string, path: string, init: RequestInit =
       response.status === 401
         ? 'E-mail ou senha inválidos.'
         : response.status === 403
-          ? 'Sua conta não tem acesso a esta locadora.'
+          ? (path === '/me' ? 'Senha correta, mas seu usuário está como "Começa do zero" e ainda não vê os dados. Peça a um administrador para mudar para "Vê todos os dados" em Perfil e equipe.' : 'Sua conta não tem acesso a esta locadora.')
           : response.status === 404
             ? 'O registro não foi encontrado.'
             : response.status === 503 && (path.startsWith('/ai/knowledge') || path.endsWith('/answer'))
