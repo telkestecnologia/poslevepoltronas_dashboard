@@ -623,6 +623,16 @@ export function useDashboard() {
       onStatusChange: setOrderStatusFilter,
       onSourceChange: setOrderSourceFilter,
       onRefresh: refreshOrders,
+      onSimulatePix: async (id: string) => {
+        if (credentials === null) throw new Error('Entre novamente para continuar.')
+        try {
+          await api.simulateOrderPix(credentials, id)
+        } catch (error) {
+          if (error instanceof ApiError && error.status === 401) logout()
+          throw error
+        }
+        await refreshOrders().catch(() => {})
+      },
       onChangeStatus: (id: string, status: OrderStatus, note: string) =>
         mutateOrder(auth => api.changeOrderStatus(auth, id, status, note)),
       onExpandStock: (id: string, stockStart: string, stockEnd: string, note: string) =>

@@ -78,6 +78,7 @@ export type Order = {
   rentalCents: number; freightCents: number; totalCents: number
   holdId: string | null; expiresAt: string | null
   paymentMock?: boolean | null
+  paymentSandbox?: boolean | null
   source: OrderSource; status: OrderStatus; courierId: string | null
   issues: OrderIssue[]; history: OrderEvent[]; createdAt: string; updatedAt: string
 }
@@ -247,6 +248,8 @@ export const api = {
   deleteAiUnanswered: (credentials: string, id: string) =>
     request<void>(credentials, `/ai/unanswered/${encodeURIComponent(id)}`, { method: 'DELETE' }),
   orders: (credentials: string) => request<Order[]>(credentials, '/orders'),
+  simulateOrderPix: (credentials: string, id: string) =>
+    request<void>(credentials, `/orders/${encodeURIComponent(id)}/pix/sandbox/pay`, { method: 'POST' }),
   orderEvidence: (credentials: string, id: string) =>
     request<OrderEvidence[]>(credentials, `/orders/${encodeURIComponent(id)}/evidence`),
   changeOrderStatus: (credentials: string, id: string, status: OrderStatus, note: string) =>

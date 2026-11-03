@@ -16,6 +16,7 @@ type Props = {
   onStatusChange: (status: OrderStatus | 'ALL') => void
   onSourceChange: (source: OrderSource | 'ALL') => void
   onRefresh: () => Promise<void>
+  onSimulatePix: (id: string) => Promise<void>
   onChangeStatus: (id: string, status: OrderStatus, note: string) => Promise<Order>
   onExpandStock: (id: string, stockStart: string, stockEnd: string, note: string) => Promise<Order>
   onAssignCourier: (id: string, courierId: string | null) => Promise<Order>
@@ -36,7 +37,7 @@ const labels: Record<OrderStatus, string> = {
   COMPLETED: 'Concluído',
 }
 
-const orderStatusLabel = (order: Order) => order.paymentMock
+const orderStatusLabel = (order: Order) => order.paymentMock || order.paymentSandbox
   ? order.status === 'PENDING_PAYMENT' ? 'Aguardando simulação'
     : order.status === 'PAYMENT_CONFIRMED' ? 'Teste confirmado' : labels[order.status]
   : labels[order.status]
@@ -69,7 +70,7 @@ function eventLabel(action: string) {
 }
 
 export function OrdersPage({ credentials, orders, couriers, status, source, onStatusChange, onSourceChange,
-  onRefresh, onChangeStatus, onExpandStock,
+  onRefresh, onSimulatePix, onChangeStatus, onExpandStock,
   onAssignCourier, onOpenIssue, onResolveIssue }: Props) {
   const [search, setSearch] = useState('')
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -83,6 +84,8 @@ export function OrdersPage({ credentials, orders, couriers, status, source, onSt
   const [stockStart, setStockStart] = useState('')
   const [stockEnd, setStockEnd] = useState('')
   const [stockNote, setStockNote] = useState('')
+  const [simulationNote, setSimulationNote] = useState('')
+  const [simulationRequestedId, setSimulationRequestedId] = useState<string | null>(null)
   const selected = orders.find(order => order.id === selectedId) ?? null
   const currentStep = selected ? statusFlow.indexOf(selected.status) : -1
   const followingStatus = currentStep >= 0 ? statusFlow[currentStep + 1] : undefined
@@ -100,15 +103,15 @@ export function OrdersPage({ credentials, orders, couriers, status, source, onSt
     { label: 'Aguardando contrato', value: countByStatus('PENDING_CONTRACT') },
     { label: 'Aguardando PIX', value: countByStatus('PENDING_PAYMENT') },
     { label: 'PIX em análise', value: countByStatus('PAYMENT_REVIEW') },
-    { label: 'Pagamento confirmado', value: visible.filter(order => order.status === 'PAYMENT_CONFIRMED' && !order.paymentMock).length },
-    { label: 'Teste confirmado', value: visible.filter(order => order.status === 'PAYMENT_CONFIRMED' && !!order.paymentMock).length },
+    { label: 'Pagamento confirmado', value: visible.filter(order => order.status === 'PAYMENT_CONFIRMED' && !order.paymentMock && !order.paymentSandbox).length },
+    { label: 'Teste confirmado', value: visible.filter(order => order.status === 'PAYMENT_CONFIRMED' && (order.paymentMock || order.paymentSandbox)).length },
     { label: 'Em operação', value: countByStatus('DELIVERY_PENDING', 'IN_USE', 'PICKUP_PENDING') },
     { label: 'Concluídos', value: countByStatus('COMPLETED') },
     { label: 'Expirados ou cancelados', value: countByStatus('EXPIRED', 'CANCELLED') },
     { label: 'Problemas em aberto', value: visible.reduce((total, order) => total + order.issues.filter(issue => issue.status === 'OPEN').length, 0) },
   ]
 
-  async function perform(operation: () => Promise<Order>, after?: () => void) {
+  async function perform(operation: () => Promise<unknown>, after?: () => void) {
     setBusy(true)
     setError('')
     try {
@@ -126,6 +129,7 @@ export function OrdersPage({ credentials, orders, couriers, status, source, onSt
       setSelectedId(null)
       setError('')
       setStatusNote('')
+      setSimulationNote('')
       setIssueTitle('')
       setIssueDescription('')
       setResolutions({})
@@ -191,7 +195,7 @@ export function OrdersPage({ credentials, orders, couriers, status, source, onSt
           <td><span className={`order-status status-${order.status.toLowerCase()}`}>{orderStatusLabel(order)}</span></td>
           <td>{order.issues.filter(issue => issue.status === 'OPEN').length || '—'}</td>
           <td><button className="table-action" onClick={() => { setError(''); setStatusNote(''); setIssueTitle('');
-            setIssueDescription(''); setResolutions({}); setStockStart(order.stockStart ?? '');
+            setIssueDescription(''); setSimulationNote(''); setResolutions({}); setStockStart(order.stockStart ?? '');
             setStockEnd(order.stockEnd ?? ''); setStockNote(''); setSelectedId(order.id) }}>
             Ver pedido <ArrowRight size={15} /></button></td>
         </tr>)}</tbody></table></div>}
@@ -210,7 +214,7 @@ export function OrdersPage({ credentials, orders, couriers, status, source, onSt
               className={index === currentStep ? 'current' : index < currentStep ? 'done' : ''}
               aria-current={index === currentStep ? 'step' : undefined}>
               <span className="order-progress-number">{index + 1}</span>
-              <span>{selected.paymentMock && status === 'PAYMENT_CONFIRMED' ? 'Teste confirmado' : labels[status]}</span>
+              <span>{(selected.paymentMock || selected.paymentSandbox) && status === 'PAYMENT_CONFIRMED' ? 'Teste confirmado' : labels[status]}</span>
             </li>)}
           </ol>}
           {selected.status === 'PENDING_CONTRACT' && <div className="order-preview-note">
@@ -219,6 +223,16 @@ export function OrdersPage({ credentials, orders, couriers, status, source, onSt
           </div>}
           {selected.status === 'PENDING_PAYMENT' && !selected.paymentMock && <div className="order-preview-note">
             Aguardando confirmação do PIX pelo Inter. Reserva válida até {selected.expiresAt ? timeLabel(selected.expiresAt) : 'o prazo informado'}.
+          </div>}
+          {selected.status === 'PENDING_PAYMENT' && selected.paymentSandbox && !selected.paymentMock && <div className="order-section">
+            <h3>Teste do Pix no Inter</h3>
+            <p className="order-muted">Solicita ao sandbox do Inter a confirmação desta cobrança. O pedido só será confirmado após a consulta ao banco.</p>
+            <div className="order-actions"><button className="button secondary" disabled={busy || simulationRequestedId === selected.id}
+              onClick={() => void perform(() => onSimulatePix(selected.id), () =>
+                { setSimulationRequestedId(selected.id); setSimulationNote('Solicitação enviada ao Inter. Atualize o pedido para acompanhar a confirmação.') })}>
+              Simular pagamento no Inter
+            </button></div>
+            {simulationNote && <p role="status">{simulationNote}</p>}
           </div>}
           {selected.paymentMock && <div className="order-preview-note">
             Pedido de homologação com pagamento fictício. Nenhum PIX foi criado e nenhum valor foi recebido.
