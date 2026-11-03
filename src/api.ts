@@ -70,7 +70,8 @@ export type OrderIssue = {
 }
 export type OrderEvent = { action: string; note: string; actor: string; at: string }
 export type Order = {
-  id: string; customerName: string; customerPhone: string; postalCode: string; address: string
+  id: string; customerName: string; customerPhone: string; postalCode: string | null; address: string
+  latitude?: number | null; longitude?: number | null
   municipalityCode: string; municipalityName: string; municipalityUf: string
   branchId: string; branchName: string; chairId: string; chairCode: string
   start: string; end: string; stockStart: string | null; stockEnd: string | null

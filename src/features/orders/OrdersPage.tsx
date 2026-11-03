@@ -256,7 +256,9 @@ export function OrdersPage({ credentials, orders, couriers, status, source, onSt
             <div><small>Período cobrado</small><strong>{dateLabel(selected.start)} a {dateLabel(selected.end)}</strong></div>
             {selected.stockStart && selected.stockEnd && <div><small>Estoque bloqueado</small>
               <strong>{dateLabel(selected.stockStart)} a {dateLabel(selected.stockEnd)}</strong></div>}
-            <div><small>Local de entrega</small><strong>{selected.address}<br />{selected.municipalityName}/{selected.municipalityUf} • CEP {selected.postalCode}</strong></div>
+            <div><small>Local de entrega</small><strong>{selected.address}<br />{selected.municipalityName}/{selected.municipalityUf} • {selected.postalCode ? `CEP ${selected.postalCode}` : 'sem CEP'}
+              {selected.latitude != null && selected.longitude != null && <><br /><a href={`https://www.google.com/maps?q=${selected.latitude},${selected.longitude}`}
+                target="_blank" rel="noopener noreferrer">Abrir no mapa</a></>}</strong></div>
             <div><small>Poltrona e filial</small><strong>{selected.chairCode} • {branchLabel(selected.branchName)}</strong></div>
             <div><small>Frete registrado</small><strong>{freightLabel(selected.freightCents)}</strong></div>
             {selected.source === 'CHECKOUT' && <div><small>Total previsto</small><strong>{freightLabel(selected.totalCents)}</strong></div>}
