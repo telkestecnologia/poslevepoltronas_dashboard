@@ -250,6 +250,8 @@ export const api = {
   orders: (credentials: string) => request<Order[]>(credentials, '/orders'),
   simulateOrderPix: (credentials: string, id: string) =>
     request<void>(credentials, `/orders/${encodeURIComponent(id)}/pix/sandbox/pay`, { method: 'POST' }),
+  checkOrderPix: (credentials: string, id: string) =>
+    request<void>(credentials, `/orders/${encodeURIComponent(id)}/pix/sandbox/check`, { method: 'POST' }),
   orderEvidence: (credentials: string, id: string) =>
     request<OrderEvidence[]>(credentials, `/orders/${encodeURIComponent(id)}/evidence`),
   changeOrderStatus: (credentials: string, id: string, status: OrderStatus, note: string) =>

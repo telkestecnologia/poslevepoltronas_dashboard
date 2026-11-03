@@ -17,6 +17,7 @@ type Props = {
   onSourceChange: (source: OrderSource | 'ALL') => void
   onRefresh: () => Promise<void>
   onSimulatePix: (id: string) => Promise<void>
+  onCheckPix: (id: string) => Promise<void>
   onChangeStatus: (id: string, status: OrderStatus, note: string) => Promise<Order>
   onExpandStock: (id: string, stockStart: string, stockEnd: string, note: string) => Promise<Order>
   onAssignCourier: (id: string, courierId: string | null) => Promise<Order>
@@ -70,7 +71,7 @@ function eventLabel(action: string) {
 }
 
 export function OrdersPage({ credentials, orders, couriers, status, source, onStatusChange, onSourceChange,
-  onRefresh, onSimulatePix, onChangeStatus, onExpandStock,
+  onRefresh, onSimulatePix, onCheckPix, onChangeStatus, onExpandStock,
   onAssignCourier, onOpenIssue, onResolveIssue }: Props) {
   const [search, setSearch] = useState('')
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -229,8 +230,12 @@ export function OrdersPage({ credentials, orders, couriers, status, source, onSt
             <p className="order-muted">Solicita ao sandbox do Inter a confirmação desta cobrança. O pedido só será confirmado após a consulta ao banco.</p>
             <div className="order-actions"><button className="button secondary" disabled={busy || simulationRequestedId === selected.id}
               onClick={() => void perform(() => onSimulatePix(selected.id), () =>
-                { setSimulationRequestedId(selected.id); setSimulationNote('Solicitação enviada ao Inter. Atualize o pedido para acompanhar a confirmação.') })}>
-              Simular pagamento no Inter
+                { setSimulationRequestedId(selected.id); setSimulationNote('Solicitação aceita pelo Inter. Consulte o recebimento antes de considerar o pedido pago.') })}>
+              {simulationRequestedId === selected.id ? 'Simulação solicitada' : 'Simular pagamento no Inter'}
+            </button><button className="button secondary" disabled={busy}
+              onClick={() => void perform(() => onCheckPix(selected.id), () =>
+                setSimulationNote('Consulta ao Inter concluída. O status do pedido foi atualizado na lista.'))}>
+              Consultar recebimento no Inter
             </button></div>
             {simulationNote && <p role="status">{simulationNote}</p>}
           </div>}
