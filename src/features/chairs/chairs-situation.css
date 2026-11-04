@@ -1,0 +1,17 @@
+.chair-situation { display: grid; gap: 10px; margin-bottom: 18px; }
+.chair-situation h2 { margin: 0; font-size: 1.1rem; }
+.chair-situation-buttons { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.chair-situation-button {
+  display: grid; gap: 2px; justify-items: center; padding: 14px 10px; border-radius: 14px; cursor: pointer;
+  border: 1.5px solid var(--tone-border); background: var(--surface, #fff); color: inherit; font: inherit;
+}
+.chair-situation-button svg { color: var(--tone); }
+.chair-situation-button.is-selected svg { color: #fff; }
+.chair-situation-button strong { font-size: 1.6rem; line-height: 1.1; color: var(--tone); }
+.chair-situation-button span { font-size: 0.9rem; font-weight: 600; }
+.chair-situation-button.is-selected { background: var(--tone); border-color: var(--tone); color: #fff; }
+.chair-situation-button.is-selected strong { color: #fff; }
+.chair-situation-button.tone-available { --tone: #0f9aa0; --tone-border: #c6e6e8; }
+.chair-situation-button.tone-in-use { --tone: #0b6f74; --tone-border: #b9d9dc; }
+.chair-situation-button.tone-maintenance { --tone: #e87461; --tone-border: #f6cdbd; }
+@media (max-width: 560px) { .chair-situation-button strong { font-size: 1.3rem; } .chair-situation-button span { font-size: 0.8rem; } }

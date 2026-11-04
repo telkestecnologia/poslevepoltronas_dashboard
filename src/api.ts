@@ -12,11 +12,14 @@ export type Chair = {
 }
 export type ChairPage = { items: Chair[]; total: number; page: number; size: number }
 export type ChairOption = Pick<Chair, 'id' | 'code' | 'model' | 'branchId' | 'status'>
+/** Filtro da tela de poltronas: estado do cadastro ou AVAILABLE (livre hoje) / IN_USE (alugada hoje). */
+export type ChairFilter = ChairStatus | 'ALL' | 'AVAILABLE' | 'IN_USE'
+export type ChairSituation = { available: number; inUse: number; maintenance: number }
 export type ChairQuery = {
   page: number
   size: number
   search: string
-  status: ChairStatus | 'ALL'
+  status: ChairFilter
   branchId: string
 }
 
@@ -419,10 +422,13 @@ export const api = {
       size: String(query.size),
       search: query.search,
     })
-    if (query.status !== 'ALL') params.set('status', query.status)
+    if (query.status === 'AVAILABLE' || query.status === 'IN_USE') params.set('use', query.status)
+    else if (query.status !== 'ALL') params.set('status', query.status)
     if (query.branchId !== 'ALL') params.set('branchId', query.branchId)
     return request<ChairPage>(credentials, `/chairs?${params}`)
   },
+  chairSituation: (credentials: string, branchId: string) =>
+    request<ChairSituation>(credentials, `/chairs/situation${branchId === 'ALL' ? '' : `?branchId=${encodeURIComponent(branchId)}`}`),
   chairOptions: (credentials: string) => request<ChairOption[]>(credentials, '/chairs/options'),
   activeChairCounts: (credentials: string) =>
     request<Record<string, number>>(credentials, '/chairs/active-counts'),

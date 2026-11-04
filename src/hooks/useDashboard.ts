@@ -11,6 +11,8 @@ import {
   type Chair,
   type ChairOption,
   type ChairQuery,
+  type ChairFilter,
+  type ChairSituation,
   type ChairStatus,
   type Courier,
   type CourierInput,
@@ -70,7 +72,8 @@ export function useDashboard() {
   const [formError, setFormError] = useState('')
   const [search, setSearch] = useState('')
   const [appliedSearch, setAppliedSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState<ChairStatus | 'ALL'>('ALL')
+  const [statusFilter, setStatusFilter] = useState<ChairFilter>('ALL')
+  const [chairSituation, setChairSituation] = useState<ChairSituation | null>(null)
   const [branchFilter, setBranchFilter] = useState('ALL')
   const [orderStatusFilter, setOrderStatusFilter] = useState<OrderStatus | 'ALL'>('ALL')
   const [orderSourceFilter, setOrderSourceFilter] = useState<OrderSource | 'ALL'>('ALL')
@@ -86,6 +89,13 @@ export function useDashboard() {
     status: statusFilter,
     branchId: branchFilter,
   }
+
+  useEffect(() => {
+    if (page !== 'chairs' || credentials === null) return
+    let active = true
+    api.chairSituation(credentials, branchFilter).then(value => { if (active) setChairSituation(value) }).catch(() => {})
+    return () => { active = false }
+  }, [page, credentials, branchFilter, chairs])
 
   // Apply the response for the active page without clearing data from other pages.
   const applyPageData = useCallback((data: PageData | null) => {
@@ -584,7 +594,8 @@ export function useDashboard() {
       status: statusFilter,
       branchId: branchFilter,
       onSearchChange: setSearch,
-      onStatusChange: (next: ChairStatus | 'ALL') => {
+      situation: chairSituation,
+      onStatusChange: (next: ChairFilter) => {
         setChairPage(0)
         setStatusFilter(next)
       },

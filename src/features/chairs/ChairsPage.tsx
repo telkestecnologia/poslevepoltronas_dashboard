@@ -1,9 +1,16 @@
-import { Armchair, ChevronRight, CircleHelp, MapPin, Plus, Search, Settings2 } from 'lucide-react'
-import type { Branch, Chair, ChairOption, ChairStatus, ManualBlock } from '../../api'
+import { Armchair, CheckCircle2, ChevronRight, CircleHelp, MapPin, Plus, Search, Settings2, UserRound, Wrench, type LucideIcon } from 'lucide-react'
+import type { Branch, Chair, ChairFilter, ChairOption, ChairSituation, ManualBlock } from '../../api'
 import { EmptyState, StatusBadge } from '../../components/common'
 import { CHAIR_PAGE_SIZE } from '../../types'
 import { branchLabel, onlyOfficialBranches } from '../../utils/branches'
 import { BlockManager } from './BlockManager'
+import './chairs-situation.css'
+
+const situationButtons: { key: ChairFilter; label: string; count: keyof ChairSituation; tone: string; icon: LucideIcon }[] = [
+  { key: 'AVAILABLE', label: 'Disponíveis', count: 'available', tone: 'available', icon: CheckCircle2 },
+  { key: 'IN_USE', label: 'Em uso', count: 'inUse', tone: 'in-use', icon: UserRound },
+  { key: 'MAINTENANCE', label: 'Em manutenção', count: 'maintenance', tone: 'maintenance', icon: Wrench },
+]
 
 type Props = {
   chairs: Chair[]
@@ -14,10 +21,11 @@ type Props = {
   branches: Branch[]
   loading: boolean
   search: string
-  status: ChairStatus | 'ALL'
+  status: ChairFilter
+  situation: ChairSituation | null
   branchId: string
   onSearchChange: (value: string) => void
-  onStatusChange: (value: ChairStatus | 'ALL') => void
+  onStatusChange: (value: ChairFilter) => void
   onBranchChange: (value: string) => void
   onPageChange: (page: number) => void
   onNewChair: () => void
@@ -43,6 +51,7 @@ export function ChairsPage(props: Props) {
     loading,
     search,
     status,
+    situation,
     branchId,
     onSearchChange,
     onStatusChange,
@@ -68,6 +77,22 @@ export function ChairsPage(props: Props) {
           <Plus size={18} /> Nova poltrona
         </button>
       </div>
+
+      <section className="chair-situation" aria-label="Situação das poltronas">
+        <h2>Poltronas</h2>
+        <div className="chair-situation-buttons">
+          {situationButtons.map(button => {
+            const selected = status === button.key
+            return <button key={button.key} type="button" aria-pressed={selected}
+              className={`chair-situation-button tone-${button.tone}${selected ? ' is-selected' : ''}`}
+              onClick={() => onStatusChange(selected ? 'ALL' : button.key)}>
+              <button.icon size={22} aria-hidden />
+              <strong>{situation ? situation[button.count] : 0}</strong>
+              <span>{button.label}</span>
+            </button>
+          })}
+        </div>
+      </section>
 
       <section className="panel table-panel">
         <div className="table-toolbar">
@@ -101,10 +126,11 @@ export function ChairsPage(props: Props) {
             <select
               aria-label="Filtrar por estado"
               value={status}
-              onChange={(event) => onStatusChange(event.target.value as ChairStatus | 'ALL')}
+              onChange={(event) => onStatusChange(event.target.value as ChairFilter)}
             >
               <option value="ALL">Todos os estados</option>
-              <option value="ACTIVE">Ativas</option>
+              <option value="AVAILABLE">Disponíveis</option>
+              <option value="IN_USE">Em uso</option>
               <option value="MAINTENANCE">Em manutenção</option>
               <option value="INACTIVE">Inativas</option>
             </select>
