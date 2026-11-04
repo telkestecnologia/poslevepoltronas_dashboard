@@ -3,4 +3,5 @@
 .is-partner .partner-only { display: block; }
 .is-partner .admin-only { display: none !important; }
 .is-partner .admin-lock { pointer-events: none; opacity: 0.55; }
+.is-partner .ai-workspace .empty-state button { display: none; }
 .partner-banner { margin-bottom: 18px; padding: 12px 16px; border-radius: 12px; background: #e5f4f5; color: #0f5e66; }

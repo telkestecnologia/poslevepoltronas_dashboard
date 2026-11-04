@@ -113,6 +113,8 @@ export function AiContextPage({ knowledge, unanswered, onCreateKnowledge, onUpda
         </div>
       </div>
 
+      <div className="partner-only partner-banner">Você pode consultar o que a Isa sabe. Para mudar uma resposta, fale com o administrador.</div>
+
       <div className="ai-summary">
         <div className="panel">
           <BookOpen size={21} />
@@ -191,10 +193,10 @@ export function AiContextPage({ knowledge, unanswered, onCreateKnowledge, onUpda
                 <h3>{entry.question}</h3>
                 <div className="ai-entry-actions">
                   <span className="ai-occurrences">{entry.occurrences} {entry.occurrences === 1 ? 'ocorrência' : 'ocorrências'}</span>
-                  <button type="button" className="button primary" disabled={busy} onClick={() => openEditor({ kind: 'answer', pending: entry })}>
+                  <button type="button" className="button primary admin-only" disabled={busy} onClick={() => openEditor({ kind: 'answer', pending: entry })}>
                     Responder e adicionar ao contexto
                   </button>
-                  <button type="button" className="ai-remove" disabled={busy} onClick={() => void removeUnanswered(entry)}>
+                  <button type="button" className="ai-remove admin-only" disabled={busy} onClick={() => void removeUnanswered(entry)}>
                     <Trash2 size={15} /> Excluir
                   </button>
                 </div>
