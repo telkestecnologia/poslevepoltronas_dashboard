@@ -8,3 +8,18 @@
 }
 .order-map-button:hover { background: var(--teal-dark); transform: translateY(-1px); }
 .order-map-button:focus-visible { outline: 2px solid var(--teal-dark); outline-offset: 2px; }
+
+/* Filtro de status vindo dos cartões da visão geral: aparece como etiqueta que limpa ao tocar. */
+.order-filter-chip {
+  border: 1px solid var(--border, #d0d7de);
+  background: var(--surface-muted, #f3f4f6);
+  color: inherit;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font: inherit;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.order-filter-chip:hover { filter: brightness(0.96); }
+.order-toolbar select:disabled { opacity: 0.6; cursor: not-allowed; }

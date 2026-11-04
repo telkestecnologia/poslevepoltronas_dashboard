@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { AlertCircle, ArrowRight, ClipboardList, MapPin, RefreshCw, Search, X } from 'lucide-react'
 import './orders.css'
-import { type Courier, type Order, type OrderSource, type OrderStatus } from '../../api'
+import { type Branch, type Courier, type Order, type OrderSource, type OrderStatus } from '../../api'
 import { EmptyState } from '../../components/common'
-import { branchLabel } from '../../utils/branches'
+import { branchLabel, onlyOfficialBranches } from '../../utils/branches'
 import { getMessage } from '../../utils/errors'
 import { formatPhone } from '../../utils/phone'
 import { OrderEvidencePanel } from './OrderEvidencePanel'
@@ -12,6 +12,7 @@ type Props = {
   credentials: string
   orders: Order[]
   couriers: Courier[]
+  branches: Branch[]
   status: OrderStatus | 'ALL'
   source: OrderSource | 'ALL'
   onStatusChange: (status: OrderStatus | 'ALL') => void
@@ -71,7 +72,7 @@ function eventLabel(action: string) {
   return action
 }
 
-export function OrdersPage({ credentials, orders, couriers, status, source, onStatusChange, onSourceChange,
+export function OrdersPage({ credentials, orders, couriers, branches, status, source, onStatusChange, onSourceChange,
   onRefresh, onSimulatePix, onCheckPix, onChangeStatus, onExpandStock,
   onAssignCourier, onOpenIssue, onResolveIssue }: Props) {
   const [search, setSearch] = useState('')
@@ -95,8 +96,16 @@ export function OrdersPage({ credentials, orders, couriers, status, source, onSt
     && !['EXPIRED', 'CANCELLED', 'COMPLETED', 'PAYMENT_REVIEW'].includes(selected.status)
   const normalize = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
   const term = normalize(search.trim())
+  const [branchId, setBranchId] = useState('ALL')
+  const [cityCode, setCityCode] = useState('ALL')
+  const officialBranches = onlyOfficialBranches(branches, branch => branch.name)
+  const branchOptions = officialBranches.length ? officialBranches : branches
+  const selectedBranch = branchOptions.find(branch => branch.id === branchId)
+  const cityOptions = [...(selectedBranch?.municipalities ?? [])].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
   const visible = orders.filter(order => (status === 'ALL' || order.status === status)
     && (source === 'ALL' || order.source === source)
+    && (branchId === 'ALL' || order.branchId === branchId)
+    && (cityCode === 'ALL' || order.municipalityCode === cityCode)
     && normalize(`${order.customerName} ${order.customerPhone} ${order.chairCode} ${order.municipalityName} ${order.branchName} ${branchLabel(order.branchName)}`)
       .includes(term))
   // Os cartões resumem exatamente as linhas da lista: busca, filtros e ações mudam os dois juntos.
@@ -170,23 +179,25 @@ export function OrdersPage({ credentials, orders, couriers, status, source, onSt
       <div className="table-toolbar order-toolbar">
         <div className="search-field"><Search size={18} /><input aria-label="Buscar pedido"
           placeholder="Cliente, poltrona ou município" value={search} onChange={event => setSearch(event.target.value)} /></div>
-        <div className="select-wrap"><select aria-label="Filtrar origem" value={source}
-          onChange={event => onSourceChange(event.target.value as OrderSource | 'ALL')}>
-          <option value="ALL">Todas as origens</option>
-          <option value="CHECKOUT">Pedidos reais</option>
-          <option value="MANUAL_PREVIEW">Demonstrações</option>
+        <div className="select-wrap"><select aria-label="Filtrar filial" value={branchId}
+          onChange={event => { setBranchId(event.target.value); setCityCode('ALL') }}>
+          <option value="ALL">Filiais atendidas</option>
+          {branchOptions.map(branch => <option value={branch.id} key={branch.id}>{branchLabel(branch.name)}</option>)}
         </select></div>
-        <div className="select-wrap"><select aria-label="Filtrar status" value={status}
-          onChange={event => onStatusChange(event.target.value as OrderStatus | 'ALL')}>
-          <option value="ALL">Todos os status</option>
-          {Object.entries(labels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}
+        <div className="select-wrap"><select aria-label="Filtrar cidade" value={cityCode} disabled={!selectedBranch}
+          onChange={event => setCityCode(event.target.value)}>
+          <option value="ALL">{selectedBranch ? 'Todas as cidades da filial' : 'Escolha a filial para ver as cidades'}</option>
+          {cityOptions.map(city => <option value={city.code} key={city.code}>{city.name}</option>)}
         </select></div>
+        {(status !== 'ALL' || source !== 'ALL') && <button type="button" className="order-filter-chip"
+          onClick={() => { onStatusChange('ALL'); onSourceChange('ALL') }} aria-label="Limpar filtro de status">
+          {status !== 'ALL' ? labels[status] : source === 'CHECKOUT' ? 'Pedidos reais' : 'Demonstrações'} ✕</button>}
       </div>
-      {orders.length === 0 && source === 'ALL' && status === 'ALL' && !term
+      {orders.length === 0 && source === 'ALL' && status === 'ALL' && branchId === 'ALL' && !term
         ? <EmptyState icon={ClipboardList} title="Nenhum pedido registrado"
         text="Os pedidos do site aparecerão aqui após a reserva e o aceite do contrato." />
         : visible.length === 0 ? <EmptyState icon={Search} title="Nenhum pedido encontrado"
-          text="Ajuste a busca ou o filtro de status." />
+          text="Ajuste a busca, a filial ou a cidade." />
         : <div className="table-scroll"><table className="orders-table"><thead><tr>
           <th>CLIENTE</th><th>PERÍODO</th><th>POLTRONA</th><th>STATUS</th><th>PROBLEMAS</th><th><span className="sr-only">Ação</span></th>
         </tr></thead><tbody>{visible.map(order => <tr key={order.id}>
