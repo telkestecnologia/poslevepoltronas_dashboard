@@ -287,6 +287,10 @@ export function OrdersPage({ credentials, orders, couriers, status, source, onSt
               onClick={() => void perform(() => onExpandStock(selected.id, stockStart, stockEnd, stockNote),
                 () => setStockNote(''))}>Confirmar intervalo logístico</button></div>
           </div>}
+          {/* Contrato enviado pelo WhatsApp e ainda não assinado: ainda não é pedido, sem entrega nem problemas. */}
+          {selected.id.startsWith('wa-contrato-') ? <div className="order-preview-note">
+            Contrato enviado pelo WhatsApp e aguardando a assinatura da cliente. Entregador, fotos e problemas ficam
+            disponíveis depois que ela assinar.</div> : <>
           <label className="order-field admin-only">Entregador
             <select value={selected.courierId ?? ''} disabled={busy || currentStep < 0 || selected.status === 'COMPLETED'}
               onChange={event => void perform(() => onAssignCourier(selected.id, event.target.value || null))}>
@@ -333,6 +337,7 @@ export function OrdersPage({ credentials, orders, couriers, status, source, onSt
               <button className="button secondary" disabled={busy}><AlertCircle size={16} /> Registrar problema</button>
             </form>
           </div>
+          </>}
           <div className="order-section"><h3>Histórico</h3>
             <div className="order-history">{[...selected.history].reverse().map((event, index) =>
               <div key={`${event.at}-${index}`}><strong>{eventLabel(event.action)}</strong>
