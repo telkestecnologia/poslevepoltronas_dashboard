@@ -178,7 +178,7 @@ export function ConversationsPage({ credentials }: { credentials: string }) {
             {chatError && <p className="wa-note wa-error">{chatError}</p>}
             {windowClosed ? <p className="wa-note">Passaram 24 horas desde a última mensagem do cliente. O WhatsApp só libera nova mensagem quando ele escrever de novo.</p>
               : <p className="wa-note">{selected.state === 'HUMAN'
-                ? 'Você está atendendo: a Isa não responde. Ao enviar, a conversa volta para a Isa. Sem resposta em 3 minutos, ela volta sozinha.'
+                ? 'Você está atendendo: a Isa não responde. Se você ficar 3 minutos sem responder, a conversa volta sozinha para a Isa.'
                 : 'A Isa está atendendo. Para digitar, clique em “Assumir conversa”.'}</p>}
             <form className={`wa-input${selected.state === 'HUMAN' ? '' : ' locked'}`} onSubmit={event => void send(event)}>
               <input value={draft} onChange={event => setDraft(event.target.value)} maxLength={2000} aria-label="Mensagem"
