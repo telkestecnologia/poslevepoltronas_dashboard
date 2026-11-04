@@ -1,0 +1,10 @@
+/* Endereço de entrega com o botão do mapa ao lado, em destaque. */
+.order-address-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.order-map-button {
+  display: inline-flex; align-items: center; gap: 6px; flex: none;
+  padding: 9px 14px; border-radius: 99px;
+  background: var(--teal); color: #fff; font-size: 13px; font-weight: 700; text-decoration: none;
+  box-shadow: 0 4px 12px rgba(26, 155, 170, 0.25); transition: background 0.2s, transform 0.2s;
+}
+.order-map-button:hover { background: var(--teal-dark); transform: translateY(-1px); }
+.order-map-button:focus-visible { outline: 2px solid var(--teal-dark); outline-offset: 2px; }
