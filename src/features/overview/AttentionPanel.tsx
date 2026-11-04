@@ -48,10 +48,16 @@ function buildAlerts(orders: Order[], conversations: Conversation[]): Alert[] {
     } else if (waitingDelivery && order.start <= tomorrow && !order.courierId) {
       items.push({ key: `courier-${order.id}`, level: 'warning', title: 'Entrega sem entregador', page: 'orders',
         detail: `${who(order)}: entrega ${order.start === now ? 'hoje' : 'amanhã'}${order.deliveryTime ? ` às ${order.deliveryTime}` : ''}.` })
+    } else if (waitingDelivery) {
+      items.push({ key: `deliver-${order.id}`, level: 'warning', title: 'Entregar poltrona', page: 'orders',
+        detail: `${who(order)}: entrega em ${shortDate(order.start)}${order.deliveryTime ? ` às ${order.deliveryTime}` : ''}.` })
     }
     if (waitingPickup && order.end < now) {
       items.push({ key: `late-pickup-${order.id}`, level: 'urgent', title: 'Retirada atrasada', page: 'orders',
         detail: `${who(order)}: estava prevista para ${shortDate(order.end)}.` })
+    } else if (order.status === 'PICKUP_PENDING') {
+      items.push({ key: `pickup-${order.id}`, level: 'warning', title: 'Retirar poltrona', page: 'orders',
+        detail: `${who(order)}: retirada em ${shortDate(order.end)}${order.pickupTime ? ` às ${order.pickupTime}` : ''}.` })
     }
   }
   for (const conversation of conversations.filter(needsHelp)) {
