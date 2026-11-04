@@ -114,7 +114,9 @@ export function DashboardLayout({
         </nav>
         <div className="sidebar-spacer" />
         <button className="sidebar-user" onClick={onLogout} title="Sair do painel">
-          <span className="avatar">{staff.displayName.charAt(0)}</span>
+          {/* A mesma logo sem fundo da tela de login. */}
+          <img src="/logo-pos-leve-icon.webp" alt="Pós Leve" width={34} height={34}
+            style={{ width: 34, height: 34, objectFit: 'contain', flexShrink: 0 }} />
           <span>
             <strong>{staff.displayName}</strong>
             <small>{staff.role === 'MEMBER' ? 'Parceiro' : 'Administrador'}</small>
