@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ArrowLeft, Globe, MessageCircle, RefreshCw, Send } from 'lucide-react'
 import { api, type Conversation, type ConversationMessage } from '../../api'
-import { conversationState, customerLabel, customerNumber, nameColor } from '../../utils/conversations'
+import { conversationState, customerLabel, customerNumber, nameColor, stageTone } from '../../utils/conversations'
 import { MessageImages, WhatsAppText } from './WhatsAppText'
 import { getMessage } from '../../utils/errors'
 import './conversations.css'
@@ -142,7 +142,7 @@ export function ConversationsPage({ credentials }: { credentials: string }) {
                 {`${item.lastMessageRole === 'AI' ? 'Isa: ' : item.lastMessageRole === 'STAFF' ? `${item.staffName ?? 'Equipe'}: ` : ''}${item.lastMessagePreview ?? ''}`}</span>
                 {item.needsAttention && <span className="wa-badge">!</span>}</span>
               <span className={`wa-state ${rowState.tone}`}>{rowState.label} • {whatsAppRow ? 'WhatsApp' : 'Site'}</span>
-              {item.stage && <span className="wa-stage">📋 {item.stage}</span>}
+              {item.stage && <span className={`wa-stage ${stageTone(item.stage).tone}`}>{stageTone(item.stage).icon} {item.stage}</span>}
             </span>
           </button>
         })}
@@ -153,9 +153,9 @@ export function ConversationsPage({ credentials }: { credentials: string }) {
           <header className="wa-chat-head">
             <button type="button" className="wa-back" aria-label="Voltar para a lista" onClick={() => { setSelectedId(null); setSelected(null) }}><ArrowLeft size={20} /></button>
             <div className="wa-chat-title"><strong>{customerLabel(selected)}{customerNumber(selected) && <small className="wa-number"> {customerNumber(selected)}</small>}</strong>
-              {selected.stage && <span className="wa-stage">📋 Etapa: {selected.stage}</span>}
-              <small>{selected.channel === 'WHATSAPP' ? 'WhatsApp' : 'Chat do site'} • desde {new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(selected.startedAt))}</small></div>
-            <span className={`wa-state ${state.tone}`}>{state.label}</span>
+              <small className="wa-chat-meta"><span className={`wa-state ${state.tone}`}>{state.label}</span>
+                {` • ${selected.channel === 'WHATSAPP' ? 'WhatsApp' : 'Site'} • desde ${new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(selected.startedAt))}`}</small>
+              {selected.stage && <span className={`wa-stage ${stageTone(selected.stage).tone}`}>{stageTone(selected.stage).icon} {selected.stage}</span>}</div>
             <button type="button" className={`wa-assign${selected.state === 'HUMAN' ? ' outline' : ''}`} disabled={busy} onClick={() => void toggleAssignment(selected)}>
               {selected.state === 'HUMAN' ? 'Devolver para a Isa' : 'Assumir conversa'}</button>
           </header>
@@ -178,11 +178,14 @@ export function ConversationsPage({ credentials }: { credentials: string }) {
             {windowClosed ? <p className="wa-note">Passaram 24 horas desde a última mensagem do cliente. O WhatsApp só libera nova mensagem quando ele escrever de novo.</p>
               : <p className="wa-note">{selected.state === 'HUMAN'
                 ? 'Você está atendendo: a Isa não responde. Ao enviar, a conversa volta para a Isa.'
-                : 'Sua resposta vai para o cliente e a conversa volta para a Isa. Para ela não responder, clique em “Assumir conversa”.'}</p>}
-            <form className="wa-input" onSubmit={event => void send(event)}>
-              <input value={draft} onChange={event => setDraft(event.target.value)} placeholder="Mensagem" maxLength={2000} aria-label="Mensagem" />
-              <button type="submit" disabled={!draft.trim() || busy} aria-label="Enviar mensagem"><Send size={18} /></button>
-            </form>
+                : 'Para responder, assuma a conversa. A Isa fica pausada enquanto você escreve e volta sozinha depois do envio.'}</p>}
+            {selected.state === 'HUMAN'
+              ? <form className="wa-input" onSubmit={event => void send(event)}>
+                <input value={draft} onChange={event => setDraft(event.target.value)} placeholder="Mensagem" maxLength={2000} aria-label="Mensagem" />
+                <button type="submit" disabled={!draft.trim() || busy} aria-label="Enviar mensagem"><Send size={18} /></button>
+              </form>
+              : <button type="button" className="wa-take-over" disabled={busy} onClick={() => void toggleAssignment(selected)}>
+                Assumir conversa para responder</button>}
           </footer>
         </>}
       </section>

@@ -181,7 +181,24 @@
 .wa-error { background: #fde8e4; color: #a3392a; }
 .wa-assign:disabled { opacity: 0.6; }
 .wa-number { color: #667781; font-weight: 400; font-size: 13px; }
-.wa-stage { display: block; color: #54656f; font-size: 12px; }
+.wa-stage {
+  display: inline-flex; align-items: center; gap: 5px; align-self: flex-start; width: fit-content;
+  margin-top: 4px; padding: 3px 10px; border-radius: 99px;
+  background: #e3f4f2; color: #12727d; font-size: 12.5px; font-weight: 700;
+}
+.wa-chat-title .wa-stage { margin: 2px 0 0; font-size: 13px; }
+.wa-chat-title .wa-chat-meta { display: block; color: #667781; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wa-chat-meta .wa-state { font-weight: 700; }
+.wa-stage.start { background: #e3f2fb; color: #027eb5; }
+.wa-stage.waiting { background: #fff3d6; color: #8a5a00; }
+.wa-stage.done { background: #e3f6ea; color: #1f7a4a; }
+.wa-stage.stopped { background: #fde8e4; color: #a3392a; }
+.wa-take-over {
+  width: 100%; padding: 12px 16px; border: 0; border-radius: 24px;
+  background: #00a884; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer;
+}
+.wa-take-over:hover { background: #008069; }
+.wa-take-over:disabled { opacity: 0.6; cursor: default; }
 .wa-text { margin: 0; white-space: pre-wrap; word-break: break-word; }
 .wa-text a { color: #027eb5; text-decoration: underline; }
 .wa-text code { font-family: ui-monospace, monospace; }

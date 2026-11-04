@@ -30,6 +30,15 @@ export function conversationState(item: Conversation): { label: string; tone: 'a
   return { label: 'Isa respondendo', tone: 'ai' }
 }
 
+/** Tom e ícone de cada etapa do atendimento (o mesmo do app), para ela se destacar na lista e na conversa. */
+export function stageTone(stage: string): { icon: string; tone: 'stopped' | 'done' | 'waiting' | 'start' | 'progress' } {
+  if (/cancelad|expirad/i.test(stage)) return { icon: '⛔', tone: 'stopped' }
+  if (/confirmado$|em uso|concluída/i.test(stage) && !/resumo/i.test(stage)) return { icon: '✅', tone: 'done' }
+  if (/aguardando|análise/i.test(stage)) return { icon: '⏳', tone: 'waiting' }
+  if (/coletando/i.test(stage)) return { icon: '📝', tone: 'start' }
+  return { icon: '📄', tone: 'progress' }
+}
+
 /** Conversa em que a Isa não conseguiu responder e ninguém da equipe respondeu ainda. */
 export function needsHelp(item: Conversation) {
   return item.needsAttention && (item.channel === 'WHATSAPP' || item.state !== 'HUMAN')
