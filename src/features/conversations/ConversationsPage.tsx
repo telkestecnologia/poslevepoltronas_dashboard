@@ -156,8 +156,8 @@ export function ConversationsPage({ credentials }: { credentials: string }) {
               <small className="wa-chat-meta"><span className={`wa-state ${state.tone}`}>{state.label}</span>
                 {` • ${selected.channel === 'WHATSAPP' ? 'WhatsApp' : 'Site'} • desde ${new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(selected.startedAt))}`}</small>
               {selected.stage && <span className={`wa-stage ${stageTone(selected.stage).tone}`}>{stageTone(selected.stage).icon} {selected.stage}</span>}</div>
-            <button type="button" className={`wa-assign${selected.state === 'HUMAN' ? ' outline' : ''}`} disabled={busy} onClick={() => void toggleAssignment(selected)}>
-              {selected.state === 'HUMAN' ? 'Devolver para a Isa' : 'Assumir conversa'}</button>
+            {selected.state === 'HUMAN' && <button type="button" className="wa-assign outline" disabled={busy}
+              onClick={() => void toggleAssignment(selected)}>Devolver para a Isa</button>}
           </header>
           <div className="wa-thread" ref={thread}>
             {messages.map((message, index) => {
