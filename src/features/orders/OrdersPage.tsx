@@ -5,7 +5,7 @@ import { type Branch, type Courier, type Order, type OrderSource, type OrderStat
 import { EmptyState } from '../../components/common'
 import { branchLabel, onlyOfficialBranches } from '../../utils/branches'
 import { getMessage } from '../../utils/errors'
-import { formatPhone } from '../../utils/phone'
+import { displayPhone } from '../../utils/phone'
 import { OrderEvidencePanel } from './OrderEvidencePanel'
 
 type Props = {
@@ -258,7 +258,7 @@ export function OrdersPage({ credentials, orders, couriers, branches, status, so
             Pedido de demonstração. O pagamento é apenas simulado; ele não reserva a poltrona nem altera a disponibilidade do site.
           </div>}
           <div className="order-facts">
-            <div><small>Contato</small><strong>{formatPhone(selected.customerPhone)}</strong></div>
+            <div><small>Contato</small><strong>{displayPhone(selected.customerPhone)}</strong></div>
             <div><small>Período cobrado</small><strong>{dateLabel(selected.start)} a {dateLabel(selected.end)}</strong></div>
             {selected.stockStart && selected.stockEnd && <div><small>Estoque bloqueado</small>
               <strong>{dateLabel(selected.stockStart)} a {dateLabel(selected.stockEnd)}</strong></div>}

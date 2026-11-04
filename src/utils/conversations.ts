@@ -1,11 +1,9 @@
 import type { Conversation } from '../api'
+import { displayPhone } from './phone'
 
 /** 5585936181059 → (85) 93618-1059. */
 export function whatsAppNumber(phone: string) {
-  const digits = phone.replace(/\D/g, '').replace(/^55(?=\d{10,11}$)/, '')
-  if (digits.length === 11) return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`
-  if (digits.length === 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`
-  return phone
+  return displayPhone(phone)
 }
 
 /** Nome do contrato quando existe; senão o número do WhatsApp ou "Visitante do site". */

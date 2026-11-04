@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react'
 import type { Branch, Courier, Order, OrderStatus } from '../../api'
 import { branchLabel } from '../../utils/branches'
 import { getMessage } from '../../utils/errors'
-import { formatPhone } from '../../utils/phone'
+import { brazilPhoneDigits, displayPhone } from '../../utils/phone'
 
 type Kind = 'delivery' | 'pickup'
 type View = 'week' | 'month'
@@ -234,7 +234,7 @@ export function AgendaPage({ orders, couriers, branches, onRefresh }: Props) {
               <p>{item.order.address}, {group.label}</p>
               <div className="agenda-item-footer">
                 <span>{item.order.courierId ? courierNames.get(item.order.courierId) ?? 'Entregador não encontrado' : 'Sem entregador'}</span>
-                <a href={`tel:${item.order.customerPhone.replace(/\D/g, '')}`}>{formatPhone(item.order.customerPhone)}</a>
+                <a href={`tel:${brazilPhoneDigits(item.order.customerPhone)}`}>{displayPhone(item.order.customerPhone)}</a>
               </div>
               {(item.order.stockStart && item.order.stockStart !== item.order.start)
                 || (item.order.stockEnd && item.order.stockEnd !== item.order.end)
