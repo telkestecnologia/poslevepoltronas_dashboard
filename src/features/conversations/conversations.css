@@ -193,12 +193,7 @@
 .wa-stage.waiting { background: #fff3d6; color: #8a5a00; }
 .wa-stage.done { background: #e3f6ea; color: #1f7a4a; }
 .wa-stage.stopped { background: #fde8e4; color: #a3392a; }
-.wa-take-over {
-  width: 100%; padding: 12px 16px; border: 0; border-radius: 24px;
-  background: #00a884; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer;
-}
-.wa-take-over:hover { background: #008069; }
-.wa-take-over:disabled { opacity: 0.6; cursor: default; }
+.wa-input.locked input { background: #eceff1; cursor: not-allowed; }
 .wa-text { margin: 0; white-space: pre-wrap; word-break: break-word; }
 .wa-text a { color: #027eb5; text-decoration: underline; }
 .wa-text code { font-family: ui-monospace, monospace; }

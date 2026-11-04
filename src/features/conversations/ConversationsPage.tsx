@@ -75,7 +75,8 @@ export function ConversationsPage({ credentials }: { credentials: string }) {
 
   async function toggleAssignment(item: Conversation) {
     const takingOver = item.state !== 'HUMAN'
-    const text = takingOver ? 'A Isa para de responder e você passa a atender este cliente.' : 'A Isa volta a responder este cliente sozinha.'
+    const text = takingOver ? 'A Isa para de responder e você passa a atender. Se não responder em 3 minutos, a conversa volta para a Isa.'
+      : 'A Isa volta a responder este cliente sozinha.'
     if (!window.confirm(`${takingOver ? 'Assumir a conversa?' : 'Devolver para a Isa?'}\n\n${text}`)) return
     setBusy(true)
     try {
@@ -156,8 +157,8 @@ export function ConversationsPage({ credentials }: { credentials: string }) {
               <small className="wa-chat-meta"><span className={`wa-state ${state.tone}`}>{state.label}</span>
                 {` • ${selected.channel === 'WHATSAPP' ? 'WhatsApp' : 'Site'} • desde ${new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(selected.startedAt))}`}</small>
               {selected.stage && <span className={`wa-stage ${stageTone(selected.stage).tone}`}>{stageTone(selected.stage).icon} {selected.stage}</span>}</div>
-            {selected.state === 'HUMAN' && <button type="button" className="wa-assign outline" disabled={busy}
-              onClick={() => void toggleAssignment(selected)}>Devolver para a Isa</button>}
+            <button type="button" className={`wa-assign${selected.state === 'HUMAN' ? ' outline' : ''}`} disabled={busy} onClick={() => void toggleAssignment(selected)}>
+              {selected.state === 'HUMAN' ? 'Devolver para a Isa' : 'Assumir conversa'}</button>
           </header>
           <div className="wa-thread" ref={thread}>
             {messages.map((message, index) => {
@@ -177,15 +178,14 @@ export function ConversationsPage({ credentials }: { credentials: string }) {
             {chatError && <p className="wa-note wa-error">{chatError}</p>}
             {windowClosed ? <p className="wa-note">Passaram 24 horas desde a última mensagem do cliente. O WhatsApp só libera nova mensagem quando ele escrever de novo.</p>
               : <p className="wa-note">{selected.state === 'HUMAN'
-                ? 'Você está atendendo: a Isa não responde. Ao enviar, a conversa volta para a Isa.'
-                : 'Para responder, assuma a conversa. A Isa fica pausada enquanto você escreve e volta sozinha depois do envio.'}</p>}
-            {selected.state === 'HUMAN'
-              ? <form className="wa-input" onSubmit={event => void send(event)}>
-                <input value={draft} onChange={event => setDraft(event.target.value)} placeholder="Mensagem" maxLength={2000} aria-label="Mensagem" />
-                <button type="submit" disabled={!draft.trim() || busy} aria-label="Enviar mensagem"><Send size={18} /></button>
-              </form>
-              : <button type="button" className="wa-take-over" disabled={busy} onClick={() => void toggleAssignment(selected)}>
-                Assumir conversa para responder</button>}
+                ? 'Você está atendendo: a Isa não responde. Ao enviar, a conversa volta para a Isa. Sem resposta em 3 minutos, ela volta sozinha.'
+                : 'A Isa está atendendo. Para digitar, clique em “Assumir conversa”.'}</p>}
+            <form className={`wa-input${selected.state === 'HUMAN' ? '' : ' locked'}`} onSubmit={event => void send(event)}>
+              <input value={draft} onChange={event => setDraft(event.target.value)} maxLength={2000} aria-label="Mensagem"
+                disabled={selected.state !== 'HUMAN'}
+                placeholder={selected.state === 'HUMAN' ? 'Mensagem' : '🔒 Bloqueado enquanto a Isa atende'} />
+              <button type="submit" disabled={selected.state !== 'HUMAN' || !draft.trim() || busy} aria-label="Enviar mensagem"><Send size={18} /></button>
+            </form>
           </footer>
         </>}
       </section>
