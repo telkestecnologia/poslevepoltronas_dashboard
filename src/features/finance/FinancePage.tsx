@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
-import { ArrowDownLeft, ArrowUpRight, ChevronDown, FileText, RefreshCw, Search, Wallet, X } from 'lucide-react'
+import { ArrowDownLeft, ArrowUpRight, ChevronDown, Download, RefreshCw, Search, Wallet, X } from 'lucide-react'
 import { api, type Branch, type FinanceQuery, type FinancialEntry, type FinancialReport } from '../../api'
 import { branchLabel, onlyOfficialBranches } from '../../utils/branches'
 import { getMessage } from '../../utils/errors'
 import { RentalDatePicker } from '../overview/RentalDatePicker'
-import { openFinanceReport } from './financeReport'
+import { downloadFinanceReport } from './financeReport'
 import './financeReport.css'
 
 const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -56,6 +56,7 @@ export function FinancePage({ credentials }: { credentials: string }) {
   const [error, setError] = useState('')
   const [reportBusy, setReportBusy] = useState(false)
   const [reportError, setReportError] = useState('')
+  const [reportSaved, setReportSaved] = useState('')
 
   useEffect(() => {
     let active = true
@@ -140,13 +141,14 @@ export function FinancePage({ credentials }: { credentials: string }) {
     if (!report) return
     setReportBusy(true)
     setReportError('')
+    setReportSaved('')
     try {
       const entries = await loadAllEntries(credentials, { from, to, branchId })
       const branch = branches.find(item => item.id === branchId)
-      const opened = openFinanceReport({ report, entries, from, to, branch: branch ? branchLabel(branch.name) : 'Todas as filiais' })
-      if (!opened) setReportError('O navegador bloqueou a janela do relatório. Permita pop-ups para este site e tente de novo.')
+      const name = await downloadFinanceReport({ report, entries, from, to, branch: branch ? branchLabel(branch.name) : 'Todas as filiais' })
+      setReportSaved(`Relatório baixado: ${name}. Ele está na pasta de downloads do navegador.`)
     } catch (failure) {
-      setReportError(getMessage(failure))
+      setReportError(`Não foi possível baixar o relatório. ${getMessage(failure)}`)
     } finally {
       setReportBusy(false)
     }
@@ -161,12 +163,13 @@ export function FinancePage({ credentials }: { credentials: string }) {
       </div>
       <div className="finance-actions">
         <button type="button" className="button secondary" onClick={() => void generateReport()}
-          disabled={!report || reportBusy}><FileText size={16} /> {reportBusy ? 'Gerando...' : 'Relatório geral em PDF'}</button>
+          disabled={!report || reportBusy}><Download size={16} /> {reportBusy ? 'Baixando...' : 'Baixar relatório em PDF'}</button>
         <button type="button" className="button secondary" onClick={() => setReloadKey(key => key + 1)}
           disabled={loading}><RefreshCw size={16} /> Atualizar</button>
       </div>
     </div>
     {reportError && <div className="form-error" role="alert">{reportError}</div>}
+    {reportSaved && <div className="finance-info" role="status">{reportSaved}</div>}
 
     {report?.mode === 'DEMO' && <div className="finance-demo" role="note">
       <strong>Dados de demonstração</strong>

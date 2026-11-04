@@ -10,66 +10,109 @@ const currency = (cents: number) => money.format(cents / 100)
 const shortDate = (iso: string) => shortDateFormat.format(new Date(`${iso}T12:00:00Z`))
 const monthName = (iso: string) => monthFormat.format(new Date(`${iso.slice(0, 10)}T12:00:00Z`))
 const dateTime = (iso: string) => dateTimeFormat.format(new Date(iso))
-const escape = (text: string) => text.replace(/[&<>"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[char]!)
+
+const teal = [18, 122, 132] as const
+const muted = [122, 130, 135] as const
+const inflow = [42, 138, 110] as const
+const outflow = [217, 96, 58] as const
 
 /**
- * Relatório geral do financeiro (o mesmo do app): resumo, mês a mês, filiais e extrato completo. Abre numa janela
- * pronta para imprimir, onde "Salvar como PDF" gera o arquivo.
+ * Relatório geral do financeiro (o mesmo do app): resumo, mês a mês, filiais e extrato completo.
+ * Gera o PDF no navegador e baixa o arquivo direto, sem abrir janela de impressão.
  */
-export function openFinanceReport({ report, entries, from, to, branch }: {
+export async function downloadFinanceReport({ report, entries, from, to, branch }: {
   report: FinancialReport; entries: FinancialEntry[]; from: string; to: string; branch: string
 }) {
+  // Carregadas só quando alguém pede o relatório, para não pesar a abertura do painel.
+  const [{ jsPDF }, plugin] = await Promise.all([import('jspdf'), import('jspdf-autotable')])
+  // O pacote do autotable é CommonJS: conforme o empacotador, a função vem em default ou em default.default.
+  const loaded = plugin.default as unknown as typeof plugin.default | { default: typeof plugin.default }
+  const autoTable = typeof loaded === 'function' ? loaded : loaded.default
+  const doc = new jsPDF({ unit: 'pt', format: 'a4' })
+  const width = doc.internal.pageSize.getWidth()
+  const margin = 40
+  let y = 52
+
+  doc.setFont('helvetica', 'bold').setFontSize(18).setTextColor(...teal)
+  doc.text('Relatório financeiro • Pós Leve', margin, y)
+  doc.setFont('helvetica', 'normal').setFontSize(9).setTextColor(...muted)
+  doc.text(`Gerado em ${dateTime(new Date().toISOString())}`, width - margin, y, { align: 'right' })
+  y += 16
+  doc.text(`Período de ${shortDate(from)} a ${shortDate(to)} • ${branch}`, margin, y)
+  y += 10
+  doc.setDrawColor(22, 136, 147).setLineWidth(2).line(margin, y, width - margin, y)
+  y += 18
+
+  if (report.mode === 'DEMO') {
+    doc.setFillColor(248, 242, 230).roundedRect(margin, y, width - margin * 2, 24, 4, 4, 'F')
+    doc.setTextColor(122, 99, 50).text('Dados de demonstração: os valores são fictícios.', margin + 10, y + 15)
+    y += 34
+  }
+
+  const totals = [
+    { label: 'Saldo acumulado', value: report.balanceCents, color: [42, 50, 54] as const },
+    { label: 'Entrou no período', value: report.inflowCents, color: inflow },
+    { label: 'Saiu no período', value: report.outflowCents, color: outflow },
+    { label: 'Sobrou', value: report.netCents, color: [42, 50, 54] as const },
+  ]
+  const gap = 8
+  const boxWidth = (width - margin * 2 - gap * (totals.length - 1)) / totals.length
+  totals.forEach((total, index) => {
+    const x = margin + index * (boxWidth + gap)
+    doc.setDrawColor(231, 230, 226).setLineWidth(1).roundedRect(x, y, boxWidth, 46, 5, 5, 'S')
+    doc.setFont('helvetica', 'normal').setFontSize(8.5).setTextColor(...muted).text(total.label, x + 9, y + 16)
+    doc.setFont('helvetica', 'bold').setFontSize(12).setTextColor(total.color[0], total.color[1], total.color[2]).text(currency(total.value), x + 9, y + 35)
+  })
+  y += 66
+
+  const table = (title: string, head: string[], body: (string | { content: string; color?: readonly number[] })[][],
+    numericFrom: number) => {
+    doc.setFont('helvetica', 'bold').setFontSize(12).setTextColor(...teal).text(title, margin, y)
+    autoTable(doc, {
+      startY: y + 8,
+      margin: { left: margin, right: margin },
+      head: [head],
+      body: body.map(row => row.map(cell => typeof cell === 'string' ? cell : {
+        content: cell.content, styles: cell.color ? { textColor: [...cell.color] as [number, number, number] } : {},
+      })),
+      theme: 'plain',
+      styles: { font: 'helvetica', fontSize: 8.5, cellPadding: 5, textColor: [42, 50, 54], lineColor: [240, 239, 235], lineWidth: { bottom: 0.6 } },
+      headStyles: { fontSize: 7.5, textColor: [...muted], fontStyle: 'bold' },
+      columnStyles: Object.fromEntries(head.map((_, index) => [index, index >= numericFrom ? { halign: 'right' as const } : {}])),
+    })
+    y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 24
+  }
+
+  const empty = (columns: number, text: string) => [[{ content: text, color: muted }, ...Array(columns - 1).fill('')]]
   const months = report.monthly.filter(item => item.inflowCents || item.outflowCents)
-  const html = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8" /><title>Relatório financeiro • Pós Leve</title>
-<style>
-  * { box-sizing: border-box; }
-  body { font-family: Helvetica, Arial, sans-serif; color: #2a3236; margin: 32px; font-size: 12px; }
-  header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 3px solid #168893; padding-bottom: 12px; }
-  h1 { margin: 0; font-size: 22px; color: #127a84; }
-  h2 { margin: 26px 0 8px; font-size: 15px; color: #127a84; }
-  .muted { color: #7a8287; }
-  .demo { margin-top: 14px; padding: 8px 12px; border-radius: 6px; background: #f8f2e6; color: #7a6332; }
-  .totals { display: flex; gap: 10px; margin-top: 16px; }
-  .total { flex: 1; padding: 12px; border: 1px solid #e7e6e2; border-radius: 8px; }
-  .total b { display: block; margin-top: 4px; font-size: 17px; }
-  table { width: 100%; border-collapse: collapse; }
-  th { text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: #7a8287; padding: 6px 8px; border-bottom: 1px solid #e7e6e2; }
-  td { padding: 7px 8px; border-bottom: 1px solid #f0efeb; vertical-align: top; }
-  .num { text-align: right; white-space: nowrap; }
-  .in { color: #2a8a6e; } .out { color: #d9603a; }
-  footer { margin-top: 28px; font-size: 10px; color: #a3a8ab; text-align: center; }
-</style></head><body>
-<header>
-  <div><h1>Relatório financeiro • Pós Leve</h1>
-    <div class="muted">Período de ${shortDate(from)} a ${shortDate(to)} • ${escape(branch)}</div></div>
-  <div class="muted">Gerado em ${dateTime(new Date().toISOString())}</div>
-</header>
-${report.mode === 'DEMO' ? '<div class="demo">Dados de demonstração: os valores são fictícios.</div>' : ''}
-<div class="totals">
-  <div class="total">Saldo acumulado<b>${currency(report.balanceCents)}</b></div>
-  <div class="total">Entrou no período<b class="in">${currency(report.inflowCents)}</b></div>
-  <div class="total">Saiu no período<b class="out">${currency(report.outflowCents)}</b></div>
-  <div class="total">Sobrou<b>${currency(report.netCents)}</b></div>
-</div>
-<h2>Mês a mês</h2>
-<table><tr><th>Mês</th><th class="num">Entrou</th><th class="num">Saiu</th><th class="num">Sobrou</th></tr>
-${months.map(item => `<tr><td>${monthName(item.start)}</td><td class="num in">${currency(item.inflowCents)}</td><td class="num out">${currency(item.outflowCents)}</td><td class="num">${currency(item.inflowCents - item.outflowCents)}</td></tr>`).join('') || '<tr><td colspan="4" class="muted">Sem movimentação.</td></tr>'}
-</table>
-<h2>Resultado por filial</h2>
-<table><tr><th>Filial</th><th class="num">Entrou</th><th class="num">Saiu</th><th class="num">Sobrou</th></tr>
-${report.branches.map(item => `<tr><td>${escape(branchLabel(item.branchName))}</td><td class="num in">${currency(item.inflowCents)}</td><td class="num out">${currency(item.outflowCents)}</td><td class="num">${currency(item.inflowCents - item.outflowCents)}</td></tr>`).join('') || '<tr><td colspan="4" class="muted">Sem movimentação.</td></tr>'}
-</table>
-<h2>Extrato completo (${entries.length} lançamentos)</h2>
-<table><tr><th>Data</th><th>Descrição</th><th>Filial</th><th>Meio</th><th class="num">Valor</th></tr>
-${entries.map(entry => `<tr><td>${dateTime(entry.occurredAt)}</td><td><b>${escape(entry.description)}</b><br/><span class="muted">${escape(entry.category)}${entry.reference ? ` • Ref. ${escape(entry.reference)}` : ''}</span></td><td>${escape(branchLabel(entry.branchName))}</td><td>${escape(entry.paymentMethod)}</td><td class="num ${entry.kind === 'INFLOW' ? 'in' : 'out'}">${entry.kind === 'INFLOW' ? '+' : '−'} ${currency(entry.amountCents)}</td></tr>`).join('') || '<tr><td colspan="5" class="muted">Nenhum lançamento no período.</td></tr>'}
-</table>
-<footer>Pós Leve Poltronas • relatório gerado pelo painel</footer>
-<script>window.onload = () => setTimeout(() => window.print(), 300)</script>
-</body></html>`
-  const page = window.open('', '_blank')
-  if (!page) return false
-  page.document.open()
-  page.document.write(html)
-  page.document.close()
-  return true
+  table('Mês a mês', ['MÊS', 'ENTROU', 'SAIU', 'SOBROU'], months.length ? months.map(item => [
+    monthName(item.start), { content: currency(item.inflowCents), color: inflow },
+    { content: currency(item.outflowCents), color: outflow }, currency(item.inflowCents - item.outflowCents),
+  ]) : empty(4, 'Sem movimentação.'), 1)
+  table('Resultado por filial', ['FILIAL', 'ENTROU', 'SAIU', 'SOBROU'], report.branches.length ? report.branches.map(item => [
+    branchLabel(item.branchName), { content: currency(item.inflowCents), color: inflow },
+    { content: currency(item.outflowCents), color: outflow }, currency(item.inflowCents - item.outflowCents),
+  ]) : empty(4, 'Sem movimentação.'), 1)
+  table(`Extrato completo (${entries.length} lançamentos)`, ['DATA', 'DESCRIÇÃO', 'FILIAL', 'MEIO', 'VALOR'], entries.length
+    ? entries.map(entry => [
+      dateTime(entry.occurredAt),
+      `${entry.description}\n${entry.category}${entry.reference ? ` • Ref. ${entry.reference}` : ''}`,
+      branchLabel(entry.branchName), entry.paymentMethod,
+      { content: `${entry.kind === 'INFLOW' ? '+' : '-'} ${currency(entry.amountCents)}`, color: entry.kind === 'INFLOW' ? inflow : outflow },
+    ])
+    : empty(5, 'Nenhum lançamento no período.'), 4)
+
+  const pages = doc.getNumberOfPages()
+  for (let page = 1; page <= pages; page++) {
+    doc.setPage(page)
+    doc.setFont('helvetica', 'normal').setFontSize(8).setTextColor(163, 168, 171)
+    doc.text(`Pós Leve Poltronas • relatório gerado pelo painel • página ${page} de ${pages}`,
+      width / 2, doc.internal.pageSize.getHeight() - 24, { align: 'center' })
+  }
+
+  const now = new Date()
+  const stamp = `${String(now.getHours()).padStart(2, '0')}h${String(now.getMinutes()).padStart(2, '0')}`
+  const name = `relatorio-financeiro-posleve-${from}-a-${to}-${stamp}.pdf`
+  doc.save(name)
+  return name
 }
