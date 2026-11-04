@@ -18,7 +18,6 @@ type Props = {
   onStatusChange: (status: OrderStatus | 'ALL') => void
   onSourceChange: (source: OrderSource | 'ALL') => void
   onRefresh: () => Promise<void>
-  onSimulatePix: (id: string) => Promise<void>
   onCheckPix: (id: string) => Promise<void>
   onChangeStatus: (id: string, status: OrderStatus, note: string) => Promise<Order>
   onExpandStock: (id: string, stockStart: string, stockEnd: string, note: string) => Promise<Order>
@@ -73,7 +72,7 @@ function eventLabel(action: string) {
 }
 
 export function OrdersPage({ credentials, orders, couriers, branches, status, source, onStatusChange, onSourceChange,
-  onRefresh, onSimulatePix, onCheckPix, onChangeStatus, onExpandStock,
+  onRefresh, onCheckPix, onChangeStatus, onExpandStock,
   onAssignCourier, onOpenIssue, onResolveIssue }: Props) {
   const [search, setSearch] = useState('')
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -88,7 +87,6 @@ export function OrdersPage({ credentials, orders, couriers, branches, status, so
   const [stockEnd, setStockEnd] = useState('')
   const [stockNote, setStockNote] = useState('')
   const [simulationNote, setSimulationNote] = useState('')
-  const [simulationRequestedId, setSimulationRequestedId] = useState<string | null>(null)
   const selected = orders.find(order => order.id === selectedId) ?? null
   const currentStep = selected ? statusFlow.indexOf(selected.status) : -1
   const followingStatus = currentStep >= 0 ? statusFlow[currentStep + 1] : undefined
@@ -241,12 +239,8 @@ export function OrdersPage({ credentials, orders, couriers, branches, status, so
           </div>}
           {selected.status === 'PENDING_PAYMENT' && selected.paymentSandbox && !selected.paymentMock && <div className="order-section admin-only">
             <h3>Teste do Pix no Inter</h3>
-            <p className="order-muted">Solicita ao sandbox do Inter a confirmação desta cobrança. O pedido só será confirmado após a consulta ao banco.</p>
-            <div className="order-actions"><button className="button secondary" disabled={busy || simulationRequestedId === selected.id}
-              onClick={() => void perform(() => onSimulatePix(selected.id), () =>
-                { setSimulationRequestedId(selected.id); setSimulationNote('Solicitação aceita pelo Inter. Consulte o recebimento antes de considerar o pedido pago.') })}>
-              {simulationRequestedId === selected.id ? 'Simulação solicitada' : 'Simular pagamento no Inter'}
-            </button><button className="button secondary" disabled={busy}
+            <p className="order-muted">O pagamento de teste é simulado automaticamente no sandbox do Inter poucos segundos depois de o PIX ser gerado. O pedido fica pago assim que o sistema confirma o recebimento no banco, e o cliente recebe o recibo no WhatsApp.</p>
+            <div className="order-actions"><button className="button secondary" disabled={busy}
               onClick={() => void perform(() => onCheckPix(selected.id), () =>
                 setSimulationNote('Consulta ao Inter concluída. O status do pedido foi atualizado na lista.'))}>
               Consultar recebimento no Inter

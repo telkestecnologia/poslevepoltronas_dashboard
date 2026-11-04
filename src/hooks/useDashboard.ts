@@ -623,16 +623,6 @@ export function useDashboard() {
       onStatusChange: setOrderStatusFilter,
       onSourceChange: setOrderSourceFilter,
       onRefresh: refreshOrders,
-      onSimulatePix: async (id: string) => {
-        if (credentials === null) throw new Error('Entre novamente para continuar.')
-        try {
-          await api.simulateOrderPix(credentials, id)
-        } catch (error) {
-          if (error instanceof ApiError && error.status === 401) logout()
-          throw error
-        }
-        await refreshOrders().catch(() => {})
-      },
       onCheckPix: async (id: string) => {
         if (credentials === null) throw new Error('Entre novamente para continuar.')
         try {
