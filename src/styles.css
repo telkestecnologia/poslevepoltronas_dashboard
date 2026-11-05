@@ -1470,7 +1470,7 @@ tbody tr:hover {
 }
 .order-summary {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 13px;
   margin-bottom: 20px;
 }
@@ -2202,6 +2202,9 @@ tbody tr:hover {
     font-size: 43px;
   }
 }
+@media (max-width: 1150px) {
+  .order-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
 @media (max-width: 680px) {
   .order-summary {
     grid-template-columns: 1fr 1fr;
@@ -2809,3 +2812,14 @@ tbody tr:hover {
   .agenda-calendar-day, .agenda-calendar-blank { min-height: 52px; padding: 3px; }
   .agenda-calendar-counts { gap: 1px; }
 }
+/* Agenda: resumo de hoje e serviços que abrem o pedido. */
+.agenda-today { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.agenda-today span { padding: 6px 11px; border-radius: 99px; background: #e8f6f4; color: #2f6b70; font-size: 12px; }
+.agenda-today strong { color: var(--teal-dark); font-size: 14px; }
+.agenda-item { cursor: pointer; transition: border-color 0.18s, box-shadow 0.18s, background 0.18s; }
+.agenda-item:hover { background: #f8fcfb; box-shadow: 0 6px 16px rgba(18, 114, 125, 0.08); }
+.agenda-item:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+.agenda-open { display: inline-flex; align-items: center; gap: 4px; color: var(--teal); font-size: 11px; font-weight: 700; }
+.agenda-day-panel.is-loading { opacity: 0.6; transition: opacity 0.2s; }
+.breadcrumb-link { border: 0; background: transparent; padding: 0; color: inherit; font: inherit; cursor: pointer; }
+.breadcrumb-link:hover { color: var(--teal-dark); text-decoration: underline; }

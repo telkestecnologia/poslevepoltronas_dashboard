@@ -87,6 +87,16 @@ export type Order = {
   source: OrderSource; status: OrderStatus; courierId: string | null
   issues: OrderIssue[]; history: OrderEvent[]; createdAt: string; updatedAt: string
 }
+/** Filtros da lista de pedidos feitos no servidor. courierId 'NONE' = sem entregador; from/to = aluguel que encosta no período. */
+export type OrderQuery = {
+  statuses?: OrderStatus[]; source?: OrderSource; branchId?: string; municipalityCode?: string; courierId?: string
+  from?: string; to?: string; openIssues?: boolean; search?: string
+}
+/** counts e openIssues ignoram os filtros de status e de problemas (servem para os cartões de resumo). */
+export type OrderPage = {
+  items: Order[]; total: number; page: number; size: number
+  counts: Partial<Record<OrderStatus, number>>; openIssues: number
+}
 export type OrderEvidence = {
   id: string; phase: 'DELIVERY' | 'PICKUP'; kind: 'PHOTO' | 'VIDEO'
   courierId: string; installationId: string; deviceManufacturer: string | null
@@ -310,8 +320,22 @@ export async function confirmPasswordReset(phone: string, code: string, newPassw
   return ((await response.json()) as { email: string }).email
 }
 
+function orderParams(query: OrderQuery, page: number, size: number) {
+  const params = new URLSearchParams({ page: String(page), size: String(size) })
+  if (query.statuses?.length) params.set('status', query.statuses.join(','))
+  if (query.source) params.set('source', query.source)
+  if (query.branchId) params.set('branchId', query.branchId)
+  if (query.municipalityCode) params.set('municipalityCode', query.municipalityCode)
+  if (query.courierId) params.set('courierId', query.courierId)
+  if (query.from) params.set('from', query.from)
+  if (query.to) params.set('to', query.to)
+  if (query.openIssues) params.set('openIssues', 'true')
+  if (query.search?.trim()) params.set('search', query.search.trim())
+  return params
+}
+
 export const api = {
-  me: (credentials: string) => request<Staff>(credentials, '/me'),
+  me:(credentials: string) => request<Staff>(credentials, '/me'),
   overviewRentals: (credentials: string, date: string) =>
     request<RentalOverview>(credentials, `/overview/rentals?date=${encodeURIComponent(date)}`),
   overviewRevenue: (credentials: string, period: RevenuePeriod) =>
@@ -348,7 +372,13 @@ export const api = {
     }),
   deleteAiUnanswered: (credentials: string, id: string) =>
     request<void>(credentials, `/ai/unanswered/${encodeURIComponent(id)}`, { method: 'DELETE' }),
-  orders: (credentials: string) => request<Order[]>(credentials, '/orders'),
+  orderPage: async (credentials: string, query: OrderQuery, page: number, size: number) => {
+    const result = await request<OrderPage | Order[]>(credentials, `/orders?${orderParams(query, page, size)}`)
+    // Um backend sem a lista paginada ignora ?page e responde com a lista inteira.
+    if (Array.isArray(result)) throw new ApiError(0, 'A API ainda não tem a lista paginada de pedidos. Publique a versão nova do backend.')
+    return result
+  },
+  order: (credentials: string, id: string) => request<Order>(credentials, `/orders/${encodeURIComponent(id)}`),
   simulateOrderPix: (credentials: string, id: string) =>
     request<void>(credentials, `/orders/${encodeURIComponent(id)}/pix/sandbox/pay`, { method: 'POST' }),
   checkOrderPix: (credentials: string, id: string) =>

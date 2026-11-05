@@ -42,6 +42,8 @@ type Props = {
   onLogout: () => void
   notice: string
   onDismissNotice: () => void
+  /** Nível extra no caminho do topo, ex.: o acompanhamento de um pedido. */
+  crumb?: string
   children: ReactNode
 }
 
@@ -52,6 +54,7 @@ export function DashboardLayout({
   onLogout,
   notice,
   onDismissNotice,
+  crumb,
   children,
 }: Props) {
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -136,7 +139,11 @@ export function DashboardLayout({
               <Menu size={23} />
             </button>
             <div className="breadcrumbs">
-              Painel <ChevronRight size={14} /> <strong>{currentPage?.label}</strong>
+              Painel <ChevronRight size={14} />
+              {crumb ? <>
+                <button type="button" className="breadcrumb-link" onClick={() => navigate(page)}>{currentPage?.label}</button>
+                <ChevronRight size={14} /> <strong>{crumb}</strong>
+              </> : <strong>{currentPage?.label ?? (page === 'couriers' ? 'Entregadores' : '')}</strong>}
             </div>
           </div>
         </header>

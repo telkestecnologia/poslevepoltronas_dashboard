@@ -19,12 +19,13 @@ function timeLabel(iso: string) {
 }
 
 /** Conversas do site e do WhatsApp (IA Tripnix), as mesmas do app: a lista atualiza a cada 10 segundos. */
-export function ConversationsPage({ credentials }: { credentials: string }) {
+type Props = { credentials: string; selectedId: string | null; onSelect: (id: string | null) => void }
+
+export function ConversationsPage({ credentials, selectedId, onSelect }: Props) {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [whatsApp, setWhatsApp] = useState<'OK' | 'NOT_CONFIGURED' | 'ERROR' | null>(null)
   const [loaded, setLoaded] = useState(false)
   const [listError, setListError] = useState('')
-  const [selectedId, setSelectedId] = useState<string | null>(null)
   const [selected, setSelected] = useState<Conversation | null>(null)
   const [messages, setMessages] = useState<ConversationMessage[]>([])
   const [chatError, setChatError] = useState('')
@@ -32,6 +33,16 @@ export function ConversationsPage({ credentials }: { credentials: string }) {
   const [draft, setDraft] = useState('')
   const [busy, setBusy] = useState(false)
   const thread = useRef<HTMLDivElement>(null)
+  const listRef = useRef<Conversation[]>([])
+  useEffect(() => { listRef.current = conversations }, [conversations])
+
+  // A conversa aberta vem da URL (/conversas/:id), então o aviso da Isa e o voltar do navegador funcionam.
+  useEffect(() => {
+    setSelected(selectedId ? listRef.current.find(item => item.id === selectedId) ?? null : null)
+    setMessages([])
+    setDraft('')
+    setChatError('')
+  }, [selectedId])
 
   const loadList = useCallback(() => api.conversations(credentials)
     .then(page => { setConversations(page.items); setWhatsApp(page.whatsApp ?? null); setListError('') },
@@ -66,11 +77,7 @@ export function ConversationsPage({ credentials }: { credentials: string }) {
     || (filter === 'SITE' && item.channel === 'SITE'))
 
   function open(id: string) {
-    setSelected(conversations.find(item => item.id === id) ?? null)
-    setMessages([])
-    setDraft('')
-    setChatError('')
-    setSelectedId(id)
+    if (id !== selectedId) onSelect(id)
   }
 
   async function toggleAssignment(item: Conversation) {
@@ -152,7 +159,7 @@ export function ConversationsPage({ credentials }: { credentials: string }) {
       <section className="wa-chat" aria-label="Conversa selecionada">
         {!selected || !state ? <div className="wa-placeholder"><p>Escolha uma conversa para ler.</p></div> : <>
           <header className="wa-chat-head">
-            <button type="button" className="wa-back" aria-label="Voltar para a lista" onClick={() => { setSelectedId(null); setSelected(null) }}><ArrowLeft size={20} /></button>
+            <button type="button" className="wa-back" aria-label="Voltar para a lista" onClick={() => onSelect(null)}><ArrowLeft size={20} /></button>
             <div className="wa-chat-title"><strong>{customerLabel(selected)}{customerNumber(selected) && <small className="wa-number"> {customerNumber(selected)}</small>}</strong>
               <small className="wa-chat-meta"><span className={`wa-state ${state.tone}`}>{state.label}</span>
                 {` • ${selected.channel === 'WHATSAPP' ? 'WhatsApp' : 'Site'} • desde ${new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(selected.startedAt))}`}</small>

@@ -23,3 +23,31 @@
 }
 .order-filter-chip:hover { filter: brightness(0.96); }
 .order-toolbar select:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* Cartões de resumo: clicar filtra a lista; clicar de novo limpa. */
+.order-summary-card {
+  text-align: left; color: inherit; font: inherit; cursor: pointer;
+  transition: border-color 0.18s, box-shadow 0.18s, transform 0.18s, background 0.18s;
+}
+.order-summary-card:hover { border-color: #bfe0dc; transform: translateY(-1px); }
+.order-summary-card:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+.order-summary-card small { display: flex; align-items: center; gap: 7px; }
+.order-summary-card small i { width: 8px; height: 8px; border-radius: 50%; background: var(--teal); flex: none; }
+.order-summary-card.tone-action small i { background: var(--teal-dark); }
+.order-summary-card.tone-waiting small i { background: var(--coral); }
+.order-summary-card.tone-danger small i { background: #d14b35; }
+.order-summary-card.tone-done small i { background: var(--green); }
+.order-summary-card.tone-closed small i { background: #a3b0b3; }
+.order-summary-card.zero strong { color: #b6c2c4; }
+.order-summary-card.selected { border-color: var(--teal); background: #eef8f7; box-shadow: 0 0 0 3px rgba(26, 155, 170, 0.12); }
+
+.order-search-clear { width: 26px; height: 26px; flex: none; }
+.order-row { cursor: pointer; }
+.order-row:hover td { background: #f7fbfa; }
+.table-scroll.is-stale { opacity: 0.55; transition: opacity 0.2s; }
+.order-pagination {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  padding: 14px 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px;
+}
+.order-pagination-nav { display: flex; align-items: center; gap: 6px; }
+

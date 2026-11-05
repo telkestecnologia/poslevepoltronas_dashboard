@@ -7,6 +7,7 @@ import { ChairsPage } from './features/chairs/ChairsPage'
 import { CourierModal } from './features/couriers/CourierModal'
 import { CouriersPage } from './features/couriers/CouriersPage'
 import { OrdersPage } from './features/orders/OrdersPage'
+import { OrderDetailPage } from './features/orders/OrderDetailPage'
 import { AgendaPage } from './features/agenda/AgendaPage'
 import { AiContextPage } from './features/ai/AiContextPage'
 import { OverviewPage } from './features/overview/OverviewPage'
@@ -26,12 +27,14 @@ function App() {
     chairsPage,
     branchesPage,
     couriersPage,
-    agendaPage,
-    ordersPage,
     aiPage,
     notificationsPage,
     dialog,
   } = useDashboard()
+
+  if (session.restoring) {
+    return <div className="empty-state" role="status"><p>Entrando no painel...</p></div>
+  }
 
   if (session.credentials === null || !session.staff) {
     return (
@@ -43,10 +46,18 @@ function App() {
     )
   }
 
-  const { page, navigate } = navigation
-  const { pageLoading, pageError, retryPage, notice, dismissNotice } = feedback
-  const showLoading = page !== 'finance' && page !== 'conversations' && page !== 'profile' && (pageLoading
+  const { page, route, params, navigate } = navigation
+  const { pageLoading, pageError, retryPage, notice, dismissNotice, loadedPage } = feedback
+  const selfLoading = ['finance', 'conversations', 'profile', 'orders', 'agenda'].includes(page)
+  // loadedPage evita mostrar por um instante os dados antigos ao voltar/avançar pelo navegador.
+  const showLoading = !selfLoading && (pageLoading || (loadedPage !== page && !pageError)
     || (page === 'overview' && (!overviewPage.rentals || !overviewPage.revenue) && !pageError))
+  const openOrder = (id: string) => navigate('orders', { id })
+  // Volta para a lista com os mesmos filtros quando o pedido foi aberto dela; senão, abre a lista.
+  const backToOrders = () => {
+    if (window.history.state?.fromOrders) window.history.back()
+    else navigate('orders', { replace: true })
+  }
 
   const partner = session.staff.role === 'MEMBER'
 
@@ -57,6 +68,7 @@ function App() {
         page={page}
         onNavigate={navigate}
         onLogout={session.logout}
+        crumb={page === 'orders' && route.id ? 'Acompanhamento' : undefined}
         notice={notice}
         onDismissNotice={dismissNotice}
       >
@@ -87,16 +99,21 @@ function App() {
             revenueError={overviewPage.revenueError}
             onRefresh={overviewPage.onRefresh}
           >
-            <AttentionPanel credentials={session.credentials} onNavigate={navigate} />
+            <AttentionPanel credentials={session.credentials}
+              onOpen={target => navigate(target.page, { id: target.id, chairStatus: target.chairStatus })} />
           </OverviewPage>
         )}
         {page === 'finance' && <FinancePage credentials={session.credentials} />}
         {page === 'chairs' && !showLoading && !pageError && <ChairsPage {...chairsPage} />}
         {page === 'branches' && !showLoading && !pageError && <BranchesPage {...branchesPage} />}
         {page === 'couriers' && !showLoading && !pageError && <CouriersPage {...couriersPage} />}
-        {page === 'agenda' && !showLoading && !pageError && <AgendaPage {...agendaPage} />}
-        {page === 'orders' && !showLoading && !pageError && <OrdersPage {...ordersPage} credentials={session.credentials} />}
-        {page === 'conversations' && <ConversationsPage credentials={session.credentials} />}
+        {page === 'agenda' && <AgendaPage credentials={session.credentials} onOpenOrder={openOrder} />}
+        {page === 'orders' && !route.id && <OrdersPage credentials={session.credentials} params={params}
+          onOpenOrder={id => navigate('orders', { id, fromList: true })} />}
+        {page === 'orders' && route.id && <OrderDetailPage key={route.id} credentials={session.credentials} id={route.id}
+          onBack={backToOrders} />}
+        {page === 'conversations' && <ConversationsPage credentials={session.credentials} selectedId={route.id ?? null}
+          onSelect={id => navigate('conversations', { id: id ?? undefined, replace: Boolean(route.id) })} />}
         {page === 'profile' && <ProfilePage credentials={session.credentials} onCredentialsChanged={session.login} partner={partner} />}
         {page === 'ai' && !showLoading && !pageError && <AiContextPage {...aiPage} />}
         {page === 'notifications' && !showLoading && !pageError && notificationsPage.settings && (

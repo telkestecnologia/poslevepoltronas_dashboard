@@ -1,14 +1,15 @@
-import { useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react'
-import type { Branch, Courier, Order, OrderStatus } from '../../api'
-import { branchLabel } from '../../utils/branches'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { ArrowRight, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react'
+import { api, type Branch, type Courier, type Order, type OrderQuery, type OrderStatus } from '../../api'
+import { fetchAllOrders, usePolling } from '../../data/orders'
+import { branchLabel, onlyOfficialBranches } from '../../utils/branches'
 import { getMessage } from '../../utils/errors'
 import { brazilPhoneDigits, displayPhone } from '../../utils/phone'
 
 type Kind = 'delivery' | 'pickup'
 type View = 'week' | 'month'
 type AgendaItem = { key: string; kind: Kind; date: string; time: string | null; done: boolean; order: Order }
-type Props = { orders: Order[]; couriers: Courier[]; branches: Branch[]; onRefresh: () => Promise<void> }
+type Props = { credentials: string; onOpenOrder: (id: string) => void }
 
 const operationalStatuses = new Set<OrderStatus>([
   'PAYMENT_CONFIRMED', 'DELIVERY_PENDING', 'IN_USE', 'PICKUP_PENDING', 'COMPLETED',
@@ -55,7 +56,20 @@ function itemStatus(item: AgendaItem, today: string) {
   return item.order.status === 'PICKUP_PENDING' ? 'Aguardando retirada' : 'Prevista'
 }
 
-export function AgendaPage({ orders, couriers, branches, onRefresh }: Props) {
+function monthBounds(iso: string) {
+  const [year, month] = iso.split('-').map(Number)
+  return { from: isoDate(year, month, 1), to: isoDate(year, month, new Date(Date.UTC(year, month, 0)).getUTCDate()) }
+}
+
+function weekBounds(iso: string) {
+  const start = dateFromIso(iso)
+  start.setUTCDate(start.getUTCDate() - (start.getUTCDay() + 6) % 7)
+  const end = new Date(start)
+  end.setUTCDate(end.getUTCDate() + 6)
+  return { from: start.toISOString().slice(0, 10), to: end.toISOString().slice(0, 10) }
+}
+
+export function AgendaPage({ credentials, onOpenOrder }: Props) {
   const [selectedDate, setSelectedDate] = useState(todayInFortaleza)
   const [view, setView] = useState<View>('week')
   const [city, setCity] = useState('ALL')
@@ -63,11 +77,57 @@ export function AgendaPage({ orders, couriers, branches, onRefresh }: Props) {
   const [courier, setCourier] = useState('ALL')
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState('')
+  const [allBranches, setBranches] = useState<Branch[]>([])
+  const [couriers, setCouriers] = useState<Courier[]>([])
+  const [result, setResult] = useState<{ key: string; orders: Order[] } | null>(null)
+  const request = useRef(0)
   const today = todayInFortaleza()
 
+  useEffect(() => {
+    let active = true
+    api.branches(credentials).then(list => { if (active) setBranches(list) }).catch(cause => { if (active) setError(getMessage(cause)) })
+    api.couriers(credentials).then(list => { if (active) setCouriers(list) }).catch(() => {})
+    return () => { active = false }
+  }, [credentials])
+  const branches = onlyOfficialBranches(allBranches, item => item.name)
+
+  // Só a semana ou o mês da tela vem do servidor (mais o dia de hoje, para o resumo do topo).
+  const range = view === 'week' ? weekBounds(selectedDate) : monthBounds(selectedDate)
+  const todayOutside = today < range.from || today > range.to
+  const key = JSON.stringify({
+    source: 'CHECKOUT', statuses: [...operationalStatuses],
+    branchId: branch === 'ALL' ? undefined : branch,
+    municipalityCode: city === 'ALL' ? undefined : city,
+    courierId: courier === 'ALL' ? undefined : courier === 'UNASSIGNED' ? 'NONE' : courier,
+    ...range, todayOutside,
+  })
+
+  const load = useCallback(async () => {
+    const id = ++request.current
+    try {
+      const { todayOutside: withToday, ...query } = JSON.parse(key) as OrderQuery & { todayOutside: boolean }
+      const [visible, todays] = await Promise.all([
+        fetchAllOrders(credentials, query),
+        withToday ? fetchAllOrders(credentials, { ...query, from: today, to: today }) : Promise.resolve([]),
+      ])
+      if (id !== request.current) return
+      const byId = new Map(visible.map(order => [order.id, order]))
+      for (const order of todays) byId.set(order.id, order)
+      setResult({ key, orders: [...byId.values()] })
+      setError('')
+    } catch (cause) {
+      if (id === request.current) setError(getMessage(cause))
+    }
+  }, [credentials, key, today])
+
+  // Confirmações do entregador chegam pela API: a agenda aberta se atualiza sozinha.
+  usePolling(load, 30_000)
+
+  const orders = useMemo(() => result?.orders ?? [], [result])
+  const loading = result?.key !== key
   const realOrders = useMemo(() => orders.filter(order => order.source === 'CHECKOUT'
     && operationalStatuses.has(order.status)), [orders])
-  const sortedBranches = useMemo(() => [...branches].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')), [branches])
+  const sortedBranches = branches
   const selectedBranch = branches.find(item => item.id === branch)
   const cities = useMemo(() => [...(selectedBranch?.municipalities ?? [])]
     .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')), [selectedBranch])
@@ -128,16 +188,20 @@ export function AgendaPage({ orders, couriers, branches, onRefresh }: Props) {
 
   async function refresh() {
     setRefreshing(true)
-    setError('')
-    try { await onRefresh() }
-    catch (cause) { setError(getMessage(cause)) }
-    finally { setRefreshing(false) }
+    await load()
+    setRefreshing(false)
   }
+
+  const todayCount = counts.get(today)
 
   return <>
     <div className="page-heading with-action">
       <div><span className="eyebrow">OPERAÇÃO • AGENDA</span><h1>Agenda de entregas e retiradas</h1>
-        <p>Acompanhe os serviços previstos e veja quais acontecem na mesma cidade.</p></div>
+        <p>Acompanhe os serviços previstos e veja quais acontecem na mesma cidade. Clique em um serviço para abrir o pedido.</p>
+        <div className="agenda-today" aria-live="polite">
+          <span><strong>{todayCount?.deliveries ?? 0}</strong> {todayCount?.deliveries === 1 ? 'entrega' : 'entregas'} hoje</span>
+          <span><strong>{todayCount?.pickups ?? 0}</strong> {todayCount?.pickups === 1 ? 'retirada' : 'retiradas'} hoje</span>
+        </div></div>
       <button className="button secondary" disabled={refreshing} onClick={() => void refresh()}>
         <RefreshCw size={16} /> {refreshing ? 'Atualizando...' : 'Atualizar agenda'}</button>
     </div>
@@ -207,7 +271,7 @@ export function AgendaPage({ orders, couriers, branches, onRefresh }: Props) {
         <div className="agenda-legend"><span><i className="delivery" /> Entrega</span><span><i className="pickup" /> Retirada</span></div>
       </section>
 
-      <section className="agenda-day-panel panel" aria-label="Serviços do dia selecionado">
+      <section className={`agenda-day-panel panel${loading ? ' is-loading' : ''}`} aria-label="Serviços do dia selecionado" aria-busy={loading}>
         <div className="agenda-day-heading">
           <span className="eyebrow">DIA SELECIONADO</span>
           <h2>{dayFormatter.format(dateFromIso(selectedDate))}</h2>
@@ -222,7 +286,10 @@ export function AgendaPage({ orders, couriers, branches, onRefresh }: Props) {
         {grouped.length === 0 ? <div className="agenda-empty">Nenhum serviço previsto para este dia com os filtros atuais.</div>
           : grouped.map(group => <div className="agenda-city-group" key={group.code}>
             <div className="agenda-city-heading"><h3>{group.label}</h3><span>{group.items.length} {group.items.length === 1 ? 'serviço' : 'serviços'}</span></div>
-            {group.items.map(item => <article className={`agenda-item ${item.kind}`} key={item.key}>
+            {group.items.map(item => <article className={`agenda-item ${item.kind}`} key={item.key} role="button" tabIndex={0}
+              aria-label={`${item.kind === 'delivery' ? 'Entrega' : 'Retirada'} de ${item.order.customerName}: abrir pedido`}
+              onClick={() => onOpenOrder(item.order.id)}
+              onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onOpenOrder(item.order.id) } }}>
               <div className="agenda-item-top">
                 <span className={`agenda-kind ${item.kind}`}>{item.kind === 'delivery' ? 'Entrega' : 'Retirada'}</span>
                 <strong>{item.time || 'Sem horário'}</strong>
@@ -234,7 +301,8 @@ export function AgendaPage({ orders, couriers, branches, onRefresh }: Props) {
               <p>{item.order.address}, {group.label}</p>
               <div className="agenda-item-footer">
                 <span>{item.order.courierId ? courierNames.get(item.order.courierId) ?? 'Entregador não encontrado' : 'Sem entregador'}</span>
-                <a href={`tel:${brazilPhoneDigits(item.order.customerPhone)}`}>{displayPhone(item.order.customerPhone)}</a>
+                <a href={`tel:${brazilPhoneDigits(item.order.customerPhone)}`} onClick={event => event.stopPropagation()}>{displayPhone(item.order.customerPhone)}</a>
+                <span className="agenda-open">Abrir pedido <ArrowRight size={13} /></span>
               </div>
               {(item.order.stockStart && item.order.stockStart !== item.order.start)
                 || (item.order.stockEnd && item.order.stockEnd !== item.order.end)

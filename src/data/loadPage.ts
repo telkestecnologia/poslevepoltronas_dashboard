@@ -10,7 +10,6 @@ import {
   type Courier,
   type ManualBlock,
   type Municipality,
-  type Order,
   type RentalOverview,
   type RevenueOverview,
   type RevenuePeriod,
@@ -34,8 +33,6 @@ export type PageData =
       municipalities: Municipality[]
     }
   | { page: 'couriers'; couriers: Courier[] }
-  | { page: 'agenda'; orders: Order[]; couriers: Courier[]; branches: Branch[] }
-  | { page: 'orders'; orders: Order[]; couriers: Courier[]; branches: Branch[]; options: ChairOption[] }
   | { page: 'ai'; knowledge: AiKnowledge[]; unanswered: AiUnansweredQuestion[] }
   | { page: 'notifications'; settings: AiNotificationSettings }
 
@@ -80,18 +77,6 @@ export async function loadPage(
   }
   if (page === 'couriers') {
     return { page, couriers: await api.couriers(credentials) }
-  }
-  if (page === 'agenda') {
-    const [orders, couriers, branches] = await Promise.all([
-      api.orders(credentials), api.couriers(credentials), api.branches(credentials),
-    ])
-    return { page, orders, couriers, branches }
-  }
-  if (page === 'orders') {
-    const [orders, couriers, branches, options] = await Promise.all([
-      api.orders(credentials), api.couriers(credentials), api.branches(credentials), api.chairOptions(credentials),
-    ])
-    return { page, orders, couriers, branches, options }
   }
   if (page === 'ai') {
     const [knowledge, unanswered] = await Promise.all([

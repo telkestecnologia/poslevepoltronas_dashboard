@@ -18,9 +18,6 @@ import {
   type CourierInput,
   type ManualBlock,
   type Municipality,
-  type Order,
-  type OrderSource,
-  type OrderStatus,
   type RentalOverview,
   type RevenueOverview,
   type RevenuePeriod,
@@ -30,6 +27,17 @@ import { CHAIR_PAGE_SIZE, type Modal, type Page } from '../types'
 import { onlyOfficialBranches } from '../utils/branches'
 import { getMessage } from '../utils/errors'
 import { loadPage, type PageData } from '../data/loadPage'
+import { go, routePath, useLocation } from '../router'
+
+/** Login guardado só nesta aba: sobrevive ao F5 e some ao fechar a aba ou o navegador. */
+const sessionKey = 'posleve.session'
+const readSession = () => { try { return sessionStorage.getItem(sessionKey) } catch { return null } }
+const writeSession = (value: string | null) => {
+  try { if (value) sessionStorage.setItem(sessionKey, value); else sessionStorage.removeItem(sessionKey) } catch { /* sem armazenamento */ }
+}
+
+/** Telas que buscam os próprios dados (o carregamento geral não passa por elas). */
+const selfLoading = new Set<Page>(['finance', 'conversations', 'profile', 'orders', 'agenda'])
 
 /** Owns authentication, page queries, mutations, and their loading states. */
 export function useDashboard() {
@@ -43,7 +51,7 @@ export function useDashboard() {
   const [activeChairCounts, setActiveChairCounts] = useState<Record<string, number>>({})
   const [branches, setBranches] = useState<Branch[]>([])
   const [couriers, setCouriers] = useState<Courier[]>([])
-  const [orders, setOrders] = useState<Order[]>([])
+  const [restoring, setRestoring] = useState(() => readSession() !== null)
   const [rentals, setRentals] = useState<RentalOverview | null>(null)
   const [rentalDate, setRentalDate] = useState(() =>
     new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Fortaleza' }))
@@ -58,7 +66,8 @@ export function useDashboard() {
   const [aiNotificationSettings, setAiNotificationSettings] = useState<AiNotificationSettings | null>(null)
   const [municipalities, setMunicipalities] = useState<Municipality[]>([])
   const [blocks, setBlocks] = useState<ManualBlock[]>([])
-  const [page, setPage] = useState<Page>('overview')
+  const { route, params } = useLocation()
+  const page = route.page
   const [modal, setModal] = useState<Modal>(null)
   const [loginBusy, setLoginBusy] = useState(false)
   const [loginError, setLoginError] = useState('')
@@ -75,11 +84,8 @@ export function useDashboard() {
   const [statusFilter, setStatusFilter] = useState<ChairFilter>('ALL')
   const [chairSituation, setChairSituation] = useState<ChairSituation | null>(null)
   const [branchFilter, setBranchFilter] = useState('ALL')
-  const [orderStatusFilter, setOrderStatusFilter] = useState<OrderStatus | 'ALL'>('ALL')
-  const [orderSourceFilter, setOrderSourceFilter] = useState<OrderSource | 'ALL'>('ALL')
   const rentalRequestId = useRef(0)
   const revenueRequestId = useRef(0)
-  const ordersRevision = useRef(0)
   const chairRequest =
     page === 'chairs' ? `${chairPage}:${appliedSearch}:${statusFilter}:${branchFilter}` : ''
   const chairQuery: ChairQuery = {
@@ -115,15 +121,6 @@ export function useDashboard() {
       setMunicipalities(data.municipalities)
     } else if (data.page === 'couriers') {
       setCouriers(data.couriers)
-    } else if (data.page === 'agenda') {
-      setOrders(data.orders)
-      setCouriers(data.couriers)
-      setBranches(data.branches)
-    } else if (data.page === 'orders') {
-      setOrders(data.orders)
-      setCouriers(data.couriers)
-      setBranches(data.branches)
-      setChairOptions(data.options)
     } else if (data.page === 'ai') {
       setAiKnowledge(data.knowledge)
       setAiUnanswered(data.unanswered)
@@ -140,6 +137,7 @@ export function useDashboard() {
       const bytes = new TextEncoder().encode(`${email}:${password}`)
       const auth = btoa(Array.from(bytes, (byte) => String.fromCharCode(byte)).join(''))
       const identity = await api.me(auth)
+      writeSession(auth)
       setPageLoading(true)
       setCredentials(auth)
       setStaff(identity)
@@ -149,6 +147,18 @@ export function useDashboard() {
       setLoginBusy(false)
     }
   }
+
+  // Depois do F5, entra de novo com o login guardado na aba (e na mesma tela, que vem da URL).
+  useEffect(() => {
+    const saved = readSession()
+    if (!saved) return
+    let active = true
+    api.me(saved)
+      .then(identity => { if (active) { setCredentials(saved); setStaff(identity) } })
+      .catch(() => writeSession(null))
+      .finally(() => { if (active) setRestoring(false) })
+    return () => { active = false }
+  }, [])
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -165,7 +175,7 @@ export function useDashboard() {
       setChairLoading(false)
       return
     }
-    if (page === 'finance' || page === 'conversations' || page === 'profile') {
+    if (selfLoading.has(page)) {
       setChairLoading(false)
       setPageLoading(false)
       setPageError('')
@@ -217,35 +227,6 @@ export function useDashboard() {
     }
   }, [credentials, page, reloadKey, chairRequest, applyPageData])
 
-  // Confirmações feitas pelo entregador chegam pela API. Atualiza a lista aberta na gestão
-  // e consulta novamente quando o navegador volta ao primeiro plano.
-  useEffect(() => {
-    if (credentials === null || (page !== 'orders' && page !== 'agenda')) return
-    let active = true
-    let inFlight = false
-    const refresh = async () => {
-      if (document.visibilityState !== 'visible' || inFlight) return
-      inFlight = true
-      const revision = ordersRevision.current
-      try {
-        const latest = await api.orders(credentials)
-        if (active && revision === ordersRevision.current) setOrders(latest)
-      } catch {
-        // O botão "Atualizar lista" continua exibindo erros de consulta ao operador.
-      } finally {
-        inFlight = false
-      }
-    }
-    const onVisibility = () => { if (document.visibilityState === 'visible') void refresh() }
-    const interval = window.setInterval(() => { void refresh() }, 30_000)
-    document.addEventListener('visibilitychange', onVisibility)
-    return () => {
-      active = false
-      window.clearInterval(interval)
-      document.removeEventListener('visibilitychange', onVisibility)
-    }
-  }, [credentials, page])
-
   async function selectRentalDate(date: string) {
     if (credentials === null || !rentals || date === rentalDate) return
     const requestId = ++rentalRequestId.current
@@ -295,6 +276,8 @@ export function useDashboard() {
   }
 
   function logout() {
+    writeSession(null)
+    go('/', { replace: true })
     rentalRequestId.current += 1
     revenueRequestId.current += 1
     setCredentials(null)
@@ -306,7 +289,6 @@ export function useDashboard() {
     setActiveChairCounts({})
     setBranches([])
     setCouriers([])
-    setOrders([])
     setRentals(null)
     setRentalDate(new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Fortaleza' }))
     setRentalLoading(false)
@@ -320,14 +302,11 @@ export function useDashboard() {
     setAiNotificationSettings(null)
     setMunicipalities([])
     setBlocks([])
-    setPage('overview')
     setPageLoading(false)
     setChairLoading(false)
     setPageError('')
     setLoadedPage(null)
     setBranchFilter('ALL')
-    setOrderStatusFilter('ALL')
-    setOrderSourceFilter('ALL')
     setNotice('')
   }
 
@@ -469,41 +448,6 @@ export function useDashboard() {
     showNotice('Bloqueio removido.')
   }
 
-  async function mutateOrder(operation: (auth: string) => Promise<Order>) {
-    if (credentials === null) throw new Error('Entre novamente para continuar.')
-    ordersRevision.current += 1
-    try {
-      const order = await operation(credentials)
-      ordersRevision.current += 1
-      setOrders(current => current.map(item => item.id === order.id ? order : item))
-      showNotice('Pedido atualizado.')
-      return order
-    } catch (error) {
-      if (error instanceof ApiError && error.status === 401) logout()
-      throw error
-    }
-  }
-
-  async function refreshOrders() {
-    if (credentials === null) throw new Error('Entre novamente para continuar.')
-    try {
-      applyPageData(await loadPage(credentials, 'orders', chairQuery, rentalDate))
-    } catch (error) {
-      if (error instanceof ApiError && error.status === 401) logout()
-      throw error
-    }
-  }
-
-  async function refreshAgenda() {
-    if (credentials === null) throw new Error('Entre novamente para continuar.')
-    try {
-      applyPageData(await loadPage(credentials, 'agenda', chairQuery, rentalDate))
-    } catch (error) {
-      if (error instanceof ApiError && error.status === 401) logout()
-      throw error
-    }
-  }
-
   async function changeAiContext(operation: (auth: string) => Promise<unknown>, noticeText: string) {
     if (credentials === null) throw new Error('Entre novamente para continuar.')
     try {
@@ -527,26 +471,24 @@ export function useDashboard() {
     }
   }
 
-  function navigate(nextPage: Page, filters?: { chairStatus?: ChairStatus | 'ALL'; orderStatus?: OrderStatus }) {
-    if (nextPage === 'chairs' && filters?.chairStatus !== undefined) {
+  /** Abre uma tela (ou um pedido/conversa pelo id). chairStatus abre Poltronas já filtrada. */
+  function navigate(nextPage: Page, options: { id?: string; chairStatus?: ChairFilter; replace?: boolean; fromList?: boolean } = {}) {
+    if (nextPage === 'chairs' && options.chairStatus !== undefined) {
       setSearch('')
       setAppliedSearch('')
       setBranchFilter('ALL')
       setChairPage(0)
-      setStatusFilter(filters.chairStatus)
+      setStatusFilter(options.chairStatus)
     }
-    if (nextPage === 'orders') {
-      setOrderStatusFilter(filters?.orderStatus ?? 'ALL')
-      setOrderSourceFilter(filters?.orderStatus ? 'CHECKOUT' : 'ALL')
-    }
-    if (nextPage === page) return
+    const changesPage = nextPage !== page
+    go(routePath({ page: nextPage, id: options.id }), { replace: options.replace, state: options.fromList ? { fromOrders: true } : undefined })
+    if (!changesPage) return
     rentalRequestId.current += 1
     revenueRequestId.current += 1
     setRentalLoading(false)
     setRevenueLoading(false)
-    setPageLoading(true)
+    if (!selfLoading.has(nextPage)) setPageLoading(true)
     setPageError('')
-    setPage(nextPage)
   }
 
   function retryPage() {
@@ -566,9 +508,9 @@ export function useDashboard() {
 
   // Group props by consumer so App only connects the controller to each screen.
   return {
-    session: { credentials, staff, login, loginBusy, loginError, logout },
-    navigation: { page, navigate },
-    feedback: { pageLoading, pageError, retryPage, notice, dismissNotice: () => setNotice('') },
+    session: { credentials, staff, login, loginBusy, loginError, logout, restoring },
+    navigation: { page, route, params, navigate },
+    feedback: { pageLoading, pageError, retryPage, notice, dismissNotice: () => setNotice(''), loadedPage },
     overviewPage: {
       rentals,
       rentalDate,
@@ -621,39 +563,6 @@ export function useDashboard() {
       couriers,
       onNewCourier: () => openModal({ kind: 'newCourier' }),
       onEditCourier: (courier: Courier) => openModal({ kind: 'editCourier', courier }),
-    },
-    agendaPage: {
-      orders, couriers,
-      branches: onlyOfficialBranches(branches, branch => branch.name),
-      onRefresh: refreshAgenda,
-    },
-    ordersPage: {
-      orders, couriers, branches, options: chairOptions,
-      status: orderStatusFilter,
-      source: orderSourceFilter,
-      onStatusChange: setOrderStatusFilter,
-      onSourceChange: setOrderSourceFilter,
-      onRefresh: refreshOrders,
-      onCheckPix: async (id: string) => {
-        if (credentials === null) throw new Error('Entre novamente para continuar.')
-        try {
-          await api.checkOrderPix(credentials, id)
-        } catch (error) {
-          if (error instanceof ApiError && error.status === 401) logout()
-          throw error
-        }
-        await refreshOrders()
-      },
-      onChangeStatus: (id: string, status: OrderStatus, note: string) =>
-        mutateOrder(auth => api.changeOrderStatus(auth, id, status, note)),
-      onExpandStock: (id: string, stockStart: string, stockEnd: string, note: string) =>
-        mutateOrder(auth => api.expandOrderStock(auth, id, stockStart, stockEnd, note)),
-      onAssignCourier: (id: string, courierId: string | null) =>
-        mutateOrder(auth => api.assignOrderCourier(auth, id, courierId)),
-      onOpenIssue: (id: string, title: string, description: string) =>
-        mutateOrder(auth => api.openOrderIssue(auth, id, title, description)),
-      onResolveIssue: (id: string, issueId: string, resolution: string) =>
-        mutateOrder(auth => api.resolveOrderIssue(auth, id, issueId, resolution)),
     },
     aiPage: {
       knowledge: aiKnowledge,
