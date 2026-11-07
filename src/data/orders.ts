@@ -56,7 +56,7 @@ export function eventTone(action: string): EventTone {
 }
 
 const actorLabels: Record<string, string> = {
-  system: 'Sistema', customer: 'Cliente', inter: 'Banco Inter', mock: 'Teste', whatsapp: 'WhatsApp', ai: 'Isa',
+  system: 'Sistema', customer: 'Cliente', inter: 'Banco Inter', asaas: 'Asaas', mock: 'Teste', whatsapp: 'WhatsApp', ai: 'Isa',
 }
 
 /** Quem fez o passo: o backend grava códigos (system, customer, inter...) ou o e-mail de quem estava logado. */

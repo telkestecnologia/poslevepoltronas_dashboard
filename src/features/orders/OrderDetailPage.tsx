@@ -22,10 +22,10 @@ type Notice = { tone: 'info' | 'warning' | 'danger'; text: string }
 function noticesOf(order: Order): Notice[] {
   const list: Notice[] = []
   const until = order.expiresAt ? dateTimeLabel(order.expiresAt) : null
-  if (order.status === 'PAYMENT_REVIEW') list.push({ tone: 'danger', text: 'Não conseguimos receber o pagamento automaticamente. Confira a ocorrência e o recebimento no Inter antes de orientar o cliente. A poltrona foi liberada, este pedido não está confirmado e não há devolução automática.' })
+  if (order.status === 'PAYMENT_REVIEW') list.push({ tone: 'danger', text: 'Não conseguimos receber o pagamento automaticamente. Confira a ocorrência e o recebimento no Asaas antes de orientar o cliente. A poltrona foi liberada, este pedido não está confirmado e não há devolução automática.' })
   if (order.id.startsWith('wa-contrato-')) list.push({ tone: 'info', text: 'Contrato enviado pelo WhatsApp e aguardando a assinatura da cliente. Entregador, fotos e problemas ficam disponíveis depois que ela assinar.' })
   else if (order.status === 'PENDING_CONTRACT') list.push({ tone: 'info', text: `Pedido ainda sem pagamento confirmado. Válido até ${until ?? 'o prazo da reserva'}; ao expirar, os dias bloqueados são liberados automaticamente.` })
-  if (order.status === 'PENDING_PAYMENT' && !order.paymentMock) list.push({ tone: 'info', text: `Aguardando a confirmação do PIX pelo Inter. Reserva válida até ${until ?? 'o prazo informado'}.` })
+  if (order.status === 'PENDING_PAYMENT' && !order.paymentMock) list.push({ tone: 'info', text: `Aguardando a confirmação do PIX pelo Asaas. Reserva válida até ${until ?? 'o prazo informado'}.` })
   if (order.paymentMock) list.push({ tone: 'warning', text: `Pedido de homologação com pagamento fictício: nenhum PIX foi criado e nenhum valor foi recebido.${order.status === 'PENDING_PAYMENT' && until ? ` A simulação deve ser confirmada antes de ${until}.` : ''}` })
   if (order.source === 'MANUAL_PREVIEW') list.push({ tone: 'info', text: 'Pedido de demonstração. O pagamento é apenas simulado; ele não reserva a poltrona nem altera a disponibilidade do site.' })
   if (order.status === 'EXPIRED' || order.status === 'CANCELLED') list.push({ tone: 'info', text: `Pedido ${order.status === 'EXPIRED' ? 'expirado' : 'cancelado'}. A poltrona já está livre para outros aluguéis.` })
@@ -149,7 +149,7 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
     try {
       await api.checkOrderPix(credentials, order.id)
       await load()
-      setPixNote('Consulta ao Inter concluída. O status do pedido foi atualizado.')
+      setPixNote('Consulta ao Asaas concluída. O status do pedido foi atualizado.')
     } catch (cause) {
       setError(getMessage(cause))
     } finally {
@@ -341,8 +341,8 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
             {order.source === 'CHECKOUT' && <div className="od-total"><dt>Total</dt><dd>{currency(order.totalCents)}</dd></div>}
           </dl>
           {order.status === 'PENDING_PAYMENT' && order.paymentSandbox && !order.paymentMock && <div className="od-sandbox admin-only">
-            <p className="order-muted">PIX de teste: o sandbox do Inter simula o pagamento sozinho em poucos segundos.</p>
-            <button className="button secondary" disabled={busy} onClick={() => void checkPix()}>Consultar recebimento no Inter</button>
+            <p className="order-muted">PIX de teste: o sandbox do Asaas simula o pagamento sozinho em poucos segundos.</p>
+            <button className="button secondary" disabled={busy} onClick={() => void checkPix()}>Consultar recebimento no Asaas</button>
             {pixNote && <p className="order-muted" role="status">{pixNote}</p>}
           </div>}
         </section>

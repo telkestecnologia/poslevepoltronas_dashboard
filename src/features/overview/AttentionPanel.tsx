@@ -58,7 +58,7 @@ function buildAlerts({ orders, conversations, unanswered, maintenance }: {
   for (const order of orders.filter(item => item.source === 'CHECKOUT')) {
     if (order.status === 'PAYMENT_REVIEW') {
       items.push({ key: `review-${order.id}`, level: 'urgent', title: 'PIX em análise', target: toOrder(order),
-        detail: `${who(order)}: confira o recebimento no Inter antes de falar com o cliente.` })
+        detail: `${who(order)}: confira o recebimento no Asaas antes de falar com o cliente.` })
     }
     for (const issue of order.issues.filter(item => item.status === 'OPEN')) {
       items.push({ key: `issue-${issue.id}`, level: 'urgent', title: `Problema em aberto: ${issue.title}`, target: toOrder(order),
