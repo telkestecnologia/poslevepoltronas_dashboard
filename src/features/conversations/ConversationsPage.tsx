@@ -103,7 +103,8 @@ export function ConversationsPage({ credentials, selectedId, onSelect }: Props) 
     setBusy(true)
     try {
       const message = await api.replyConversation(credentials, selected.id, text)
-      setMessages(current => [...current, message])
+      // A atualização automática pode ter trazido esta mensagem enquanto o envio respondia: não duplica.
+      setMessages(current => current.some(item => item.id === message.id) ? current : [...current, message])
       setDraft('')
       setChatError('')
       await loadChat(selected.id)
