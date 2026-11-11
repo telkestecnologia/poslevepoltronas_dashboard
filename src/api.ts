@@ -104,14 +104,6 @@ export type OrderEvidence = {
   sizeBytes: number; capturedAt: string; uploadedAt: string; readUrl: string
   contentType?: string; uploadedByName?: string | null; uploadedByStaff?: boolean
 }
-export type EvidenceUploadStart = {
-  evidenceId: string; status: 'PENDING' | 'UPLOADED'; uploadUrl: string | null
-  headers: Record<string, string>; expiresInSeconds: number
-}
-export type EvidenceUploadInput = {
-  phase: 'DELIVERY' | 'PICKUP'; kind: 'PHOTO' | 'VIDEO'; clientMediaId: string; installationId: string
-  platform: 'android' | 'ios'; contentType: string; sizeBytes: number; capturedAt: string
-}
 
 export type AccessLevel = 'ALL' | 'NONE'
 export type TeamMember = {
@@ -284,28 +276,6 @@ async function publicPost(path: string, body: unknown) {
   }
 }
 
-/** Envio de foto ou vídeo pelo painel: o arquivo vai ao backend, que grava no armazenamento. */
-export async function uploadEvidenceFile(credentials: string, orderId: string, phase: 'DELIVERY' | 'PICKUP', file: Blob, fileName: string) {
-  const body = new FormData()
-  body.append('phase', phase)
-  body.append('capturedAt', new Date().toISOString())
-  body.append('file', file, fileName)
-  let response: Response
-  try {
-    response = await fetch(`${baseUrl}/api/admin/${encodeURIComponent(tenantSlug)}/orders/${encodeURIComponent(orderId)}/evidence/files`, {
-      method: 'POST', headers: { Authorization: `Basic ${credentials}` }, body,
-    })
-  } catch {
-    throw new ApiError(0, 'Não foi possível conectar à API. Confira sua internet.')
-  }
-  if (response.status === 413) throw new ApiError(413, 'Arquivo grande demais: fotos até 5 MB e vídeos até 30 MB.')
-  if (response.status === 415) throw new ApiError(415, 'Formato não aceito. Envie foto JPG ou vídeo MP4/MOV.')
-  if (response.status === 409) throw new ApiError(409, 'Esta etapa do pedido não aceita registros agora.')
-  if (response.status === 503) throw new ApiError(503, 'O armazenamento de mídias não está configurado no servidor.')
-  if (!response.ok) throw new ApiError(response.status, 'Não foi possível enviar o arquivo agora. Tente novamente.')
-  return response.json() as Promise<OrderEvidence>
-}
-
 export async function requestPasswordReset(phone: string) {
   const response = await publicPost('/staff/password-reset', { phone })
   if (response.status === 400) throw new ApiError(400, 'Informe o celular com DDD, o mesmo cadastrado no seu perfil.')
@@ -385,15 +355,6 @@ export const api = {
     request<void>(credentials, `/orders/${encodeURIComponent(id)}/pix/sandbox/check`, { method: 'POST' }),
   orderEvidence: (credentials: string, id: string) =>
     request<OrderEvidence[]>(credentials, `/orders/${encodeURIComponent(id)}/evidence`),
-  startEvidenceUpload: (credentials: string, id: string, data: EvidenceUploadInput) =>
-    request<EvidenceUploadStart>(credentials, `/orders/${encodeURIComponent(id)}/evidence/uploads`, {
-      method: 'POST', body: JSON.stringify(data),
-    }),
-  completeEvidenceUpload: (credentials: string, id: string, evidenceId: string) =>
-    request<OrderEvidence>(credentials, `/orders/${encodeURIComponent(id)}/evidence/${encodeURIComponent(evidenceId)}/complete`,
-      { method: 'POST' }),
-  deleteEvidence: (credentials: string, id: string, evidenceId: string) =>
-    request<void>(credentials, `/orders/${encodeURIComponent(id)}/evidence/${encodeURIComponent(evidenceId)}`, { method: 'DELETE' }),
   team: (credentials: string) => request<TeamMember[]>(credentials, '/team'),
   createTeamMember: (credentials: string, data: TeamMemberInput) =>
     request<TeamMember>(credentials, '/team', { method: 'POST', body: JSON.stringify(data) }),
