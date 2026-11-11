@@ -18,7 +18,7 @@ function timeLabel(iso: string) {
   return new Intl.DateTimeFormat('pt-BR', today ? { hour: '2-digit', minute: '2-digit' } : { day: '2-digit', month: '2-digit' }).format(date)
 }
 
-/** Conversas do site e do WhatsApp (IA Tripnix), as mesmas do app: a lista atualiza a cada 10 segundos. */
+/** Conversas do site e do WhatsApp (Isa no backend), as mesmas do app: a lista atualiza a cada 10 segundos. */
 type Props = { credentials: string; selectedId: string | null; onSelect: (id: string | null) => void }
 
 export function ConversationsPage({ credentials, selectedId, onSelect }: Props) {
