@@ -3,6 +3,7 @@ import { AlertTriangle, Armchair, Bell, BellOff, Check, ChevronRight, MessagesSq
 import { api, type Conversation, type Order, type OrderStatus } from '../../api'
 import { fetchAllOrders, usePolling } from '../../data/orders'
 import type { Page } from '../../types'
+import { timeLabel } from '../../utils/time'
 import { helpDetail, helpTitle, needsHelp } from '../../utils/conversations'
 import './attention.css'
 
@@ -71,17 +72,17 @@ function buildAlerts({ orders, conversations, unanswered, maintenance }: {
         detail: `${who(order)}: estava prevista para ${shortDate(order.start)}.` })
     } else if (waitingDelivery && order.start <= tomorrow && !order.courierId) {
       items.push({ key: `courier-${order.id}`, level: 'warning', title: 'Entrega sem entregador', target: toOrder(order),
-        detail: `${who(order)}: entrega ${order.start === now ? 'hoje' : 'amanhã'}${order.deliveryTime ? ` às ${order.deliveryTime}` : ''}.` })
+        detail: `${who(order)}: entrega ${order.start === now ? 'hoje' : 'amanhã'}${order.deliveryTime ? ` ${timeLabel(order.deliveryTime)}` : ''}.` })
     } else if (waitingDelivery) {
       items.push({ key: `deliver-${order.id}`, level: 'warning', title: 'Entregar poltrona', target: toOrder(order),
-        detail: `${who(order)}: entrega em ${shortDate(order.start)}${order.deliveryTime ? ` às ${order.deliveryTime}` : ''}.` })
+        detail: `${who(order)}: entrega em ${shortDate(order.start)}${order.deliveryTime ? ` ${timeLabel(order.deliveryTime)}` : ''}.` })
     }
     if (waitingPickup && order.end < now) {
       items.push({ key: `late-pickup-${order.id}`, level: 'urgent', title: 'Retirada atrasada', target: toOrder(order),
         detail: `${who(order)}: estava prevista para ${shortDate(order.end)}.` })
     } else if (order.status === 'PICKUP_PENDING') {
       items.push({ key: `pickup-${order.id}`, level: 'warning', title: 'Retirar poltrona', target: toOrder(order),
-        detail: `${who(order)}: retirada em ${shortDate(order.end)}${order.pickupTime ? ` às ${order.pickupTime}` : ''}.` })
+        detail: `${who(order)}: retirada em ${shortDate(order.end)}${order.pickupTime ? ` ${timeLabel(order.pickupTime)}` : ''}.` })
     }
     if (order.status === 'PENDING_PAYMENT' && order.expiresAt) {
       const left = new Date(order.expiresAt).getTime() - Date.now()

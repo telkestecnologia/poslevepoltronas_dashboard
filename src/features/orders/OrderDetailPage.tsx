@@ -1,3 +1,4 @@
+import { timeLabel } from '../../utils/time'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   AlertCircle, ArrowLeft, ArrowRight, CalendarClock, Check, CheckCircle2, ChevronDown, ChevronUp,
@@ -220,13 +221,13 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
             <div className="od-schedule-item delivery">
               <small>Entrega</small>
               <strong>{weekdayDateLabel(order.start)}</strong>
-              <span>{order.deliveryTime ? `às ${order.deliveryTime}` : 'Sem horário combinado'}</span>
+              <span>{order.deliveryTime ? timeLabel(order.deliveryTime) : 'Sem horário combinado'}</span>
             </div>
             <ArrowRight size={18} className="od-schedule-arrow" aria-hidden="true" />
             <div className="od-schedule-item pickup">
               <small>Retirada</small>
               <strong>{weekdayDateLabel(order.end)}</strong>
-              <span>{order.pickupTime ? `às ${order.pickupTime}` : 'Sem horário combinado'}</span>
+              <span>{order.pickupTime ? timeLabel(order.pickupTime) : 'Sem horário combinado'}</span>
             </div>
           </div>
           {stockDiffers && <p className="od-stock-note"><CalendarClock size={15} />

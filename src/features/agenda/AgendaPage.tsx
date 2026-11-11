@@ -1,3 +1,4 @@
+import { timeShort } from '../../utils/time'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowRight, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react'
 import { api, type Branch, type Courier, type Order, type OrderQuery, type OrderStatus } from '../../api'
@@ -292,7 +293,7 @@ export function AgendaPage({ credentials, onOpenOrder }: Props) {
               onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onOpenOrder(item.order.id) } }}>
               <div className="agenda-item-top">
                 <span className={`agenda-kind ${item.kind}`}>{item.kind === 'delivery' ? 'Entrega' : 'Retirada'}</span>
-                <strong>{item.time || 'Sem horário'}</strong>
+                <strong>{timeShort(item.time) || 'Sem horário'}</strong>
                 <span className={`agenda-item-status${!item.done && item.date < today ? ' past' : ''}`}>
                   {itemStatus(item, today)}</span>
               </div>
