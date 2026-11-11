@@ -35,6 +35,7 @@ const eventLabels: Record<string, string> = {
   CREATED: 'Pedido criado', STOCK_EXPANDED: 'Intervalo de estoque ampliado', EXPIRED: 'Prazo encerrado',
   CANCELLED: 'Pedido cancelado', COURIER_ASSIGNED: 'Entregador alterado', ISSUE_OPENED: 'Problema registrado',
   ISSUE_RESOLVED: 'Problema resolvido', PIX_REQUESTED: 'PIX gerado', PIX_CONFIRMED: 'Pagamento PIX confirmado',
+    CARD_REQUESTED: 'Pagamento com cartão solicitado', CARD_CONFIRMED: 'Pagamento com cartão aprovado',
   PIX_REVIEW: 'Pagamento em análise', MOCK_PAYMENT_REQUESTED: 'PIX de teste gerado',
   MOCK_PAYMENT_CONFIRMED: 'Pagamento de teste confirmado',
 }
@@ -49,7 +50,7 @@ export type EventTone = 'start' | 'done' | 'problem' | 'closed' | 'step'
 
 export function eventTone(action: string): EventTone {
   if (action === 'CREATED') return 'start'
-  if (['STATUS_COMPLETED', 'ISSUE_RESOLVED', 'PIX_CONFIRMED', 'MOCK_PAYMENT_CONFIRMED'].includes(action)) return 'done'
+  if (['STATUS_COMPLETED', 'ISSUE_RESOLVED', 'PIX_CONFIRMED', 'CARD_CONFIRMED', 'MOCK_PAYMENT_CONFIRMED'].includes(action)) return 'done'
   if (action === 'ISSUE_OPENED' || action === 'PIX_REVIEW' || action === 'STATUS_PAYMENT_REVIEW') return 'problem'
   if (['EXPIRED', 'CANCELLED', 'STATUS_CANCELLED', 'STATUS_EXPIRED'].includes(action)) return 'closed'
   return 'step'

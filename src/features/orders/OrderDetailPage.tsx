@@ -142,7 +142,7 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
       `Pedido avançado para ${statusLabels[nextStatus].toLowerCase()}.`, () => setStatusNote(''))
   }
 
-  /** Paga o Pix de teste pelo próprio sandbox do Asaas: o pedido é confirmado pelo webhook, como um Pix real. */
+  /** Paga o pagamento de teste (Pix ou cartão) pelo sandbox do Asaas: o pedido é confirmado pelo webhook, como um real. */
   async function payTestPix() {
     if (!order) return
     setBusy(true)
@@ -359,9 +359,9 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
             {order.source === 'CHECKOUT' && <div className="od-total"><dt>Total</dt><dd>{currency(order.totalCents)}</dd></div>}
           </dl>
           {order.status === 'PENDING_PAYMENT' && order.paymentSandbox && !order.paymentMock && <div className="od-sandbox admin-only">
-            <p className="order-muted">PIX de teste: ele só é pago quando alguém confirma no sandbox do Asaas (por este botão ou
-              em Cobranças → Confirmar pagamento no painel do Asaas), pelo mesmo caminho de um Pix real.</p>
-            <button className="button primary" disabled={busy} onClick={() => void payTestPix()}>Pagar Pix de teste no Asaas</button>
+            <p className="order-muted">Pagamento de teste (Pix ou cartão): só é pago quando alguém paga no sandbox do Asaas (por este
+              botão, que usa a ação do sandbox no Pix e o cartão de teste no cartão), pelo mesmo caminho de um pagamento real.</p>
+            <button className="button primary" disabled={busy} onClick={() => void payTestPix()}>Pagar teste no Asaas</button>
             <button className="button secondary" disabled={busy} onClick={() => void checkPix()}>Consultar recebimento no Asaas</button>
             {pixNote && <p className="order-muted" role="status">{pixNote}</p>}
           </div>}
