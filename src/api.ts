@@ -133,6 +133,32 @@ export type ConversationPage = {
 export type ConversationMessage = {
   id: string; role: ConversationRole; content: string; status: string | null; staffName: string | null; createdAt: string
   images?: { url: string; caption?: string | null }[] | null
+  /** Arquivos que a equipe enviou: IMAGE, VIDEO, AUDIO ou DOCUMENT (PDF). Link temporário. */
+  attachments?: { url: string; kind: 'IMAGE' | 'VIDEO' | 'AUDIO' | 'DOCUMENT'; contentType: string; filename: string }[] | null
+}
+
+/** Envia imagem, vídeo, áudio ou PDF (até 16 MB) na conversa, com a mensagem digitada como legenda (igual ao app). */
+export async function sendConversationAttachment(credentials: string, id: string, file: File, caption: string) {
+  const form = new FormData()
+  form.append('file', file, file.name)
+  if (caption.trim()) form.append('caption', caption.trim())
+  let response: Response
+  try {
+    response = await fetch(`${baseUrl}/api/admin/${encodeURIComponent(tenantSlug)}/conversations/${encodeURIComponent(id)}/attachments`, {
+      method: 'POST', body: form, headers: { Authorization: `Basic ${credentials}` },
+    })
+  } catch {
+    throw new ApiError(0, 'Não foi possível conectar à API. Confira sua internet.')
+  }
+  if (!response.ok) {
+    const message = response.status === 413 ? 'O arquivo precisa ter até 16 MB.'
+      : response.status === 422 || response.status === 400 ? 'Envie foto (JPG ou PNG), vídeo (MP4), áudio (MP3, M4A, AAC ou OGG) ou PDF.'
+        : response.status === 409 ? 'Assuma a conversa antes de enviar, ou o WhatsApp do cliente está fora da janela de 24 horas.'
+          : response.status === 502 ? 'O WhatsApp não aceitou o arquivo. Tente de novo.'
+            : `Erro ${response.status} ao enviar o arquivo.`
+    throw new ApiError(response.status, message)
+  }
+  return response.json() as Promise<ConversationMessage>
 }
 export type AiKnowledge = {
   id: string

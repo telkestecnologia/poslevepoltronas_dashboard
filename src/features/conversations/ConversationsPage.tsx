@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ArrowLeft, Globe, MessageCircle, RefreshCw, Send, X } from 'lucide-react'
-import { api, type Conversation, type ConversationMessage } from '../../api'
+import { ArrowLeft, Globe, MessageCircle, Paperclip, RefreshCw, Send, X } from 'lucide-react'
+import { api, sendConversationAttachment, type Conversation, type ConversationMessage } from '../../api'
 import { conversationState, customerLabel, customerNumber, nameColor, stageTone } from '../../utils/conversations'
 import { MessageImages, WhatsAppText } from './WhatsAppText'
 import { getMessage } from '../../utils/errors'
@@ -32,6 +32,7 @@ export function ConversationsPage({ credentials, selectedId, onSelect }: Props) 
   const [filter, setFilter] = useState<Filter>('ALL')
   const [draft, setDraft] = useState('')
   const [replyTo, setReplyTo] = useState<ConversationMessage | null>(null)
+  const fileInput = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
   const thread = useRef<HTMLDivElement>(null)
   const listRef = useRef<Conversation[]>([])
@@ -94,6 +95,25 @@ export function ConversationsPage({ credentials, selectedId, onSelect }: Props) 
       setChatError(getMessage(failure))
     } finally {
       setBusy(false)
+    }
+  }
+
+  // Anexo: foto, vídeo, áudio ou PDF; a mensagem digitada vai como legenda.
+  async function sendFile(file: File | undefined) {
+    if (!file || !selected) return
+    setBusy(true)
+    try {
+      const message = await sendConversationAttachment(credentials, selected.id, file, draft)
+      setMessages(current => current.some(item => item.id === message.id) ? current : [...current, message])
+      setDraft('')
+      setChatError('')
+      await loadChat(selected.id)
+      void loadList()
+    } catch (failure) {
+      setChatError(getMessage(failure))
+    } finally {
+      setBusy(false)
+      if (fileInput.current) fileInput.current.value = ''
     }
   }
 
@@ -192,6 +212,11 @@ export function ConversationsPage({ credentials, selectedId, onSelect }: Props) 
                 {!customer && first && <span className="wa-author" style={{ color: message.role === 'AI' ? '#06cf9c' : nameColor(message.staffName ?? '') }}>
                   {message.role === 'AI' ? 'Isa (assistente)' : message.staffName ?? 'Equipe Pós Leve'}</span>}
                 <MessageImages images={message.images} />
+                {message.attachments?.map(file => file.kind === 'IMAGE'
+                  ? <a key={file.url} className="wa-photo" href={file.url} target="_blank" rel="noopener noreferrer"><img src={file.url} alt={file.filename} loading="lazy" /></a>
+                  : file.kind === 'VIDEO' ? <video key={file.url} className="wa-video" src={file.url} controls preload="metadata" />
+                    : file.kind === 'AUDIO' ? <audio key={file.url} className="wa-audio" src={file.url} controls preload="metadata" />
+                      : <a key={file.url} className="wa-file" href={file.url} target="_blank" rel="noopener noreferrer">📄 {file.filename}</a>)}
                 {message.content && <WhatsAppText text={message.content} />}
                 <span className="wa-meta">{hour(message.createdAt)}{!customer && <span className="wa-ticks"> ✓✓</span>}</span>
               </div>
@@ -206,6 +231,10 @@ export function ConversationsPage({ credentials, selectedId, onSelect }: Props) 
             {replyTo && <div className="wa-quote"><div><strong>Respondendo a</strong><span>{replyTo.content}</span></div>
               <button type="button" aria-label="Cancelar resposta" onClick={() => setReplyTo(null)}><X size={16} /></button></div>}
             <form className={`wa-input${selected.state === 'HUMAN' ? '' : ' locked'}`} onSubmit={event => void send(event)}>
+              <input ref={fileInput} type="file" hidden accept="image/jpeg,image/png,video/mp4,video/3gpp,audio/*,application/pdf"
+                onChange={event => void sendFile(event.target.files?.[0])} />
+              <button type="button" className="wa-attach" aria-label="Enviar foto, vídeo, áudio ou PDF" title="Enviar foto, vídeo, áudio ou PDF"
+                disabled={selected.state !== 'HUMAN' || busy || windowClosed} onClick={() => fileInput.current?.click()}><Paperclip size={18} /></button>
               <input value={draft} onChange={event => setDraft(event.target.value)} maxLength={2000} aria-label="Mensagem"
                 disabled={selected.state !== 'HUMAN'}
                 placeholder={selected.state === 'HUMAN' ? 'Mensagem' : '🔒 Bloqueado enquanto a Isa atende'} />

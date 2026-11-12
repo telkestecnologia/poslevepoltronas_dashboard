@@ -216,3 +216,10 @@
 .wa-quote strong { color: #00a884; font-size: 12.5px; }
 .wa-quote span { overflow: hidden; color: #667781; font-size: 13px; white-space: nowrap; text-overflow: ellipsis; }
 .wa-quote button { display: grid; place-items: center; border: 0; background: transparent; color: #8696a0; cursor: pointer; }
+
+/* Arquivos enviados pela equipe (foto, vídeo, áudio e PDF) e o botão de anexo. */
+.wa-video { display: block; width: 260px; max-width: 100%; margin-bottom: 4px; border-radius: 6px; }
+.wa-audio { display: block; width: 260px; max-width: 100%; margin-bottom: 4px; }
+.wa-file { display: block; max-width: 260px; margin-bottom: 4px; padding: 10px 12px; overflow: hidden; border-radius: 6px; background: rgba(0, 0, 0, 0.06); color: #111b21; font-weight: 600; text-decoration: none; text-overflow: ellipsis; white-space: nowrap; }
+.wa-attach { display: grid; place-items: center; flex: none; width: 40px; height: 40px; border: 0; border-radius: 50%; background: transparent; color: #54656f; cursor: pointer; }
+.wa-attach:disabled { opacity: 0.4; cursor: not-allowed; }
