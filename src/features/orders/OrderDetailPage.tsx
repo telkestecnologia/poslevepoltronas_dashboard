@@ -45,6 +45,8 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
   const [issueDescription, setIssueDescription] = useState('')
   const [resolutions, setResolutions] = useState<Record<string, string>>({})
   const [stockOpen, setStockOpen] = useState(false)
+  const [newDelivery, setNewDelivery] = useState('')
+  const [newPickup, setNewPickup] = useState('')
   const [stockStart, setStockStart] = useState('')
   const [stockEnd, setStockEnd] = useState('')
   const [stockNote, setStockNote] = useState('')
@@ -264,6 +266,17 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
               {stockOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
             </button>
             {stockOpen && <div className="od-collapse-body">
+              <div className="order-form-grid">
+                <label className="order-field">Novo horário de entrega
+                  <input type="time" value={newDelivery} disabled={order.status === 'IN_USE' || order.status === 'PICKUP_PENDING'}
+                    onChange={event => setNewDelivery(event.target.value)} /></label>
+                <label className="order-field">Novo horário de retirada
+                  <input type="time" value={newPickup} onChange={event => setNewPickup(event.target.value)} /></label>
+              </div>
+              <div><button className="button secondary" disabled={busy || (!newDelivery && !newPickup)}
+                onClick={() => void perform(() => api.changeOrderSchedule(credentials, order.id, newDelivery || null, newPickup || null, ''),
+                  'Horário atualizado.', () => { setNewDelivery(''); setNewPickup('') })}>
+                Salvar horário</button></div>
               <div className="order-form-grid">
                 <label className="order-field">Primeiro dia de estoque
                   <input type="date" value={stockStart} max={order.stockStart ?? undefined} onChange={event => setStockStart(event.target.value)} /></label>

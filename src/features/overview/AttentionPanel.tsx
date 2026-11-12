@@ -59,6 +59,12 @@ function buildAlerts({ orders, conversations, unanswered, maintenance }: {
   const who = (order: Order) => `${order.customerName} (${order.municipalityName}/${order.municipalityUf}, ${order.address})`
   const toOrder = (order: Order): AttentionTarget => ({ page: 'orders', id: order.id })
   for (const order of orders.filter(item => item.source === 'CHECKOUT')) {
+    // Cliente mudou o horário pela Isa nas últimas 24 h.
+    for (const event of order.history.filter(item => item.action === 'SCHEDULE_CHANGED' && item.actor === 'ai'
+      && Date.now() - new Date(item.at).getTime() < 86_400_000)) {
+      items.push({ key: `schedule-${order.id}-${event.at}`, level: 'urgent', title: 'Cliente mudou o horário', target: toOrder(order),
+        detail: `${who(order)}: ${event.note}` })
+    }
     if (order.status === 'PAYMENT_REVIEW') {
       items.push({ key: `review-${order.id}`, level: 'urgent', title: orderStatusLabel(order), target: toOrder(order),
         detail: `${who(order)}: confira o recebimento no Asaas antes de falar com o cliente.` })

@@ -54,7 +54,7 @@ function humanize(code: string) {
 }
 
 const eventLabels: Record<string, string> = {
-  CREATED: 'Pedido criado', STOCK_EXPANDED: 'Intervalo de estoque ampliado', EXPIRED: 'Prazo encerrado',
+  CREATED: 'Pedido criado', STOCK_EXPANDED: 'Intervalo de estoque ampliado', SCHEDULE_CHANGED: 'Horário alterado', EXPIRED: 'Prazo encerrado',
   CANCELLED: 'Pedido cancelado', COURIER_ASSIGNED: 'Entregador alterado', ISSUE_OPENED: 'Problema registrado',
   ISSUE_RESOLVED: 'Problema resolvido', PIX_REQUESTED: 'Pix gerado', PIX_CONFIRMED: 'Pagamento com Pix confirmado',
     CARD_REQUESTED: 'Pagamento com cartão solicitado', CARD_CONFIRMED: 'Pagamento com cartão aprovado',

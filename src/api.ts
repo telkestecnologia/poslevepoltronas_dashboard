@@ -404,6 +404,10 @@ export const api = {
     request<Order>(credentials, `/orders/${encodeURIComponent(id)}/logistics`, {
       method: 'PATCH', body: JSON.stringify({ stockStart, stockEnd, note }),
     }),
+  changeOrderSchedule: (credentials: string, id: string, deliveryTime: string | null, pickupTime: string | null, note: string) =>
+    request<Order>(credentials, `/orders/${encodeURIComponent(id)}/schedule`, {
+      method: 'PATCH', body: JSON.stringify({ deliveryTime, pickupTime, note }),
+    }),
   assignOrderCourier: (credentials: string, id: string, courierId: string | null) =>
     request<Order>(credentials, `/orders/${encodeURIComponent(id)}/courier`, {
       method: 'PATCH', body: JSON.stringify({ courierId }),
