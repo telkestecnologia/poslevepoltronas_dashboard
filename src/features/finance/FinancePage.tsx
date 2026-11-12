@@ -261,7 +261,12 @@ export function FinancePage({ credentials }: { credentials: string }) {
           {!shownMonth ? <div className="finance-branch-empty"><Wallet size={22} /> Sem movimentação no período.</div> : <div className="finance-month">
             <div className="finance-month-nav">
               <button type="button" aria-label="Mês anterior" disabled={shownIndex <= 0} onClick={() => setMonthIndex(shownIndex - 1)}><ChevronLeft size={20} /></button>
-              <div><strong>{monthName.format(new Date(`${shownMonth.start}T12:00:00Z`))}</strong><span>{selectedBranchLabel}</span></div>
+              <div><strong>{monthName.format(new Date(`${shownMonth.start}T12:00:00Z`))}</strong><label className="finance-month-branch"><span className="sr-only">Trocar filial</span>
+                <select value={branchId} onChange={event => { setBranchId(event.target.value); setPage(0) }}>
+                  <option value="">Todas as filiais</option>
+                  {onlyOfficialBranches(branches, branch => branch.name).map(branch =>
+                    <option value={branch.id} key={branch.id}>{branchLabel(branch.name)}</option>)}
+                </select></label></div>
               <button type="button" aria-label="Próximo mês" disabled={shownIndex >= months.length - 1} onClick={() => setMonthIndex(shownIndex + 1)}><ChevronRight size={20} /></button>
             </div>
             <div className="finance-month-figures">

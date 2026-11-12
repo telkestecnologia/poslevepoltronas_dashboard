@@ -39,3 +39,7 @@
 .finance-kind-tag { display: block; font-size: 10.5px; font-style: normal; font-weight: 800; letter-spacing: 0.4px; text-transform: uppercase; }
 .finance-row.inflow .finance-kind-tag { color: #1f7a4a; }
 .finance-row.outflow .finance-kind-tag { color: #b8321f; }
+
+/* Nome da filial no mês a mês: clicar troca a filial. */
+.finance-month-branch { justify-self: center; }
+.finance-month-branch select { padding: 5px 28px 5px 12px; border: 0; border-radius: 99px; background-color: #e5f4f5; color: var(--teal-dark); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
