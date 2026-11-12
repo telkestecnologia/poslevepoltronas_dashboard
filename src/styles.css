@@ -2829,3 +2829,21 @@ tbody tr:hover {
 .nav-badge { width: 9px; height: 9px; border-radius: 50%; background: #e5484d; box-shadow: 0 0 0 2px #fff; margin-left: auto; flex: none; }
 .menu-badge { position: absolute; top: 6px; right: 6px; margin: 0; }
 .sidebar.collapsed .nav-badge { position: absolute; top: 9px; right: calc(50% - 15px); margin: 0; }
+
+/* Menu lateral rola quando não cabe na altura da tela (telas baixas, celular com barra do navegador). */
+.sidebar { height: 100dvh; min-height: 0; }
+.main-nav {
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #d6e3e1 transparent;
+  margin-inline: -4px;
+  padding-inline: 4px;
+}
+.main-nav .nav-item { flex: none; }
+.sidebar-user { flex: none; }
+@media (max-height: 760px) {
+  .sidebar-brand { padding-bottom: 22px; }
+}
