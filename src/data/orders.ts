@@ -78,6 +78,23 @@ export function eventTone(action: string): EventTone {
   return 'step'
 }
 
+/** Tipos da linha do tempo (os mesmos do app): cada um com cor, emoji e nome. */
+export const eventKinds = {
+  order: { label: 'Pedido', emoji: '📝' }, payment: { label: 'Pagamento', emoji: '💰' }, delivery: { label: 'Entrega', emoji: '🚚' },
+  problem: { label: 'Problema', emoji: '⚠️' }, done: { label: 'Concluído', emoji: '✅' }, closed: { label: 'Encerrado', emoji: '⛔' },
+  step: { label: 'Andamento', emoji: '➡️' },
+} as const
+
+export function eventKind(action: string): keyof typeof eventKinds {
+  if (action === 'ISSUE_OPENED' || /REVIEW/.test(action)) return 'problem'
+  if (/CANCEL|EXPIRE/.test(action)) return 'closed'
+  if (action === 'STATUS_COMPLETED' || action === 'ISSUE_RESOLVED') return 'done'
+  if (action === 'CREATED' || /CONTRACT/.test(action)) return 'order'
+  if (/PIX|CARD|PAYMENT/.test(action)) return 'payment'
+  if (/COURIER|DEPARTURE|STOCK|DELIVERY|PICKUP|IN_USE/.test(action)) return 'delivery'
+  return 'step'
+}
+
 const actorLabels: Record<string, string> = {
   system: 'Sistema', customer: 'Cliente', inter: 'Banco Inter', asaas: 'Asaas', mock: 'Pagamento', whatsapp: 'WhatsApp', ai: 'Isa',
 }

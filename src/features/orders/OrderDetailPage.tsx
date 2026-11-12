@@ -7,7 +7,7 @@ import {
 import './order-detail.css'
 import { api, ApiError, type Courier, type Order } from '../../api'
 import {
-  actorLabel, currency, dateLabel, dateTimeLabel, eventLabel, eventTone, orderStatusLabel, paymentName,
+  actorLabel, currency, dateLabel, dateTimeLabel, eventKind, eventKinds, eventLabel, orderStatusLabel, paymentName,
   statusFlow, statusLabels, usePolling, weekdayDateLabel,
 } from '../../data/orders'
 import { branchLabel } from '../../utils/branches'
@@ -386,13 +386,20 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
 
         <section className="panel od-card" aria-labelledby="od-history-title">
           <h2 id="od-history-title" className="od-side-title">Linha do tempo</h2>
+          {/* Legenda: cada cor é um tipo de acontecimento (as mesmas do app). */}
+          <div className="od-tl-legend">{(['order', 'payment', 'delivery', 'problem', 'done'] as const).map(key =>
+            <span key={key} className={`od-tl-chip kind-${key}`}>{eventKinds[key].emoji} {eventKinds[key].label}</span>)}</div>
           <ol className="od-timeline">
-            {[...order.history].reverse().map((event, index) => <li key={`${event.at}-${index}`} className={`tone-${eventTone(event.action)}`}>
+            {[...order.history].reverse().map((event, index) => {
+              const kind = eventKind(event.action)
+              return <li key={`${event.at}-${index}`} className={`kind-${kind}`}>
               <span className="od-timeline-dot" aria-hidden="true" />
-              <div><strong>{eventLabel(event.action)}</strong>
+              <div><em className="od-tl-kind">{eventKinds[kind].emoji} {eventKinds[kind].label}{index === 0 ? ' • agora' : ''}</em>
+                <strong>{eventLabel(event.action)}</strong>
                 <small>{dateTimeLabel(event.at)} • {actorLabel(event.actor, couriers)}</small>
                 {event.note && <p>{event.note}</p>}</div>
-            </li>)}
+            </li>
+            })}
           </ol>
         </section>
       </aside>
