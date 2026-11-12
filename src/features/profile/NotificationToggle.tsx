@@ -4,13 +4,18 @@ import '../overview/attention.css'
 
 const notifyKey = 'posleve.desktop-notifications'
 
-/** true quando a pessoa ligou as notificações e o navegador permite. */
-export function desktopNotificationsOn() {
+/** Ligadas por padrão: só ficam desligadas quando a pessoa desliga no Perfil. */
+export function desktopNotificationsWanted() {
   try {
-    return localStorage.getItem(notifyKey) === 'on' && typeof Notification !== 'undefined' && Notification.permission === 'granted'
+    return localStorage.getItem(notifyKey) !== 'off'
   } catch {
-    return false
+    return true
   }
+}
+
+/** true quando a pessoa não desligou as notificações e o navegador permite. */
+export function desktopNotificationsOn() {
+  return desktopNotificationsWanted() && typeof Notification !== 'undefined' && Notification.permission === 'granted'
 }
 
 /** Liga e desliga os avisos urgentes no computador. Fica no Perfil, como no app. */

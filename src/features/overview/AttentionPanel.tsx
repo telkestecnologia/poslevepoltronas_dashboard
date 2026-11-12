@@ -7,7 +7,7 @@ const capitalized = (text: string) => text.charAt(0).toUpperCase() + text.slice(
 import type { Page } from '../../types'
 import { timeLabel } from '../../utils/time'
 import { helpDetail, helpTitle, needsHelp } from '../../utils/conversations'
-import { desktopNotificationsOn } from '../profile/NotificationToggle'
+import { desktopNotificationsOn, desktopNotificationsWanted } from '../profile/NotificationToggle'
 import './attention.css'
 
 /** Para onde o aviso leva: o pedido ou a conversa daquele aviso, ou a tela com o filtro certo. */
@@ -128,8 +128,12 @@ export function AttentionPanel({ credentials, onOpen }: { credentials: string; o
   const [unanswered, setUnanswered] = useState(0)
   const [maintenance, setMaintenance] = useState(0)
   const [showAll, setShowAll] = useState(false)
-  // As notificações são ligadas no Perfil; aqui só se lê a escolha.
-  const [notifyOn] = useState(desktopNotificationsOn)
+  // Ligadas por padrão (só o Perfil desliga). Na primeira vez, o navegador pede a permissão.
+  const [notifyOn, setNotifyOn] = useState(desktopNotificationsOn)
+  useEffect(() => {
+    if (notifyOn || !desktopNotificationsWanted() || typeof Notification === 'undefined' || Notification.permission !== 'default') return
+    void Notification.requestPermission().then(permission => setNotifyOn(permission === 'granted'), () => {})
+  }, [notifyOn])
   const primed = useRef(false)
   const onOpenRef = useRef(onOpen)
   useEffect(() => { onOpenRef.current = onOpen }, [onOpen])
