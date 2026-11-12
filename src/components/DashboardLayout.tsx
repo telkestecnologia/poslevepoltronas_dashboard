@@ -46,6 +46,8 @@ type Props = {
   onDismissNotice: () => void
   /** Nível extra no caminho do topo, ex.: o acompanhamento de um pedido. */
   crumb?: string
+  /** Menus com novidade desde a última visita (círculo vermelho). */
+  badges?: ReadonlySet<Page>
   children: ReactNode
 }
 
@@ -57,8 +59,10 @@ export function DashboardLayout({
   notice,
   onDismissNotice,
   crumb,
+  badges,
   children,
 }: Props) {
+  const hasNews = !!badges && badges.size > 0
   const [mobileOpen, setMobileOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
   const currentPage = navigation.find((item) => item.page === page)
@@ -107,13 +111,14 @@ export function DashboardLayout({
             <button
               key={item.page}
               className={`nav-item${page === item.page ? ' selected' : ''}`}
-              aria-label={item.label}
+              aria-label={badges?.has(item.page) ? `${item.label} (novidades)` : item.label}
               aria-current={page === item.page ? 'page' : undefined}
               title={collapsed ? item.label : undefined}
               onClick={() => navigate(item.page)}
             >
               <item.icon size={20} strokeWidth={1.9} />
               <span>{item.label}</span>
+              {badges?.has(item.page) && <i className="nav-badge" aria-hidden="true" />}
             </button>
           ))}
         </nav>
@@ -135,10 +140,11 @@ export function DashboardLayout({
           <div className="topbar-left">
             <button
               className="mobile-menu icon-button"
-              aria-label="Abrir menu"
+              aria-label={hasNews ? 'Abrir menu (há novidades)' : 'Abrir menu'}
               onClick={() => setMobileOpen(true)}
             >
               <Menu size={23} />
+              {hasNews && <i className="nav-badge menu-badge" aria-hidden="true" />}
             </button>
             <div className="breadcrumbs">
               Painel <ChevronRight size={14} />

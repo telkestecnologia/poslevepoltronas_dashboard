@@ -2823,3 +2823,9 @@ tbody tr:hover {
 .agenda-day-panel.is-loading { opacity: 0.6; transition: opacity 0.2s; }
 .breadcrumb-link { border: 0; background: transparent; padding: 0; color: inherit; font: inherit; cursor: pointer; }
 .breadcrumb-link:hover { color: var(--teal-dark); text-decoration: underline; }
+
+/* Círculo vermelho: menu com novidade desde a última visita. */
+.nav-item, .mobile-menu { position: relative; }
+.nav-badge { width: 9px; height: 9px; border-radius: 50%; background: #e5484d; box-shadow: 0 0 0 2px #fff; margin-left: auto; flex: none; }
+.menu-badge { position: absolute; top: 6px; right: 6px; margin: 0; }
+.sidebar.collapsed .nav-badge { position: absolute; top: 9px; right: calc(50% - 15px); margin: 0; }

@@ -18,6 +18,7 @@ import { AttentionPanel } from './features/overview/AttentionPanel'
 import { ProfilePage } from './features/profile/ProfilePage'
 import { PaymentsPricingPage } from './features/payments/PaymentsPricingPage'
 import { useDashboard } from './hooks/useDashboard'
+import { useMenuBadges } from './hooks/useMenuBadges'
 
 function App() {
   const {
@@ -32,6 +33,7 @@ function App() {
     notificationsPage,
     dialog,
   } = useDashboard()
+  const badges = useMenuBadges(session.staff ? session.credentials : null, session.staff?.email ?? '', navigation.page)
 
   if (session.restoring) {
     return <div className="empty-state" role="status"><p>Entrando no painel...</p></div>
@@ -70,6 +72,7 @@ function App() {
         onNavigate={navigate}
         onLogout={session.logout}
         crumb={page === 'orders' && route.id ? 'Acompanhamento' : undefined}
+        badges={badges}
         notice={notice}
         onDismissNotice={dismissNotice}
       >
