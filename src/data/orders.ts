@@ -3,8 +3,8 @@ import { api, type Courier, type Order, type OrderQuery, type OrderStatus } from
 
 export const statusLabels: Record<OrderStatus, string> = {
   PENDING_CONTRACT: 'Aguardando contrato',
-  PENDING_PAYMENT: 'Aguardando PIX',
-  PAYMENT_REVIEW: 'PIX em análise',
+  PENDING_PAYMENT: 'Aguardando pagamento',
+  PAYMENT_REVIEW: 'Pagamento em análise',
   EXPIRED: 'Expirado',
   CANCELLED: 'Cancelado',
   PAYMENT_CONFIRMED: 'Pagamento confirmado',
@@ -19,9 +19,31 @@ export const statusFlow: OrderStatus[] = ['PAYMENT_CONFIRMED', 'DELIVERY_PENDING
 
 export const isTestPayment = (order: Order) => Boolean(order.paymentMock || order.paymentSandbox)
 
+/**
+ * Forma de pagamento do pedido, pelo último evento de cobrança do histórico (o cliente pode trocar de Pix para
+ * cartão e vice-versa antes de pagar). null quando não há cobrança real (contrato pendente ou pagamento de teste).
+ */
+export function paymentKind(order: Pick<Order, 'history'>): 'pix' | 'card' | null {
+  for (let index = (order.history?.length ?? 0) - 1; index >= 0; index -= 1) {
+    const action = order.history[index].action
+    if (action === 'PIX_REQUESTED' || action === 'PIX_CONFIRMED') return 'pix'
+    if (action === 'CARD_REQUESTED' || action === 'CARD_CONFIRMED') return 'card'
+  }
+  return null
+}
+
+/** "Pix", "cartão" ou "pagamento" (forma ainda desconhecida), para compor os textos. */
+export function paymentName(order: Pick<Order, 'history'>) {
+  const kind = paymentKind(order)
+  return kind === 'pix' ? 'Pix' : kind === 'card' ? 'cartão' : 'pagamento'
+}
+
 export function orderStatusLabel(order: Order) {
   if (isTestPayment(order) && order.status === 'PENDING_PAYMENT') return 'Aguardando simulação'
   if (isTestPayment(order) && order.status === 'PAYMENT_CONFIRMED') return 'Teste confirmado'
+  const kind = paymentKind(order)
+  if (order.status === 'PENDING_PAYMENT') return kind === 'pix' ? 'Aguardando Pix' : kind === 'card' ? 'Aguardando cartão' : 'Aguardando pagamento'
+  if (order.status === 'PAYMENT_REVIEW') return kind === 'pix' ? 'Pix em análise' : kind === 'card' ? 'Cartão em análise' : 'Pagamento em análise'
   return statusLabels[order.status]
 }
 
@@ -34,9 +56,9 @@ function humanize(code: string) {
 const eventLabels: Record<string, string> = {
   CREATED: 'Pedido criado', STOCK_EXPANDED: 'Intervalo de estoque ampliado', EXPIRED: 'Prazo encerrado',
   CANCELLED: 'Pedido cancelado', COURIER_ASSIGNED: 'Entregador alterado', ISSUE_OPENED: 'Problema registrado',
-  ISSUE_RESOLVED: 'Problema resolvido', PIX_REQUESTED: 'PIX gerado', PIX_CONFIRMED: 'Pagamento PIX confirmado',
+  ISSUE_RESOLVED: 'Problema resolvido', PIX_REQUESTED: 'Pix gerado', PIX_CONFIRMED: 'Pagamento com Pix confirmado',
     CARD_REQUESTED: 'Pagamento com cartão solicitado', CARD_CONFIRMED: 'Pagamento com cartão aprovado',
-  PIX_REVIEW: 'Pagamento em análise', MOCK_PAYMENT_REQUESTED: 'PIX de teste gerado',
+  PIX_REVIEW: 'Pagamento em análise', MOCK_PAYMENT_REQUESTED: 'Pagamento de teste gerado',
   MOCK_PAYMENT_CONFIRMED: 'Pagamento de teste confirmado',
 }
 

@@ -13,6 +13,7 @@ const paths: Record<Page, string> = {
   conversations: '/conversas',
   ai: '/contexto-ia',
   notifications: '/alertas-ia',
+  payments: '/pagamentos-e-precos',
   profile: '/perfil',
 }
 

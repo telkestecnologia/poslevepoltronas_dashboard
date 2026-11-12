@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AlertTriangle, Armchair, Bell, BellOff, Check, ChevronRight, MessagesSquare, Sparkles } from 'lucide-react'
 import { api, type Conversation, type Order, type OrderStatus } from '../../api'
-import { fetchAllOrders, usePolling } from '../../data/orders'
+import { fetchAllOrders, orderStatusLabel, paymentName, usePolling } from '../../data/orders'
+
+const capitalized = (text: string) => text.charAt(0).toUpperCase() + text.slice(1)
 import type { Page } from '../../types'
 import { timeLabel } from '../../utils/time'
 import { helpDetail, helpTitle, needsHelp } from '../../utils/conversations'
@@ -58,7 +60,7 @@ function buildAlerts({ orders, conversations, unanswered, maintenance }: {
   const toOrder = (order: Order): AttentionTarget => ({ page: 'orders', id: order.id })
   for (const order of orders.filter(item => item.source === 'CHECKOUT')) {
     if (order.status === 'PAYMENT_REVIEW') {
-      items.push({ key: `review-${order.id}`, level: 'urgent', title: 'PIX em análise', target: toOrder(order),
+      items.push({ key: `review-${order.id}`, level: 'urgent', title: orderStatusLabel(order), target: toOrder(order),
         detail: `${who(order)}: confira o recebimento no Asaas antes de falar com o cliente.` })
     }
     for (const issue of order.issues.filter(item => item.status === 'OPEN')) {
@@ -87,7 +89,7 @@ function buildAlerts({ orders, conversations, unanswered, maintenance }: {
     if (order.status === 'PENDING_PAYMENT' && order.expiresAt) {
       const left = new Date(order.expiresAt).getTime() - Date.now()
       if (left > 0 && left < 2 * 60 * 60_000) {
-        items.push({ key: `expiring-${order.id}`, level: 'warning', title: 'PIX perto de vencer', target: toOrder(order),
+        items.push({ key: `expiring-${order.id}`, level: 'warning', title: `${capitalized(paymentName(order))} perto de vencer`, target: toOrder(order),
           detail: `${who(order)}: a reserva vence às ${time(order.expiresAt)}.` })
       }
     }
@@ -188,7 +190,7 @@ export function AttentionPanel({ credentials, onOpen }: { credentials: string; o
       <span className="notify-icon">{notifyOn ? <Bell size={18} /> : <BellOff size={18} />}</span>
       <span className="notify-text"><strong>{notifyOn ? 'Notificações ativadas' : 'Ativar notificações'}</strong>
         <small>{notifyMessage || (notifyOn ? 'Você recebe um aviso no computador quando algo urgente acontecer, como uma mensagem que a Isa não conseguiu responder.'
-          : 'Receba no computador os avisos urgentes, como PIX em análise ou mensagem que a Isa não soube responder.')}</small></span>
+          : 'Receba no computador os avisos urgentes, como pagamento em análise ou mensagem que a Isa não soube responder.')}</small></span>
       <span className={`notify-switch${notifyOn ? ' on' : ''}`}><i /></span>
     </button>
 

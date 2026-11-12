@@ -16,6 +16,7 @@ import { FinancePage } from './features/finance/FinancePage'
 import { ConversationsPage } from './features/conversations/ConversationsPage'
 import { AttentionPanel } from './features/overview/AttentionPanel'
 import { ProfilePage } from './features/profile/ProfilePage'
+import { PaymentsPricingPage } from './features/payments/PaymentsPricingPage'
 import { useDashboard } from './hooks/useDashboard'
 
 function App() {
@@ -48,7 +49,7 @@ function App() {
 
   const { page, route, params, navigate } = navigation
   const { pageLoading, pageError, retryPage, notice, dismissNotice, loadedPage } = feedback
-  const selfLoading = ['finance', 'conversations', 'profile', 'orders', 'agenda'].includes(page)
+  const selfLoading = ['finance', 'conversations', 'profile', 'orders', 'agenda', 'payments'].includes(page)
   // loadedPage evita mostrar por um instante os dados antigos ao voltar/avançar pelo navegador.
   const showLoading = !selfLoading && (pageLoading || (loadedPage !== page && !pageError)
     || (page === 'overview' && (!overviewPage.rentals || !overviewPage.revenue) && !pageError))
@@ -114,6 +115,7 @@ function App() {
           onBack={backToOrders} />}
         {page === 'conversations' && <ConversationsPage credentials={session.credentials} selectedId={route.id ?? null}
           onSelect={id => navigate('conversations', { id: id ?? undefined, replace: Boolean(route.id) })} />}
+        {page === 'payments' && <PaymentsPricingPage credentials={session.credentials} />}
         {page === 'profile' && <ProfilePage credentials={session.credentials} onCredentialsChanged={session.login} partner={partner} />}
         {page === 'ai' && !showLoading && !pageError && <AiContextPage {...aiPage} />}
         {page === 'notifications' && !showLoading && !pageError && notificationsPage.settings && (

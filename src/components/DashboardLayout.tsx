@@ -14,6 +14,7 @@ import {
   BellRing,
   Users,
   Wallet,
+  BadgeDollarSign,
   PanelLeftClose,
   PanelLeftOpen,
   X,
@@ -32,6 +33,7 @@ const navigation = [
   { page: 'conversations', label: 'Conversas', icon: MessagesSquare },
   { page: 'ai', label: 'Contexto da IA', icon: Sparkles },
   { page: 'notifications', label: 'Alertas da IA', icon: BellRing },
+  { page: 'payments', label: 'Pagamentos e preços', icon: BadgeDollarSign },
   { page: 'profile', label: 'Perfil e equipe', icon: Users },
 ] as const
 

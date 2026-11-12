@@ -152,6 +152,12 @@ export type AiUnansweredQuestion = {
 }
 export type AiNotificationSettings = { emails: string[]; whatsAppNumbers: string[] }
 
+/** Formas de pagamento aceitas pela locadora; com uma só, o site e a Isa deixam de oferecer a outra. */
+export type PaymentOptions = { pix: boolean; card: boolean; maxInstallments: number }
+export type PricingPlan = { id: 'essencial' | 'plus' | 'premium'; name: string; days: number; priceCents: number; popular: boolean }
+export type PricingCatalog = { version: string; dailyRateCents: number; maxDays: number; plans: PricingPlan[] }
+export type PricingInput = { dailyRateCents: number; maxDays: number; plans: PricingPlan[] }
+
 export type RentalOverview = {
   rentalDate: string
   rentedChairsByBranch: {
@@ -236,6 +242,8 @@ async function request<T>(credentials: string, path: string, init: RequestInit =
               ? 'Configure uma API Key com permissão de conhecimento no backend.'
             : response.status >= 500
               ? 'A API encontrou um erro interno. Confira os logs do backend.'
+              : response.status === 400 && (path.startsWith('/pricing') || path.startsWith('/payment-options'))
+                ? 'O servidor recusou os valores. Confira a diária, os planos e as formas de pagamento e tente de novo.'
               : response.status === 400 && path.startsWith('/account')
                 ? 'Senha atual incorreta, ou a nova senha não tem de 6 a 72 caracteres.'
               : response.status === 409
@@ -322,6 +330,12 @@ export const api = {
     request<AiNotificationSettings>(credentials, '/ai/notifications', {
       method: 'PUT', body: JSON.stringify(data),
     }),
+  paymentOptions: (credentials: string) => request<PaymentOptions>(credentials, '/payment-options'),
+  savePaymentOptions: (credentials: string, data: PaymentOptions) =>
+    request<PaymentOptions>(credentials, '/payment-options', { method: 'PUT', body: JSON.stringify(data) }),
+  pricing: (credentials: string) => request<PricingCatalog>(credentials, '/pricing'),
+  savePricing: (credentials: string, data: PricingInput) =>
+    request<PricingCatalog>(credentials, '/pricing', { method: 'PUT', body: JSON.stringify(data) }),
   recordAiUnanswered: (credentials: string, question: string) =>
     request<AiUnansweredQuestion>(credentials, '/ai/unanswered', {
       method: 'POST', body: JSON.stringify({ question }),

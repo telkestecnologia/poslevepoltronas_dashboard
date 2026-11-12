@@ -7,7 +7,7 @@ import {
 import './order-detail.css'
 import { api, ApiError, type Courier, type Order } from '../../api'
 import {
-  actorLabel, currency, dateLabel, dateTimeLabel, eventLabel, eventTone, isTestPayment, orderStatusLabel,
+  actorLabel, currency, dateLabel, dateTimeLabel, eventLabel, eventTone, isTestPayment, orderStatusLabel, paymentName,
   statusFlow, statusLabels, usePolling, weekdayDateLabel,
 } from '../../data/orders'
 import { branchLabel } from '../../utils/branches'
@@ -26,8 +26,8 @@ function noticesOf(order: Order): Notice[] {
   if (order.status === 'PAYMENT_REVIEW') list.push({ tone: 'danger', text: 'Não conseguimos receber o pagamento automaticamente. Confira a ocorrência e o recebimento no Asaas antes de orientar o cliente. A poltrona foi liberada, este pedido não está confirmado e não há devolução automática.' })
   if (order.id.startsWith('wa-contrato-')) list.push({ tone: 'info', text: 'Contrato enviado pelo WhatsApp e aguardando a assinatura da cliente. Entregador, fotos e problemas ficam disponíveis depois que ela assinar.' })
   else if (order.status === 'PENDING_CONTRACT') list.push({ tone: 'info', text: `Pedido ainda sem pagamento confirmado. Válido até ${until ?? 'o prazo da reserva'}; ao expirar, os dias bloqueados são liberados automaticamente.` })
-  if (order.status === 'PENDING_PAYMENT' && !order.paymentMock) list.push({ tone: 'info', text: `Aguardando a confirmação do PIX pelo Asaas. Reserva válida até ${until ?? 'o prazo informado'}.` })
-  if (order.paymentMock) list.push({ tone: 'warning', text: `Pedido de homologação com pagamento fictício: nenhum PIX foi criado e nenhum valor foi recebido.${order.status === 'PENDING_PAYMENT' && until ? ` A simulação deve ser confirmada antes de ${until}.` : ''}` })
+  if (order.status === 'PENDING_PAYMENT' && !order.paymentMock) list.push({ tone: 'info', text: `Aguardando a confirmação do ${paymentName(order)} pelo Asaas. Reserva válida até ${until ?? 'o prazo informado'}.` })
+  if (order.paymentMock) list.push({ tone: 'warning', text: `Pedido de homologação com pagamento fictício: nenhuma cobrança foi criada e nenhum valor foi recebido.${order.status === 'PENDING_PAYMENT' && until ? ` A simulação deve ser confirmada antes de ${until}.` : ''}` })
   if (order.source === 'MANUAL_PREVIEW') list.push({ tone: 'info', text: 'Pedido de demonstração. O pagamento é apenas simulado; ele não reserva a poltrona nem altera a disponibilidade do site.' })
   if (order.status === 'EXPIRED' || order.status === 'CANCELLED') list.push({ tone: 'info', text: `Pedido ${order.status === 'EXPIRED' ? 'expirado' : 'cancelado'}. A poltrona já está livre para outros aluguéis.` })
   return list
