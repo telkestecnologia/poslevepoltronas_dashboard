@@ -1,2 +1,41 @@
 /* Botões do topo do Financeiro lado a lado. */
 .finance-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+
+/* Saldo com o botão de período e filial; Entradas e Saídas como botões que filtram o extrato (igual ao app). */
+.finance-filter-button { justify-self: start; margin-top: 4px; padding: 7px 12px; border: 0; border-radius: 99px; background: #fff; color: var(--teal-dark); font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08); }
+.finance-kind { text-align: left; font: inherit; cursor: pointer; border: 2px solid transparent; }
+.finance-kind.inflow { background: #e8f6ef; }
+.finance-kind.outflow { background: #fdecea; }
+.finance-kind.inflow span, .finance-kind.inflow strong { color: #1f7a4a; }
+.finance-kind.outflow span, .finance-kind.outflow strong { color: #b8321f; }
+.finance-kind.selected.inflow { border-color: #2e9b5f; }
+.finance-kind.selected.outflow { border-color: #d4412d; }
+.finance-filter-modal .finance-filter-fields { display: grid; gap: 12px; margin: 14px 0; }
+.finance-filter-modal .finance-presets { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* Mês a mês num card só, com setas. */
+.finance-month { display: grid; gap: 14px; text-align: center; }
+.finance-month-nav { display: flex; align-items: center; gap: 10px; }
+.finance-month-nav div { display: grid; flex: 1; gap: 2px; }
+.finance-month-nav strong { color: var(--ink); font-size: 18px; text-transform: capitalize; }
+.finance-month-nav span { color: var(--teal-dark); font-size: 13px; font-weight: 700; }
+.finance-month-nav button { display: grid; place-items: center; width: 40px; height: 40px; border: 0; border-radius: 50%; background: #e5f4f5; color: var(--teal-dark); cursor: pointer; }
+.finance-month-nav button:disabled { opacity: 0.3; cursor: default; }
+.finance-month-figures { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.finance-month-figures div { display: grid; gap: 4px; padding: 14px; border-radius: 12px; }
+.finance-month-figures .inflow { background: #e8f6ef; color: #1f7a4a; }
+.finance-month-figures .outflow { background: #fdecea; color: #b8321f; }
+.finance-month-figures span { font-size: 13px; font-weight: 700; }
+.finance-month-figures strong { font-size: 20px; }
+.finance-month p { margin: 0; font-size: 16px; font-weight: 700; }
+.finance-month small { color: var(--muted); }
+
+/* Extrato colorido: verde entrou, vermelho saiu. */
+.finance-row.inflow, .finance-row.inflow td { background: #f2fbf6; }
+.finance-row.outflow, .finance-row.outflow td { background: #fef4f2; }
+.finance-entry-list .finance-row { border-radius: 10px; margin-bottom: 6px; }
+.finance-entry-icon.inflow { background: #2e9b5f !important; color: #fff !important; }
+.finance-entry-icon.outflow { background: #d4412d !important; color: #fff !important; }
+.finance-kind-tag { display: block; font-size: 10.5px; font-style: normal; font-weight: 800; letter-spacing: 0.4px; text-transform: uppercase; }
+.finance-row.inflow .finance-kind-tag { color: #1f7a4a; }
+.finance-row.outflow .finance-kind-tag { color: #b8321f; }

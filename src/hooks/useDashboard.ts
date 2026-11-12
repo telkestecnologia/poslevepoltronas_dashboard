@@ -472,13 +472,13 @@ export function useDashboard() {
   }
 
   /** Abre uma tela (ou um pedido/conversa pelo id). chairStatus abre Poltronas já filtrada. */
-  function navigate(nextPage: Page, options: { id?: string; chairStatus?: ChairFilter; replace?: boolean; fromList?: boolean } = {}) {
-    if (nextPage === 'chairs' && options.chairStatus !== undefined) {
+  function navigate(nextPage: Page, options: { id?: string; chairStatus?: ChairFilter; branchId?: string; replace?: boolean; fromList?: boolean } = {}) {
+    if (nextPage === 'chairs' && (options.chairStatus !== undefined || options.branchId !== undefined)) {
       setSearch('')
       setAppliedSearch('')
-      setBranchFilter('ALL')
+      setBranchFilter(options.branchId ?? 'ALL')
       setChairPage(0)
-      setStatusFilter(options.chairStatus)
+      setStatusFilter(options.chairStatus ?? 'ALL')
     }
     const changesPage = nextPage !== page
     go(routePath({ page: nextPage, id: options.id }), { replace: options.replace, state: options.fromList ? { fromOrders: true } : undefined })
@@ -557,6 +557,8 @@ export function useDashboard() {
       activeCounts: activeChairCounts,
       onNewBranch: () => openModal({ kind: 'newBranch' }),
       onEditBranch: (branch: Branch) => openModal({ kind: 'editBranch', branch }),
+      // Poltronas saiu do menu: abre pela filial, já filtrada nela.
+      onOpenChairs: (branch: Branch) => navigate('chairs', { branchId: branch.id }),
       onToggleFreeShipping: toggleBranchFreeShipping,
     },
     couriersPage: {

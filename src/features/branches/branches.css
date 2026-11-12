@@ -1,0 +1,10 @@
+/* Dentro da filial: foto da região ao fundo e os dois caminhos (igual ao app). */
+.branch-back { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 14px; border: 0; background: transparent; color: var(--teal-dark); font: inherit; font-weight: 700; cursor: pointer; }
+.branch-enter { position: relative; display: flex; align-items: flex-end; min-height: 440px; overflow: hidden; border-radius: 20px; background: #127a84 center / cover no-repeat; }
+.branch-enter::before { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(8, 40, 46, 0.1), rgba(8, 40, 46, 0.7)); }
+.branch-enter-body { position: relative; display: grid; gap: 8px; width: 100%; padding: 32px; color: #fff; }
+.branch-enter-body h1 { margin: 0; color: #fff; font-size: 34px; }
+.branch-enter-body p { margin: 0; color: #e6f4f5; }
+.branch-enter-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
+.branch-enter-actions .button { min-height: 48px; padding: 0 22px; font-size: 15px; }
+@media (max-width: 640px) { .branch-enter { min-height: 360px; } .branch-enter-body { padding: 22px; } .branch-enter-actions .button { flex: 1; justify-content: center; } }

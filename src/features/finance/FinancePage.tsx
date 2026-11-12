@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ArrowDownLeft, ArrowUpRight, ChevronDown, Download, RefreshCw, Search, Wallet, X } from 'lucide-react'
+import { ArrowDown, ArrowUp, ChevronDown, ChevronLeft, ChevronRight, Download, RefreshCw, Search, Wallet, X } from 'lucide-react'
 import { api, type Branch, type FinanceQuery, type FinancialEntry, type FinancialReport } from '../../api'
 import { branchLabel, onlyOfficialBranches } from '../../utils/branches'
 import { getMessage } from '../../utils/errors'
@@ -8,6 +8,8 @@ import { downloadFinanceReport } from './financeReport'
 import './financeReport.css'
 
 const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+const shortDay = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', timeZone: 'UTC' })
+const dateLabel = (iso: string) => shortDay.format(new Date(`${iso}T12:00:00Z`))
 const monthName = new Intl.DateTimeFormat('pt-BR', { month: 'short', year: '2-digit', timeZone: 'UTC' })
 const dateTime = new Intl.DateTimeFormat('pt-BR', {
   dateStyle: 'short', timeStyle: 'short', timeZone: 'America/Fortaleza',
@@ -52,6 +54,11 @@ export function FinancePage({ credentials }: { credentials: string }) {
   const [reloadKey, setReloadKey] = useState(0)
   const [branches, setBranches] = useState<Branch[]>([])
   const [report, setReport] = useState<FinancialReport | null>(null)
+  const [allReport, setAllReport] = useState<FinancialReport | null>(null)
+  const [monthIndex, setMonthIndex] = useState<number | null>(null)
+  const [kindFilter, setKindFilter] = useState<'ALL' | 'INFLOW' | 'OUTFLOW'>('ALL')
+  const [filterOpen, setFilterOpen] = useState(false)
+  const [draft, setDraft] = useState({ from: '', to: '', branchId: '' })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [reportBusy, setReportBusy] = useState(false)
@@ -76,8 +83,13 @@ export function FinancePage({ credentials }: { credentials: string }) {
       .then(data => { if (active) setReport(data) })
       .catch(error => { if (active) { setReport(null); setError(getMessage(error)) } })
       .finally(() => { if (active) setLoading(false) })
+    // Saldo acumulado e resultado por filial: sempre de todas as filiais, mesmo com uma filial escolhida (igual ao app).
+    void api.finance(credentials, { from, to, branchId: '', page: 0, size: 1 })
+      .then(data => { if (active) setAllReport(data) }).catch(() => {})
     return () => { active = false }
   }, [credentials, from, to, branchId, page, reloadKey])
+
+  useEffect(() => { setMonthIndex(null) }, [from, to, branchId])
 
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
@@ -98,9 +110,9 @@ export function FinancePage({ credentials }: { credentials: string }) {
     return () => clearTimeout(timer)
   }, [search])
 
-  useEffect(() => { setStatementPage(0) }, [debouncedSearch, statementFrom, statementTo, branchId])
+  useEffect(() => { setStatementPage(0) }, [debouncedSearch, statementFrom, statementTo, branchId, kindFilter])
 
-  const statementFiltered = debouncedSearch !== '' || statementFrom !== from || statementTo !== to
+  const statementFiltered = debouncedSearch !== '' || statementFrom !== from || statementTo !== to || kindFilter !== 'ALL'
 
   useEffect(() => {
     if (!statementFiltered) { setAllEntries(null); return }
@@ -114,18 +126,12 @@ export function FinancePage({ credentials }: { credentials: string }) {
   }, [credentials, statementFiltered, statementFrom, statementTo, branchId, reloadKey])
 
   const term = normalize(debouncedSearch)
-  const matches = allEntries?.filter(entry => term === '' || normalize([
+  const matches = allEntries?.filter(entry => kindFilter === 'ALL' || (kindFilter === 'INFLOW') === (entry.kind === 'INFLOW'))
+    .filter(entry => term === '' || normalize([
     entry.description, entry.category, entry.reference, entry.paymentMethod, branchLabel(entry.branchName),
   ].join(' ')).includes(term)) ?? []
 
-  function selectPreset(months: number) {
-    setFrom(monthStart(months - 1))
-    setTo(today())
-    setPage(0)
-  }
 
-  const maxChart = Math.max(1, ...(report?.monthly.map(bucket =>
-    Math.max(bucket.inflowCents, bucket.outflowCents)) ?? []))
   const statementTotal = statementFiltered ? matches.length : report?.total ?? 0
   const pages = Math.max(1, Math.ceil(statementTotal / pageSize))
   const currentPage = statementFiltered ? statementPage : page
@@ -133,7 +139,25 @@ export function FinancePage({ credentials }: { credentials: string }) {
   const visibleEntries = statementFiltered
     ? matches.slice(statementPage * pageSize, (statementPage + 1) * pageSize)
     : report?.entries ?? []
-  const visibleBranchResults = onlyOfficialBranches(report?.branches ?? [], branch => branch.branchName)
+  const visibleBranchResults = onlyOfficialBranches((allReport ?? report)?.branches ?? [], branch => branch.branchName)
+  const selectedBranch = branches.find(item => item.id === branchId)
+  const selectedBranchLabel = selectedBranch ? branchLabel(selectedBranch.name) : 'Todas as filiais'
+  const months = report?.monthly ?? []
+  const shownIndex = months.length === 0 ? -1 : Math.min(monthIndex ?? months.length - 1, months.length - 1)
+  const shownMonth = shownIndex >= 0 ? months[shownIndex] : undefined
+
+  function openFilter() {
+    setDraft({ from, to, branchId })
+    setFilterOpen(true)
+  }
+
+  function applyFilter() {
+    setFrom(draft.from)
+    setTo(draft.to)
+    setBranchId(draft.branchId)
+    setPage(0)
+    setFilterOpen(false)
+  }
   const maxBranchFlow = Math.max(1, ...visibleBranchResults.map(branch => branch.inflowCents + branch.outflowCents))
 
   // Relatório geral (o mesmo do app): todos os lançamentos do período e da filial escolhidos.
@@ -174,46 +198,55 @@ export function FinancePage({ credentials }: { credentials: string }) {
       Ainda não há movimentações financeiras recebidas pelo backend.
     </div>}
 
-    <section className="panel finance-filters" aria-label="Filtros do financeiro">
-      <div className="finance-presets" role="group" aria-label="Período rápido">
-        {[{ months: 1, label: 'Este mês' }, { months: 3, label: '3 meses' },
-          { months: 6, label: '6 meses' }].map(preset =>
-          <button type="button" key={preset.months}
-            className={from === monthStart(preset.months - 1) && to === today() ? 'selected' : ''}
-            onClick={() => selectPreset(preset.months)}>{preset.label}</button>)}
-      </div>
-      <div className="finance-filter-fields">
-        <RentalDatePicker date={from} onChange={value => { setFrom(value); setPage(0) }}
-          label="De" maxDate={to} />
-        <RentalDatePicker date={to} onChange={value => { setTo(value); setPage(0) }}
-          label="Até" minDate={from} maxDate={today()} />
-        <label className="finance-branch-filter">Filial
-          <select value={branchId} onChange={event => { setBranchId(event.target.value); setPage(0) }}>
-            <option value="">Todas as filiais</option>
-            {onlyOfficialBranches(branches, branch => branch.name).map(branch =>
-              <option value={branch.id} key={branch.id}>{branchLabel(branch.name)}</option>)}
-          </select>
-        </label>
-      </div>
-      {loading && <span className="finance-loading" role="status">Atualizando dados...</span>}
-    </section>
+    {filterOpen && <div className="modal-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) setFilterOpen(false) }}>
+      <section className="modal finance-filter-modal" role="dialog" aria-modal="true" aria-label="Período e filial">
+        <div className="modal-head"><div><span className="eyebrow">FINANCEIRO</span><h2>Período e filial</h2></div>
+          <button className="icon-button" aria-label="Fechar" onClick={() => setFilterOpen(false)}><X size={20} /></button></div>
+        <div className="finance-presets" role="group" aria-label="Período rápido">
+          {[{ months: 1, label: 'Este mês' }, { months: 3, label: '3 meses' }, { months: 6, label: '6 meses' }].map(preset =>
+            <button type="button" key={preset.months}
+              className={draft.from === monthStart(preset.months - 1) && draft.to === today() ? 'selected' : ''}
+              onClick={() => setDraft(current => ({ ...current, from: monthStart(preset.months - 1), to: today() }))}>{preset.label}</button>)}
+        </div>
+        <div className="finance-filter-fields">
+          <RentalDatePicker date={draft.from} onChange={value => setDraft(current => ({ ...current, from: value }))} label="De" maxDate={draft.to} />
+          <RentalDatePicker date={draft.to} onChange={value => setDraft(current => ({ ...current, to: value }))} label="Até" minDate={draft.from} maxDate={today()} />
+          <label className="finance-branch-filter">Filial
+            <select value={draft.branchId} onChange={event => setDraft(current => ({ ...current, branchId: event.target.value }))}>
+              <option value="">Todas as filiais</option>
+              {onlyOfficialBranches(branches, branch => branch.name).map(branch =>
+                <option value={branch.id} key={branch.id}>{branchLabel(branch.name)}</option>)}
+            </select>
+          </label>
+        </div>
+        <div className="modal-actions">
+          <button type="button" className="button secondary" onClick={() => setFilterOpen(false)}>Cancelar</button>
+          <button type="button" className="button primary" onClick={applyFilter}>Aplicar</button>
+        </div>
+      </section>
+    </div>}
 
     {error && <div className="form-error finance-error" role="alert">{error}</div>}
     {!report && loading && <div className="panel finance-initial-loading" role="status">Carregando financeiro...</div>}
     {report && <div className={loading ? 'finance-content is-loading' : 'finance-content'} aria-busy={loading}>
       <div className="finance-summary">
         <div className="panel finance-summary-card balance">
-          <span>Saldo acumulado</span><strong>{currency(report.balanceCents)}</strong>
-          <small>Entradas menos saídas registradas até agora</small>
+          <span>Saldo acumulado</span><strong>{currency((allReport ?? report).balanceCents)}</strong>
+          <small>Total de todas as filiais</small>
+          <button type="button" className="finance-filter-button" onClick={openFilter}>
+            📅 {dateLabel(from)} a {dateLabel(to)} • {selectedBranchLabel} <ChevronDown size={14} /></button>
+          {loading && <span className="finance-loading" role="status">Atualizando dados...</span>}
         </div>
-        <div className="panel finance-summary-card">
-          <span>Entradas no período</span><strong>{currency(report.inflowCents)}</strong>
-          <small>Valores recebidos</small>
-        </div>
-        <div className="panel finance-summary-card">
-          <span>Saídas no período</span><strong>{currency(report.outflowCents)}</strong>
-          <small>Despesas e devoluções</small>
-        </div>
+        <button type="button" className={`panel finance-summary-card finance-kind inflow${kindFilter === 'INFLOW' ? ' selected' : ''}`}
+          aria-pressed={kindFilter === 'INFLOW'} onClick={() => setKindFilter(current => current === 'INFLOW' ? 'ALL' : 'INFLOW')}>
+          <span>⬆ Entradas no período</span><strong>{currency(report.inflowCents)}</strong>
+          <small>{kindFilter === 'INFLOW' ? 'Mostrando só as entradas no extrato' : 'Clique para ver só as entradas'}</small>
+        </button>
+        <button type="button" className={`panel finance-summary-card finance-kind outflow${kindFilter === 'OUTFLOW' ? ' selected' : ''}`}
+          aria-pressed={kindFilter === 'OUTFLOW'} onClick={() => setKindFilter(current => current === 'OUTFLOW' ? 'ALL' : 'OUTFLOW')}>
+          <span>⬇ Saídas no período</span><strong>{currency(report.outflowCents)}</strong>
+          <small>{kindFilter === 'OUTFLOW' ? 'Mostrando só as saídas no extrato' : 'Clique para ver só as saídas'}</small>
+        </button>
         <div className="panel finance-summary-card">
           <span>Resultado do período</span><strong>{currency(report.netCents)}</strong>
           <small>Entradas menos saídas</small>
@@ -223,27 +256,22 @@ export function FinancePage({ credentials }: { credentials: string }) {
       <div className="finance-visuals">
         <section className="panel finance-chart" aria-labelledby="finance-chart-title">
           <div className="finance-panel-heading">
-            <div><span className="eyebrow">MOVIMENTAÇÃO</span><h2 id="finance-chart-title">Fluxo mensal</h2></div>
-            <div className="finance-chart-legend"><span className="inflow">Entradas</span><span className="outflow">Saídas</span></div>
+            <div><span className="eyebrow">MOVIMENTAÇÃO</span><h2 id="finance-chart-title">Mês a mês</h2></div>
           </div>
-          <div className="finance-chart-scroll">
-            <div className="finance-chart-bars">
-              {report.monthly.map((bucket, index) => <div className="finance-chart-month" key={bucket.start}
-                role="img" tabIndex={0} style={{ '--i': index } as React.CSSProperties}
-                aria-label={`${monthName.format(new Date(`${bucket.start}T12:00:00Z`))}: entradas ${currency(bucket.inflowCents)}, saídas ${currency(bucket.outflowCents)}`}>
-                <div className="finance-chart-plot">
-                  <span className="finance-chart-bar inflow" style={{ height: `${bucket.inflowCents / maxChart * 100}%` }} />
-                  <span className="finance-chart-bar outflow" style={{ height: `${bucket.outflowCents / maxChart * 100}%` }} />
-                  <span className="finance-chart-tooltip" aria-hidden="true">
-                    <small>{monthName.format(new Date(`${bucket.start}T12:00:00Z`))}</small>
-                    <span>Entradas <strong>{currency(bucket.inflowCents)}</strong></span>
-                    <span>Saídas <strong>{currency(bucket.outflowCents)}</strong></span>
-                  </span>
-                </div>
-                <span>{monthName.format(new Date(`${bucket.start}T12:00:00Z`))}</span>
-              </div>)}
+          {!shownMonth ? <div className="finance-branch-empty"><Wallet size={22} /> Sem movimentação no período.</div> : <div className="finance-month">
+            <div className="finance-month-nav">
+              <button type="button" aria-label="Mês anterior" disabled={shownIndex <= 0} onClick={() => setMonthIndex(shownIndex - 1)}><ChevronLeft size={20} /></button>
+              <div><strong>{monthName.format(new Date(`${shownMonth.start}T12:00:00Z`))}</strong><span>{selectedBranchLabel}</span></div>
+              <button type="button" aria-label="Próximo mês" disabled={shownIndex >= months.length - 1} onClick={() => setMonthIndex(shownIndex + 1)}><ChevronRight size={20} /></button>
             </div>
-          </div>
+            <div className="finance-month-figures">
+              <div className="inflow"><span>⬆ Entrou</span><strong>{currency(shownMonth.inflowCents)}</strong></div>
+              <div className="outflow"><span>⬇ Saiu</span><strong>{currency(shownMonth.outflowCents)}</strong></div>
+            </div>
+            <p className={shownMonth.inflowCents - shownMonth.outflowCents >= 0 ? 'finance-positive' : 'finance-negative'}>
+              {shownMonth.inflowCents - shownMonth.outflowCents >= 0 ? 'Sobrou' : 'Faltou'} {currency(Math.abs(shownMonth.inflowCents - shownMonth.outflowCents))}</p>
+            <small>{shownIndex + 1} de {months.length} meses</small>
+          </div>}
         </section>
         <section className="panel finance-branches" aria-labelledby="finance-branches-title">
           <div className="finance-panel-heading"><div><span className="eyebrow">FILIAIS</span>
@@ -290,22 +318,22 @@ export function FinancePage({ credentials }: { credentials: string }) {
               : 'Nenhuma movimentação neste período.'}</div>
           : <><div className="finance-table-scroll"><table className="finance-table">
             <thead><tr><th>Data</th><th>Descrição</th><th>Filial</th><th>Meio</th><th>Valor</th></tr></thead>
-            <tbody>{visibleEntries.map(entry => <tr key={entry.id}>
+            <tbody>{visibleEntries.map(entry => <tr key={entry.id} className={`finance-row ${entry.kind === 'INFLOW' ? 'inflow' : 'outflow'}`}>
               <td>{dateTime.format(new Date(entry.occurredAt))}</td>
               <td><span className={`finance-entry-icon ${entry.kind.toLowerCase()}`}>
-                {entry.kind === 'INFLOW' ? <ArrowDownLeft size={16} /> : <ArrowUpRight size={16} />}</span>
-                <span className="finance-entry-description"><strong>{entry.description}</strong>
+                {entry.kind === 'INFLOW' ? <ArrowUp size={16} /> : <ArrowDown size={16} />}</span>
+                <span className="finance-entry-description"><em className="finance-kind-tag">{entry.kind === 'INFLOW' ? '💰 Entrada' : '💸 Saída'}</em><strong>{entry.description}</strong>
                   <small>{entry.category}{entry.reference ? ` • Ref. ${entry.reference}` : ''}</small></span></td>
               <td>{branchLabel(entry.branchName)}</td><td>{entry.paymentMethod}</td>
               <td className={entry.kind === 'INFLOW' ? 'finance-positive' : 'finance-negative'}>
                 {entry.kind === 'INFLOW' ? '+' : '−'} {currency(entry.amountCents)}</td>
             </tr>)}</tbody>
           </table></div>
-          <ul className="finance-entry-list">{visibleEntries.map(entry => <li key={entry.id}>
+          <ul className="finance-entry-list">{visibleEntries.map(entry => <li key={entry.id} className={`finance-row ${entry.kind === 'INFLOW' ? 'inflow' : 'outflow'}`}>
             <details>
               <summary>
                 <span className={`finance-entry-icon ${entry.kind.toLowerCase()}`}>
-                  {entry.kind === 'INFLOW' ? <ArrowDownLeft size={16} /> : <ArrowUpRight size={16} />}</span>
+                  {entry.kind === 'INFLOW' ? <ArrowUp size={16} /> : <ArrowDown size={16} />}</span>
                 <span className="finance-entry-description"><strong>{entry.description}</strong>
                   <small>{dateTime.format(new Date(entry.occurredAt))}</small></span>
                 <b className={entry.kind === 'INFLOW' ? 'finance-positive' : 'finance-negative'}>
