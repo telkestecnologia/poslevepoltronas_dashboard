@@ -2132,7 +2132,6 @@ tbody tr:hover {
   background: #fff;
   box-shadow: 0 12px 35px rgba(40, 95, 96, 0.15);
   border: 1px solid #d9eee8;
-  border-left: 4px solid #67b99a;
   border-radius: 10px;
   padding: 11px 13px;
   display: flex;
@@ -2781,8 +2780,7 @@ tbody tr:hover {
 .agenda-city-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
 .agenda-city-heading h3 { color: var(--ink); font-size: 16px; }
 .agenda-city-heading span { color: var(--muted); font-size: 11px; white-space: nowrap; }
-.agenda-item { margin-top: 11px; padding: 13px 14px; border: 1px solid #e7efed; border-left: 3px solid var(--teal); border-radius: 9px; }
-.agenda-item.pickup { border-left-color: var(--coral); }
+.agenda-item { margin-top: 11px; padding: 13px 14px; border: 1px solid #e7efed; border-radius: 9px; }
 .agenda-item-top { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 9px; margin-bottom: 8px; }
 .agenda-kind { padding: 3px 7px; border-radius: 5px; font-size: 10px; font-weight: 800; }
 .agenda-kind.delivery { background: #e3f3f1; color: #147e81; }

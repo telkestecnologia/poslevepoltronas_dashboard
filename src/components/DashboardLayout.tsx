@@ -18,6 +18,7 @@ import {
   PanelLeftOpen,
   X,
 } from 'lucide-react'
+import './nav-count.css'
 import type { Staff } from '../api'
 import type { Page } from '../types'
 import { Brand } from './common'
@@ -46,6 +47,8 @@ type Props = {
   crumb?: string
   /** Menus com novidade desde a última visita (círculo vermelho). */
   badges?: ReadonlySet<Page>
+  /** Números em vermelho: conversas para responder e poltronas para entregar. */
+  counts?: Partial<Record<Page, number>>
   children: ReactNode
 }
 
@@ -58,6 +61,7 @@ export function DashboardLayout({
   onDismissNotice,
   crumb,
   badges,
+  counts,
   children,
 }: Props) {
   const hasNews = !!badges && badges.size > 0
@@ -109,14 +113,15 @@ export function DashboardLayout({
             <button
               key={item.page}
               className={`nav-item${page === item.page ? ' selected' : ''}`}
-              aria-label={badges?.has(item.page) ? `${item.label} (novidades)` : item.label}
+              aria-label={counts?.[item.page] ? `${item.label} (${counts[item.page]})` : badges?.has(item.page) ? `${item.label} (novidades)` : item.label}
               aria-current={page === item.page ? 'page' : undefined}
               title={collapsed ? item.label : undefined}
               onClick={() => navigate(item.page)}
             >
               <item.icon size={20} strokeWidth={1.9} />
               <span>{item.label}</span>
-              {badges?.has(item.page) && <i className="nav-badge" aria-hidden="true" />}
+              {counts?.[item.page] ? <i className="nav-count" aria-hidden="true">{counts[item.page]! > 99 ? '99+' : counts[item.page]}</i>
+                : badges?.has(item.page) && <i className="nav-badge" aria-hidden="true" />}
             </button>
           ))}
         </nav>

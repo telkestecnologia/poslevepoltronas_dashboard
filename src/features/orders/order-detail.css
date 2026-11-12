@@ -100,7 +100,7 @@
 .od-issue-form textarea:focus, .od-resolve input:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(26, 155, 170, 0.13); }
 .od-actions { display: flex; justify-content: flex-end; gap: 10px; }
 .od-issue { display: grid; gap: 6px; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--line); }
-.od-issue.open { border-color: #f2d3c2; background: #fffaf7; border-left: 4px solid var(--coral); }
+.od-issue.open { border-color: #f2d3c2; background: #fffaf7; }
 .od-issue-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .od-issue-head strong { color: var(--ink); font-size: 14px; }
 .od-issue p { font-size: 13px; color: #4f6268; line-height: 1.55; }
@@ -161,7 +161,7 @@
 .od-count.resolved { background: #edf7ee; color: #5c9b73; }
 
 /* Comunicado ao cliente ("saindo para entrega"), no topo do card de fotos do entregador. */
-.od-notice { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 16px; padding: 14px 16px; border-left: 4px solid #f47a52; border-radius: 12px; background: #fff4ec; }
+.od-notice { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 16px; padding: 14px 16px; border-radius: 12px; background: #fff4ec; }
 .od-notice-icon { display: grid; place-items: center; flex: none; width: 30px; height: 30px; border-radius: 50%; background: #f47a52; color: #fff; }
 .od-notice strong { display: block; margin-bottom: 2px; }
 .od-notice p { margin: 0; color: var(--ink); line-height: 1.45; }
@@ -177,7 +177,7 @@
 .od-timeline li .od-timeline-dot, .od-timeline li:first-child .od-timeline-dot { background: var(--kind); box-shadow: 0 0 0 1px var(--kind); }
 .od-timeline li:first-child .od-timeline-dot { transform: scale(1.3); }
 .od-timeline li:not(:last-child)::after { background: var(--kind-soft); width: 3px; }
-.od-timeline li > div { padding: 9px 11px; border-left: 4px solid var(--kind); border-radius: 10px; background: var(--kind-soft); }
+.od-timeline li > div { padding: 9px 11px; border-radius: 10px; background: var(--kind-soft); }
 .od-timeline p { background: rgba(255, 255, 255, 0.7); }
 .od-tl-kind { color: var(--kind); font-size: 10.5px; font-style: normal; font-weight: 800; letter-spacing: 0.6px; text-transform: uppercase; }
 .od-tl-legend { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }

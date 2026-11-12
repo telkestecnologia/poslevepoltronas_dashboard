@@ -1,0 +1,7 @@
+/* Número em vermelho no menu (conversas para responder, poltronas para entregar). */
+.nav-count {
+  display: grid; place-items: center; flex: none; min-width: 22px; height: 22px; margin-left: auto; padding: 0 6px;
+  border-radius: 99px; background: #e5484d; color: #fff; font-size: 12px; font-style: normal; font-weight: 700;
+  box-shadow: 0 0 0 2px #fff;
+}
+.sidebar.collapsed .nav-count { position: absolute; top: 4px; right: calc(50% - 22px); margin: 0; }

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ArrowLeft, Globe, MessageCircle, RefreshCw, Send } from 'lucide-react'
+import { ArrowLeft, Globe, MessageCircle, RefreshCw, Send, X } from 'lucide-react'
 import { api, type Conversation, type ConversationMessage } from '../../api'
 import { conversationState, customerLabel, customerNumber, nameColor, stageTone } from '../../utils/conversations'
 import { MessageImages, WhatsAppText } from './WhatsAppText'
@@ -31,6 +31,7 @@ export function ConversationsPage({ credentials, selectedId, onSelect }: Props) 
   const [chatError, setChatError] = useState('')
   const [filter, setFilter] = useState<Filter>('ALL')
   const [draft, setDraft] = useState('')
+  const [replyTo, setReplyTo] = useState<ConversationMessage | null>(null)
   const [busy, setBusy] = useState(false)
   const thread = useRef<HTMLDivElement>(null)
   const listRef = useRef<Conversation[]>([])
@@ -98,14 +99,17 @@ export function ConversationsPage({ credentials, selectedId, onSelect }: Props) 
 
   async function send(event: React.FormEvent) {
     event.preventDefault()
-    const text = draft.trim()
-    if (!text || !selected) return
+    const typed = draft.trim()
+    if (!typed || !selected) return
+    // Resposta a uma mensagem escolhida: vai com a pergunta citada, como no WhatsApp (igual ao app).
+    const text = replyTo?.content ? `_“${quoteOf(replyTo.content)}”_\n\n${typed}` : typed
     setBusy(true)
     try {
       const message = await api.replyConversation(credentials, selected.id, text)
       // A atualização automática pode ter trazido esta mensagem enquanto o envio respondia: não duplica.
       setMessages(current => current.some(item => item.id === message.id) ? current : [...current, message])
       setDraft('')
+      setReplyTo(null)
       setChatError('')
       await loadChat(selected.id)
       void loadList()
@@ -152,7 +156,7 @@ export function ConversationsPage({ credentials, selectedId, onSelect }: Props) 
               <span className={`wa-state ${rowState.tone}`}>{rowState.label} • {whatsAppRow ? 'WhatsApp' : 'Site'}</span>
               {(() => {
                 // Etapa do atendimento antes de abrir a conversa; sem pedido ainda, é o primeiro contato.
-                const stage = item.stage ?? (item.channel === 'WHATSAPP' ? 'Primeiro contato' : null)
+                const stage = item.stage ?? 'Primeiro contato'
                 return stage && <span className={`wa-stage ${stageTone(stage).tone}`}>{stageTone(stage).icon} {stage}</span>
               })()}
               {item.needsAttention && <span className="wa-problem"><strong>⚠️ {item.state === 'HUMAN' ? 'Pediu atendimento humano' : 'A Isa não soube responder'}</strong>
@@ -169,7 +173,7 @@ export function ConversationsPage({ credentials, selectedId, onSelect }: Props) 
             <div className="wa-chat-title"><strong>{customerLabel(selected)}{customerNumber(selected) && <small className="wa-number"> {customerNumber(selected)}</small>}</strong>
               <small className="wa-chat-meta"><span className={`wa-state ${state.tone}`}>{state.label}</span>
                 {` • ${selected.channel === 'WHATSAPP' ? 'WhatsApp' : 'Site'} • desde ${new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(selected.startedAt))}`}</small>
-              {selected.stage && <span className={`wa-stage ${stageTone(selected.stage).tone}`}>{stageTone(selected.stage).icon} {selected.stage}</span>}</div>
+              <span className={`wa-stage ${stageTone(selected.stage ?? 'Primeiro contato').tone}`}>{stageTone(selected.stage ?? 'Primeiro contato').icon} Etapa: {selected.stage ?? 'Primeiro contato'}</span></div>
             <button type="button" className={`wa-assign${selected.state === 'HUMAN' ? ' outline' : ''}`} disabled={busy} onClick={() => void toggleAssignment(selected)}>
               {selected.state === 'HUMAN' ? 'Devolver para a Isa' : 'Assumir conversa'}</button>
           </header>
@@ -178,7 +182,13 @@ export function ConversationsPage({ credentials, selectedId, onSelect }: Props) 
               const customer = message.role === 'CUSTOMER'
               const previous = messages[index - 1]
               const first = !previous || previous.role !== message.role || previous.staffName !== message.staffName
-              return <div key={message.id} className={`wa-bubble ${customer ? 'in' : 'out'}${first ? ' first' : ''}`}>
+              const missed = customer && (isUnanswered(messages[index + 1])
+                || (selected.needsAttention && !!message.content && message.content === selected.lastCustomerMessage))
+              const chosen = replyTo?.id === message.id
+              return <div key={message.id} className={`wa-bubble ${customer ? 'in' : 'out'}${first ? ' first' : ''}${missed ? ' missed' : ''}${chosen ? ' chosen' : ''}`}
+                role={customer ? 'button' : undefined} tabIndex={customer ? 0 : undefined} title={customer ? 'Clique para responder a esta mensagem' : undefined}
+                onClick={customer ? () => setReplyTo(chosen ? null : message) : undefined}>
+                {missed && <span className="wa-missed-tag">⚠️ A Isa não soube responder</span>}
                 {!customer && first && <span className="wa-author" style={{ color: message.role === 'AI' ? '#06cf9c' : nameColor(message.staffName ?? '') }}>
                   {message.role === 'AI' ? 'Isa (assistente)' : message.staffName ?? 'Equipe Pós Leve'}</span>}
                 <MessageImages images={message.images} />
@@ -192,7 +202,9 @@ export function ConversationsPage({ credentials, selectedId, onSelect }: Props) 
             {windowClosed ? <p className="wa-note">Passaram 24 horas desde a última mensagem do cliente. O WhatsApp só libera nova mensagem quando ele escrever de novo.</p>
               : <p className="wa-note">{selected.state === 'HUMAN'
                 ? 'Você está atendendo: a Isa não responde. Se você ficar 3 minutos sem responder, a conversa volta sozinha para a Isa.'
-                : 'A Isa está atendendo. Para digitar, clique em “Assumir conversa”.'}</p>}
+                : 'A Isa está atendendo. Para digitar, clique em “Assumir conversa”. Clique numa mensagem do cliente para responder a ela.'}</p>}
+            {replyTo && <div className="wa-quote"><div><strong>Respondendo a</strong><span>{replyTo.content}</span></div>
+              <button type="button" aria-label="Cancelar resposta" onClick={() => setReplyTo(null)}><X size={16} /></button></div>}
             <form className={`wa-input${selected.state === 'HUMAN' ? '' : ' locked'}`} onSubmit={event => void send(event)}>
               <input value={draft} onChange={event => setDraft(event.target.value)} maxLength={2000} aria-label="Mensagem"
                 disabled={selected.state !== 'HUMAN'}
@@ -204,4 +216,14 @@ export function ConversationsPage({ credentials, selectedId, onSelect }: Props) 
       </section>
     </div>
   </>
+}
+
+/** A pergunta que a Isa não soube responder: a que recebeu a frase de "vou confirmar com a equipe". */
+function isUnanswered(next?: ConversationMessage) {
+  return !!next && next.role === 'AI' && /vou confirmar com a nossa equipe/i.test(next.content ?? '')
+}
+
+function quoteOf(text: string) {
+  const line = text.replace(/\s+/g, ' ').trim()
+  return line.length > 120 ? `${line.slice(0, 117)}...` : line
 }
