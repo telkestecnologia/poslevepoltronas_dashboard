@@ -200,3 +200,8 @@
 .wa-photo { display: block; margin-bottom: 6px; color: inherit; text-decoration: none; }
 .wa-photo img { display: block; width: 260px; max-width: 100%; border-radius: 8px; }
 .wa-photo span { display: block; margin-top: 4px; font-size: 14px; }
+
+/* O que a Isa não soube responder aparece na lista, sem precisar abrir a conversa. */
+.wa-problem { display: grid; gap: 2px; margin-top: 6px; padding: 7px 9px; border-left: 4px solid #d4412d; border-radius: 8px; background: #fde8e4; text-align: left; }
+.wa-problem strong { color: #b8321f; font-size: 12px; }
+.wa-problem span { overflow: hidden; color: #5b2a22; font-size: 13px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }

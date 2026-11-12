@@ -150,7 +150,13 @@ export function ConversationsPage({ credentials, selectedId, onSelect }: Props) 
                 {`${item.lastMessageRole === 'AI' ? 'Isa: ' : item.lastMessageRole === 'STAFF' ? `${item.staffName ?? 'Equipe'}: ` : ''}${item.lastMessagePreview ?? ''}`}</span>
                 {item.needsAttention && <span className="wa-badge">!</span>}</span>
               <span className={`wa-state ${rowState.tone}`}>{rowState.label} • {whatsAppRow ? 'WhatsApp' : 'Site'}</span>
-              {item.stage && <span className={`wa-stage ${stageTone(item.stage).tone}`}>{stageTone(item.stage).icon} {item.stage}</span>}
+              {(() => {
+                // Etapa do atendimento antes de abrir a conversa; sem pedido ainda, é o primeiro contato.
+                const stage = item.stage ?? (item.channel === 'WHATSAPP' ? 'Primeiro contato' : null)
+                return stage && <span className={`wa-stage ${stageTone(stage).tone}`}>{stageTone(stage).icon} {stage}</span>
+              })()}
+              {item.needsAttention && <span className="wa-problem"><strong>⚠️ {item.state === 'HUMAN' ? 'Pediu atendimento humano' : 'A Isa não soube responder'}</strong>
+                {item.lastCustomerMessage && <span>“{item.lastCustomerMessage}”</span>}</span>}
             </span>
           </button>
         })}
