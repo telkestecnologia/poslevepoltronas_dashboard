@@ -46,3 +46,15 @@
 .overview-stat strong { color: var(--ink); font-family: 'Outfit', sans-serif; font-size: clamp(22px, 2.4vw, 30px); white-space: nowrap; }
 .overview-stat small { color: #91a2a4; font-size: 12px; }
 @media (max-width: 520px) { .overview-stats { gap: 10px; } .overview-stat { padding: 15px; } .overview-stat strong { font-size: 20px; } }
+
+/* Avisos urgentes chamam a atenção: faixa vermelha, selo URGENTE e contador pulsando. */
+.attention-list.has-urgent { border: 2px solid #d4552d; }
+.attention-row.urgent { background: #fff0ea; border-left: 5px solid #d4552d; }
+.attention-row.urgent:hover { background: #ffe4d9; }
+.attention-row.urgent .attention-icon { background: #d4552d; color: #fff; }
+.attention-row.urgent .attention-text strong { color: #b8401c; }
+.attention-tag { color: #d4552d; font-size: 11px; font-style: normal; font-weight: 800; letter-spacing: 1px; }
+.attention-count.urgent { background: #d4552d; animation: attention-pulse 1s ease-in-out infinite; }
+.attention-urgent-label { position: relative; padding: 3px 10px; border-radius: 99px; background: #d4552d; color: #fff; font-size: 12px; font-weight: 800; }
+@keyframes attention-pulse { 50% { transform: scale(1.25); box-shadow: 0 0 0 6px rgba(212, 85, 45, 0.18); } }
+@media (prefers-reduced-motion: reduce) { .attention-count.urgent { animation: none; } }

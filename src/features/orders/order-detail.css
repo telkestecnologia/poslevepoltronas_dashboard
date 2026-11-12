@@ -159,3 +159,9 @@
   .od-card { padding: 18px 16px; }
 }
 .od-count.resolved { background: #edf7ee; color: #5c9b73; }
+
+/* Comunicado ao cliente ("saindo para entrega"), no topo do card de fotos do entregador. */
+.od-notice { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 16px; padding: 14px 16px; border-left: 4px solid #f47a52; border-radius: 12px; background: #fff4ec; }
+.od-notice-icon { display: grid; place-items: center; flex: none; width: 30px; height: 30px; border-radius: 50%; background: #f47a52; color: #fff; }
+.od-notice strong { display: block; margin-bottom: 2px; }
+.od-notice p { margin: 0; color: var(--ink); line-height: 1.45; }

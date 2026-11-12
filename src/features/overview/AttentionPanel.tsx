@@ -165,7 +165,7 @@ export function AttentionPanel({ credentials, onOpen }: { credentials: string; o
     }
     for (const alert of alerts.filter(item => item.level === 'urgent' && !notified.has(item.key))) {
       notified.add(alert.key)
-      const notification = new Notification(`Pós Leve • ${alert.title}`, { body: alert.detail, icon: '/logo-pos-leve-icon.webp', tag: alert.key })
+      const notification = new Notification(`🚨 URGENTE • ${alert.title}`, { body: alert.detail, icon: '/logo-pos-leve-icon.webp', tag: alert.key, requireInteraction: true })
       notification.onclick = () => { window.focus(); onOpenRef.current(alert.target) }
     }
   }, [alerts, notifyOn])
@@ -177,14 +177,15 @@ export function AttentionPanel({ credentials, onOpen }: { credentials: string; o
   return <section className="glass-backdrop" aria-label="Notificações">
     <span className="glass-blob teal" /><span className="glass-blob coral" />
     <div className="attention-head"><h2>Precisa da sua atenção</h2>
-      {list.length > 0 && <span className={`attention-count${urgent ? ' urgent' : ''}`}>{list.length}</span>}</div>
+      {list.length > 0 && <span className={`attention-count${urgent ? ' urgent' : ''}`}>{list.length}</span>}
+      {urgent > 0 && <span className="attention-urgent-label">⚠ {urgent} {urgent === 1 ? 'urgente' : 'urgentes'}</span>}</div>
     {alerts === null ? <div className="glass-card attention-empty"><p>Carregando avisos…</p></div>
       : list.length === 0 ? <div className="glass-card attention-empty"><span className="attention-ok"><Check size={18} /></span>
         <div><strong>Tudo em dia</strong></div></div>
-        : <div className="glass-card attention-list">
-          {shown.map(alert => <button type="button" key={alert.key} className="attention-row" onClick={() => onOpen(alert.target)}>
+        : <div className={`glass-card attention-list${urgent ? ' has-urgent' : ''}`}>
+          {shown.map(alert => <button type="button" key={alert.key} className={`attention-row ${alert.level}`} onClick={() => onOpen(alert.target)}>
             <span className={`attention-icon ${alert.level}`}>{iconOf(alert)}</span>
-            <span className="attention-text"><strong>{alert.title}</strong><small>{alert.detail}</small></span>
+            <span className="attention-text">{alert.level === 'urgent' && <em className="attention-tag">URGENTE</em>}<strong>{alert.title}</strong><small>{alert.detail}</small></span>
             <ChevronRight size={16} />
           </button>)}
           {list.length > 3 && <button type="button" className="attention-more" onClick={() => setShowAll(value => !value)}>

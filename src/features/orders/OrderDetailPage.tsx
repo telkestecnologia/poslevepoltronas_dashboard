@@ -2,7 +2,7 @@ import { timeLabel } from '../../utils/time'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   AlertCircle, ArrowLeft, ArrowRight, CalendarClock, Check, CheckCircle2, ChevronDown, ChevronUp,
-  Info, MapPin, MessageCircle, Phone, RefreshCw, Truck, X,
+  Info, MapPin, Megaphone, MessageCircle, Phone, RefreshCw, Truck, X,
 } from 'lucide-react'
 import './order-detail.css'
 import { api, ApiError, type Courier, type Order } from '../../api'
@@ -123,6 +123,7 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
   const canExpand = order.source === 'CHECKOUT' && order.stockStart && order.stockEnd
     && !['EXPIRED', 'CANCELLED', 'COMPLETED', 'PAYMENT_REVIEW'].includes(order.status)
   const stockDiffers = order.stockStart && order.stockEnd && (order.stockStart !== order.start || order.stockEnd !== order.end)
+  const departure = [...order.history].reverse().find(event => event.action === 'DELIVERY_DEPARTURE_NOTIFIED')
   const openIssues = order.issues.filter(issue => issue.status === 'OPEN')
   const issues = [...openIssues, ...order.issues.filter(issue => issue.status !== 'OPEN')]
   const courier = couriers.find(item => item.id === order.courierId)
@@ -258,8 +259,8 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
 
           {canExpand && <div className="od-collapse">
             <button type="button" className="od-collapse-toggle" aria-expanded={stockOpen} onClick={() => setStockOpen(value => !value)}>
-              <span><strong>Entregar antes ou retirar depois</strong>
-                <small>Bloqueia dias extras da poltrona sem mudar o período cobrado nem o preço.</small></span>
+              <span><strong>Entrega antecipada ou retirada posterior</strong>
+                <small>Entrega {order.deliveryTime ? timeLabel(order.deliveryTime) : 'sem horário'} • Retirada {order.pickupTime ? timeLabel(order.pickupTime) : 'sem horário'}</small></span>
               {stockOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
             </button>
             {stockOpen && <div className="od-collapse-body">
@@ -283,6 +284,11 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
         </section>
 
         {!contractOnly && <section className="panel od-card od-evidence">
+          {departure && <div className="od-notice" role="note">
+            <span className="od-notice-icon"><Megaphone size={16} /></span>
+            <div><strong>Comunicado ao cliente</strong>
+              <p>✓ Avisado pelo WhatsApp que a poltrona saiu para entrega em {dateTimeLabel(departure.at)}.</p></div>
+          </div>}
           <OrderEvidencePanel key={`${order.id}:${order.status}`} credentials={credentials} orderId={order.id}
             status={order.status} couriers={couriers} />
         </section>}
