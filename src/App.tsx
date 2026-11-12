@@ -11,7 +11,7 @@ import { OrderDetailPage } from './features/orders/OrderDetailPage'
 import { AgendaPage } from './features/agenda/AgendaPage'
 import { AiContextPage } from './features/ai/AiContextPage'
 import { OverviewPage } from './features/overview/OverviewPage'
-import { NotificationsPage } from './features/notifications/NotificationsPage'
+import { AiAlertsTab, NotificationsPage } from './features/notifications/NotificationsPage'
 import { FinancePage } from './features/finance/FinancePage'
 import { ConversationsPage } from './features/conversations/ConversationsPage'
 import { AttentionPanel } from './features/overview/AttentionPanel'
@@ -92,15 +92,7 @@ function App() {
         {page === 'overview' && !showLoading && !pageError && overviewPage.rentals && overviewPage.revenue && (
           <OverviewPage
             rentals={overviewPage.rentals}
-            rentalDate={overviewPage.rentalDate}
-            onRentalDateChange={overviewPage.onRentalDateChange}
-            rentalLoading={overviewPage.rentalLoading}
-            rentalError={overviewPage.rentalError}
             revenue={overviewPage.revenue}
-            revenuePeriod={overviewPage.revenuePeriod}
-            onRevenuePeriodChange={overviewPage.onRevenuePeriodChange}
-            revenueLoading={overviewPage.revenueLoading}
-            revenueError={overviewPage.revenueError}
             onRefresh={overviewPage.onRefresh}
           >
             <AttentionPanel credentials={session.credentials}
@@ -120,7 +112,7 @@ function App() {
           onSelect={id => navigate('conversations', { id: id ?? undefined, replace: Boolean(route.id) })} />}
         {page === 'payments' && <PaymentsPricingPage credentials={session.credentials} />}
         {page === 'profile' && <ProfilePage credentials={session.credentials} onCredentialsChanged={session.login} partner={partner} />}
-        {page === 'ai' && !showLoading && !pageError && <AiContextPage {...aiPage} />}
+        {page === 'ai' && !showLoading && !pageError && <AiContextPage {...aiPage} alerts={<AiAlertsTab credentials={session.credentials} />} />}
         {page === 'notifications' && !showLoading && !pageError && notificationsPage.settings && (
           <NotificationsPage settings={notificationsPage.settings} onSave={notificationsPage.onSave} />
         )}

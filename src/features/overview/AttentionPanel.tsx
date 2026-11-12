@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { AlertTriangle, Armchair, Bell, BellOff, Check, ChevronRight, MessagesSquare, Sparkles } from 'lucide-react'
+import { AlertTriangle, Armchair, Check, ChevronRight, MessagesSquare, Sparkles } from 'lucide-react'
 import { api, type Conversation, type Order, type OrderStatus } from '../../api'
 import { fetchAllOrders, orderStatusLabel, paymentName, usePolling } from '../../data/orders'
 
@@ -7,6 +7,7 @@ const capitalized = (text: string) => text.charAt(0).toUpperCase() + text.slice(
 import type { Page } from '../../types'
 import { timeLabel } from '../../utils/time'
 import { helpDetail, helpTitle, needsHelp } from '../../utils/conversations'
+import { desktopNotificationsOn } from '../profile/NotificationToggle'
 import './attention.css'
 
 /** Para onde o aviso leva: o pedido ou a conversa daquele aviso, ou a tela com o filtro certo. */
@@ -14,7 +15,6 @@ export type AttentionTarget = { page: Page; id?: string; chairStatus?: 'MAINTENA
 type Alert = { key: string; level: 'urgent' | 'warning'; title: string; detail: string; target: AttentionTarget }
 
 const zone = 'America/Fortaleza'
-const notifyKey = 'posleve.desktop-notifications'
 const notified = new Set<string>()
 
 function todayIso() {
@@ -110,9 +110,6 @@ function buildAlerts({ orders, conversations, unanswered, maintenance }: {
   return items.sort((a, b) => (a.level === b.level ? 0 : a.level === 'urgent' ? -1 : 1))
 }
 
-function readSetting() {
-  try { return localStorage.getItem(notifyKey) === 'on' } catch { return false }
-}
 
 function iconOf(alert: Alert) {
   if (alert.target.page === 'conversations') return <MessagesSquare size={17} />
@@ -131,8 +128,9 @@ export function AttentionPanel({ credentials, onOpen }: { credentials: string; o
   const [unanswered, setUnanswered] = useState(0)
   const [maintenance, setMaintenance] = useState(0)
   const [showAll, setShowAll] = useState(false)
-  const [notifyOn, setNotifyOn] = useState(() => readSetting() && typeof Notification !== 'undefined' && Notification.permission === 'granted')
-  const [notifyMessage, setNotifyMessage] = useState('')
+  // As notificações são ligadas no Perfil; aqui só se lê a escolha.
+  const [notifyOn] = useState(desktopNotificationsOn)
+  const primed = useRef(false)
   const onOpenRef = useRef(onOpen)
   useEffect(() => { onOpenRef.current = onOpen }, [onOpen])
 
@@ -155,6 +153,12 @@ export function AttentionPanel({ credentials, onOpen }: { credentials: string; o
 
   useEffect(() => {
     if (!notifyOn || !alerts) return
+    // Os avisos que já estavam lá ao abrir a tela não viram notificação; só os que chegarem depois.
+    if (!primed.current) {
+      primed.current = true
+      alerts.forEach(alert => notified.add(alert.key))
+      return
+    }
     for (const alert of alerts.filter(item => item.level === 'urgent' && !notified.has(item.key))) {
       notified.add(alert.key)
       const notification = new Notification(`Pós Leve • ${alert.title}`, { body: alert.detail, icon: '/logo-pos-leve-icon.webp', tag: alert.key })
@@ -162,43 +166,17 @@ export function AttentionPanel({ credentials, onOpen }: { credentials: string; o
     }
   }, [alerts, notifyOn])
 
-  async function toggleNotifications() {
-    if (typeof Notification === 'undefined') return setNotifyMessage('Este navegador não mostra notificações.')
-    if (notifyOn) {
-      setNotifyOn(false)
-      try { localStorage.setItem(notifyKey, 'off') } catch { /* sem armazenamento local */ }
-      return
-    }
-    const permission = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission()
-    if (permission !== 'granted') return setNotifyMessage('O navegador bloqueou as notificações. Libere nas configurações do site.')
-    // Avisos que já estão na tela não viram notificação; só os que chegarem a partir de agora.
-    alerts?.forEach(alert => notified.add(alert.key))
-    try { localStorage.setItem(notifyKey, 'on') } catch { /* sem armazenamento local */ }
-    setNotifyMessage('')
-    setNotifyOn(true)
-    new Notification('Pós Leve • Notificações ativadas', { body: 'Você vai receber aqui os avisos urgentes do painel.', icon: '/logo-pos-leve-icon.webp' })
-  }
-
   const list = alerts ?? []
   const shown = showAll ? list : list.slice(0, 3)
   const urgent = list.filter(alert => alert.level === 'urgent').length
 
   return <section className="glass-backdrop" aria-label="Notificações">
     <span className="glass-blob teal" /><span className="glass-blob coral" />
-    <button type="button" className={`glass-card notify-toggle${notifyOn ? ' on' : ''}`} role="switch" aria-checked={notifyOn}
-      onClick={() => void toggleNotifications()}>
-      <span className="notify-icon">{notifyOn ? <Bell size={18} /> : <BellOff size={18} />}</span>
-      <span className="notify-text"><strong>{notifyOn ? 'Notificações ativadas' : 'Ativar notificações'}</strong>
-        <small>{notifyMessage || (notifyOn ? 'Você recebe um aviso no computador quando algo urgente acontecer, como uma mensagem que a Isa não conseguiu responder.'
-          : 'Receba no computador os avisos urgentes, como pagamento em análise ou mensagem que a Isa não soube responder.')}</small></span>
-      <span className={`notify-switch${notifyOn ? ' on' : ''}`}><i /></span>
-    </button>
-
     <div className="attention-head"><h2>Precisa da sua atenção</h2>
       {list.length > 0 && <span className={`attention-count${urgent ? ' urgent' : ''}`}>{list.length}</span>}</div>
     {alerts === null ? <div className="glass-card attention-empty"><p>Carregando avisos…</p></div>
       : list.length === 0 ? <div className="glass-card attention-empty"><span className="attention-ok"><Check size={18} /></span>
-        <div><strong>Tudo em dia</strong><small>Nenhum pedido, entrega ou conversa precisando de você agora.</small></div></div>
+        <div><strong>Tudo em dia</strong></div></div>
         : <div className="glass-card attention-list">
           {shown.map(alert => <button type="button" key={alert.key} className="attention-row" onClick={() => onOpen(alert.target)}>
             <span className={`attention-icon ${alert.level}`}>{iconOf(alert)}</span>

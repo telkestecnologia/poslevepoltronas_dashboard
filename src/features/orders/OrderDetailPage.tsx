@@ -7,7 +7,7 @@ import {
 import './order-detail.css'
 import { api, ApiError, type Courier, type Order } from '../../api'
 import {
-  actorLabel, currency, dateLabel, dateTimeLabel, eventLabel, eventTone, isTestPayment, orderStatusLabel, paymentName,
+  actorLabel, currency, dateLabel, dateTimeLabel, eventLabel, eventTone, orderStatusLabel, paymentName,
   statusFlow, statusLabels, usePolling, weekdayDateLabel,
 } from '../../data/orders'
 import { branchLabel } from '../../utils/branches'
@@ -27,8 +27,6 @@ function noticesOf(order: Order): Notice[] {
   if (order.id.startsWith('wa-contrato-')) list.push({ tone: 'info', text: 'Contrato enviado pelo WhatsApp e aguardando a assinatura da cliente. Entregador, fotos e problemas ficam disponíveis depois que ela assinar.' })
   else if (order.status === 'PENDING_CONTRACT') list.push({ tone: 'info', text: `Pedido ainda sem pagamento confirmado. Válido até ${until ?? 'o prazo da reserva'}; ao expirar, os dias bloqueados são liberados automaticamente.` })
   if (order.status === 'PENDING_PAYMENT' && !order.paymentMock) list.push({ tone: 'info', text: `Aguardando a confirmação do ${paymentName(order)} pelo Asaas. Reserva válida até ${until ?? 'o prazo informado'}.` })
-  if (order.paymentMock) list.push({ tone: 'warning', text: `Pedido de homologação com pagamento fictício: nenhuma cobrança foi criada e nenhum valor foi recebido.${order.status === 'PENDING_PAYMENT' && until ? ` A simulação deve ser confirmada antes de ${until}.` : ''}` })
-  if (order.source === 'MANUAL_PREVIEW') list.push({ tone: 'info', text: 'Pedido de demonstração. O pagamento é apenas simulado; ele não reserva a poltrona nem altera a disponibilidade do site.' })
   if (order.status === 'EXPIRED' || order.status === 'CANCELLED') list.push({ tone: 'info', text: `Pedido ${order.status === 'EXPIRED' ? 'expirado' : 'cancelado'}. A poltrona já está livre para outros aluguéis.` })
   return list
 }
@@ -133,7 +131,7 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
     ? `https://www.google.com/maps?q=${order.latitude},${order.longitude}`
     : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${order.address}, ${order.municipalityName} - ${order.municipalityUf}`)}`
   const stepLabel = (status: typeof statusFlow[number]) =>
-    isTestPayment(order) && status === 'PAYMENT_CONFIRMED' ? 'Teste confirmado' : statusLabels[status]
+    statusLabels[status]
 
   function advance() {
     if (!order || !nextStatus) return
@@ -151,7 +149,7 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
     try {
       await api.simulateOrderPix(credentials, order.id)
       await load()
-      setPixNote('Pagamento confirmado no sandbox do Asaas. O pedido muda de status assim que o Asaas avisar o recebimento.')
+      setPixNote('Pagamento enviado. O pedido muda de status assim que o Asaas avisar o recebimento.')
     } catch (cause) {
       setError(getMessage(cause))
     } finally {
@@ -359,9 +357,7 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
             {order.source === 'CHECKOUT' && <div className="od-total"><dt>Total</dt><dd>{currency(order.totalCents)}</dd></div>}
           </dl>
           {order.status === 'PENDING_PAYMENT' && order.paymentSandbox && !order.paymentMock && <div className="od-sandbox admin-only">
-            <p className="order-muted">Pagamento de teste (Pix ou cartão): só é pago quando alguém paga no sandbox do Asaas (por este
-              botão, que usa a ação do sandbox no Pix e o cartão de teste no cartão), pelo mesmo caminho de um pagamento real.</p>
-            <button className="button primary" disabled={busy} onClick={() => void payTestPix()}>Pagar teste no Asaas</button>
+            <button className="button primary" disabled={busy} onClick={() => void payTestPix()}>Pagar no Asaas</button>
             <button className="button secondary" disabled={busy} onClick={() => void checkPix()}>Consultar recebimento no Asaas</button>
             {pixNote && <p className="order-muted" role="status">{pixNote}</p>}
           </div>}

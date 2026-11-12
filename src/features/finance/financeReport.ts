@@ -43,11 +43,6 @@ export async function downloadFinanceReport({ report, entries, from, to, branch 
   doc.setDrawColor(22, 136, 147).setLineWidth(2).line(margin, y, width - margin, y)
   y += 18
 
-  if (report.mode === 'DEMO') {
-    doc.setFillColor(248, 242, 230).roundedRect(margin, y, width - margin * 2, 24, 4, 4, 'F')
-    doc.setTextColor(122, 99, 50).text('Dados de demonstração: os valores são fictícios.', margin + 10, y + 15)
-    y += 34
-  }
 
   const totals = [
     { label: 'Saldo acumulado', value: report.balanceCents, color: [42, 50, 54] as const },

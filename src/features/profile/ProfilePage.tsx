@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { NotificationToggle } from './NotificationToggle'
 import { ArrowRight, ChevronRight, KeyRound, Mail, Plus, UserRound, Users, X } from 'lucide-react'
 import { api, type AccessLevel, type Account, type Branch, type TeamMember, type TeamMemberInput } from '../../api'
 import { branchLabel } from '../../utils/branches'
@@ -45,8 +46,7 @@ export function ProfilePage({ credentials, onCredentialsChanged, partner = false
 
   return <>
     <div className="page-heading">
-      <div><span className="eyebrow">CONTA • EQUIPE</span><h1>Perfil e equipe</h1>
-        <p>Seus dados de acesso e as pessoas da equipe que usam o painel e o app.</p></div>
+      <div><span className="eyebrow">CONTA • EQUIPE</span><h1>Perfil e equipe</h1></div>
     </div>
     {notice && <div className="profile-notice" role="status">{notice}<button aria-label="Fechar aviso" onClick={() => setNotice('')}><X size={16} /></button></div>}
     {error && <div className="form-error" role="alert">{error}</div>}
@@ -67,6 +67,7 @@ export function ProfilePage({ credentials, onCredentialsChanged, partner = false
           <button className="button secondary" onClick={() => setDialog({ kind: 'password' })}><KeyRound size={16} /> Alterar senha</button>
           <button className="button secondary" onClick={() => setDialog({ kind: 'email' })}><Mail size={16} /> Alterar e-mail</button>
         </div>
+        <NotificationToggle />
         {account && !account.phone && <p className="field-help">Cadastre seu celular com WhatsApp na lista da equipe (toque no seu nome). É para ele que vai o código de “Esqueci minha senha”.</p>}
       </section>
 

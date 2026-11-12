@@ -121,8 +121,7 @@ export function ConversationsPage({ credentials, selectedId, onSelect }: Props) 
 
   return <>
     <div className="page-heading with-action">
-      <div><span className="eyebrow">ATENDIMENTO • ISA</span><h1>Conversas</h1>
-        <p>Conversas do site e do WhatsApp da Pós Leve, (85) 93618-1059. Assuma quando a Isa precisar de ajuda.</p></div>
+      <div><span className="eyebrow">WHATSAPP E SITE • ISA</span><h1>Atendimento</h1></div>
       <button className="button secondary" type="button" onClick={() => void loadList()}><RefreshCw size={16} /> Atualizar</button>
     </div>
 

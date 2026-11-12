@@ -35,7 +35,6 @@ export function BranchesPage({ branches, activeCounts, onNewBranch, onEditBranch
         <div>
           <span className="eyebrow">FILIAIS • PÓS LEVE</span>
           <h1>Filiais</h1>
-          <p>Cadastre as cidades atendidas e ative frete grátis por filial. Os valores normais ficam salvos.</p>
         </div>
         {branches.length < OFFICIAL_BRANCH_COUNT && (
           <button className="button primary admin-only" onClick={onNewBranch}>

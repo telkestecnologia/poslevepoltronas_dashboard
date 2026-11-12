@@ -40,7 +40,7 @@ export function paymentName(order: Pick<Order, 'history'>) {
 
 export function orderStatusLabel(order: Order) {
   if (isTestPayment(order) && order.status === 'PENDING_PAYMENT') return 'Aguardando simulação'
-  if (isTestPayment(order) && order.status === 'PAYMENT_CONFIRMED') return 'Teste confirmado'
+  if (isTestPayment(order) && order.status === 'PAYMENT_CONFIRMED') return 'Pagamento confirmado'
   const kind = paymentKind(order)
   if (order.status === 'PENDING_PAYMENT') return kind === 'pix' ? 'Aguardando Pix' : kind === 'card' ? 'Aguardando cartão' : 'Aguardando pagamento'
   if (order.status === 'PAYMENT_REVIEW') return kind === 'pix' ? 'Pix em análise' : kind === 'card' ? 'Cartão em análise' : 'Pagamento em análise'
@@ -58,8 +58,8 @@ const eventLabels: Record<string, string> = {
   CANCELLED: 'Pedido cancelado', COURIER_ASSIGNED: 'Entregador alterado', ISSUE_OPENED: 'Problema registrado',
   ISSUE_RESOLVED: 'Problema resolvido', PIX_REQUESTED: 'Pix gerado', PIX_CONFIRMED: 'Pagamento com Pix confirmado',
     CARD_REQUESTED: 'Pagamento com cartão solicitado', CARD_CONFIRMED: 'Pagamento com cartão aprovado',
-  PIX_REVIEW: 'Pagamento em análise', MOCK_PAYMENT_REQUESTED: 'Pagamento de teste gerado',
-  MOCK_PAYMENT_CONFIRMED: 'Pagamento de teste confirmado',
+  PIX_REVIEW: 'Pagamento em análise', MOCK_PAYMENT_REQUESTED: 'Pagamento gerado',
+  MOCK_PAYMENT_CONFIRMED: 'Pagamento confirmado',
 }
 
 /** Texto da linha do tempo para cada código de evento gravado pelo backend no histórico do pedido. */
@@ -79,7 +79,7 @@ export function eventTone(action: string): EventTone {
 }
 
 const actorLabels: Record<string, string> = {
-  system: 'Sistema', customer: 'Cliente', inter: 'Banco Inter', asaas: 'Asaas', mock: 'Teste', whatsapp: 'WhatsApp', ai: 'Isa',
+  system: 'Sistema', customer: 'Cliente', inter: 'Banco Inter', asaas: 'Asaas', mock: 'Pagamento', whatsapp: 'WhatsApp', ai: 'Isa',
 }
 
 /** Quem fez o passo: o backend grava códigos (system, customer, inter...) ou o e-mail de quem estava logado. */

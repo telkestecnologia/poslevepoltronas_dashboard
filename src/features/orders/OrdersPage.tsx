@@ -3,7 +3,7 @@ import { ArrowRight, ChevronLeft, ChevronRight, ClipboardList, RefreshCw, Search
 import './orders.css'
 import { api, type Branch, type Order, type OrderPage, type OrderQuery, type OrderStatus } from '../../api'
 import { EmptyState } from '../../components/common'
-import { dateLabel, isTestPayment, orderStatusLabel, usePolling } from '../../data/orders'
+import { dateLabel, orderStatusLabel, usePolling } from '../../data/orders'
 import { replaceQuery } from '../../router'
 import { branchLabel, onlyOfficialBranches } from '../../utils/branches'
 import { getMessage } from '../../utils/errors'
@@ -11,15 +11,14 @@ import { getMessage } from '../../utils/errors'
 // Os mesmos cartões do app. Clicar em um filtra a lista (no servidor); clicar de novo limpa.
 type Summary = { key: string; label: string; statuses?: OrderStatus[]; issues?: boolean; tone: string }
 const summaries: Summary[] = [
-  { key: 'entregar', label: 'Entregar poltronas', statuses: ['PAYMENT_CONFIRMED', 'DELIVERY_PENDING'], tone: 'action' },
-  { key: 'retirar', label: 'Retirar poltronas', statuses: ['PICKUP_PENDING'], tone: 'action' },
   { key: 'contrato', label: 'Aguardando contrato', statuses: ['PENDING_CONTRACT'], tone: 'waiting' },
   { key: 'pix', label: 'Aguardando pagamento', statuses: ['PENDING_PAYMENT'], tone: 'waiting' },
   { key: 'analise', label: 'Pagamento em análise', statuses: ['PAYMENT_REVIEW'], tone: 'danger' },
-  { key: 'pago', label: 'Pagamento confirmado', statuses: ['PAYMENT_CONFIRMED'], tone: 'moving' },
-  { key: 'operacao', label: 'Em operação', statuses: ['DELIVERY_PENDING', 'IN_USE', 'PICKUP_PENDING'], tone: 'moving' },
+  { key: 'entregar', label: 'Entregar', statuses: ['PAYMENT_CONFIRMED', 'DELIVERY_PENDING'], tone: 'action' },
+  { key: 'em-uso', label: 'Em uso', statuses: ['IN_USE'], tone: 'moving' },
+  { key: 'retirar', label: 'Retirar', statuses: ['PICKUP_PENDING'], tone: 'action' },
   { key: 'concluidos', label: 'Concluídos', statuses: ['COMPLETED'], tone: 'done' },
-  { key: 'encerrados', label: 'Expirados ou cancelados', statuses: ['EXPIRED', 'CANCELLED'], tone: 'closed' },
+  { key: 'encerrados', label: 'Cancelados ou expirados', statuses: ['EXPIRED', 'CANCELLED'], tone: 'closed' },
   { key: 'problemas', label: 'Problemas em aberto', issues: true, tone: 'danger' },
 ]
 
@@ -112,8 +111,7 @@ export function OrdersPage({ credentials, params, onOpenOrder }: Props) {
 
   return <>
     <div className="page-heading with-action">
-      <div><span className="eyebrow">OPERAÇÃO • PEDIDOS</span><h1>Gestão de pedidos</h1>
-        <p>Acompanhe pedidos pendentes, entregas e problemas de cada aluguel. Clique em um resumo para filtrar.</p></div>
+      <div><span className="eyebrow">OPERAÇÃO • PEDIDOS</span><h1>Gestão de pedidos</h1></div>
       <div className="order-heading-actions">
         <button className="button secondary" disabled={refreshing} onClick={() => void refresh()}>
           <RefreshCw size={16} /> {refreshing ? 'Atualizando...' : 'Atualizar lista'}</button>
@@ -165,9 +163,7 @@ export function OrdersPage({ credentials, params, onOpenOrder }: Props) {
             const issues = openIssuesOf(order)
             return <tr key={order.id} className="order-row" onClick={() => onOpenOrder(order.id)}>
               <td><div className="courier-identity"><strong>{order.customerName}</strong>
-                <small>{order.municipalityName} • {branchLabel(order.branchName)}</small>
-                {order.source === 'MANUAL_PREVIEW' && <small className="order-preview-label">Demonstração</small>}
-                {isTestPayment(order) && <small className="order-preview-label">Pagamento de teste</small>}</div></td>
+                <small>{order.municipalityName} • {branchLabel(order.branchName)}</small></div></td>
               <td>{dateLabel(order.start)} a {dateLabel(order.end)}</td>
               <td>{order.chairCode}</td>
               <td><span className={`order-status status-${order.status.toLowerCase()}`}>{orderStatusLabel(order)}</span></td>

@@ -71,7 +71,6 @@ export function ChairsPage(props: Props) {
         <div>
           <span className="eyebrow">ESTOQUE • PÓS LEVE</span>
           <h1>Poltronas</h1>
-          <p>Cadastre equipamentos e acompanhe sua condição operacional.</p>
         </div>
         <button className="button primary admin-only" onClick={onNewChair} disabled={branches.length === 0}>
           <Plus size={18} /> Nova poltrona

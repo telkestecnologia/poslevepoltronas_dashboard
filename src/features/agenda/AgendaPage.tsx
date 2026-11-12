@@ -198,7 +198,6 @@ export function AgendaPage({ credentials, onOpenOrder }: Props) {
   return <>
     <div className="page-heading with-action">
       <div><span className="eyebrow">OPERAÇÃO • AGENDA</span><h1>Agenda de entregas e retiradas</h1>
-        <p>Acompanhe os serviços previstos e veja quais acontecem na mesma cidade. Clique em um serviço para abrir o pedido.</p>
         <div className="agenda-today" aria-live="polite">
           <span><strong>{todayCount?.deliveries ?? 0}</strong> {todayCount?.deliveries === 1 ? 'entrega' : 'entregas'} hoje</span>
           <span><strong>{todayCount?.pickups ?? 0}</strong> {todayCount?.pickups === 1 ? 'retirada' : 'retiradas'} hoje</span>
@@ -207,7 +206,7 @@ export function AgendaPage({ credentials, onOpenOrder }: Props) {
         <RefreshCw size={16} /> {refreshing ? 'Atualizando...' : 'Atualizar agenda'}</button>
     </div>
     {error && <div className="form-error" role="alert">{error}</div>}
-    <p className="agenda-explanation panel">As datas e os horários vêm dos pedidos. Dias extras de estoque bloqueado não alteram esta agenda. Pedidos sem pagamento confirmado e demonstrações não aparecem.</p>
+    <p className="agenda-explanation panel">As datas e os horários vêm dos pedidos. Dias extras de estoque bloqueado não alteram esta agenda. Pedidos sem pagamento confirmado não aparecem.</p>
 
     <div className="agenda-filters panel" role="group" aria-label="Filtros da agenda">
       <label>Filial

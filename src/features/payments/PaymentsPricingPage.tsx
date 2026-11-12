@@ -119,7 +119,6 @@ export function PaymentsPricingPage({ credentials }: { credentials: string }) {
       <div>
         <span className="eyebrow">CONFIGURAÇÕES • PÓS LEVE</span>
         <h1>Pagamentos e preços</h1>
-        <p>Escolha como o cliente pode pagar e ajuste a diária e os planos. As mudanças valem para o site e para a Isa no WhatsApp.</p>
       </div>
     </div>
 

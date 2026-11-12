@@ -159,7 +159,6 @@ export function FinancePage({ credentials }: { credentials: string }) {
       <div>
         <span className="eyebrow">GESTÃO • FINANCEIRO</span>
         <h1>Financeiro</h1>
-        <p>Acompanhe as entradas e saídas registradas no caixa por período e filial.</p>
       </div>
       <div className="finance-actions">
         <button type="button" className="button secondary" onClick={() => void generateReport()}
@@ -171,10 +170,6 @@ export function FinancePage({ credentials }: { credentials: string }) {
     {reportError && <div className="form-error" role="alert">{reportError}</div>}
     {reportSaved && <div className="finance-info" role="status">{reportSaved}</div>}
 
-    {report?.mode === 'DEMO' && <div className="finance-demo" role="note">
-      <strong>Dados de demonstração</strong>
-      <span>Os valores abaixo são fictícios e não representam dinheiro recebido pela empresa.</span>
-    </div>}
     {report?.mode === 'EMPTY' && <div className="finance-info" role="status">
       Ainda não há movimentações financeiras recebidas pelo backend.
     </div>}

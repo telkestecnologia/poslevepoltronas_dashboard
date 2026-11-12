@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { BookOpen, MessageCircle, Pencil, Plus, RefreshCw, Search, Trash2 } from 'lucide-react'
 import type { AiKnowledge, AiKnowledgeInput, AiUnansweredQuestion } from '../../api'
 import { EmptyState } from '../../components/common'
@@ -15,6 +15,8 @@ type Props = {
   onDeleteUnanswered: (id: string) => Promise<void>
   onRecordUnanswered: (question: string) => Promise<void>
   onRefresh: () => void
+  /** Aba Avisos: quem da equipe é avisado quando a Isa não sabe responder. */
+  alerts?: ReactNode
 }
 
 function dateLabel(value: string) {
@@ -28,8 +30,8 @@ function matches(text: string, search: string) {
   return normalize(text).includes(normalize(search.trim()))
 }
 
-export function AiContextPage({ knowledge, unanswered, onCreateKnowledge, onUpdateKnowledge, onDeleteKnowledge, onAnswerUnanswered, onDeleteUnanswered, onRecordUnanswered, onRefresh }: Props) {
-  const [tab, setTab] = useState<'knowledge' | 'unanswered'>('knowledge')
+export function AiContextPage({ knowledge, unanswered, onCreateKnowledge, onUpdateKnowledge, onDeleteKnowledge, onAnswerUnanswered, onDeleteUnanswered, onRecordUnanswered, onRefresh, alerts }: Props) {
+  const [tab, setTab] = useState<'knowledge' | 'unanswered' | 'alerts'>('knowledge')
   const [search, setSearch] = useState('')
   const [editor, setEditor] = useState<AiEditor | null>(null)
   const [busy, setBusy] = useState(false)
@@ -37,7 +39,7 @@ export function AiContextPage({ knowledge, unanswered, onCreateKnowledge, onUpda
   const visibleKnowledge = knowledge.filter(entry => matches(`${entry.question} ${entry.answer}`, search))
   const visibleUnanswered = unanswered.filter(entry => matches(entry.question, search))
 
-  function switchTab(next: 'knowledge' | 'unanswered') {
+  function switchTab(next: 'knowledge' | 'unanswered' | 'alerts') {
     setTab(next)
     setSearch('')
     setError('')
@@ -100,31 +102,18 @@ export function AiContextPage({ knowledge, unanswered, onCreateKnowledge, onUpda
       <div className="page-heading with-action ai-page-heading">
         <div>
           <span className="eyebrow">ATENDIMENTO • PÓS LEVE</span>
-          <h1>Contexto da IA</h1>
-          <p>Cadastre respostas para os clientes e acompanhe as dúvidas pendentes.</p>
+          <h1>O que a Isa sabe</h1>
         </div>
         <div className="ai-heading-actions">
           <button className="button secondary" type="button" onClick={onRefresh}>
             <RefreshCw size={17} /> Atualizar
           </button>
-          <button className="button primary admin-only" type="button" onClick={() => openEditor(tab === 'knowledge' ? { kind: 'knowledge' } : { kind: 'unanswered' })}>
+          {tab !== 'alerts' && <button className="button primary admin-only" type="button" onClick={() => openEditor(tab === 'knowledge' ? { kind: 'knowledge' } : { kind: 'unanswered' })}>
             <Plus size={18} /> {tab === 'knowledge' ? 'Nova pergunta e resposta' : 'Registrar dúvida'}
-          </button>
+          </button>}
         </div>
       </div>
 
-      <div className="partner-only partner-banner">Você pode consultar o que a Isa sabe. Para mudar uma resposta, fale com o administrador.</div>
-
-      <div className="ai-summary">
-        <div className="panel">
-          <BookOpen size={21} />
-          <span><small>Respostas no contexto</small><strong>{knowledge.length}</strong></span>
-        </div>
-        <div className="panel">
-          <MessageCircle size={21} />
-          <span><small>Dúvidas sem resposta</small><strong>{unanswered.length}</strong></span>
-        </div>
-      </div>
 
       <section className="panel ai-workspace">
         <div className="ai-navigation">
@@ -135,8 +124,11 @@ export function AiContextPage({ knowledge, unanswered, onCreateKnowledge, onUpda
             <button type="button" className={tab === 'unanswered' ? 'active' : ''} aria-pressed={tab === 'unanswered'} onClick={() => switchTab('unanswered')}>
               Dúvidas sem resposta <span>{unanswered.length}</span>
             </button>
+            <button type="button" className={tab === 'alerts' ? 'active' : ''} aria-pressed={tab === 'alerts'} onClick={() => switchTab('alerts')}>
+              Avisos
+            </button>
           </div>
-          <div className="search-field">
+          {tab !== 'alerts' && <div className="search-field">
             <Search size={18} />
             <input
               aria-label={tab === 'knowledge' ? 'Buscar no contexto' : 'Buscar dúvidas'}
@@ -144,7 +136,7 @@ export function AiContextPage({ knowledge, unanswered, onCreateKnowledge, onUpda
               value={search}
               onChange={event => setSearch(event.target.value)}
             />
-          </div>
+          </div>}
         </div>
         {error && !editor && <div className="form-error ai-page-error" role="alert">{error}</div>}
         {tab === 'knowledge' && (knowledge.length === 0 ? (
@@ -204,6 +196,7 @@ export function AiContextPage({ knowledge, unanswered, onCreateKnowledge, onUpda
             ))}
           </div>
         ))}
+        {tab === 'alerts' && alerts}
       </section>
 
       {editor && (

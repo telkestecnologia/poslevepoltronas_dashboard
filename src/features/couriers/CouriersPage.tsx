@@ -25,8 +25,7 @@ export function CouriersPage({ couriers, onNewCourier, onEditCourier }: Props) {
 
   return <>
     <div className="page-heading with-action">
-      <div><span className="eyebrow">EQUIPE • PÓS LEVE</span><h1>Entregadores</h1>
-        <p>Cadastre a equipe de entregas e gerencie as credenciais de acesso.</p></div>
+      <div><span className="eyebrow">EQUIPE • PÓS LEVE</span><h1>Entregadores</h1></div>
       <button className="button primary" onClick={onNewCourier}><Plus size={18} /> Novo entregador</button>
     </div>
     <section className="panel table-panel">

@@ -1,6 +1,6 @@
-import { useState, type FormEvent } from 'react'
-import { BellRing, Mail, MessageCircle, Plus, Save, Trash2 } from 'lucide-react'
-import type { AiNotificationSettings } from '../../api'
+import { useEffect, useState, type FormEvent } from 'react'
+import { Mail, MessageCircle, Plus, Save, Trash2 } from 'lucide-react'
+import { api, type AiNotificationSettings } from '../../api'
 import { getMessage } from '../../utils/errors'
 import { formatPhone } from '../../utils/phone'
 
@@ -57,27 +57,11 @@ export function NotificationsPage({ settings, onSave }: Props) {
   }
 
   return <>
-    <div className="page-heading">
-      <div>
-        <span className="eyebrow">ATENDIMENTO • PÓS LEVE</span>
-        <h1>Alertas da IA</h1>
-        <p>Cadastre os contatos para futuros avisos sobre perguntas que a IA não souber responder.</p>
-      </div>
-    </div>
-
-    <div className="notification-intro panel">
-      <BellRing size={22} />
-      <div>
-        <strong>Cadastro de contatos</strong>
-        <p>O envio de e-mails e mensagens de WhatsApp ainda não está ativado. As perguntas continuam disponíveis em Contexto da IA para você responder.</p>
-      </div>
-    </div>
-
     <form onSubmit={event => void save(event)} className="notification-form">
       <section className="panel notification-channel">
         <div className="notification-channel-head">
           <span className="notification-channel-icon"><Mail size={21} /></span>
-          <div><h2>E-mail</h2><p>Endereços da equipe para futuros avisos.</p></div>
+          <div><h2>E-mail</h2></div>
         </div>
         <div className="notification-contacts">
           {emails.map((email, index) => <div className="notification-contact" key={index}>
@@ -101,7 +85,7 @@ export function NotificationsPage({ settings, onSave }: Props) {
       <section className="panel notification-channel">
         <div className="notification-channel-head">
           <span className="notification-channel-icon"><MessageCircle size={21} /></span>
-          <div><h2>WhatsApp</h2><p>Números com DDD e 8 ou 9 dígitos para futuros avisos.</p></div>
+          <div><h2>WhatsApp</h2></div>
         </div>
         <div className="notification-contacts">
           {phones.map((phone, index) => <div className="notification-contact" key={index}>
@@ -129,4 +113,18 @@ export function NotificationsPage({ settings, onSave }: Props) {
       </div>
     </form>
   </>
+}
+
+/** Aba "Avisos" da tela O que a Isa sabe: carrega e salva os contatos sozinha, como no app. */
+export function AiAlertsTab({ credentials }: { credentials: string }) {
+  const [settings, setSettings] = useState<AiNotificationSettings | null>(null)
+  const [error, setError] = useState('')
+  useEffect(() => {
+    let active = true
+    api.aiNotificationSettings(credentials).then(data => { if (active) setSettings(data) }, cause => { if (active) setError(getMessage(cause)) })
+    return () => { active = false }
+  }, [credentials])
+  if (error) return <div className="form-error" role="alert">{error}</div>
+  if (!settings) return <p className="notification-empty">Carregando...</p>
+  return <NotificationsPage settings={settings} onSave={async data => setSettings(await api.saveAiNotificationSettings(credentials, data))} />
 }
