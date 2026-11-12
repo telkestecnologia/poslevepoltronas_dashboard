@@ -21,15 +21,16 @@ const toText = (cents: number) => (cents / 100).toFixed(2).replace('.', ',')
 type PlanForm = Omit<PricingPlan, 'priceCents' | 'days'> & { price: string; days: string }
 
 /** Mesmas regras do backend, para mostrar o motivo exato antes de salvar. */
-function pricingError(daily: number, maxDays: number, plans: PlanForm[]) {
+function pricingError(daily: number, minDays: number, maxDays: number, plans: PlanForm[]) {
   if (!Number.isFinite(daily) || daily < 100 || daily > 1_000_000) return 'A diária deve ficar entre R$ 1,00 e R$ 10.000,00.'
   if (!Number.isInteger(maxDays) || maxDays < 1 || maxDays > MAX_DAYS) return `O período máximo vai de 1 a ${MAX_DAYS} dias.`
+  if (!Number.isInteger(minDays) || minDays < 1 || minDays > maxDays) return `O período mínimo vai de 1 dia até o período máximo (${maxDays} dias).`
   for (const plan of plans) {
     const label = plan.name.trim() || plan.id
     const days = Number(plan.days)
     const price = toCents(plan.price)
     if (!plan.name.trim()) return 'Dê um nome a cada plano.'
-    if (!Number.isInteger(days) || days < 1 || days > maxDays) return `O plano ${label} precisa ter de 1 a ${maxDays} dias (o período máximo).`
+    if (!Number.isInteger(days) || days < minDays || days > maxDays) return `O plano ${label} precisa ter de ${minDays} (o período mínimo) a ${maxDays} dias (o período máximo).`
     if (!Number.isFinite(price) || price <= 0) return `Informe o preço do plano ${label}.`
     if (price > days * daily) return `O plano ${label} (${days} dias) não pode custar mais que ${days} diárias avulsas (${currency(days * daily)}).`
   }
@@ -43,6 +44,7 @@ export function PaymentsPricingPage({ credentials }: { credentials: string }) {
   const [catalog, setCatalog] = useState<PricingCatalog | null>(null)
   const [daily, setDaily] = useState('')
   const [maxDays, setMaxDays] = useState('')
+  const [minDays, setMinDays] = useState('')
   const [plans, setPlans] = useState<PlanForm[]>([])
   const [paymentBusy, setPaymentBusy] = useState(false)
   const [pricingBusy, setPricingBusy] = useState(false)
@@ -53,6 +55,7 @@ export function PaymentsPricingPage({ credentials }: { credentials: string }) {
     setCatalog(value)
     setDaily(toText(value.dailyRateCents))
     setMaxDays(String(value.maxDays))
+    setMinDays(String(value.minDays ?? 1))
     setPlans(value.plans.map(plan => ({ ...plan, price: toText(plan.priceCents), days: String(plan.days) })))
   }
 
@@ -84,14 +87,15 @@ export function PaymentsPricingPage({ credentials }: { credentials: string }) {
     event.preventDefault()
     const dailyCents = toCents(daily)
     const max = Number(maxDays)
-    const problem = pricingError(dailyCents, max, plans)
+    const min = Number(minDays)
+    const problem = pricingError(dailyCents, min, max, plans)
     if (problem) return setPricingNote({ tone: 'error', text: problem })
     if (!window.confirm('Salvar os novos valores? Eles passam a valer na hora para novas cotações no site e no WhatsApp. Reservas e pedidos já feitos não mudam.')) return
     setPricingBusy(true)
     setPricingNote(null)
     try {
       fillPricing(await api.savePricing(credentials, {
-        dailyRateCents: dailyCents, maxDays: max,
+        dailyRateCents: dailyCents, minDays: min, maxDays: max,
         plans: plans.map(plan => ({ id: plan.id, name: plan.name.trim(), days: Number(plan.days), priceCents: toCents(plan.price), popular: plan.popular })),
       }))
       setPricingNote({ tone: 'ok', text: 'Valores salvos. As próximas cotações já usam a nova tabela.' })
@@ -164,7 +168,7 @@ export function PaymentsPricingPage({ credentials }: { credentials: string }) {
       <form className="panel pay-section" onSubmit={event => void savePricing(event)}>
         <div className="notification-channel-head">
           <span className="notification-channel-icon"><BadgeDollarSign size={21} /></span>
-          <div><h2>Diária e planos</h2><p>Períodos com a mesma quantidade de dias de um plano usam o preço do plano; os demais, a diária avulsa. O frete continua por filial.</p></div>
+          <div><h2>Diária e planos</h2><p>Do período mínimo até o menor plano vale a diária avulsa. A partir de cada plano, cada dia sai pela diária dele (preço ÷ dias) até o próximo plano; acima do maior plano, vale a diária dele. O frete continua por filial.</p></div>
         </div>
 
         <div className="pay-grid">
@@ -173,6 +177,12 @@ export function PaymentsPricingPage({ credentials }: { credentials: string }) {
             <input inputMode="decimal" value={daily} disabled={pricingBusy} required
               onChange={event => { setDaily(event.target.value); setPricingNote(null) }}
               onBlur={() => { const cents = toCents(daily); if (Number.isFinite(cents)) setDaily(toText(cents)) }} />
+          </label>
+          <label className="pay-field">
+            <span>Período mínimo (dias)</span>
+            <input type="number" min={1} max={Number(maxDays) || MAX_DAYS} value={minDays} disabled={pricingBusy} required
+              onChange={event => { setMinDays(event.target.value); setPricingNote(null) }} />
+            <small>Menor locação aceita no site e pela Isa. Prorrogações não seguem este limite.</small>
           </label>
           <label className="pay-field">
             <span>Período máximo (dias)</span>
@@ -185,6 +195,9 @@ export function PaymentsPricingPage({ credentials }: { credentials: string }) {
           {plans.map(plan => {
             const days = Number(plan.days)
             const price = toCents(plan.price)
+            // Próximo plano (por dias): até ele, os dias extras saem pela diária deste plano.
+            const next = plans.map(other => Number(other.days)).filter(other => other > days).sort((a, b) => a - b)[0]
+            const planDaily = days > 0 && Number.isFinite(price) ? Math.round(price / days) : NaN
             const savings = Number.isFinite(price) && Number.isFinite(dailyCents) && days > 0 ? days * dailyCents - price : NaN
             return <fieldset key={plan.id} className="pay-plan">
               <legend className="sr-only">Plano {plan.name}</legend>
@@ -195,7 +208,7 @@ export function PaymentsPricingPage({ credentials }: { credentials: string }) {
               </label>
               <label className="pay-field">
                 <span>Dias</span>
-                <input type="number" min={1} max={Number(maxDays) || MAX_DAYS} value={plan.days} disabled={pricingBusy} required
+                <input type="number" min={Number(minDays) || 1} max={Number(maxDays) || MAX_DAYS} value={plan.days} disabled={pricingBusy} required
                   onChange={event => updatePlan(plan.id, { days: event.target.value })} />
               </label>
               <label className="pay-field">
@@ -210,6 +223,8 @@ export function PaymentsPricingPage({ credentials }: { credentials: string }) {
                 Mais procurado
               </label>
               <p className="pay-muted pay-plan-hint">
+                {Number.isFinite(planDaily) && <><strong>Diária de {currency(planDaily)}</strong>{' '}
+                  {next ? `de ${days} a ${next - 1} dias` : `a partir de ${days} dias`}{next ? ` (ex.: ${Math.min(days + 5, next - 1)} dias = ${currency(Math.min(days + 5, next - 1) * planDaily)})` : ''}. </>}
                 {Number.isFinite(savings) && savings >= 0
                   ? `Economia de ${currency(savings)} sobre ${days} diárias avulsas.`
                   : Number.isFinite(savings) ? `Mais caro que ${days} diárias avulsas: ajuste o preço.` : ''}

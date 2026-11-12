@@ -19,7 +19,7 @@
 .pay-field input:focus, .pay-field select:focus { border-color: var(--teal); outline: 3px solid #d7eeeb; }
 .pay-field input:disabled, .pay-field select:disabled { background: #f4f7f6; color: var(--muted); }
 
-.pay-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.pay-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-items: start; }
 .pay-plans { display: flex; flex-direction: column; gap: 12px; }
 .pay-plan { display: grid; grid-template-columns: minmax(0, 2fr) minmax(70px, 0.7fr) minmax(90px, 1fr) auto; gap: 12px; align-items: end;
   margin: 0; padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px; min-width: 0; }

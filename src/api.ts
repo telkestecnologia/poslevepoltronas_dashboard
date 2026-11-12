@@ -155,8 +155,8 @@ export type AiNotificationSettings = { emails: string[]; whatsAppNumbers: string
 /** Formas de pagamento aceitas pela locadora; com uma só, o site e a Isa deixam de oferecer a outra. */
 export type PaymentOptions = { pix: boolean; card: boolean; maxInstallments: number }
 export type PricingPlan = { id: 'essencial' | 'plus' | 'premium'; name: string; days: number; priceCents: number; popular: boolean }
-export type PricingCatalog = { version: string; dailyRateCents: number; maxDays: number; plans: PricingPlan[] }
-export type PricingInput = { dailyRateCents: number; maxDays: number; plans: PricingPlan[] }
+export type PricingCatalog = { version: string; dailyRateCents: number; minDays: number; maxDays: number; plans: PricingPlan[] }
+export type PricingInput = { dailyRateCents: number; minDays: number; maxDays: number; plans: PricingPlan[] }
 
 export type RentalOverview = {
   rentalDate: string
