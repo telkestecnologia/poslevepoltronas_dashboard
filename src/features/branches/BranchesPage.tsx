@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ArrowLeft, Armchair, ChevronRight, MapPin, Plus } from 'lucide-react'
+import { ArrowLeft, Armchair, CheckCircle2, ChevronRight, MapPin, PauseCircle, Plus, Wrench } from 'lucide-react'
 import { api, type Branch, type BranchInput, type Chair, type Municipality } from '../../api'
 import { BranchModal } from './BranchModal'
 import { EmptyState } from '../../components/common'
@@ -149,14 +149,16 @@ function branchPhoto(name: string) {
   return '/filiais/filial-fortaleza.webp'
 }
 
-const chairStatus: Record<string, { label: string; tone: string }> = {
-  ACTIVE: { label: 'Ativa', tone: 'active' }, MAINTENANCE: { label: 'Em manutenção', tone: 'maintenance' }, INACTIVE: { label: 'Inativa', tone: 'inactive' },
+const chairStatus: Record<string, { label: string; plural: string; tone: string }> = {
+  ACTIVE: { label: 'Ativa', plural: 'Ativas', tone: 'active' }, MAINTENANCE: { label: 'Em manutenção', plural: 'Manutenção', tone: 'maintenance' },
+  INACTIVE: { label: 'Inativa', plural: 'Inativas', tone: 'inactive' },
 }
 
 /** Poltronas da filial, na própria página da filial. */
 function BranchChairs({ credentials, branchId }: { credentials: string; branchId: string }) {
   const [chairs, setChairs] = useState<Chair[] | null>(null)
   const [error, setError] = useState('')
+  const [filter, setFilter] = useState<string | null>(null)
   useEffect(() => {
     let active = true
     void api.chairs(credentials, { page: 0, size: 100, search: '', status: 'ALL', branchId })
@@ -166,10 +168,21 @@ function BranchChairs({ credentials, branchId }: { credentials: string; branchId
   }, [credentials, branchId])
   if (error) return <div className="form-error" role="alert">{error}</div>
   if (!chairs) return <p className="branch-muted">Carregando poltronas...</p>
-  if (chairs.length === 0) return <p className="branch-muted">Nenhuma poltrona nesta filial.</p>
-  return <div className="branch-chairs">{chairs.map(chair => <div key={chair.id} className={`branch-chair ${chairStatus[chair.status]?.tone ?? ''}`}>
-    <span className="branch-chair-icon"><Armchair size={18} /></span>
-    <span className="branch-chair-text"><strong>{chair.code}</strong><small>{chair.model}{chair.notes ? ` • ${chair.notes}` : ''}</small></span>
-    <span className="branch-chair-status">{chairStatus[chair.status]?.label ?? chair.status}</span>
-  </div>)}</div>
+  const shown = chairs.filter(chair => !filter || chair.status === filter)
+  return <>
+    {/* Botões com contador (igual ao app): clicar mostra só aquelas poltronas; clicar de novo mostra todas. */}
+    <div className="branch-chair-buttons">{(['ACTIVE', 'MAINTENANCE', 'INACTIVE'] as const).map(status => {
+      const Icon = status === 'ACTIVE' ? CheckCircle2 : status === 'MAINTENANCE' ? Wrench : PauseCircle
+      return <button type="button" key={status} className={`${chairStatus[status].tone}${filter === status ? ' selected' : ''}`}
+        aria-pressed={filter === status} onClick={() => setFilter(filter === status ? null : status)}>
+        <Icon size={20} /><strong>{chairs.filter(chair => chair.status === status).length}</strong><span>{chairStatus[status].plural}</span>
+      </button>
+    })}</div>
+    {shown.length === 0 ? <p className="branch-muted">{chairs.length === 0 ? 'Nenhuma poltrona nesta filial.' : 'Nenhuma poltrona nesta situação.'}</p>
+      : <div className="branch-chairs">{shown.map(chair => <div key={chair.id} className={`branch-chair ${chairStatus[chair.status]?.tone ?? ''}`}>
+        <span className="branch-chair-icon"><Armchair size={18} /></span>
+        <span className="branch-chair-text"><strong>{chair.code}</strong><small>{chair.model}{chair.notes ? ` • ${chair.notes}` : ''}</small></span>
+        <span className="branch-chair-status">{chairStatus[chair.status]?.label ?? chair.status}</span>
+      </div>)}</div>}
+  </>
 }

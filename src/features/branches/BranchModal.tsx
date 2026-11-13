@@ -202,6 +202,8 @@ export function BranchModal({
               A cobertura inclui todos os CEPs dos municípios escolhidos, inclusive zona rural.
               Use 0,00 para zerar apenas este município; o botão na lista de filiais zera todos temporariamente.
             </small>
+            {inline && <button type="submit" className="button primary branch-inline-save" disabled={saving}>
+              {saving ? 'Salvando...' : 'Salvar alterações'}</button>}
           </details>
           <label className="branch-option">
             <input
@@ -216,7 +218,7 @@ export function BranchModal({
               {localError || error}
             </div>
           )}
-          <div className="modal-actions">
+          {!inline && <div className="modal-actions">
             {!inline && <button type="button" className="button secondary" onClick={onClose} disabled={saving}>
               Cancelar
             </button>}
@@ -224,7 +226,7 @@ export function BranchModal({
               {saving ? 'Salvando...' : branch ? 'Salvar alterações' : 'Criar filial'}{' '}
               <ArrowRight size={17} />
             </button>
-          </div>
+          </div>}
         </form>
   )
 
