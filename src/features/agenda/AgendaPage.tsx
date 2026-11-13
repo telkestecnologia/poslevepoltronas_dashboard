@@ -1,10 +1,11 @@
 import { timeShort } from '../../utils/time'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowRight, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react'
+import { ArrowRight, CalendarCheck, ChevronLeft, ChevronRight, RefreshCw, Truck, Undo2 } from 'lucide-react'
 import { api, type Branch, type Courier, type Order, type OrderQuery, type OrderStatus } from '../../api'
 import { fetchAllOrders, usePolling } from '../../data/orders'
 import { branchLabel, onlyOfficialBranches, chairName } from '../../utils/branches'
 import { getMessage } from '../../utils/errors'
+import './agenda.css'
 import { brazilPhoneDigits, displayPhone } from '../../utils/phone'
 
 type Kind = 'delivery' | 'pickup'
@@ -198,15 +199,18 @@ export function AgendaPage({ credentials, onOpenOrder }: Props) {
   return <>
     <div className="page-heading with-action">
       <div><span className="eyebrow">OPERAÇÃO • AGENDA</span><h1>Agenda de entregas e retiradas</h1>
-        <div className="agenda-today" aria-live="polite">
-          <span><strong>{todayCount?.deliveries ?? 0}</strong> {todayCount?.deliveries === 1 ? 'entrega' : 'entregas'} hoje</span>
-          <span><strong>{todayCount?.pickups ?? 0}</strong> {todayCount?.pickups === 1 ? 'retirada' : 'retiradas'} hoje</span>
-        </div></div>
+</div>
       <button className="button secondary" disabled={refreshing} onClick={() => void refresh()}>
         <RefreshCw size={16} /> {refreshing ? 'Atualizando...' : 'Atualizar agenda'}</button>
     </div>
     {error && <div className="form-error" role="alert">{error}</div>}
-    <p className="agenda-explanation panel">As datas e os horários vêm dos pedidos. Dias extras de estoque bloqueado não alteram esta agenda. Pedidos sem pagamento confirmado não aparecem.</p>
+    {/* Hoje em dois cartões coloridos (igual ao app): entregas e retiradas. */}
+    <div className="agenda-today-tiles" aria-live="polite">
+      <div className="delivery"><span className="agenda-today-icon"><Truck size={18} /></span>
+        <strong>{todayCount?.deliveries ?? 0}</strong><small>{todayCount?.deliveries === 1 ? 'entrega hoje' : 'entregas hoje'}</small></div>
+      <div className="pickup"><span className="agenda-today-icon"><Undo2 size={18} /></span>
+        <strong>{todayCount?.pickups ?? 0}</strong><small>{todayCount?.pickups === 1 ? 'retirada hoje' : 'retiradas hoje'}</small></div>
+    </div>
 
     <div className="agenda-filters panel" role="group" aria-label="Filtros da agenda">
       <label>Filial
@@ -262,13 +266,13 @@ export function AgendaPage({ credentials, onOpenOrder }: Props) {
               onClick={() => setSelectedDate(date)}>
               <span className="agenda-calendar-number">{view === 'week' ? `${date.slice(8)}/${date.slice(5, 7)}` : Number(date.slice(-2))}</span>
               <span className="agenda-calendar-counts" aria-hidden="true">
-                {!!count?.deliveries && <span className="agenda-count delivery">E {count.deliveries}</span>}
-                {!!count?.pickups && <span className="agenda-count pickup">R {count.pickups}</span>}
+                {!!count?.deliveries && <span className="agenda-count delivery">{count.deliveries}</span>}
+                {!!count?.pickups && <span className="agenda-count pickup">{count.pickups}</span>}
               </span>
             </button>
           })}
         </div>
-        <div className="agenda-legend"><span><i className="delivery" /> Entrega</span><span><i className="pickup" /> Retirada</span></div>
+        <div className="agenda-legend"><span><i className="delivery" /> Entregas</span><span><i className="pickup" /> Retiradas</span><small>o número é a quantidade do dia</small></div>
       </section>
 
       <section className={`agenda-day-panel panel${loading ? ' is-loading' : ''}`} aria-label="Serviços do dia selecionado" aria-busy={loading}>
@@ -283,16 +287,18 @@ export function AgendaPage({ credentials, onOpenOrder }: Props) {
           <span><strong>{pickupCount}</strong> {pickupCount === 1 ? 'retirada' : 'retiradas'}</span>
           {unassignedCount > 0 && <span className="needs-courier"><strong>{unassignedCount}</strong> sem entregador</span>}
         </div>
-        {grouped.length === 0 ? <div className="agenda-empty">Nenhum serviço previsto para este dia com os filtros atuais.</div>
+        {grouped.length === 0 ? <div className="agenda-empty"><CalendarCheck size={30} /><strong>Dia livre</strong><span>Nenhuma entrega ou retirada neste dia.</span></div>
           : grouped.map(group => <div className="agenda-city-group" key={group.code}>
             <div className="agenda-city-heading"><h3>{group.label}</h3><span>{group.items.length} {group.items.length === 1 ? 'serviço' : 'serviços'}</span></div>
             {group.items.map(item => <article className={`agenda-item ${item.kind}`} key={item.key} role="button" tabIndex={0}
               aria-label={`${item.kind === 'delivery' ? 'Entrega' : 'Retirada'} de ${item.order.customerName}: abrir pedido`}
               onClick={() => onOpenOrder(item.order.id)}
               onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onOpenOrder(item.order.id) } }}>
+              <div className="agenda-item-time"><strong>{timeShort(item.time) || '--:--'}</strong>
+                <span className={`agenda-kind-icon ${item.kind}`}>{item.kind === 'delivery' ? <Truck size={16} /> : <Undo2 size={16} />}</span></div>
+              <div className="agenda-item-body">
               <div className="agenda-item-top">
                 <span className={`agenda-kind ${item.kind}`}>{item.kind === 'delivery' ? 'Entrega' : 'Retirada'}</span>
-                <strong>{timeShort(item.time) || 'Sem horário'}</strong>
                 <span className={`agenda-item-status${!item.done && item.date < today ? ' past' : ''}`}>
                   {itemStatus(item, today)}</span>
               </div>
@@ -308,9 +314,11 @@ export function AgendaPage({ credentials, onOpenOrder }: Props) {
                 || (item.order.stockEnd && item.order.stockEnd !== item.order.end)
                 ? <small className="agenda-stock-note">Estoque bloqueado de {shortFormatter.format(dateFromIso(item.order.stockStart ?? item.order.start))} a {shortFormatter.format(dateFromIso(item.order.stockEnd ?? item.order.end))}</small>
                 : null}
+              </div>
             </article>)}
           </div>)}
       </section>
     </div>
+    <p className="agenda-note">As datas e os horários vêm dos pedidos. Dias extras de estoque bloqueado não alteram esta agenda. Pedidos sem pagamento confirmado não aparecem.</p>
   </>
 }
