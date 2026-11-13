@@ -257,3 +257,19 @@
 .od-name img { width: 44px; height: 60px; object-fit: contain; flex: none; }
 .od-name img { width: 56px; height: 56px; border-radius: 14px; object-fit: cover; }
 .od-name img { object-fit: contain; background: #fff; border: 1px solid #e7e6e2; }
+
+/* Símbolo do logo ao lado do nome; situação ao lado do total; cards das etapas que abrem ao clicar. */
+.od-name img { width: 56px; height: 56px; padding: 6px; border-radius: 14px; object-fit: contain; background: #fff; border: 1px solid #e7e6e2; }
+.od-price-status { margin-left: 8px; font-size: 12px; vertical-align: middle; }
+.od-evidence.clickable { cursor: pointer; }
+.od-evidence-body { cursor: default; display: grid; gap: 12px; }
+.od-attendance .od-step-dot.failed { background: #a3392a; color: #fff; }
+/* Etapas do atendimento (sem pedido). */
+.od-attendance ol { display: grid; gap: 12px; margin: 12px 0 0; padding: 0; list-style: none; }
+.od-attendance li { display: flex; align-items: flex-start; gap: 12px; }
+.od-attendance li span:last-child { display: grid; gap: 2px; }
+.od-attendance li small { color: #7a8287; }
+.od-attendance .od-step-dot { display: grid; place-items: center; flex: none; width: 28px; height: 28px; border-radius: 50%; background: #e7e6e2; color: #7a8287; font-weight: 700; font-size: 13px; }
+.od-attendance .od-step-dot.done { background: #1a9baa; color: #fff; }
+.od-attendance .od-step-dot.current { background: #f47a52; color: #fff; }
+.od-attendance li.failed strong { color: #a3392a; }

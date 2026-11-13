@@ -15,7 +15,8 @@ import { brazilPhoneDigits, displayPhone } from '../../utils/phone'
 import { OrderEvidencePanel } from './OrderEvidencePanel'
 import { EarlySchedule } from './EarlySchedule'
 import { MediaCarousel } from './MediaCarousel'
-import chairPicture from '../../assets/poltrona-cliente.png'
+import { AttendanceSteps } from './AttendanceSteps'
+import logoSymbol from '../../assets/logo-simbolo.png'
 
 type Props = { credentials: string; id: string; onBack: () => void }
 
@@ -41,7 +42,7 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
   const [busy, setBusy] = useState(false)
   const [mediaPhase, setMediaPhase] = useState<'DELIVERY' | 'PICKUP' | null>(null)
   const [timelineAll, setTimelineAll] = useState(false)
-  const [openPhase, setOpenPhase] = useState<'DELIVERY' | 'PICKUP' | null>(null)
+  const [openPhase, setOpenPhase] = useState<'DEPARTURE' | 'DELIVERY' | 'PICKUP' | null>(null)
   const [error, setError] = useState('')
   const [saved, setSaved] = useState('')
   const [statusNote, setStatusNote] = useState('')
@@ -117,8 +118,15 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
   const contractOnly = order.id.startsWith('wa-contrato-')
   const canChangeSchedule = order.source === 'CHECKOUT' && !contractOnly
     && ['PAYMENT_CONFIRMED', 'DELIVERY_PENDING', 'IN_USE', 'PICKUP_PENDING'].includes(order.status)
-  const deliveryIndex = statusFlow.indexOf('DELIVERY_PENDING')
-  const pickupIndex = statusFlow.indexOf('PICKUP_PENDING')
+  const stepLabel = (status: typeof statusFlow[number]) =>
+    statusLabels[status]
+  // Etapas na tela: as do pedido mais "Saindo para entrega" antes de "Aguardando entrega" (igual ao app).
+  const displayRows = [
+    { key: 'PAYMENT_CONFIRMED', label: stepLabel('PAYMENT_CONFIRMED') },
+    { key: 'DEPARTURE', label: 'Saindo para entrega' },
+    ...statusFlow.slice(1).map(status => ({ key: status, label: stepLabel(status) })),
+  ]
+  const displayStep = order.status === 'PAYMENT_CONFIRMED' ? 1 : displayRows.findIndex(row => row.key === order.status)
   async function saveSchedule(changes: Parameters<typeof api.changeOrderSchedule>[2]) {
     let ok = false
     await perform(() => api.changeOrderSchedule(credentials, order!.id, changes, ''), 'Dia e horário atualizados.', () => { ok = true })
@@ -133,8 +141,6 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
   const mapUrl = order.latitude != null && order.longitude != null
     ? `https://www.google.com/maps?q=${order.latitude},${order.longitude}`
     : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${order.address}, ${order.municipalityName} - ${order.municipalityUf}`)}`
-  const stepLabel = (status: typeof statusFlow[number]) =>
-    statusLabels[status]
 
   function advance() {
     if (!order || !nextStatus) return
@@ -182,7 +188,7 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
     <header className="od-header">
       <div className="od-header-main">
         <span className="eyebrow">PEDIDO • {chairName(order.chairCode, order.branchName).toUpperCase()}</span>
-        <h1 className="od-name"><img src={chairPicture} alt="" aria-hidden="true" />{order.customerName}</h1>
+        <h1 className="od-name"><img src={logoSymbol} alt="" aria-hidden="true" />{order.customerName}</h1>
         <p><MapPin size={14} /> {order.municipalityName}/{order.municipalityUf} • {branchLabel(order.branchName)}
           <span className="od-dot" aria-hidden="true">•</span> Entrada em {dateTimeLabel(order.createdAt)}</p>
       </div>
@@ -201,17 +207,19 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
     {noticesOf(order).map(notice => <div key={notice.text} className={`od-notice ${notice.tone}`}>
       {notice.tone === 'danger' ? <AlertCircle size={18} /> : <Info size={18} />}<p>{notice.text}</p></div>)}
 
-    {step >= 0 && <ol className="od-steps" aria-label={`Etapa ${step + 1} de ${statusFlow.length}: ${statusLabels[order.status]}`}>
-      {statusFlow.map((status, index) => {
-        const done = index < step || (index === step && status === 'COMPLETED')
-        const current = index === step && !done
-        return <li key={status} className={done ? 'done' : current ? 'current' : ''} aria-current={current ? 'step' : undefined}>
+    {step >= 0 && <ol className="od-steps" aria-label={`Etapa ${displayStep + 1} de ${displayRows.length}`}>
+      {displayRows.map((row, index) => {
+        const done = index < displayStep || (index === displayStep && order.status === 'COMPLETED')
+        const current = index === displayStep && !done
+        return <li key={row.key} className={done ? 'done' : current ? 'current' : ''} aria-current={current ? 'step' : undefined}>
           <span className="od-step-dot">{done ? <Check size={14} strokeWidth={3} /> : index + 1}</span>
-          <span className="od-step-text"><strong>{stepLabel(status)}</strong>
+          <span className="od-step-text"><strong>{row.label}</strong>
             <small>{done ? 'Concluída' : current ? 'Etapa atual' : 'Próxima'}</small></span>
         </li>
       })}
     </ol>}
+    {/* Sem pagamento confirmado não há pedido: só as etapas do atendimento, com o que aconteceu de fato. */}
+    {step < 0 && <AttendanceSteps order={order} />}
 
     <div className="od-layout">
       <div className="od-main">
@@ -235,38 +243,42 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
 
         {/* Etapas da entrega e da retirada (igual ao app): dia e horário, antecipados ou posteriores, e as fotos e vídeos.
             Na etapa atual as fotos aparecem; nas que já passaram, ficam num botão que abre a janela com elas. */}
-        {!contractOnly && ([['DELIVERY', deliveryIndex], ['PICKUP', pickupIndex]] as const).map(([phase, index]) => {
-          const passed = step < 0 || step > index
-          const current = step === index
-          const canEdit = canChangeSchedule && step <= index
+        {step >= 0 && !contractOnly && ([['DEPARTURE', 1], ['DELIVERY', 2], ['PICKUP', 4]] as const).map(([phase, index]) => {
+          const passed = displayStep > index || order.status === 'COMPLETED'
+          const current = displayStep === index && !passed
+          const departureCard = phase === 'DEPARTURE'
+          const media = phase === 'DELIVERY' || phase === 'PICKUP' ? phase : null
+          const scheduleKind = departureCard ? 'delivery' : phase === 'PICKUP' ? 'pickup' : null
+          const canEdit = canChangeSchedule && !!scheduleKind && !passed
+          const hasContent = current || (departureCard && !passed)
           if (!passed && !current && !canEdit) return null
-          const word = phase === 'DELIVERY' ? 'entrega' : 'retirada'
-          return <section key={phase} className={`panel od-card od-evidence${current ? ' now' : ''}${current && openPhase !== phase ? ' pulsing' : ''}`}>
+          const title = departureCard ? 'SAINDO PARA ENTREGA' : phase === 'DELIVERY' ? 'AGUARDANDO ENTREGA' : 'AGUARDANDO RETIRADA'
+          const opened = hasContent && openPhase === phase
+          const toggle = () => setOpenPhase(value => value === phase ? null : phase)
+          return <section key={phase} className={`panel od-card od-evidence${current ? ' now' : ''}${current && !opened ? ' pulsing' : ''}${hasContent ? ' clickable' : ''}`}
+            onClick={event => { if (hasContent && !(event.target as HTMLElement).closest('button, a, input, select, textarea, video, .od-evidence-body')) toggle() }}>
             <div className="od-step-head">
-              {/* O conteúdo da etapa (fotos e comunicado) só aparece ao clicar no nome (igual ao app). */}
-              {current || (phase === 'DELIVERY' && departure && !passed)
-                ? <button type="button" className="od-step-toggle" aria-expanded={openPhase === phase}
-                  onClick={() => setOpenPhase(value => value === phase ? null : phase)}>
-                  <span className="eyebrow">ETAPA • AGUARDANDO {word.toUpperCase()}</span>
-</button>
-                : <span className="eyebrow">ETAPA • AGUARDANDO {word.toUpperCase()}</span>}
+              <span className="eyebrow">ETAPA • {title}</span>
               <span className="od-step-actions">
-                {canEdit && <EarlySchedule order={order} kind={phase === 'DELIVERY' ? 'delivery' : 'pickup'} busy={busy} current={current} onSave={saveSchedule} />}
-                {passed && <button type="button" className="od-media-button" onClick={() => setMediaPhase(phase)}>
+                {canEdit && scheduleKind && <EarlySchedule order={order} kind={scheduleKind} busy={busy} current={current} onSave={saveSchedule} />}
+                {passed && media && <button type="button" className="od-media-button" onClick={() => setMediaPhase(media)}>
                   <Images size={15} /> Ver fotos e vídeos</button>}
               </span>
             </div>
-            {openPhase === phase && phase === 'DELIVERY' && departure && !passed && <div className="od-notice" role="note">
-              <span className="od-notice-icon"><Megaphone size={16} /></span>
-              <div><strong>Comunicado ao cliente</strong>
-                <p>✓ Avisado pelo WhatsApp que a poltrona saiu para entrega em {dateTimeLabel(departure.at)}.</p></div>
+            {opened && <div className="od-evidence-body">
+              {departureCard && <div className="od-notice" role="note">
+                <span className="od-notice-icon"><Megaphone size={16} /></span>
+                <div><strong>Comunicado ao cliente</strong>
+                  <p>{departure ? `✓ Avisado pelo WhatsApp que a poltrona saiu para entrega em ${dateTimeLabel(departure.at)}.`
+                    : 'O aviso de que a poltrona está a caminho é enviado pelo app, no botão "Saindo para entrega".'}</p></div>
+              </div>}
+              {current && media && <OrderEvidencePanel key={`${order.id}:${order.status}:${media}`} credentials={credentials} orderId={order.id}
+                status={order.status} couriers={couriers} phase={media} />}
             </div>}
-            {openPhase === phase && current && <OrderEvidencePanel key={`${order.id}:${order.status}:${word}`} credentials={credentials} orderId={order.id}
-              status={order.status} couriers={couriers} phase={phase} />}
-            {/* Setinha no canto inferior direito do card: abre e fecha a etapa (igual ao app). */}
-            {(current || (phase === 'DELIVERY' && departure && !passed)) && <button type="button" className={`od-corner-chevron${current ? ' now' : ''}`}
-              aria-label={openPhase === phase ? 'Fechar etapa' : 'Abrir etapa'} onClick={() => setOpenPhase(value => value === phase ? null : phase)}>
-              {openPhase === phase ? <ChevronUp size={15} /> : <ChevronDown size={15} />}</button>}
+            {/* Setinha no canto inferior direito; clicar no card também abre e fecha (igual ao app). */}
+            {hasContent && <button type="button" className={`od-corner-chevron${current ? ' now' : ''}`}
+              aria-label={opened ? 'Fechar etapa' : 'Abrir etapa'} onClick={toggle}>
+              {opened ? <ChevronUp size={15} /> : <ChevronDown size={15} />}</button>}
           </section>
         })}
         {mediaPhase && <MediaCarousel credentials={credentials} orderId={order.id} phase={mediaPhase} couriers={couriers}
@@ -367,7 +379,9 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
           <dl className="od-facts od-money">
             {order.source === 'CHECKOUT' && <div><dt>Aluguel</dt><dd>{currency(order.rentalCents)}</dd></div>}
             <div><dt>Frete</dt><dd>{order.freightCents ? currency(order.freightCents) : 'Grátis'}</dd></div>
-            {order.source === 'CHECKOUT' && <div className="od-total"><dt>Total</dt><dd>{currency(order.totalCents)}</dd></div>}
+            {order.source === 'CHECKOUT' && <div className="od-total"><dt>Total</dt><dd>{currency(order.totalCents)}
+              {/* Ao lado do preço, a situação atual do cliente. */}
+              <span className={`order-status od-price-status status-${order.status.toLowerCase()}`}>{orderStatusLabel(order)}</span></dd></div>}
           </dl>
           {order.status === 'PENDING_PAYMENT' && order.paymentSandbox && !order.paymentMock && <div className="od-sandbox admin-only">
             <button className="button primary" disabled={busy} onClick={() => void payTestPix()}>Pagar no Asaas</button>
