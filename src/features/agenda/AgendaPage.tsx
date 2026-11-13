@@ -159,11 +159,11 @@ export function AgendaPage({ credentials, onOpenOrder }: Props) {
       && (courier === 'ALL' || (courier === 'UNASSIGNED' ? !order.courierId : order.courierId === courier)))
     .flatMap((order): AgendaItem[] => [
       {
-        key: `${order.id}:delivery`, kind: 'delivery', date: order.start, time: order.deliveryTime,
+        key: `${order.id}:delivery`, kind: 'delivery', date: order.deliveryDate ?? order.start, time: order.deliveryTime,
         done: ['IN_USE', 'PICKUP_PENDING', 'COMPLETED'].includes(order.status), order,
       },
       {
-        key: `${order.id}:pickup`, kind: 'pickup', date: order.end, time: order.pickupTime,
+        key: `${order.id}:pickup`, kind: 'pickup', date: order.pickupDate ?? order.end, time: order.pickupTime,
         done: order.status === 'COMPLETED', order,
       },
     ]), [realOrders, city, branch, courier])
@@ -199,8 +199,8 @@ export function AgendaPage({ credentials, onOpenOrder }: Props) {
   const kindItems: AgendaItem[] | null = kindFilter === null || kindOrders === null ? null : kindOrders
     .filter(order => (branch === 'ALL' || order.branchId === branch) && (city === 'ALL' || order.municipalityCode === city))
     .map((order): AgendaItem => kindFilter === 'delivery'
-      ? { key: `${order.id}:delivery`, kind: 'delivery', date: order.start, time: order.deliveryTime, done: false, order }
-      : { key: `${order.id}:pickup`, kind: 'pickup', date: order.end, time: order.pickupTime, done: false, order })
+      ? { key: `${order.id}:delivery`, kind: 'delivery', date: order.deliveryDate ?? order.start, time: order.deliveryTime, done: false, order }
+      : { key: `${order.id}:pickup`, kind: 'pickup', date: order.pickupDate ?? order.end, time: order.pickupTime, done: false, order })
     .sort((a, b) => a.date.localeCompare(b.date) || (a.time ?? '99:99').localeCompare(b.time ?? '99:99'))
   const selectedItems = kindItems ?? items.filter(item => item.date === selectedDate)
     .sort((a, b) => (a.time ?? '99:99').localeCompare(b.time ?? '99:99')

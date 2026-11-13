@@ -80,6 +80,8 @@ export type Order = {
   branchId: string; branchName: string; chairId: string; chairCode: string
   start: string; end: string; stockStart: string | null; stockEnd: string | null
   deliveryTime: string | null; pickupTime: string | null; priceVersion: string | null
+  /** Dia combinado da entrega e da retirada, antecipadas ou posteriores (null = primeiro e último dia do aluguel). */
+  deliveryDate?: string | null; pickupDate?: string | null
   rentalCents: number; freightCents: number; totalCents: number
   holdId: string | null; expiresAt: string | null
   paymentMock?: boolean | null
@@ -447,9 +449,11 @@ export const api = {
     request<Order>(credentials, `/orders/${encodeURIComponent(id)}/logistics`, {
       method: 'PATCH', body: JSON.stringify({ stockStart, stockEnd, note }),
     }),
-  changeOrderSchedule: (credentials: string, id: string, deliveryTime: string | null, pickupTime: string | null, note: string) =>
+  /** Entrega/retirada antecipada ou posterior: dia (AAAA-MM-DD) e/ou horário (HH:mm); o que não vier fica como está. */
+  changeOrderSchedule: (credentials: string, id: string, changes: { deliveryDate?: string | null; deliveryTime?: string | null
+    pickupDate?: string | null; pickupTime?: string | null }, note: string) =>
     request<Order>(credentials, `/orders/${encodeURIComponent(id)}/schedule`, {
-      method: 'PATCH', body: JSON.stringify({ deliveryTime, pickupTime, note }),
+      method: 'PATCH', body: JSON.stringify({ ...changes, note }),
     }),
   assignOrderCourier: (credentials: string, id: string, courierId: string | null) =>
     request<Order>(credentials, `/orders/${encodeURIComponent(id)}/courier`, {

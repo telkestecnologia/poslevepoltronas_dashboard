@@ -1,8 +1,7 @@
 import { timeLabel } from '../../utils/time'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  AlertCircle, ArrowLeft, ArrowRight, CalendarClock, Check, CheckCircle2, ChevronDown, ChevronUp,
-  Info, MapPin, Megaphone, MessageCircle, Phone, RefreshCw, Truck, X,
+  AlertCircle, ArrowLeft, ArrowRight, CalendarClock, Check, CheckCircle2, Info, MapPin, Megaphone, MessageCircle, Phone, RefreshCw, Truck, X, Images,
 } from 'lucide-react'
 import './order-detail.css'
 import { api, ApiError, type Courier, type Order } from '../../api'
@@ -14,6 +13,7 @@ import { branchLabel, chairName } from '../../utils/branches'
 import { getMessage } from '../../utils/errors'
 import { brazilPhoneDigits, displayPhone } from '../../utils/phone'
 import { OrderEvidencePanel } from './OrderEvidencePanel'
+import { EarlySchedule } from './EarlySchedule'
 
 type Props = { credentials: string; id: string; onBack: () => void }
 
@@ -37,6 +37,7 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
   const [loadError, setLoadError] = useState('')
   const [couriers, setCouriers] = useState<Courier[]>([])
   const [busy, setBusy] = useState(false)
+  const [mediaPhase, setMediaPhase] = useState<'DELIVERY' | 'PICKUP' | null>(null)
   const [error, setError] = useState('')
   const [saved, setSaved] = useState('')
   const [statusNote, setStatusNote] = useState('')
@@ -44,12 +45,6 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
   const [issueTitle, setIssueTitle] = useState('')
   const [issueDescription, setIssueDescription] = useState('')
   const [resolutions, setResolutions] = useState<Record<string, string>>({})
-  const [stockOpen, setStockOpen] = useState(false)
-  const [newDelivery, setNewDelivery] = useState('')
-  const [newPickup, setNewPickup] = useState('')
-  const [stockStart, setStockStart] = useState('')
-  const [stockEnd, setStockEnd] = useState('')
-  const [stockNote, setStockNote] = useState('')
   const [pixNote, setPixNote] = useState('')
   const revision = useRef(0)
 
@@ -83,12 +78,6 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
     return () => window.clearTimeout(timer)
   }, [saved])
 
-  // Os campos de estoque começam com o intervalo atual do pedido.
-  useEffect(() => {
-    if (!order) return
-    setStockStart(order.stockStart ?? '')
-    setStockEnd(order.stockEnd ?? '')
-  }, [order?.stockStart, order?.stockEnd]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function perform(operation: () => Promise<Order>, message: string, after?: () => void) {
     setBusy(true)
@@ -122,8 +111,15 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
   const step = statusFlow.indexOf(order.status)
   const nextStatus = step >= 0 ? statusFlow[step + 1] : undefined
   const contractOnly = order.id.startsWith('wa-contrato-')
-  const canExpand = order.source === 'CHECKOUT' && order.stockStart && order.stockEnd
-    && !['EXPIRED', 'CANCELLED', 'COMPLETED', 'PAYMENT_REVIEW'].includes(order.status)
+  const canChangeSchedule = order.source === 'CHECKOUT' && !contractOnly
+    && ['PAYMENT_CONFIRMED', 'DELIVERY_PENDING', 'IN_USE', 'PICKUP_PENDING'].includes(order.status)
+  const deliveryIndex = statusFlow.indexOf('DELIVERY_PENDING')
+  const pickupIndex = statusFlow.indexOf('PICKUP_PENDING')
+  async function saveSchedule(changes: Parameters<typeof api.changeOrderSchedule>[2]) {
+    let ok = false
+    await perform(() => api.changeOrderSchedule(credentials, order!.id, changes, ''), 'Dia e horário atualizados.', () => { ok = true })
+    return ok
+  }
   const stockDiffers = order.stockStart && order.stockEnd && (order.stockStart !== order.start || order.stockEnd !== order.end)
   const departure = [...order.history].reverse().find(event => event.action === 'DELIVERY_DEPARTURE_NOTIFIED')
   const openIssues = order.issues.filter(issue => issue.status === 'OPEN')
@@ -233,34 +229,51 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
           <CheckCircle2 size={22} /><div><h2>Pedido concluído</h2><p>A poltrona já foi retirada e o aluguel está encerrado.</p></div>
         </section>}
 
-        {/* Fotos e vídeos por etapa (igual ao app): os da entrega em "Aguardando entrega", os da retirada em "Aguardando retirada". */}
-        {!contractOnly && (step < 0 || step >= statusFlow.indexOf('DELIVERY_PENDING')) && <section className="panel od-card od-evidence">
-          <span className="eyebrow">ETAPA • AGUARDANDO ENTREGA</span>
-          {departure && <div className="od-notice" role="note">
-            <span className="od-notice-icon"><Megaphone size={16} /></span>
-            <div><strong>Comunicado ao cliente</strong>
-              <p>✓ Avisado pelo WhatsApp que a poltrona saiu para entrega em {dateTimeLabel(departure.at)}.</p></div>
-          </div>}
-          <OrderEvidencePanel key={`${order.id}:${order.status}:entrega`} credentials={credentials} orderId={order.id}
-            status={order.status} couriers={couriers} phase="DELIVERY" />
-        </section>}
-        {!contractOnly && (step < 0 || step >= statusFlow.indexOf('PICKUP_PENDING')) && <section className="panel od-card od-evidence">
-          <span className="eyebrow">ETAPA • AGUARDANDO RETIRADA</span>
-          <OrderEvidencePanel key={`${order.id}:${order.status}:retirada`} credentials={credentials} orderId={order.id}
-            status={order.status} couriers={couriers} phase="PICKUP" />
-        </section>}
+        {/* Etapas da entrega e da retirada (igual ao app): dia e horário, antecipados ou posteriores, e as fotos e vídeos.
+            Na etapa atual as fotos aparecem; nas que já passaram, ficam num botão que abre a janela com elas. */}
+        {!contractOnly && ([['DELIVERY', deliveryIndex], ['PICKUP', pickupIndex]] as const).map(([phase, index]) => {
+          const passed = step < 0 || step > index
+          const current = step === index
+          const canEdit = canChangeSchedule && step <= index
+          if (!passed && !current && !canEdit) return null
+          const word = phase === 'DELIVERY' ? 'entrega' : 'retirada'
+          return <section key={phase} className="panel od-card od-evidence">
+            <div className="od-step-head">
+              <span className="eyebrow">ETAPA • AGUARDANDO {word.toUpperCase()}</span>
+              {passed && <button type="button" className="od-media-button" onClick={() => setMediaPhase(phase)}>
+                <Images size={15} /> Ver fotos e vídeos</button>}
+            </div>
+            {canEdit && <EarlySchedule order={order} kind={phase === 'DELIVERY' ? 'delivery' : 'pickup'} busy={busy} onSave={saveSchedule} />}
+            {phase === 'DELIVERY' && departure && !passed && <div className="od-notice" role="note">
+              <span className="od-notice-icon"><Megaphone size={16} /></span>
+              <div><strong>Comunicado ao cliente</strong>
+                <p>✓ Avisado pelo WhatsApp que a poltrona saiu para entrega em {dateTimeLabel(departure.at)}.</p></div>
+            </div>}
+            {current && <OrderEvidencePanel key={`${order.id}:${order.status}:${word}`} credentials={credentials} orderId={order.id}
+              status={order.status} couriers={couriers} phase={phase} />}
+          </section>
+        })}
+        {mediaPhase && <div className="modal-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) setMediaPhase(null) }}>
+          <section className="modal od-media-modal" role="dialog" aria-modal="true" aria-label="Fotos e vídeos">
+            <div className="modal-head"><div><span className="eyebrow">PEDIDO • {order.customerName}</span>
+              <h2>Fotos e vídeos da {mediaPhase === 'DELIVERY' ? 'entrega' : 'retirada'}</h2></div>
+              <button className="icon-button" aria-label="Fechar" onClick={() => setMediaPhase(null)}><X size={20} /></button></div>
+            <div className="od-media-body"><OrderEvidencePanel credentials={credentials} orderId={order.id} status={order.status}
+              couriers={couriers} phase={mediaPhase} /></div>
+          </section>
+        </div>}
         <section className="panel od-card" aria-labelledby="od-logistics-title">
           <div className="od-card-head"><h2 id="od-logistics-title"><Truck size={18} /> Entrega e retirada</h2></div>
           <div className="od-schedule">
             <div className="od-schedule-item delivery">
               <small>Entrega</small>
-              <strong>{weekdayDateLabel(order.start)}</strong>
+              <strong>{weekdayDateLabel(order.deliveryDate ?? order.start)}</strong>
               <span>{order.deliveryTime ? timeLabel(order.deliveryTime) : 'Sem horário combinado'}</span>
             </div>
             <ArrowRight size={18} className="od-schedule-arrow" aria-hidden="true" />
             <div className="od-schedule-item pickup">
               <small>Retirada</small>
-              <strong>{weekdayDateLabel(order.end)}</strong>
+              <strong>{weekdayDateLabel(order.pickupDate ?? order.end)}</strong>
               <span>{order.pickupTime ? timeLabel(order.pickupTime) : 'Sem horário combinado'}</span>
             </div>
           </div>
@@ -275,41 +288,6 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
             <a className="order-map-button" target="_blank" rel="noopener noreferrer" href={mapUrl}><MapPin size={16} /> Abrir mapa</a>
           </div>
 
-          {canExpand && <div className="od-collapse">
-            <button type="button" className="od-collapse-toggle" aria-expanded={stockOpen} onClick={() => setStockOpen(value => !value)}>
-              <span><strong>Entrega antecipada ou retirada posterior</strong>
-                <small>Entrega {order.deliveryTime ? timeLabel(order.deliveryTime) : 'sem horário'} • Retirada {order.pickupTime ? timeLabel(order.pickupTime) : 'sem horário'}</small></span>
-              {stockOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-            </button>
-            {stockOpen && <div className="od-collapse-body">
-              <div className="order-form-grid">
-                <label className="order-field">Novo horário de entrega
-                  <input type="time" value={newDelivery} disabled={order.status === 'IN_USE' || order.status === 'PICKUP_PENDING'}
-                    onChange={event => setNewDelivery(event.target.value)} /></label>
-                <label className="order-field">Novo horário de retirada
-                  <input type="time" value={newPickup} onChange={event => setNewPickup(event.target.value)} /></label>
-              </div>
-              <div><button className="button secondary" disabled={busy || (!newDelivery && !newPickup)}
-                onClick={() => void perform(() => api.changeOrderSchedule(credentials, order.id, newDelivery || null, newPickup || null, ''),
-                  'Horário atualizado.', () => { setNewDelivery(''); setNewPickup('') })}>
-                Salvar horário</button></div>
-              <div className="order-form-grid">
-                <label className="order-field">Primeiro dia de estoque
-                  <input type="date" value={stockStart} max={order.stockStart ?? undefined} onChange={event => setStockStart(event.target.value)} /></label>
-                <label className="order-field">Último dia de estoque
-                  <input type="date" value={stockEnd} min={order.stockEnd ?? undefined} onChange={event => setStockEnd(event.target.value)} /></label>
-              </div>
-              <label className="order-field"><span>Observação <span className="optional">(opcional)</span></span>
-                <input value={stockNote} maxLength={300} onChange={event => setStockNote(event.target.value)}
-                  placeholder="Ex.: entrega combinada um dia antes" /></label>
-              <p className="order-muted">Os dias extras só são confirmados se a poltrona estiver livre.</p>
-              <div><button className="button secondary" disabled={busy || !stockStart || !stockEnd
-                || (stockStart === order.stockStart && stockEnd === order.stockEnd)}
-                onClick={() => void perform(() => api.expandOrderStock(credentials, order.id, stockStart, stockEnd, stockNote),
-                  'Intervalo de estoque atualizado.', () => { setStockNote(''); setStockOpen(false) })}>
-                Confirmar intervalo</button></div>
-            </div>}
-          </div>}
         </section>
 
 

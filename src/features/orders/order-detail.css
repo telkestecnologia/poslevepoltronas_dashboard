@@ -182,3 +182,12 @@
 .od-tl-kind { color: var(--kind); font-size: 10.5px; font-style: normal; font-weight: 800; letter-spacing: 0.6px; text-transform: uppercase; }
 .od-tl-legend { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
 .od-tl-chip { padding: 3px 9px; border-radius: 99px; background: var(--kind-soft); color: var(--kind); font-size: 11.5px; font-weight: 700; }
+
+/* Etapas da entrega e da retirada: botão das fotos já feitas e a janela com elas. */
+.od-step-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.od-media-button { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 0; border-radius: 99px;
+  background: #e6f4f5; color: #127a84; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.od-media-button:hover { background: #d3eced; }
+.od-media-modal { width: min(100%, 760px); }
+.od-media-body { padding: 8px 22px 22px; }
+.od-early { margin-top: 4px; }

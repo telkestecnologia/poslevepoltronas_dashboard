@@ -76,22 +76,22 @@ function buildAlerts({ orders, conversations, unanswered, maintenance }: {
     }
     const waitingDelivery = order.status === 'PAYMENT_CONFIRMED' || order.status === 'DELIVERY_PENDING'
     const waitingPickup = order.status === 'IN_USE' || order.status === 'PICKUP_PENDING'
-    if (waitingDelivery && order.start < now) {
+    if (waitingDelivery && (order.deliveryDate ?? order.start) < now) {
       items.push({ key: `late-delivery-${order.id}`, level: 'urgent', title: 'Entrega atrasada', target: toOrder(order),
-        detail: `${who(order)}: estava prevista para ${shortDate(order.start)}.` })
-    } else if (waitingDelivery && order.start <= tomorrow && !order.courierId) {
+        detail: `${who(order)}: estava prevista para ${shortDate((order.deliveryDate ?? order.start))}.` })
+    } else if (waitingDelivery && (order.deliveryDate ?? order.start) <= tomorrow && !order.courierId) {
       items.push({ key: `courier-${order.id}`, level: 'warning', title: 'Entrega sem entregador', target: toOrder(order),
-        detail: `${who(order)}: entrega ${order.start === now ? 'hoje' : 'amanhã'}${order.deliveryTime ? ` ${timeLabel(order.deliveryTime)}` : ''}.` })
+        detail: `${who(order)}: entrega ${(order.deliveryDate ?? order.start) === now ? 'hoje' : 'amanhã'}${order.deliveryTime ? ` ${timeLabel(order.deliveryTime)}` : ''}.` })
     } else if (waitingDelivery) {
       items.push({ key: `deliver-${order.id}`, level: 'warning', title: 'Entregar poltrona', target: toOrder(order),
-        detail: `${who(order)}: entrega em ${shortDate(order.start)}${order.deliveryTime ? ` ${timeLabel(order.deliveryTime)}` : ''}.` })
+        detail: `${who(order)}: entrega em ${shortDate((order.deliveryDate ?? order.start))}${order.deliveryTime ? ` ${timeLabel(order.deliveryTime)}` : ''}.` })
     }
-    if (waitingPickup && order.end < now) {
+    if (waitingPickup && (order.pickupDate ?? order.end) < now) {
       items.push({ key: `late-pickup-${order.id}`, level: 'urgent', title: 'Retirada atrasada', target: toOrder(order),
-        detail: `${who(order)}: estava prevista para ${shortDate(order.end)}.` })
+        detail: `${who(order)}: estava prevista para ${shortDate((order.pickupDate ?? order.end))}.` })
     } else if (order.status === 'PICKUP_PENDING') {
       items.push({ key: `pickup-${order.id}`, level: 'warning', title: 'Retirar poltrona', target: toOrder(order),
-        detail: `${who(order)}: retirada em ${shortDate(order.end)}${order.pickupTime ? ` ${timeLabel(order.pickupTime)}` : ''}.` })
+        detail: `${who(order)}: retirada em ${shortDate((order.pickupDate ?? order.end))}${order.pickupTime ? ` ${timeLabel(order.pickupTime)}` : ''}.` })
     }
     if (order.status === 'PENDING_PAYMENT' && order.expiresAt) {
       const left = new Date(order.expiresAt).getTime() - Date.now()
