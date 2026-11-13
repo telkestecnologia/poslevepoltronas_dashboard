@@ -191,3 +191,22 @@
 .od-media-modal { width: min(100%, 760px); }
 .od-media-body { padding: 8px 22px 22px; }
 .od-early { margin-top: 4px; }
+
+/* Carrossel de fotos e vídeos numa janela; a foto só abre em tela cheia ao clicar. */
+.media-carousel { width: min(100%, 640px); }
+.media-carousel-body { display: grid; justify-items: center; gap: 12px; padding: 18px 22px 22px; }
+.media-carousel-stage { position: relative; display: grid; place-items: center; width: 100%; aspect-ratio: 4 / 3; border-radius: 14px; overflow: hidden; background: #1f2b30; }
+.media-carousel-photo { width: 100%; height: 100%; padding: 0; border: 0; background: none; cursor: zoom-in; }
+.media-carousel-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.media-carousel-expand { position: absolute; right: 12px; bottom: 12px; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: rgba(0, 0, 0, 0.45); color: #fff; }
+.media-carousel-video { width: 100%; height: 100%; background: #000; }
+.media-carousel-arrow { position: absolute; top: 50%; z-index: 1; display: grid; place-items: center; width: 40px; height: 40px; margin-top: -20px; border: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.9); color: #2a3236; cursor: pointer; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); }
+.media-carousel-arrow.left { left: 10px; } .media-carousel-arrow.right { right: 10px; }
+.media-carousel-arrow:disabled { opacity: 0; pointer-events: none; }
+.media-carousel-dots { display: flex; gap: 6px; }
+.media-carousel-dots button { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 99px; background: #e7e6e2; cursor: pointer; }
+.media-carousel-dots button.on { width: 20px; background: #1a9baa; }
+.media-carousel-caption { margin: 0; color: #7a8287; font-size: 13px; }
+.media-fullscreen { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; background: rgba(0, 0, 0, 0.92); cursor: zoom-out; }
+.media-fullscreen img { max-width: 100vw; max-height: 100vh; object-fit: contain; }
+.media-fullscreen-close { position: absolute; top: 18px; right: 18px; display: grid; place-items: center; width: 42px; height: 42px; border: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.15); color: #fff; cursor: pointer; }

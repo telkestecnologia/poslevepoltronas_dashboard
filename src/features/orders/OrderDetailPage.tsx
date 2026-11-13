@@ -14,6 +14,7 @@ import { getMessage } from '../../utils/errors'
 import { brazilPhoneDigits, displayPhone } from '../../utils/phone'
 import { OrderEvidencePanel } from './OrderEvidencePanel'
 import { EarlySchedule } from './EarlySchedule'
+import { MediaCarousel } from './MediaCarousel'
 
 type Props = { credentials: string; id: string; onBack: () => void }
 
@@ -253,15 +254,8 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
               status={order.status} couriers={couriers} phase={phase} />}
           </section>
         })}
-        {mediaPhase && <div className="modal-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) setMediaPhase(null) }}>
-          <section className="modal od-media-modal" role="dialog" aria-modal="true" aria-label="Fotos e vídeos">
-            <div className="modal-head"><div><span className="eyebrow">PEDIDO • {order.customerName}</span>
-              <h2>Fotos e vídeos da {mediaPhase === 'DELIVERY' ? 'entrega' : 'retirada'}</h2></div>
-              <button className="icon-button" aria-label="Fechar" onClick={() => setMediaPhase(null)}><X size={20} /></button></div>
-            <div className="od-media-body"><OrderEvidencePanel credentials={credentials} orderId={order.id} status={order.status}
-              couriers={couriers} phase={mediaPhase} /></div>
-          </section>
-        </div>}
+        {mediaPhase && <MediaCarousel credentials={credentials} orderId={order.id} phase={mediaPhase} couriers={couriers}
+          customer={order.customerName} onClose={() => setMediaPhase(null)} />}
         <section className="panel od-card" aria-labelledby="od-logistics-title">
           <div className="od-card-head"><h2 id="od-logistics-title"><Truck size={18} /> Entrega e retirada</h2></div>
           <div className="od-schedule">
