@@ -301,7 +301,7 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
 
         {!contractOnly && <section className="panel od-card" aria-labelledby="od-issues-title">
           <div className="od-card-head">
-            <h2 id="od-issues-title"><AlertCircle size={18} /> Problemas
+            <h2 id="od-issues-title"><AlertCircle size={18} /> Encontrou algum problema?
               {openIssues.length > 0 && <span className="od-count">{openIssues.length} em aberto</span>}
               {order.issues.length > 0 && openIssues.length === 0 && <span className="od-count resolved">todos resolvidos</span>}</h2>
             {!issueOpen && <button className="button secondary" onClick={() => setIssueOpen(true)}>Registrar problema</button>}
