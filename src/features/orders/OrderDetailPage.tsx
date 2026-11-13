@@ -10,7 +10,7 @@ import {
   actorLabel, currency, dateLabel, dateTimeLabel, eventKind, eventKinds, eventLabel, orderStatusLabel, paymentName,
   statusFlow, statusLabels, usePolling, weekdayDateLabel,
 } from '../../data/orders'
-import { branchLabel } from '../../utils/branches'
+import { branchLabel, chairName } from '../../utils/branches'
 import { getMessage } from '../../utils/errors'
 import { brazilPhoneDigits, displayPhone } from '../../utils/phone'
 import { OrderEvidencePanel } from './OrderEvidencePanel'
@@ -181,7 +181,7 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
 
     <header className="od-header">
       <div className="od-header-main">
-        <span className="eyebrow">PEDIDO • POLTRONA {order.chairCode}</span>
+        <span className="eyebrow">PEDIDO • {chairName(order.chairCode, order.branchName).toUpperCase()}</span>
         <h1>{order.customerName}</h1>
         <p><MapPin size={14} /> {order.municipalityName}/{order.municipalityUf} • {branchLabel(order.branchName)}
           <span className="od-dot" aria-hidden="true">•</span> Entrada em {dateTimeLabel(order.createdAt)}</p>
@@ -367,7 +367,7 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
           <h2 id="od-rental-title" className="od-side-title">Aluguel</h2>
           <dl className="od-facts">
             <div><dt>Período cobrado</dt><dd>{dateLabel(order.start)} a {dateLabel(order.end)}</dd></div>
-            <div><dt>Poltrona</dt><dd>{order.chairCode}</dd></div>
+            <div><dt>Poltrona</dt><dd>{chairName(order.chairCode, order.branchName)}</dd></div>
             <div><dt>Filial</dt><dd>{branchLabel(order.branchName)}</dd></div>
           </dl>
           <dl className="od-facts od-money">

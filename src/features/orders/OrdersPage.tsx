@@ -5,7 +5,7 @@ import { api, type Branch, type Order, type OrderPage, type OrderQuery, type Ord
 import { EmptyState } from '../../components/common'
 import { dateLabel, orderStatusLabel, usePolling } from '../../data/orders'
 import { replaceQuery } from '../../router'
-import { branchLabel, onlyOfficialBranches } from '../../utils/branches'
+import { branchLabel, onlyOfficialBranches, chairName } from '../../utils/branches'
 import { getMessage } from '../../utils/errors'
 
 // Os mesmos cartões do app. Clicar em um filtra a lista (no servidor); clicar de novo limpa.
@@ -165,7 +165,7 @@ export function OrdersPage({ credentials, params, onOpenOrder }: Props) {
               <td><div className="courier-identity"><strong>{order.customerName}</strong>
                 <small>{order.municipalityName} • {branchLabel(order.branchName)}</small></div></td>
               <td>{dateLabel(order.start)} a {dateLabel(order.end)}</td>
-              <td>{order.chairCode}</td>
+              <td>{chairName(order.chairCode, order.branchName)}</td>
               <td><span className={`order-status status-${order.status.toLowerCase()}`}>{orderStatusLabel(order)}</span></td>
               <td>{issues ? <span className="order-status status-issue_open">{issues} em aberto</span> : '—'}</td>
               <td><button className="table-action" onClick={event => { event.stopPropagation(); onOpenOrder(order.id) }}>

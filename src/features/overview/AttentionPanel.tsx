@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { chairName } from '../../utils/branches'
 import { AlertTriangle, Armchair, Check, ChevronRight, MessagesSquare, Sparkles } from 'lucide-react'
 import { api, type Conversation, type Order, type OrderStatus } from '../../api'
 import { fetchAllOrders, orderStatusLabel, paymentName, usePolling } from '../../data/orders'
@@ -71,7 +72,7 @@ function buildAlerts({ orders, conversations, unanswered, maintenance }: {
     }
     for (const issue of order.issues.filter(item => item.status === 'OPEN')) {
       items.push({ key: `issue-${issue.id}`, level: 'urgent', title: `Problema em aberto: ${issue.title}`, target: toOrder(order),
-        detail: `${who(order)} • poltrona ${order.chairCode}` })
+        detail: `${who(order)} • ${chairName(order.chairCode, order.branchName)}` })
     }
     const waitingDelivery = order.status === 'PAYMENT_CONFIRMED' || order.status === 'DELIVERY_PENDING'
     const waitingPickup = order.status === 'IN_USE' || order.status === 'PICKUP_PENDING'

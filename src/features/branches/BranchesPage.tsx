@@ -3,7 +3,7 @@ import { ArrowLeft, Armchair, CheckCircle2, ChevronRight, MapPin, PauseCircle, P
 import { api, type Branch, type BranchInput, type Chair, type Municipality } from '../../api'
 import { BranchModal } from './BranchModal'
 import { EmptyState } from '../../components/common'
-import { branchLabel, OFFICIAL_BRANCH_COUNT } from '../../utils/branches'
+import { branchLabel, OFFICIAL_BRANCH_COUNT, chairName } from '../../utils/branches'
 import { getMessage } from '../../utils/errors'
 import './branches.css'
 
@@ -61,7 +61,7 @@ export function BranchesPage({ branches, activeCounts, onNewBranch, onToggleFree
       </section>
       <section className="panel branch-section">
         <h2>Poltronas da filial</h2>
-        <BranchChairs credentials={credentials} branchId={entered.id} reload={modalOpen} onEdit={onEditChair} onNew={onNewChair} />
+        <BranchChairs credentials={credentials} branchId={entered.id} branchName={entered.name} reload={modalOpen} onEdit={onEditChair} onNew={onNewChair} />
       </section>
     </>
   }
@@ -74,8 +74,8 @@ export function BranchesPage({ branches, activeCounts, onNewBranch, onToggleFree
           <h1>Filiais</h1>
         </div>
         {branches.length < OFFICIAL_BRANCH_COUNT && (
-          <button className="button primary admin-only" onClick={onNewBranch}>
-            <Plus size={18} /> Nova filial
+          <button className="button primary admin-only branch-new-small" onClick={onNewBranch}>
+            <Plus size={15} /> Nova filial
           </button>
         )}
       </div>
@@ -130,8 +130,8 @@ export function BranchesPage({ branches, activeCounts, onNewBranch, onToggleFree
                       </button>
                     </td>
                     <td>
-                      <button className="table-action" disabled={busyId !== null} onClick={() => setEnteredId(branch.id)}>
-                        Entrar <ChevronRight size={16} />
+                      <button className="branch-enter-button" disabled={busyId !== null} onClick={() => setEnteredId(branch.id)}>
+                        Entrar <span className="branch-enter-arrow"><ChevronRight size={15} /></span>
                       </button>
                     </td>
                   </tr>
@@ -158,9 +158,10 @@ const chairStatus: Record<string, { label: string; plural: string; tone: string 
 }
 
 /** Poltronas da filial, na própria página da filial. */
-function BranchChairs({ credentials, branchId, reload, onEdit, onNew }: {
-  credentials: string; branchId: string; reload: boolean; onEdit: (chair: Chair) => void; onNew: () => void
+function BranchChairs({ credentials, branchId, branchName, reload, onEdit, onNew }: {
+  credentials: string; branchId: string; branchName: string; reload: boolean; onEdit: (chair: Chair) => void; onNew: () => void
 }) {
+  const branchNameOf = (_id: string) => branchName
   const [search, setSearch] = useState('')
   const [chairs, setChairs] = useState<Chair[] | null>(null)
   const [error, setError] = useState('')
@@ -195,7 +196,7 @@ function BranchChairs({ credentials, branchId, reload, onEdit, onNew }: {
     {shown.length === 0 ? <p className="branch-muted">{chairs.length === 0 ? 'Nenhuma poltrona nesta filial.' : 'Nenhuma poltrona nesta situação.'}</p>
       : <div className="branch-chairs">{shown.map(chair => <button type="button" key={chair.id} onClick={() => onEdit(chair)} className={`branch-chair ${chairStatus[chair.status]?.tone ?? ''}`}>
         <span className="branch-chair-icon"><Armchair size={18} /></span>
-        <span className="branch-chair-text"><strong>{chair.code}</strong><small>{chair.model}{chair.notes ? ` • ${chair.notes}` : ''}</small></span>
+        <span className="branch-chair-text"><strong>{chairName(chair.code, branchNameOf(chair.branchId))}</strong><small>{chair.model}{chair.notes ? ` • ${chair.notes}` : ''}</small></span>
         <span className="branch-chair-status">{chairStatus[chair.status]?.label ?? chair.status}</span>
       </button>)}</div>}
   </>

@@ -27,3 +27,15 @@ export function onlyOfficialBranches<T>(items: T[], nameOf: (item: T) => string)
     .filter(item => isOfficialBranch(nameOf(item)))
     .sort((a, b) => officialIndex(nameOf(a)) - officialIndex(nameOf(b)))
 }
+
+/**
+ * Nome da poltrona para mostrar (igual ao app): "Poltrona FOR-01", "Poltrona SER-01" ou "Poltrona SOB-01", pela filial
+ * e pelo número do código (DEV-SER-01 → Poltrona SER-01). O código da etiqueta continua o mesmo no cadastro.
+ */
+export function chairName(code: string, branchName?: string | null) {
+  const text = (branchName ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+  const prefix = /serra|ibiapaba/.test(text) ? 'SER' : /sobral/.test(text) ? 'SOB' : /fortaleza/.test(text) ? 'FOR' : null
+  const number = code.match(/(\d+)\D*$/)?.[1]
+  if (!prefix || !number) return `Poltrona ${code}`
+  return `Poltrona ${prefix}-${number.padStart(2, '0')}`
+}

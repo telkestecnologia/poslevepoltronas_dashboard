@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowRight, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react'
 import { api, type Branch, type Courier, type Order, type OrderQuery, type OrderStatus } from '../../api'
 import { fetchAllOrders, usePolling } from '../../data/orders'
-import { branchLabel, onlyOfficialBranches } from '../../utils/branches'
+import { branchLabel, onlyOfficialBranches, chairName } from '../../utils/branches'
 import { getMessage } from '../../utils/errors'
 import { brazilPhoneDigits, displayPhone } from '../../utils/phone'
 
@@ -297,7 +297,7 @@ export function AgendaPage({ credentials, onOpenOrder }: Props) {
                   {itemStatus(item, today)}</span>
               </div>
               <h4>{item.order.customerName}</h4>
-              <p>{item.order.chairCode} • {branchLabel(item.order.branchName)}</p>
+              <p>{chairName(item.order.chairCode, item.order.branchName)} • {branchLabel(item.order.branchName)}</p>
               <p>{item.order.address}, {group.label}</p>
               <div className="agenda-item-footer">
                 <span>{item.order.courierId ? courierNames.get(item.order.courierId) ?? 'Entregador não encontrado' : 'Sem entregador'}</span>

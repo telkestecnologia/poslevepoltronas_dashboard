@@ -2,7 +2,7 @@ import { Armchair, CheckCircle2, ChevronRight, CircleHelp, MapPin, Plus, Search,
 import type { Branch, Chair, ChairFilter, ChairOption, ChairSituation, ManualBlock } from '../../api'
 import { EmptyState, StatusBadge } from '../../components/common'
 import { CHAIR_PAGE_SIZE } from '../../types'
-import { branchLabel, onlyOfficialBranches } from '../../utils/branches'
+import { branchLabel, onlyOfficialBranches, chairName } from '../../utils/branches'
 import { BlockManager } from './BlockManager'
 import './chairs-situation.css'
 
@@ -185,7 +185,7 @@ export function ChairsPage(props: Props) {
                         <span className="row-icon">
                           <Armchair size={18} />
                         </span>
-                        <strong>{chair.code}</strong>
+                        <strong>{chairName(chair.code, branches.find((branch) => branch.id === chair.branchId)?.name)}</strong>
                       </div>
                     </td>
                     <td>{chair.model}</td>
