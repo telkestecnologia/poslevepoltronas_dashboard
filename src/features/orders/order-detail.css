@@ -248,3 +248,6 @@
 .od-corner-chevron { justify-self: end; align-self: end; display: grid; place-items: center; width: 26px; height: 26px; margin-left: auto; border: 0;
   border-radius: 50%; background: #1a9baa; color: #fff; cursor: pointer; }
 .od-corner-chevron.now { background: #f47a52; }
+
+/* Enquanto carrega, o espaço já tem o tamanho da foto (a janela não muda de tamanho). */
+.media-carousel-stage.loading { background: #f6f5f2; color: #7a8287; font-size: 14px; }

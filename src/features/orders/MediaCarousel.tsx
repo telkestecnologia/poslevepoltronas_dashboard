@@ -46,7 +46,7 @@ export function MediaCarousel({ credentials, orderId, phase, couriers, customer,
         <button className="icon-button" aria-label="Fechar" onClick={onClose}><X size={20} /></button></div>
       <div className="media-carousel-body">
         {error && <p className="form-error" role="alert">{error}</p>}
-        {!items ? <p className="order-muted">Carregando...</p>
+        {!items ? <div className="media-carousel-stage loading" role="status"><span>Carregando...</span></div>
           : items.length === 0 ? <p className="order-muted">Nenhuma foto ou vídeo da {word} enviado.</p>
           : current && <>
             <div className="media-carousel-stage">
