@@ -87,9 +87,3 @@
 .finance-filter-modal .overview-rentals-calendar { position: static; width: 100%; max-width: none; margin-top: 8px; box-shadow: none; }
 
 .finance-today { margin-left: 6px; color: var(--muted); font-size: 14px; font-weight: 600; }
-
-/* Card do mês com efeito de vidro (igual ao app) e setas com mais destaque. */
-.finance-chart { background: linear-gradient(135deg, #cdeef0, #fbe3d8 55%, #dff2ee); }
-.finance-chart .finance-month { padding: 16px; border: 1px solid rgba(255, 255, 255, 0.85); border-radius: 16px; background: rgba(255, 255, 255, 0.55); backdrop-filter: blur(18px) saturate(140%); -webkit-backdrop-filter: blur(18px) saturate(140%); }
-.finance-month-nav button { width: 46px; height: 46px; background: var(--teal-dark); color: #fff; box-shadow: 0 3px 8px rgba(0, 0, 0, 0.18); }
-.finance-month-figures button:focus { outline: none; }
