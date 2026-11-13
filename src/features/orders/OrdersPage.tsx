@@ -8,6 +8,7 @@ import { replaceQuery } from '../../router'
 import { branchLabel, onlyOfficialBranches, chairName } from '../../utils/branches'
 import './orders-v2.css'
 import { getMessage } from '../../utils/errors'
+import logoSymbol from '../../assets/logo-simbolo.png'
 
 // Os mesmos cartões do app. Clicar em um filtra a lista (no servidor); clicar de novo limpa.
 type Summary = { key: string; label: string; statuses?: OrderStatus[]; issues?: boolean; tone: string; icon: LucideIcon }
@@ -168,7 +169,7 @@ export function OrdersPage({ credentials, params, onOpenOrder }: Props) {
           </tr></thead><tbody>{shown.items.map(order => {
             const issues = openIssuesOf(order)
             return <tr key={order.id} className="order-row" onClick={() => onOpenOrder(order.id)}>
-              <td><div className="order-client"><span className={`order-avatar status-${order.status.toLowerCase()}`}>{order.customerName.split(' ').filter(Boolean).map(part => part[0]).slice(0, 2).join('').toUpperCase()}</span>
+              <td><div className="order-client"><span className="order-logo"><img src={logoSymbol} alt="" aria-hidden="true" /></span>
                 <div className="courier-identity"><strong>{order.customerName}</strong>
                 <small>{order.municipalityName} • {branchLabel(order.branchName)}</small></div></div></td>
               <td>{dateLabel(order.start)} a {dateLabel(order.end)}</td>
