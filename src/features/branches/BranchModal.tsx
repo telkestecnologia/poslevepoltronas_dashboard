@@ -86,6 +86,8 @@ export function BranchModal({
 
   const form = (
         <form onSubmit={submit} className="modal-form">
+          {/* Na página da filial fica só o Atendendo; no cadastro aparece o nome. */}
+          {!inline && (
           <label>
             Nome da filial
             <input
@@ -97,6 +99,7 @@ export function BranchModal({
               autoFocus={!inline}
             />
           </label>
+          )}
           {/* Na página da filial, cidades e frete abre e fecha (começa fechado). */}
           <details className="municipality-picker" open={!inline}>
             <summary><strong>Cidades atendidas e frete ({areas.length})</strong></summary>
