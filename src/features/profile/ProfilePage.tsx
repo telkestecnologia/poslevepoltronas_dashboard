@@ -281,7 +281,7 @@ function MemberDialog({ credentials, member, areas, branches, onAreas, onClose, 
     <form className="modal-form" onSubmit={event => void submit(event)}>
       {!member && <FormIntro icon={<Sparkles size={13} />} title="Boas-vindas à Pós Leve" image={founders}>
         Preencha os dados de quem vai fazer parte do time. Ela entra no painel e no app com o e-mail e a senha que você criar aqui.</FormIntro>}
-      {!member && <h3 className="form-new-member">Adicionar novo integrante ao Time da Pós Leve</h3>}
+      {!member && <p className="form-new-member">Insira o novo integrante ao Time</p>}
       <label>Nome completo<input value={form.name} onChange={event => set('name', event.target.value)} maxLength={120} required autoFocus placeholder="Ex.: Isadora Ivo" /></label>
       <label>E-mail<input type="email" value={form.email} onChange={event => set('email', event.target.value)} required autoComplete="off" placeholder="nome@poslevepoltronas.com.br" /></label>
       <label>Celular com WhatsApp<input type="tel" inputMode="numeric" value={formatPhone(form.phone)} onChange={event => set('phone', event.target.value.replace(/\D/g, '').slice(0, 11))} required placeholder="(85) 99999-9999" /></label>
