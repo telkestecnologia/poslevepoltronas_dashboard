@@ -1,10 +1,11 @@
 import { timeShort } from '../../utils/time'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowRight, CalendarCheck, ChevronLeft, ChevronRight, RefreshCw, Truck, Undo2 } from 'lucide-react'
+import { ArrowRight, Building2, CalendarCheck, ChevronLeft, ChevronRight, MapPin, RefreshCw, Truck, Undo2 } from 'lucide-react'
 import { api, type Branch, type Courier, type Order, type OrderQuery, type OrderStatus } from '../../api'
 import { fetchAllOrders, usePolling } from '../../data/orders'
 import { branchLabel, onlyOfficialBranches, chairName } from '../../utils/branches'
 import { getMessage } from '../../utils/errors'
+import '../orders/orders-v2.css'
 import './agenda.css'
 import { brazilPhoneDigits, displayPhone } from '../../utils/phone'
 
@@ -76,7 +77,8 @@ export function AgendaPage({ credentials, onOpenOrder }: Props) {
   const [view, setView] = useState<View>('week')
   const [city, setCity] = useState('ALL')
   const [branch, setBranch] = useState('ALL')
-  const [courier, setCourier] = useState('ALL')
+  // Sem filtro de entregador na tela: a agenda mostra todos.
+  const courier = 'ALL' as string
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState('')
   const [allBranches, setBranches] = useState<Branch[]>([])
@@ -204,6 +206,19 @@ export function AgendaPage({ credentials, onOpenOrder }: Props) {
         <RefreshCw size={16} /> {refreshing ? 'Atualizando...' : 'Atualizar agenda'}</button>
     </div>
     {error && <div className="form-error" role="alert">{error}</div>}
+    {/* Filial e cidade no topo, discretas como em Pedidos (sem filtro de entregador). */}
+    <div className="order-pills agenda-pills" role="group" aria-label="Filtros da agenda">
+      <label className="order-pill"><span className="order-pill-icon"><Building2 size={15} /></span>
+        <select aria-label="Filial" value={branch} onChange={event => { setBranch(event.target.value); setCity('ALL') }}>
+          <option value="ALL">Todas as filiais</option>
+          {sortedBranches.map(item => <option key={item.id} value={item.id}>{branchLabel(item.name)}</option>)}
+        </select></label>
+      <label className="order-pill"><span className="order-pill-icon"><MapPin size={15} /></span>
+        <select aria-label="Cidade" value={city} disabled={!selectedBranch} onChange={event => setCity(event.target.value)}>
+          <option value="ALL">{selectedBranch ? 'Todas as cidades' : 'Escolha a filial'}</option>
+          {cities.map(item => <option key={item.code} value={item.code}>{item.name}/{item.uf}</option>)}
+        </select></label>
+    </div>
     {/* Hoje em dois cartões coloridos (igual ao app): entregas e retiradas. */}
     <div className="agenda-today-tiles" aria-live="polite">
       <div className="delivery"><span className="agenda-today-icon"><Truck size={18} /></span>
@@ -212,27 +227,6 @@ export function AgendaPage({ credentials, onOpenOrder }: Props) {
         <strong>{todayCount?.pickups ?? 0}</strong><small>{todayCount?.pickups === 1 ? 'retirada hoje' : 'retiradas hoje'}</small></div>
     </div>
 
-    <div className="agenda-filters panel" role="group" aria-label="Filtros da agenda">
-      <label>Filial
-        <select value={branch} onChange={event => { setBranch(event.target.value); setCity('ALL') }}>
-          <option value="ALL">Todas as filiais</option>
-          {sortedBranches.map(item => <option key={item.id} value={item.id}>{branchLabel(item.name)}</option>)}
-        </select>
-      </label>
-      <label>Cidade da filial
-        <select value={city} disabled={!selectedBranch} onChange={event => setCity(event.target.value)}>
-          <option value="ALL">{selectedBranch ? 'Todas as cidades da filial' : 'Selecione uma filial'}</option>
-          {cities.map(item => <option key={item.code} value={item.code}>{item.name}/{item.uf}</option>)}
-        </select>
-      </label>
-      <label>Entregador
-        <select value={courier} onChange={event => setCourier(event.target.value)}>
-          <option value="ALL">Todos os entregadores</option>
-          <option value="UNASSIGNED">Sem entregador</option>
-          {couriers.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
-        </select>
-      </label>
-    </div>
 
     <div className="agenda-layout">
       <section className="agenda-calendar panel" aria-label="Calendário de serviços">
