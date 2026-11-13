@@ -250,7 +250,7 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
                   {openPhase === phase ? <ChevronUp size={16} /> : <ChevronDown size={16} />}</button>
                 : <span className="eyebrow">ETAPA • AGUARDANDO {word.toUpperCase()}</span>}
               <span className="od-step-actions">
-                {canEdit && <EarlySchedule order={order} kind={phase === 'DELIVERY' ? 'delivery' : 'pickup'} busy={busy} onSave={saveSchedule} />}
+                {canEdit && <EarlySchedule order={order} kind={phase === 'DELIVERY' ? 'delivery' : 'pickup'} busy={busy} current={current} onSave={saveSchedule} />}
                 {passed && <button type="button" className="od-media-button" onClick={() => setMediaPhase(phase)}>
                   <Images size={15} /> Ver fotos e vídeos</button>}
               </span>

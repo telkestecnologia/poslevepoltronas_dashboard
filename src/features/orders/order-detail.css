@@ -220,3 +220,7 @@
 /* Nome da etapa que abre e fecha o conteúdo. */
 .od-step-toggle { display: inline-flex; align-items: center; gap: 6px; padding: 0; border: 0; background: none; color: #127a84; cursor: pointer; }
 .od-step-toggle .eyebrow { color: inherit; }
+
+/* Dia e horário da etapa atual em laranja. */
+.od-media-button.now { background: #fef0ea; color: #f47a52; }
+.od-media-button.now:hover { background: #fde2d6; }

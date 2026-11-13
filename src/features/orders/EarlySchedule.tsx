@@ -11,8 +11,10 @@ const todayIso = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'Ameri
  * Entrega ou retirada antecipada ou posterior (igual ao app): um botão discreto "Dia e horário" ao lado da etapa,
  * que abre uma janela pequena com o dia e o horário. Dias fora do bloqueio conferem se a poltrona está livre.
  */
-export function EarlySchedule({ order, kind, busy, onSave }: {
+export function EarlySchedule({ order, kind, busy, current, onSave }: {
   order: Order; kind: 'delivery' | 'pickup'; busy: boolean
+  /** Etapa atual do processo: o botão fica em laranja. */
+  current?: boolean
   onSave: (changes: { deliveryDate?: string | null; deliveryTime?: string | null; pickupDate?: string | null; pickupTime?: string | null }) => Promise<boolean>
 }) {
   const delivery = kind === 'delivery'
@@ -35,7 +37,7 @@ export function EarlySchedule({ order, kind, busy, onSave }: {
 
   return <>
     <span className="od-step-when">{moved ? 'Combinada' : 'Prevista'} para {dayLabel(day)}{time ? ` às ${time.slice(0, 5)}` : ''}</span>
-    <button type="button" className="od-media-button" onClick={() => setOpen(true)}><CalendarClock size={15} /> Dia e horário</button>
+    <button type="button" className={`od-media-button${current ? ' now' : ''}`} onClick={() => setOpen(true)}><CalendarClock size={15} /> Dia e horário</button>
     {open && createPortal(<div className="modal-backdrop" onMouseDown={event => { if (event.target === event.currentTarget && !busy) close() }}>
       <section className="modal od-early-modal" role="dialog" aria-modal="true" aria-label={delivery ? 'Entrega antecipada ou posterior' : 'Retirada antecipada ou posterior'}>
         <div className="modal-head"><div><span className="eyebrow">PEDIDO • {order.customerName}</span>
