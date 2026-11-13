@@ -38,3 +38,6 @@
 /* Foto quadrada das proprietárias na recepção: a capa mostra a cena inteira. */
 .profile-cover { height: auto; aspect-ratio: 1 / 1; background-position: center; }
 .profile-cover::after { background: linear-gradient(180deg, rgba(255, 255, 255, 0) 62%, #fff 100%); }
+
+/* Cabeças perto do topo e cartão mais acima. */
+.profile-cover { aspect-ratio: auto; height: 300px; background-position: center top; }
