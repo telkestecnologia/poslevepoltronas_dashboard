@@ -3,6 +3,7 @@ import { ArrowLeft, MessageCircle, Paperclip, RefreshCw, Send, X, MessagesSquare
 import { api, sendConversationAttachment, type Conversation, type ConversationAnalysis, type ConversationMessage } from '../../api'
 import { conversationState, customerLabel, customerNumber, nameColor, stageTone } from '../../utils/conversations'
 import { MessageImages, WhatsAppText } from './WhatsAppText'
+import { VoiceRecorder } from './VoiceRecorder'
 import { conversationRecap } from './conversationRecap'
 import { getMessage } from '../../utils/errors'
 import './conversations.css'
@@ -44,6 +45,7 @@ export function ConversationsPage({ credentials, selectedId, onSelect }: Props) 
       failure => setAnalysis({ error: getMessage(failure), loading: false }))
   }
   const fileInput = useRef<HTMLInputElement>(null)
+  const [voiceRecording, setVoiceRecording] = useState(false)
   const [busy, setBusy] = useState(false)
   const thread = useRef<HTMLDivElement>(null)
   const listRef = useRef<Conversation[]>([])
@@ -109,7 +111,7 @@ export function ConversationsPage({ credentials, selectedId, onSelect }: Props) 
     }
   }
 
-  // Anexo: foto, vídeo, áudio ou PDF; a mensagem digitada vai como legenda.
+  // Anexo: foto, vídeo, PDF ou o áudio gravado; a mensagem digitada vai como legenda.
   async function sendFile(file: File | undefined) {
     if (!file || !selected) return
     setBusy(true)
@@ -273,14 +275,20 @@ export function ConversationsPage({ credentials, selectedId, onSelect }: Props) 
             {replyTo && <div className="wa-quote"><div><strong>Respondendo a</strong><span>{replyTo.content}</span></div>
               <button type="button" aria-label="Cancelar resposta" onClick={() => setReplyTo(null)}><X size={16} /></button></div>}
             <form className={`wa-input${selected.state === 'HUMAN' ? '' : ' locked'}`} onSubmit={event => void send(event)}>
-              <input ref={fileInput} type="file" hidden accept="image/jpeg,image/png,video/mp4,video/3gpp,audio/*,application/pdf"
+              <input ref={fileInput} type="file" hidden accept="image/jpeg,image/png,video/mp4,video/3gpp,application/pdf"
                 onChange={event => void sendFile(event.target.files?.[0])} />
-              <button type="button" className="wa-attach" aria-label="Enviar foto, vídeo, áudio ou PDF" title="Enviar foto, vídeo, áudio ou PDF"
-                disabled={selected.state !== 'HUMAN' || busy || windowClosed} onClick={() => fileInput.current?.click()}><Paperclip size={18} /></button>
-              <input value={draft} onChange={event => setDraft(event.target.value)} maxLength={2000} aria-label="Mensagem"
-                disabled={selected.state !== 'HUMAN'}
-                placeholder={selected.state === 'HUMAN' ? 'Mensagem' : '🔒 Bloqueado enquanto a Isa atende'} />
-              <button type="submit" disabled={selected.state !== 'HUMAN' || !draft.trim() || busy} aria-label="Enviar mensagem"><Send size={18} /></button>
+              {!voiceRecording && <>
+                <button type="button" className="wa-attach" aria-label="Enviar foto, vídeo ou PDF" title="Enviar foto, vídeo ou PDF"
+                  disabled={selected.state !== 'HUMAN' || busy || windowClosed} onClick={() => fileInput.current?.click()}><Paperclip size={18} /></button>
+                <input value={draft} onChange={event => setDraft(event.target.value)} maxLength={2000} aria-label="Mensagem"
+                  disabled={selected.state !== 'HUMAN'}
+                  placeholder={selected.state === 'HUMAN' ? 'Mensagem' : '🔒 Bloqueado enquanto a Isa atende'} />
+              </>}
+              {/* Sem texto digitado, o botão é o microfone para gravar e enviar áudio, como no WhatsApp. */}
+              {draft.trim() && !voiceRecording
+                ? <button type="submit" disabled={selected.state !== 'HUMAN' || busy} aria-label="Enviar mensagem"><Send size={18} /></button>
+                : <VoiceRecorder disabled={selected.state !== 'HUMAN' || busy || windowClosed} onRecordingChange={setVoiceRecording}
+                  onRecorded={file => void sendFile(file)} onError={setChatError} />}
             </form>
           </footer>
         </>}

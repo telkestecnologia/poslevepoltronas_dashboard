@@ -257,3 +257,15 @@
 /* Resumo do atendimento: o modal inteiro rola com folga. */
 .wa-summary { max-height: calc(100vh - 48px); display: flex; flex-direction: column; }
 .wa-summary .wa-recap { max-height: none; flex: 1; min-height: 0; overscroll-behavior: contain; }
+
+/* Gravar áudio (como no WhatsApp Web). */
+.wa-input .wa-mic { background: #00a884; color: #fff; }
+.wa-recording { display: flex; flex: 1; align-items: center; gap: 12px; min-height: 44px; padding: 0 6px 0 4px; border-radius: 22px; background: #fff; }
+.wa-input .wa-recording button { width: 40px; height: 40px; }
+.wa-input .wa-recording .wa-recording-trash { background: transparent; color: #8696a0; }
+.wa-input .wa-recording .wa-recording-send { margin-left: auto; background: #00a884; color: #fff; }
+.wa-recording-dot { width: 10px; height: 10px; border-radius: 50%; background: #e53935; animation: wa-rec 1s ease-in-out infinite alternate; }
+.wa-recording-time { color: #111b21; font-variant-numeric: tabular-nums; }
+.wa-recording-label { color: #8696a0; font-size: 14px; }
+@keyframes wa-rec { from { opacity: 1; } to { opacity: 0.25; } }
+@media (prefers-reduced-motion: reduce) { .wa-recording-dot { animation: none; } }
