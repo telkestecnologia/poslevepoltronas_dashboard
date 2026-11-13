@@ -6,6 +6,3 @@
 .modal-form input, .modal-form select, .modal-form textarea { transition: border-color 0.15s ease, box-shadow 0.15s ease; }
 .modal-form input:focus, .modal-form select:focus, .modal-form textarea:focus { border-color: #1a9baa; box-shadow: 0 0 0 3px #d7eeeb; outline: none; }
 .modal-form .modal-actions .button.primary { border-radius: 999px; padding-inline: 22px; }
-.form-intro { position: relative; }
-.form-intro.with-figure { padding-right: 104px; margin-bottom: 18px; }
-.form-intro-figure { position: absolute; right: 22px; bottom: -64px; width: 68px; height: 170px; object-fit: contain; pointer-events: none; z-index: 2; }
