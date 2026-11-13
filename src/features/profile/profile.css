@@ -41,3 +41,4 @@
 
 /* Cabeças perto do topo e cartão mais acima. */
 .profile-cover { aspect-ratio: auto; height: 300px; background-position: center top; }
+.profile-cover { height: 270px; }
