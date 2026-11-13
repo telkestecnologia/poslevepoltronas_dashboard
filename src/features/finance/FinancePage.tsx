@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ArrowDown, ArrowUp, ChevronDown, ChevronLeft, ChevronRight, Download, RefreshCw, Search, Wallet, X } from 'lucide-react'
+import { ArrowDown, ArrowUp, CalendarCog, ChevronDown, ChevronLeft, ChevronRight, Download, RefreshCw, Search, Wallet, X } from 'lucide-react'
 import { api, type Branch, type FinanceQuery, type FinancialEntry, type FinancialReport } from '../../api'
 import { branchLabel, onlyOfficialBranches } from '../../utils/branches'
 import { getMessage } from '../../utils/errors'
@@ -232,8 +232,6 @@ export function FinancePage({ credentials }: { credentials: string }) {
         <div className="panel finance-summary-card balance">
           <span>Saldo acumulado</span><strong>{currency((allReport ?? report).balanceCents)}</strong>
           <small>Total de todas as filiais</small>
-          <button type="button" className="finance-filter-button" onClick={openFilter}>
-            📅 {dateLabel(from)} a {dateLabel(to)} <ChevronDown size={14} /></button>
           {loading && <span className="finance-loading" role="status">Atualizando dados...</span>}
         </div>
       </div>
@@ -242,6 +240,9 @@ export function FinancePage({ credentials }: { credentials: string }) {
         <section className="panel finance-chart" aria-labelledby="finance-chart-title">
           <div className="finance-panel-heading">
             <div><h2 id="finance-chart-title">Hoje <small className="finance-today">{dateLabel(today())}</small></h2></div>
+            {/* Ícone de editar as datas (De e Até): abre o modal com o calendário (igual ao app). */}
+            <button type="button" className="finance-date-icon" onClick={openFilter} title={`Mudar as datas (${dateLabel(from)} a ${dateLabel(to)})`}
+              aria-label={`Mudar as datas (${dateLabel(from)} a ${dateLabel(to)})`}><CalendarCog size={19} /></button>
           </div>
           {!shownMonth ? <div className="finance-branch-empty"><Wallet size={22} /> Sem movimentação no período.</div> : <div className="finance-month">
             <div className="finance-month-nav">

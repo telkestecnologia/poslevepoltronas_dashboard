@@ -87,3 +87,7 @@
 .finance-filter-modal .overview-rentals-calendar { position: static; width: 100%; max-width: none; margin-top: 8px; box-shadow: none; }
 
 .finance-today { margin-left: 6px; color: var(--muted); font-size: 14px; font-weight: 600; }
+
+/* Ícone de editar as datas ao lado de Hoje. */
+.finance-date-icon { display: grid; place-items: center; width: 40px; height: 40px; border: 0; border-radius: 50%; background: #e5f4f5; color: var(--teal-dark); cursor: pointer; }
+.finance-date-icon:hover { background: #d3eced; }
