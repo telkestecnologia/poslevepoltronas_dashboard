@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ArrowRight, ChevronLeft, ChevronRight, ClipboardList, RefreshCw, Search, X, PenLine, Clock, SearchCheck, Truck, Armchair, Undo2, BadgeCheck, XCircle, TriangleAlert, type LucideIcon } from 'lucide-react'
+import { ArrowRight, ChevronLeft, ChevronRight, ClipboardList, RefreshCw, Search, X, PenLine, Clock, SearchCheck, Truck, Armchair, Undo2, BadgeCheck, XCircle, TriangleAlert, type LucideIcon, Building2, MapPin } from 'lucide-react'
 import './orders.css'
 import { api, type Branch, type Order, type OrderPage, type OrderQuery, type OrderStatus } from '../../api'
 import { EmptyState } from '../../components/common'
@@ -120,6 +120,20 @@ export function OrdersPage({ credentials, params, onOpenOrder }: Props) {
     </div>
     {error && <div className="form-error order-page-error" role="alert">{error}</div>}
 
+    {/* Filial e cidade acima das etapas, em pílulas com ícone (igual ao app). */}
+    <div className="order-pills">
+        <label className="order-pill"><span className="order-pill-icon"><Building2 size={15} /></span><select aria-label="Filtrar filial" value={branchId}
+          onChange={event => setFilter({ filial: event.target.value === 'ALL' ? undefined : event.target.value, cidade: undefined })}>
+          <option value="ALL">Filiais atendidas</option>
+          {branchOptions.map(branch => <option value={branch.id} key={branch.id}>{branchLabel(branch.name)}</option>)}
+        </select></label>
+        <label className="order-pill"><span className="order-pill-icon"><MapPin size={15} /></span><select aria-label="Filtrar cidade" value={cityCode} disabled={!selectedBranch}
+          onChange={event => setFilter({ cidade: event.target.value === 'ALL' ? undefined : event.target.value })}>
+          <option value="ALL">{selectedBranch ? 'Todas as cidades da filial' : 'Escolha a filial para ver as cidades'}</option>
+          {cityOptions.map(city => <option value={city.code} key={city.code}>{city.name}</option>)}
+        </select></label>
+    </div>
+
     <div className="order-summary" role="group" aria-label="Resumo dos pedidos">
       {summaries.map(item => {
         const selected = item.key === summaryKey
@@ -140,16 +154,6 @@ export function OrdersPage({ credentials, params, onOpenOrder }: Props) {
           placeholder="Cliente, telefone, poltrona ou município" value={search} onChange={event => setSearch(event.target.value)} />
           {search && <button type="button" className="icon-button order-search-clear" aria-label="Limpar busca"
             onClick={() => setSearch('')}><X size={15} /></button>}</div>
-        <div className="select-wrap"><select aria-label="Filtrar filial" value={branchId}
-          onChange={event => setFilter({ filial: event.target.value === 'ALL' ? undefined : event.target.value, cidade: undefined })}>
-          <option value="ALL">Filiais atendidas</option>
-          {branchOptions.map(branch => <option value={branch.id} key={branch.id}>{branchLabel(branch.name)}</option>)}
-        </select></div>
-        <div className="select-wrap"><select aria-label="Filtrar cidade" value={cityCode} disabled={!selectedBranch}
-          onChange={event => setFilter({ cidade: event.target.value === 'ALL' ? undefined : event.target.value })}>
-          <option value="ALL">{selectedBranch ? 'Todas as cidades da filial' : 'Escolha a filial para ver as cidades'}</option>
-          {cityOptions.map(city => <option value={city.code} key={city.code}>{city.name}</option>)}
-        </select></div>
         {active && <button type="button" className="order-filter-chip" onClick={() => setFilter({ resumo: undefined })}
           aria-label={`Limpar filtro ${active.label}`}>{active.label} ✕</button>}
       </div>

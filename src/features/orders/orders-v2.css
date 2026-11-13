@@ -47,3 +47,10 @@
 .orders-table.tinted tbody tr.order-row td, .orders-table.tinted tbody tr.order-row td * { color: #fff !important; }
 .orders-table.tinted tbody tr.order-row td { border-color: rgba(255, 255, 255, 0.25) !important; }
 .orders-table.tinted .order-avatar, .orders-table.tinted .order-status, .orders-table.tinted .table-action { background: rgba(255, 255, 255, 0.2) !important; }
+
+/* Filial e cidade em pílulas com ícone, acima das etapas. */
+.order-pills { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+.order-pill { display: inline-flex; align-items: center; gap: 8px; padding: 4px 6px 4px 4px; border-radius: 99px; background: #e5f4f5; }
+.order-pill-icon { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--teal-dark); color: #fff; }
+.order-pill select { border: 0; outline: 0; background: transparent; color: var(--teal-dark); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; padding-right: 8px; }
+.order-pill select:disabled { opacity: 0.55; cursor: default; }
