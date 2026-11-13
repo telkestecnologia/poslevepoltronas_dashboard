@@ -130,6 +130,14 @@ export type Conversation = {
 export type ConversationPage = {
   items: Conversation[]; total: number; page: number; size: number; whatsApp?: 'OK' | 'NOT_CONFIGURED' | 'ERROR' | null
 }
+/** Relatório geral do atendimento no período, com a análise da Isa (POST /conversations/report). */
+export type ConversationReport = {
+  from: string; to: string; generatedAt: string; stages: Record<string, number>; unanswered: string[]
+  totals: { conversations: number; whatsApp: number; site: number; customerMessages: number; isaMessages: number; staffMessages: number
+    needsAttention: number; handledByTeam: number }
+  analysis: { summary: string; score: number | null; scoreReason: string; strengths: string[]; problems: string[]
+    frequentQuestions: string[]; opportunities: string[]; suggestions: string[] }
+}
 /** Análise da IA sobre o atendimento (POST /conversations/{id}/analysis). */
 export type ConversationAnalysis = { summary: string; customer: string; service: string; attention: string; suggestion: string; generatedAt: string }
 export type ConversationMessage = {
@@ -416,6 +424,8 @@ export const api = {
   conversation: (credentials: string, id: string) => request<Conversation>(credentials, `/conversations/${encodeURIComponent(id)}`),
   conversationMessages: (credentials: string, id: string) =>
     request<ConversationMessage[]>(credentials, `/conversations/${encodeURIComponent(id)}/messages`),
+  conversationReport: (credentials: string, from: string, to: string) =>
+    request<ConversationReport>(credentials, '/conversations/report', { method: 'POST', body: JSON.stringify({ from, to }) }),
   conversationAnalysis: (credentials: string, id: string) =>
     request<ConversationAnalysis>(credentials, `/conversations/${encodeURIComponent(id)}/analysis`, { method: 'POST' }),
   replyConversation: (credentials: string, id: string, content: string) =>

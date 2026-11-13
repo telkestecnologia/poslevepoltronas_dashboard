@@ -4,8 +4,11 @@ import type { AiKnowledge, AiKnowledgeInput, AiUnansweredQuestion } from '../../
 import { EmptyState } from '../../components/common'
 import { getMessage } from '../../utils/errors'
 import { AiEditorModal, type AiEditor } from './AiEditorModal'
+import { IsaReportButton } from './IsaReportButton'
+import './ai.css'
 
 type Props = {
+  credentials: string
   knowledge: AiKnowledge[]
   unanswered: AiUnansweredQuestion[]
   onCreateKnowledge: (data: AiKnowledgeInput) => Promise<void>
@@ -30,7 +33,7 @@ function matches(text: string, search: string) {
   return normalize(text).includes(normalize(search.trim()))
 }
 
-export function AiContextPage({ knowledge, unanswered, onCreateKnowledge, onUpdateKnowledge, onDeleteKnowledge, onAnswerUnanswered, onDeleteUnanswered, onRecordUnanswered, onRefresh, alerts }: Props) {
+export function AiContextPage({ credentials, knowledge, unanswered, onCreateKnowledge, onUpdateKnowledge, onDeleteKnowledge, onAnswerUnanswered, onDeleteUnanswered, onRecordUnanswered, onRefresh, alerts }: Props) {
   const [tab, setTab] = useState<'knowledge' | 'unanswered' | 'alerts'>('knowledge')
   const [search, setSearch] = useState('')
   const [editor, setEditor] = useState<AiEditor | null>(null)
@@ -102,7 +105,9 @@ export function AiContextPage({ knowledge, unanswered, onCreateKnowledge, onUpda
       <div className="page-heading with-action ai-page-heading">
         <div>
           <span className="eyebrow">ATENDIMENTO • PÓS LEVE</span>
-          <h1>O que a Isa sabe</h1>
+          {/* PDF do relatório geral do atendimento, ao lado do título (só o administrador). */}
+          <div className="ai-title-row"><h1>O que a Isa sabe</h1>
+            <span className="admin-only"><IsaReportButton credentials={credentials} /></span></div>
         </div>
         <div className="ai-heading-actions">
           <button className="button secondary" type="button" onClick={onRefresh}>

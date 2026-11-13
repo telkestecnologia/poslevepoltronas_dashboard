@@ -118,7 +118,7 @@ function App() {
           onSelect={id => navigate('conversations', { id: id ?? undefined, replace: Boolean(route.id) })} />}
         {page === 'payments' && <PaymentsPricingPage credentials={session.credentials} />}
         {page === 'profile' && <ProfilePage credentials={session.credentials} onCredentialsChanged={session.login} partner={partner} />}
-        {page === 'ai' && !showLoading && !pageError && <AiContextPage {...aiPage} alerts={<AiAlertsTab credentials={session.credentials} />} />}
+        {page === 'ai' && !showLoading && !pageError && <AiContextPage {...aiPage} credentials={session.credentials} alerts={<AiAlertsTab credentials={session.credentials} />} />}
         {page === 'notifications' && !showLoading && !pageError && notificationsPage.settings && (
           <NotificationsPage settings={notificationsPage.settings} onSave={notificationsPage.onSave} />
         )}

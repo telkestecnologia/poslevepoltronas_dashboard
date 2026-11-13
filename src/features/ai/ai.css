@@ -1,0 +1,3 @@
+
+/* Título com o ícone do relatório em PDF ao lado. */
+.ai-title-row { display: flex; align-items: center; gap: 12px; }
