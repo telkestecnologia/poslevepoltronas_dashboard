@@ -67,3 +67,7 @@ button.branch-chair:hover { filter: brightness(0.98); }
 .branch-enter-arrow { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--teal-dark); color: #fff; }
 
 .branch-new-small { min-height: 36px; padding: 0 14px; font-size: 13.5px; }
+
+/* Frete grátis por cidade. */
+.municipality-free { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: #127a84; white-space: nowrap; }
+.municipality-fee input:disabled { opacity: 0.45; }

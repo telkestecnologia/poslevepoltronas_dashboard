@@ -24,23 +24,12 @@ type Props = {
   onToggleFreeShipping: (branch: Branch) => Promise<void>
 }
 
-export function BranchesPage({ branches, activeCounts, onNewBranch, onToggleFreeShipping, credentials, municipalities, saving, formError, onUpdateBranch, onEditChair, onNewChair, modalOpen }: Props) {
+export function BranchesPage({ branches, activeCounts, onNewBranch, credentials, municipalities, saving, formError, onUpdateBranch, onEditChair, onNewChair, modalOpen }: Props) {
   const [enteredId, setEnteredId] = useState<string | null>(null)
   const entered = branches.find(branch => branch.id === enteredId)
-  const [busyId, setBusyId] = useState<string | null>(null)
-  const [error, setError] = useState('')
+  const busyId = null as string | null
+  const error = ''
 
-  async function toggleFreeShipping(branch: Branch) {
-    setBusyId(branch.id)
-    setError('')
-    try {
-      await onToggleFreeShipping(branch)
-    } catch (cause) {
-      setError(getMessage(cause))
-    } finally {
-      setBusyId(null)
-    }
-  }
 
 
   // Dentro da filial (igual ao app): a foto da região ao fundo, Editar filial e Poltronas da filial.
@@ -95,7 +84,6 @@ export function BranchesPage({ branches, activeCounts, onNewBranch, onToggleFree
                   <th>MUNICÍPIOS</th>
                   <th>POLTRONAS ATIVAS</th>
                   <th>ESTADO</th>
-                  <th>FRETE GRÁTIS</th>
                   <th>
                     <span className="sr-only">Ação</span>
                   </th>
@@ -118,15 +106,6 @@ export function BranchesPage({ branches, activeCounts, onNewBranch, onToggleFree
                     </td>
                     <td>{activeCounts[branch.id] ?? 0}</td>
                     <td>{branch.active ? 'Ativa' : 'Inativa'}</td>
-                    <td>
-                      <button type="button"
-                        className={`branch-freight-toggle admin-lock${branch.freeShipping ? ' active' : ''}`}
-                        aria-pressed={branch.freeShipping}
-                        disabled={busyId !== null}
-                        onClick={() => void toggleFreeShipping(branch)}>
-                        {busyId === branch.id ? 'Salvando...' : branch.freeShipping ? 'Desativar frete grátis' : 'Ativar frete grátis'}
-                      </button>
-                    </td>
                     <td>
                       <button className="branch-enter-button" disabled={busyId !== null} onClick={() => setEnteredId(branch.id)}>
                         Entrar <span className="branch-enter-arrow"><ChevronRight size={15} /></span>

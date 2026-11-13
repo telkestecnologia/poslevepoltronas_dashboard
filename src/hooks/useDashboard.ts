@@ -397,6 +397,7 @@ export function useDashboard() {
     try {
       if (modal?.kind === 'editBranch') {
         await api.updateBranch(credentials, modal.branch.id, data)
+        if (modal.branch.freeShipping) await api.setBranchFreeShipping(credentials, modal.branch.id, false)
         showNotice('Filial atualizada com sucesso.')
       } else {
         await api.createBranch(credentials, data)
@@ -419,6 +420,8 @@ export function useDashboard() {
     setFormError('')
     try {
       await api.updateBranch(credentials, branch.id, data)
+      // O frete grátis agora é por cidade: o da filial inteira é desligado para valer o de cada cidade.
+      if (branch.freeShipping) await api.setBranchFreeShipping(credentials, branch.id, false)
       showNotice('Filial atualizada com sucesso.')
       applyPageData(await loadPage(credentials, 'branches', chairQuery, rentalDate))
     } catch (error) {

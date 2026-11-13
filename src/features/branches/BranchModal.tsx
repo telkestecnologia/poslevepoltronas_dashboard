@@ -23,10 +23,13 @@ export function BranchModal({
 }) {
   const branch = modal.kind === 'editBranch' ? modal.branch : null
   const [name, setName] = useState(branch?.name ?? '')
-  const [areas, setAreas] = useState<{ code: string; freight: string }[]>(
+  // free: frete grátis nesta cidade (o preço fica desligado e vai como R$ 0,00). O frete grátis da filial inteira
+  // (o antigo) aparece como grátis em todas as cidades dela.
+  const [areas, setAreas] = useState<{ code: string; freight: string; free: boolean }[]>(
     branch?.municipalities.map((city) => ({
       code: city.code,
       freight: (city.freightCents / 100).toFixed(2).replace('.', ','),
+      free: branch.freeShipping || city.freightCents === 0,
     })) ?? [],
   )
   const [uf, setUf] = useState(branch?.municipalities[0]?.uf ?? 'CE')
@@ -53,7 +56,7 @@ export function BranchModal({
 
   function addMunicipality(code: string) {
     setAreas((current) =>
-      current.some((area) => area.code === code) ? current : [...current, { code, freight: '' }],
+      current.some((area) => area.code === code) ? current : [...current, { code, freight: '', free: false }],
     )
     setSearch('')
     setLocalError('')
@@ -68,6 +71,7 @@ export function BranchModal({
     }
     const priced: BranchInput['municipalities'] = []
     for (const area of areas) {
+      if (area.free) { priced.push({ code: area.code, freightCents: 0 }); continue }
       const input = area.freight.trim()
       if (!/^\d+(,\d{1,2})?$/.test(input)) {
         setLocalError('Informe um frete válido em reais para cada município (ex.: 120,00).')
@@ -175,7 +179,8 @@ export function BranchModal({
                         <input
                           type="text"
                           inputMode="decimal"
-                          value={area.freight}
+                          value={area.free ? '0,00' : area.freight}
+                          disabled={area.free}
                           onChange={(event) =>
                             setAreas((current) =>
                               current.map((item) =>
@@ -187,8 +192,15 @@ export function BranchModal({
                           }
                           placeholder="120,00"
                           aria-label={`Frete para ${city?.name ?? area.code} em reais`}
-                          required
+                          required={!area.free}
                         />
+                      </label>
+                      {/* Frete grátis nesta cidade: o preço fica desligado. */}
+                      <label className="municipality-free">
+                        <input type="checkbox" checked={area.free}
+                          onChange={(event) => setAreas((current) => current.map((item) =>
+                            item.code === area.code ? { ...item, free: event.target.checked } : item))} />
+                        Frete grátis
                       </label>
                       <button
                         type="button"
