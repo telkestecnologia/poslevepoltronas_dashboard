@@ -130,6 +130,8 @@ export type Conversation = {
 export type ConversationPage = {
   items: Conversation[]; total: number; page: number; size: number; whatsApp?: 'OK' | 'NOT_CONFIGURED' | 'ERROR' | null
 }
+/** Limite mensal do relatório do atendimento (GET /conversations/report/quota). */
+export type ReportQuota = { used: number; limit: number; remaining: number; month: string }
 /** Relatório geral do atendimento no período, com a análise da Isa (POST /conversations/report). */
 export type ConversationReport = {
   from: string; to: string; generatedAt: string; stages: Record<string, number>; unanswered: string[]
@@ -424,6 +426,7 @@ export const api = {
   conversation: (credentials: string, id: string) => request<Conversation>(credentials, `/conversations/${encodeURIComponent(id)}`),
   conversationMessages: (credentials: string, id: string) =>
     request<ConversationMessage[]>(credentials, `/conversations/${encodeURIComponent(id)}/messages`),
+  conversationReportQuota: (credentials: string) => request<ReportQuota>(credentials, '/conversations/report/quota'),
   conversationReport: (credentials: string, from: string, to: string) =>
     request<ConversationReport>(credentials, '/conversations/report', { method: 'POST', body: JSON.stringify({ from, to }) }),
   conversationAnalysis: (credentials: string, id: string) =>

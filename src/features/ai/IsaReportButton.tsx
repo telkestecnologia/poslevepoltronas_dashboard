@@ -1,11 +1,17 @@
 import { useState } from 'react'
 import { FileText, X } from 'lucide-react'
-import { api } from '../../api'
+import { api, type ReportQuota } from '../../api'
 import { getMessage } from '../../utils/errors'
 import { downloadIsaReport } from './isaReport'
 import '../finance/financeReport.css'
 
 const isoDay = (date: Date) => date.toLocaleDateString('sv-SE', { timeZone: 'America/Fortaleza' })
+
+function quotaText(quota: ReportQuota | null) {
+  if (!quota) return ''
+  if (quota.remaining <= 0) return `Você já gerou os ${quota.limit} relatórios deste mês. Dá para baixar de novo um período já gerado; um novo libera no dia 1º.`
+  return `Você pode gerar mais ${quota.remaining} ${quota.remaining === 1 ? 'relatório' : 'relatórios'} este mês (limite de ${quota.limit}). Baixar de novo um período já gerado não conta.`
+}
 
 /**
  * Ícone de PDF ao lado de "O que a Isa sabe" (igual ao app): escolhe o período e a Isa analisa todos os atendimentos
@@ -18,6 +24,13 @@ export function IsaReportButton({ credentials }: { credentials: string }) {
   const [to, setTo] = useState(today)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [quota, setQuota] = useState<ReportQuota | null>(null)
+
+  function openModal() {
+    setError('')
+    setOpen(true)
+    api.conversationReportQuota(credentials).then(setQuota, () => setQuota(null))
+  }
 
   async function generate() {
     if (!from || !to || to < from) return setError('Escolha um período válido.')
@@ -26,6 +39,7 @@ export function IsaReportButton({ credentials }: { credentials: string }) {
     try {
       await downloadIsaReport(await api.conversationReport(credentials, from, to))
       setOpen(false)
+      api.conversationReportQuota(credentials).then(setQuota, () => {})
     } catch (failure) {
       setError(getMessage(failure))
     } finally {
@@ -34,7 +48,7 @@ export function IsaReportButton({ credentials }: { credentials: string }) {
   }
 
   return <>
-    <button type="button" className="finance-date-icon pdf" onClick={() => { setError(''); setOpen(true) }}
+    <button type="button" className="finance-date-icon pdf" onClick={openModal}
       title="Baixar relatório do atendimento em PDF" aria-label="Baixar relatório do atendimento em PDF"><FileText size={19} /></button>
     {open && <div className="modal-backdrop" onMouseDown={event => { if (event.target === event.currentTarget && !busy) setOpen(false) }}>
       <section className="modal" role="dialog" aria-modal="true" aria-labelledby="isa-report-title">
@@ -44,6 +58,7 @@ export function IsaReportButton({ credentials }: { credentials: string }) {
           <p className="field-help">Escolha o período. A Isa lê os atendimentos do site e do WhatsApp e monta um relatório geral em PDF.</p>
           <label>De<input type="date" value={from} max={to || today} onChange={event => setFrom(event.target.value)} required /></label>
           <label>Até<input type="date" value={to} min={from} max={today} onChange={event => setTo(event.target.value)} required /></label>
+          {quota && <p className="field-help" style={{ color: quota.remaining <= 0 ? '#a3392a' : '#127a84' }}>{quotaText(quota)}</p>}
           {error && <div className="form-error" role="alert">{error}</div>}
           <div className="modal-actions"><button type="button" className="button secondary" onClick={() => setOpen(false)} disabled={busy}>Cancelar</button>
             <button type="submit" className="button primary" disabled={busy}>{busy ? 'A Isa está analisando...' : 'Gerar relatório em PDF'}</button></div>
