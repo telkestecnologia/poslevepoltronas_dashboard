@@ -240,7 +240,7 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
           const canEdit = canChangeSchedule && step <= index
           if (!passed && !current && !canEdit) return null
           const word = phase === 'DELIVERY' ? 'entrega' : 'retirada'
-          return <section key={phase} className="panel od-card od-evidence">
+          return <section key={phase} className={`panel od-card od-evidence${current ? ' now' : ''}`}>
             <div className="od-step-head">
               {/* O conteúdo da etapa (fotos e comunicado) só aparece ao clicar no nome (igual ao app). */}
               {current || (phase === 'DELIVERY' && departure && !passed)

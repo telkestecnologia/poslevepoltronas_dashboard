@@ -234,3 +234,7 @@
 @media (prefers-reduced-motion: reduce) { .od-pulse { animation: none; } }
 .od-change { display: grid; line-height: 1.1; text-align: left; }
 .od-change small { font-size: 9.5px; font-weight: 700; letter-spacing: 0.06em; }
+
+/* Etapa atual com o fundo laranja-clarinho, o mesmo do botão Alterar; o botão fica branco. */
+.od-evidence.now { background: #fef0ea; border-color: #fbd9c9; }
+.od-evidence.now .od-media-button.now { background: #fff; }
