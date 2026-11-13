@@ -101,3 +101,7 @@
 .finance-entry-icon.outflow { background: #fde8e4; color: #b8321f; }
 .finance-ref { display: inline-flex; align-items: center; gap: 6px; }
 .finance-copy { display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border: 0; border-radius: 99px; background: #e5f4f5; color: var(--teal-dark); font: inherit; font-size: 11.5px; font-weight: 700; cursor: pointer; }
+
+/* Calendário e PDF no cantinho direito do título. */
+.finance-chart .finance-panel-heading > .finance-today-title { flex: 1; }
+.finance-today-title .finance-date-icon:first-of-type { margin-left: auto; }
