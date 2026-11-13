@@ -156,8 +156,6 @@ export function FinancePage({ credentials }: { credentials: string }) {
   const visibleEntries = statementFiltered
     ? matches.slice(statementPage * pageSize, (statementPage + 1) * pageSize)
     : report?.entries ?? []
-  const selectedBranch = branches.find(item => item.id === branchId)
-  const selectedBranchLabel = selectedBranch ? branchLabel(selectedBranch.name) : 'Todas as filiais'
   const months = report?.monthly ?? []
   const shownIndex = months.length === 0 ? -1 : Math.min(monthIndex ?? months.length - 1, months.length - 1)
   const shownMonth = shownIndex >= 0 ? months[shownIndex] : undefined
@@ -170,7 +168,6 @@ export function FinancePage({ credentials }: { credentials: string }) {
   function applyFilter() {
     setFrom(draft.from)
     setTo(draft.to)
-    setBranchId(draft.branchId)
     setPage(0)
     setFilterOpen(false)
   }
@@ -214,25 +211,12 @@ export function FinancePage({ credentials }: { credentials: string }) {
     </div>}
 
     {filterOpen && <div className="modal-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) setFilterOpen(false) }}>
-      <section className="modal finance-filter-modal" role="dialog" aria-modal="true" aria-label="Período e filial">
-        <div className="modal-head"><div><span className="eyebrow">FINANCEIRO</span><h2>Período e filial</h2></div>
+      <section className="modal finance-filter-modal" role="dialog" aria-modal="true" aria-label="Período">
+        <div className="modal-head"><div><span className="eyebrow">FINANCEIRO</span><h2>Período</h2></div>
           <button className="icon-button" aria-label="Fechar" onClick={() => setFilterOpen(false)}><X size={20} /></button></div>
-        <div className="finance-presets" role="group" aria-label="Período rápido">
-          {[{ months: 1, label: 'Este mês' }, { months: 3, label: '3 meses' }, { months: 6, label: '6 meses' }].map(preset =>
-            <button type="button" key={preset.months}
-              className={draft.from === monthStart(preset.months - 1) && draft.to === today() ? 'selected' : ''}
-              onClick={() => setDraft(current => ({ ...current, from: monthStart(preset.months - 1), to: today() }))}>{preset.label}</button>)}
-        </div>
         <div className="finance-filter-fields">
           <RentalDatePicker date={draft.from} onChange={value => setDraft(current => ({ ...current, from: value }))} label="De" maxDate={draft.to} />
           <RentalDatePicker date={draft.to} onChange={value => setDraft(current => ({ ...current, to: value }))} label="Até" minDate={draft.from} maxDate={today()} />
-          <label className="finance-branch-filter">Filial
-            <select value={draft.branchId} onChange={event => setDraft(current => ({ ...current, branchId: event.target.value }))}>
-              <option value="">Todas as filiais</option>
-              {onlyOfficialBranches(branches, branch => branch.name).map(branch =>
-                <option value={branch.id} key={branch.id}>{branchLabel(branch.name)}</option>)}
-            </select>
-          </label>
         </div>
         <div className="modal-actions">
           <button type="button" className="button secondary" onClick={() => setFilterOpen(false)}>Cancelar</button>
@@ -249,7 +233,7 @@ export function FinancePage({ credentials }: { credentials: string }) {
           <span>Saldo acumulado</span><strong>{currency((allReport ?? report).balanceCents)}</strong>
           <small>Total de todas as filiais</small>
           <button type="button" className="finance-filter-button" onClick={openFilter}>
-            📅 {dateLabel(from)} a {dateLabel(to)} • {selectedBranchLabel} <ChevronDown size={14} /></button>
+            📅 {dateLabel(from)} a {dateLabel(to)} <ChevronDown size={14} /></button>
           {loading && <span className="finance-loading" role="status">Atualizando dados...</span>}
         </div>
       </div>
