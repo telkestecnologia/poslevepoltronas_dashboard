@@ -53,3 +53,7 @@
   .pay-cover { min-height: 340px; background-position: center top; }
   .pay-cover::before { background: linear-gradient(180deg, rgba(255, 255, 255, 0) 45%, rgba(255, 255, 255, 0.88) 70%, #fff 100%); }
 }
+
+/* Ilustração até a altura dos ombros. */
+.pay-cover { min-height: 250px; background-position: center 12%; }
+@media (max-width: 760px) { .pay-cover { min-height: 262px; background-position: center top; } }
