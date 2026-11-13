@@ -37,7 +37,7 @@ export function EarlySchedule({ order, kind, busy, current, onSave }: {
 
   return <>
     <span className="od-step-when">{moved ? 'Combinada' : 'Prevista'} para {dayLabel(day)}{time ? ` às ${time.slice(0, 5)}` : ''}</span>
-    <button type="button" className={`od-media-button${current ? ' now' : ''}`} onClick={() => setOpen(true)}><CalendarClock size={15} /> Dia e horário</button>
+    <button type="button" className={`od-media-button${current ? ' now' : ''}`} onClick={() => setOpen(true)}><CalendarClock size={15} /><span className="od-change"><small>ALTERAR</small>Dia e horário</span></button>
     {open && createPortal(<div className="modal-backdrop" onMouseDown={event => { if (event.target === event.currentTarget && !busy) close() }}>
       <section className="modal od-early-modal" role="dialog" aria-modal="true" aria-label={delivery ? 'Entrega antecipada ou posterior' : 'Retirada antecipada ou posterior'}>
         <div className="modal-head"><div><span className="eyebrow">PEDIDO • {order.customerName}</span>

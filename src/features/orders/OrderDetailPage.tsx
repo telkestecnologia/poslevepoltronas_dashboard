@@ -247,7 +247,8 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
                 ? <button type="button" className="od-step-toggle" aria-expanded={openPhase === phase}
                   onClick={() => setOpenPhase(value => value === phase ? null : phase)}>
                   <span className="eyebrow">ETAPA • AGUARDANDO {word.toUpperCase()}</span>
-                  {openPhase === phase ? <ChevronUp size={16} /> : <ChevronDown size={16} />}</button>
+                  <span className={`od-pulse${openPhase === phase ? ' open' : ''}${current ? ' now' : ''}`}>
+                    {openPhase === phase ? <ChevronUp size={14} /> : <ChevronDown size={14} />}</span></button>
                 : <span className="eyebrow">ETAPA • AGUARDANDO {word.toUpperCase()}</span>}
               <span className="od-step-actions">
                 {canEdit && <EarlySchedule order={order} kind={phase === 'DELIVERY' ? 'delivery' : 'pickup'} busy={busy} current={current} onSave={saveSchedule} />}

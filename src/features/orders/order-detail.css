@@ -224,3 +224,13 @@
 /* Dia e horário da etapa atual em laranja. */
 .od-media-button.now { background: #fef0ea; color: #f47a52; }
 .od-media-button.now:hover { background: #fde2d6; }
+
+/* Setinha da etapa num circulinho que pulsa (laranja na etapa atual) e "Alterar" em cima de Dia e horário. */
+.od-pulse { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: #1a9baa; color: #fff;
+  animation: od-pulse 1.4s ease-in-out infinite; }
+.od-pulse.now { background: #f47a52; }
+.od-pulse.open { animation: none; }
+@keyframes od-pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.22); opacity: 0.75; } }
+@media (prefers-reduced-motion: reduce) { .od-pulse { animation: none; } }
+.od-change { display: grid; line-height: 1.1; text-align: left; }
+.od-change small { font-size: 9.5px; font-weight: 700; letter-spacing: 0.06em; }
