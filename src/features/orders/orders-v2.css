@@ -59,7 +59,3 @@
 .order-pill { gap: 6px !important; padding: 0 12px !important; min-height: 38px; border: 1px solid #e3ebea; background: #fff !important; }
 .order-pill-icon { width: auto !important; height: auto !important; background: transparent !important; color: var(--teal-dark) !important; }
 .order-pill select { color: var(--ink) !important; font-weight: 500 !important; }
-
-/* Símbolo do logo ao lado do nome do cliente. */
-.order-logo { display: grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 50%; background: #fff; border: 1px solid #e7e6e2; }
-.order-logo img { width: 30px; height: 30px; object-fit: contain; }
