@@ -40,3 +40,10 @@
 .orders-table.tinted.tone-closed { --c: #7b8a8f; }
 .orders-table.tinted tbody tr.order-row { background: color-mix(in srgb, var(--c) 8%, #fff); }
 .orders-table.tinted tbody tr.order-row:hover { background: color-mix(in srgb, var(--c) 14%, #fff); }
+
+/* Lista da etapa escolhida no mesmo tom forte do cartão, com texto branco (igual ao app). */
+.orders-table.tinted tbody tr.order-row { background: var(--c) !important; }
+.orders-table.tinted tbody tr.order-row:hover { background: color-mix(in srgb, var(--c) 88%, #000) !important; }
+.orders-table.tinted tbody tr.order-row td, .orders-table.tinted tbody tr.order-row td * { color: #fff !important; }
+.orders-table.tinted tbody tr.order-row td { border-color: rgba(255, 255, 255, 0.25) !important; }
+.orders-table.tinted .order-avatar, .orders-table.tinted .order-status, .orders-table.tinted .table-action { background: rgba(255, 255, 255, 0.2) !important; }
