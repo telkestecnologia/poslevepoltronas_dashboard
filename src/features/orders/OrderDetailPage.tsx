@@ -39,6 +39,7 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
   const [couriers, setCouriers] = useState<Courier[]>([])
   const [busy, setBusy] = useState(false)
   const [mediaPhase, setMediaPhase] = useState<'DELIVERY' | 'PICKUP' | null>(null)
+  const [timelineAll, setTimelineAll] = useState(false)
   const [error, setError] = useState('')
   const [saved, setSaved] = useState('')
   const [statusNote, setStatusNote] = useState('')
@@ -379,12 +380,16 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
         </section>}
 
         <section className="panel od-card" aria-labelledby="od-history-title">
-          <h2 id="od-history-title" className="od-side-title">Linha do tempo</h2>
-          {/* Legenda: cada cor é um tipo de acontecimento (as mesmas do app). */}
-          <div className="od-tl-legend">{(['order', 'payment', 'delivery', 'problem', 'done'] as const).map(key =>
-            <span key={key} className={`od-tl-chip kind-${key}`}>{eventKinds[key].emoji} {eventKinds[key].label}</span>)}</div>
+          {/* Só os acontecimentos mais recentes; a linha do tempo inteira, do início ao fim, aparece em "Ver tudo" (igual ao app). */}
+          <div className="od-step-head">
+            <h2 id="od-history-title" className="od-side-title">Linha do tempo</h2>
+            {order.history.length > 3 && <button type="button" className="od-media-button" onClick={() => setTimelineAll(value => !value)}>
+              {timelineAll ? 'Mostrar menos' : `Ver tudo (${order.history.length})`}</button>}
+          </div>
+          {timelineAll && <div className="od-tl-legend">{(['order', 'payment', 'delivery', 'problem', 'done'] as const).map(key =>
+            <span key={key} className={`od-tl-chip kind-${key}`}>{eventKinds[key].emoji} {eventKinds[key].label}</span>)}</div>}
           <ol className="od-timeline">
-            {[...order.history].reverse().map((event, index) => {
+            {[...order.history].reverse().slice(0, timelineAll ? undefined : 3).map((event, index) => {
               const kind = eventKind(event.action)
               return <li key={`${event.at}-${index}`} className={`kind-${kind}`}>
               <span className="od-timeline-dot" aria-hidden="true" />
