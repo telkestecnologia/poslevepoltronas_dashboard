@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ArrowLeft, MessageCircle, Paperclip, RefreshCw, Send, X, MessagesSquare } from 'lucide-react'
-import { api, sendConversationAttachment, type Conversation, type ConversationMessage } from '../../api'
+import { api, sendConversationAttachment, type Conversation, type ConversationAnalysis, type ConversationMessage } from '../../api'
 import { conversationState, customerLabel, customerNumber, nameColor, stageTone } from '../../utils/conversations'
 import { MessageImages, WhatsAppText } from './WhatsAppText'
 import { conversationRecap } from './conversationRecap'
@@ -34,6 +34,15 @@ export function ConversationsPage({ credentials, selectedId, onSelect }: Props) 
   const [draft, setDraft] = useState('')
   const [replyTo, setReplyTo] = useState<ConversationMessage | null>(null)
   const [summaryOpen, setSummaryOpen] = useState(false)
+  const [analysis, setAnalysis] = useState<{ data?: ConversationAnalysis; error?: string; loading: boolean }>({ loading: false })
+  // Abrir o resumo pede a análise da IA (o backend guarda a última até chegar mensagem nova).
+  function openSummary() {
+    if (!selected) return
+    setSummaryOpen(true)
+    setAnalysis(current => ({ ...current, loading: true, error: undefined }))
+    api.conversationAnalysis(credentials, selected.id).then(data => setAnalysis({ data, loading: false }),
+      failure => setAnalysis({ error: getMessage(failure), loading: false }))
+  }
   const fileInput = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
   const thread = useRef<HTMLDivElement>(null)
@@ -193,7 +202,7 @@ export function ConversationsPage({ credentials, selectedId, onSelect }: Props) 
           <header className="wa-chat-head">
             <button type="button" className="wa-back" aria-label="Voltar para a lista" onClick={() => onSelect(null)}><ArrowLeft size={20} /></button>
             <div className="wa-chat-title"><strong>{customerLabel(selected)}{customerNumber(selected) && <small className="wa-number"> {customerNumber(selected)}</small>}</strong>
-              <small className="wa-chat-meta"><button type="button" className={`wa-state wa-state-link ${state.tone}`} onClick={() => setSummaryOpen(true)}
+              <small className="wa-chat-meta"><button type="button" className={`wa-state wa-state-link ${state.tone}`} onClick={() => openSummary()}
                 title="Ver o resumo do atendimento">{state.label} ⓘ</button>
                 {` • ${selected.channel === 'WHATSAPP' ? 'WhatsApp' : 'Site'} • desde ${new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(selected.startedAt))}`}</small>
               <span className={`wa-stage ${stageTone(selected.stage ?? 'Primeiro contato').tone}`}>{stageTone(selected.stage ?? 'Primeiro contato').icon} Etapa: {selected.stage ?? 'Primeiro contato'}</span></div>
@@ -211,6 +220,16 @@ export function ConversationsPage({ credentials, selectedId, onSelect }: Props) 
               {(() => {
                 const recap = conversationRecap(selected, messages)
                 return <div className="wa-recap">
+                  <div className="wa-ai"><h3>✨ Análise da IA</h3>
+                    {analysis.loading ? <p className="wa-ai-loading">Analisando o atendimento...</p>
+                      : analysis.error ? <p>{analysis.error}</p>
+                      : analysis.data && <>
+                        {([['Resumo', analysis.data.summary], ['Cliente', analysis.data.customer], ['Atendimento', analysis.data.service],
+                          ['Sugestão', analysis.data.suggestion]] as const).filter(([, value]) => value)
+                          .map(([label, value]) => <div key={label}><h4>{label}</h4><p>{value}</p></div>)}
+                        {analysis.data.attention && <div className="wa-summary-alert"><h4>⚠️ Atenção</h4><p>{analysis.data.attention}</p></div>}
+                      </>}
+                  </div>
                   <div className="wa-recap-box"><h3>Até agora</h3><ul>{recap.facts.map(fact => <li key={fact}>{fact}</li>)}</ul></div>
                   {recap.lastQuestion && <div className={selected.needsAttention ? 'wa-summary-alert' : 'wa-recap-box'}>
                     <h3>{selected.needsAttention ? '⚠️ A Isa não soube responder' : 'Última mensagem do cliente'}</h3><p>“{recap.lastQuestion}”</p></div>}
@@ -280,4 +299,4 @@ function quoteOf(text: string) {
   return line.length > 120 ? `${line.slice(0, 117)}...` : line
 }
 
-const summaryDate = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+const summaryDate = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })

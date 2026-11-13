@@ -71,9 +71,16 @@ export function conversationRecap(conversation: RecapConversation, messages: Rec
   else if (has(customerText, 'idos', 'minha mãe', 'minha mae', 'meu pai', 'avó', 'avô', 'vovó', 'vovô')) facts.push('Para uma pessoa idosa da família.')
 
   // Período, local e valor citados na conversa.
-  const dates = [...allText.matchAll(/\b(\d{1,2})\/(\d{1,2})(?:\/\d{2,4})?\b/g)]
-    .map(match => `${match[1].padStart(2, '0')}/${match[2].padStart(2, '0')}`)
-    .filter(date => Number(date.slice(0, 2)) <= 31 && Number(date.slice(3)) <= 12)
+  const dates = messages.flatMap(message => [...message.content.matchAll(/\b(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?\b/g)].map(match => {
+    const day = Number(match[1])
+    const month = Number(match[2])
+    if (day < 1 || day > 31 || month < 1 || month > 12) return null
+    const sent = new Date(message.createdAt)
+    let year = match[3] ? Number(match[3].length === 2 ? `20${match[3]}` : match[3]) : sent.getFullYear()
+    // Sem ano: um mês bem antes do mês da mensagem é do ano seguinte (ex.: "10/01" escrito em dezembro).
+    if (!match[3] && month < sent.getMonth() + 1 - 6) year += 1
+    return `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`
+  })).filter((date): date is string => date !== null)
   const days = customerText.match(/(\d{1,3})\s*dias/)
   if (dates.length >= 2) facts.push(`Período: ${dates[dates.length - 2]} a ${dates[dates.length - 1]}.`)
   else if (dates.length === 1) facts.push(`Data citada: ${dates[0]}${days ? `, por ${days[1]} dias` : ''}.`)

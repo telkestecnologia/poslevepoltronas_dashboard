@@ -130,6 +130,8 @@ export type Conversation = {
 export type ConversationPage = {
   items: Conversation[]; total: number; page: number; size: number; whatsApp?: 'OK' | 'NOT_CONFIGURED' | 'ERROR' | null
 }
+/** Análise da IA sobre o atendimento (POST /conversations/{id}/analysis). */
+export type ConversationAnalysis = { summary: string; customer: string; service: string; attention: string; suggestion: string; generatedAt: string }
 export type ConversationMessage = {
   id: string; role: ConversationRole; content: string; status: string | null; staffName: string | null; createdAt: string
   images?: { url: string; caption?: string | null }[] | null
@@ -414,6 +416,8 @@ export const api = {
   conversation: (credentials: string, id: string) => request<Conversation>(credentials, `/conversations/${encodeURIComponent(id)}`),
   conversationMessages: (credentials: string, id: string) =>
     request<ConversationMessage[]>(credentials, `/conversations/${encodeURIComponent(id)}/messages`),
+  conversationAnalysis: (credentials: string, id: string) =>
+    request<ConversationAnalysis>(credentials, `/conversations/${encodeURIComponent(id)}/analysis`, { method: 'POST' }),
   replyConversation: (credentials: string, id: string, content: string) =>
     request<ConversationMessage>(credentials, `/conversations/${encodeURIComponent(id)}/messages`, {
       method: 'POST', body: JSON.stringify({ content }),
