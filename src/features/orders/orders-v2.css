@@ -22,3 +22,21 @@
 .order-avatar.status-completed { background: #ebf5ec; color: #4f8a5b; }
 .order-avatar.status-expired, .order-avatar.status-cancelled { background: #f1f3f3; color: #7b8a8f; }
 .orders-table tbody tr.order-row:hover { background: #f6fbfb; }
+
+/* Cartões de etapa todos iguais; só o ícone leva a cor forte. Selecionado continua preenchido. */
+.order-summary-card { background: #fff !important; border: 1px solid #e7efed !important; }
+.order-summary-card.zero { opacity: 1; }
+.order-summary-icon { background: var(--c) !important; color: #fff !important; }
+.order-summary-card strong { color: var(--ink) !important; }
+.order-summary-card.selected { background: var(--c) !important; border-color: var(--c) !important; }
+.order-summary-card.selected .order-summary-icon { background: rgba(255, 255, 255, 0.2) !important; }
+
+/* A lista da etapa escolhida fica na cor da etapa. */
+.orders-table.tinted { --c: var(--teal-dark); }
+.orders-table.tinted.tone-waiting { --c: #c4532c; }
+.orders-table.tinted.tone-danger { --c: #c0392b; }
+.orders-table.tinted.tone-moving { --c: #1a9baa; }
+.orders-table.tinted.tone-done { --c: #4f8a5b; }
+.orders-table.tinted.tone-closed { --c: #7b8a8f; }
+.orders-table.tinted tbody tr.order-row { background: color-mix(in srgb, var(--c) 8%, #fff); }
+.orders-table.tinted tbody tr.order-row:hover { background: color-mix(in srgb, var(--c) 14%, #fff); }

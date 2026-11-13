@@ -159,7 +159,7 @@ export function OrdersPage({ credentials, params, onOpenOrder }: Props) {
           ? <EmptyState icon={ClipboardList} title="Nenhum pedido registrado"
             text="Os pedidos do site aparecerão aqui após a reserva e o aceite do contrato." />
           : <EmptyState icon={Search} title="Nenhum pedido encontrado" text="Ajuste a busca, o resumo, a filial ou a cidade." />)
-          : <div className={`table-scroll${stale ? ' is-stale' : ''}`} aria-busy={stale}><table className="orders-table"><thead><tr>
+          : <div className={`table-scroll${stale ? ' is-stale' : ''}`} aria-busy={stale}><table className={`orders-table${active ? ` tinted tone-${active.tone}` : ''}`}><thead><tr>
             <th>CLIENTE</th><th>PERÍODO</th><th>POLTRONA</th><th>STATUS</th><th>PROBLEMAS</th><th><span className="sr-only">Ação</span></th>
           </tr></thead><tbody>{shown.items.map(order => {
             const issues = openIssuesOf(order)
