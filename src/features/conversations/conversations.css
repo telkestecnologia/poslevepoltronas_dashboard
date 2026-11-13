@@ -232,3 +232,16 @@
 .wa-summary dd { margin: 0; color: #111b21; font-weight: 600; }
 .wa-summary-alert { display: grid; gap: 2px; margin: 12px 0 0; padding: 10px 12px; border-radius: 10px; background: #fde8e4; color: #5b2a22; }
 .wa-summary-alert strong { color: #b8321f; }
+
+/* Resumo do atendimento tirado das mensagens. */
+.wa-summary-meta { margin: 0 0 12px; color: #667781; font-size: 13px; }
+.wa-recap { display: grid; gap: 10px; max-height: min(60vh, 520px); overflow: auto; }
+.wa-recap h3 { margin: 0 0 4px; color: #667781; font-size: 12px; font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase; }
+.wa-recap p, .wa-recap ul { margin: 0; color: #111b21; font-size: 14px; line-height: 1.45; }
+.wa-recap ul { padding-left: 18px; }
+.wa-recap-box { padding: 12px 14px; border-radius: 12px; background: #f4f6f6; }
+.wa-recap-next { padding: 12px 14px; border-radius: 12px; background: #e3f4ef; }
+.wa-recap-next h3 { color: #0b6b52; }
+.wa-recap-next p { color: #0b3d30; font-weight: 600; }
+.wa-recap .wa-summary-alert { margin: 0; display: block; }
+.wa-recap .wa-summary-alert h3 { color: #b8321f; }

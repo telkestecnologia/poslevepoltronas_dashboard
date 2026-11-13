@@ -3,6 +3,7 @@ import { ArrowLeft, MessageCircle, Paperclip, RefreshCw, Send, X, MessagesSquare
 import { api, sendConversationAttachment, type Conversation, type ConversationMessage } from '../../api'
 import { conversationState, customerLabel, customerNumber, nameColor, stageTone } from '../../utils/conversations'
 import { MessageImages, WhatsAppText } from './WhatsAppText'
+import { conversationRecap } from './conversationRecap'
 import { getMessage } from '../../utils/errors'
 import './conversations.css'
 
@@ -203,18 +204,20 @@ export function ConversationsPage({ credentials, selectedId, onSelect }: Props) 
             <section className="modal wa-summary" role="dialog" aria-modal="true" aria-label="Resumo do atendimento">
               <div className="modal-head"><div><h2>Resumo do atendimento</h2></div>
                 <button className="icon-button" aria-label="Fechar" onClick={() => setSummaryOpen(false)}><X size={20} /></button></div>
-              <dl>{[
-                ['Situação', state.label],
-                ['Etapa', selected.stage ?? 'Primeiro contato'],
-                ['Canal', selected.channel === 'WHATSAPP' ? 'WhatsApp' : 'Chat do site'],
-                ['Cliente', [customerLabel(selected), customerNumber(selected)].filter(Boolean).join(' • ')],
-                ['Quem atende', selected.state === 'HUMAN' ? selected.staffName ?? 'Equipe' : 'Isa (assistente)'],
-                ['Mensagens', String(selected.messageCount)],
-                ['Início', summaryDate.format(new Date(selected.startedAt))],
-                ['Última mensagem', summaryDate.format(new Date(selected.lastMessageAt))],
-              ].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
-              {selected.needsAttention && selected.lastCustomerMessage && <p className="wa-summary-alert"><strong>⚠️ A Isa não soube responder</strong>
-                “{selected.lastCustomerMessage}”</p>}
+              <p className="wa-summary-meta">{[customerLabel(selected), customerNumber(selected), selected.channel === 'WHATSAPP' ? 'WhatsApp' : 'Chat do site',
+                selected.state === 'HUMAN' ? `com ${selected.staffName ?? 'a equipe'}` : 'com a Isa',
+                `desde ${summaryDate.format(new Date(selected.startedAt))}`].filter(Boolean).join(' • ')}</p>
+              {/* O que aconteceu até agora, tirado das mensagens: não precisa ler a conversa toda. */}
+              {(() => {
+                const recap = conversationRecap(selected, messages)
+                return <div className="wa-recap">
+                  <div className="wa-recap-box"><h3>Até agora</h3><ul>{recap.facts.map(fact => <li key={fact}>{fact}</li>)}</ul></div>
+                  {recap.lastQuestion && <div className={selected.needsAttention ? 'wa-summary-alert' : 'wa-recap-box'}>
+                    <h3>{selected.needsAttention ? '⚠️ A Isa não soube responder' : 'Última mensagem do cliente'}</h3><p>“{recap.lastQuestion}”</p></div>}
+                  {recap.lastAnswer && <div className="wa-recap-box"><h3>Última resposta ({recap.lastAnswer.who})</h3><p>“{recap.lastAnswer.text}”</p></div>}
+                  <div className="wa-recap-next"><h3>Próximo passo</h3><p>{recap.next}</p></div>
+                </div>
+              })()}
             </section>
           </div>}
           <div className="wa-thread" ref={thread}>
