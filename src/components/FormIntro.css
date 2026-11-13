@@ -26,3 +26,6 @@
 .form-banner-eyebrow { background: #e6f4f5; color: #127a84; }
 .form-banner strong { color: #127a84; }
 .form-banner p { color: #2a3236; }
+
+/* Chamada em laranja, centralizada acima dos dados pessoais. */
+.form-new-member { margin: 4px 0 0; color: #f47a52; font-size: 18px; font-weight: 700; text-align: center; }
