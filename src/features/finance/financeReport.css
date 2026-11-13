@@ -85,3 +85,5 @@
 
 /* No modal de datas o calendário aparece no lugar, acima do botão Buscar (não flutua por cima dele). */
 .finance-filter-modal .overview-rentals-calendar { position: static; width: 100%; max-width: none; margin-top: 8px; box-shadow: none; }
+
+.finance-today { margin-left: 6px; color: var(--muted); font-size: 14px; font-weight: 600; }

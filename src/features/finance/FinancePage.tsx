@@ -241,7 +241,7 @@ export function FinancePage({ credentials }: { credentials: string }) {
       <div className="finance-visuals">
         <section className="panel finance-chart" aria-labelledby="finance-chart-title">
           <div className="finance-panel-heading">
-            <div><span className="eyebrow">MOVIMENTAÇÃO</span><h2 id="finance-chart-title">Mês a mês</h2></div>
+            <div><h2 id="finance-chart-title">Hoje <small className="finance-today">{dateLabel(today())}</small></h2></div>
           </div>
           {!shownMonth ? <div className="finance-branch-empty"><Wallet size={22} /> Sem movimentação no período.</div> : <div className="finance-month">
             <div className="finance-month-nav">
