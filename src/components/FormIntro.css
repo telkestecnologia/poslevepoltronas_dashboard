@@ -18,3 +18,11 @@
 .form-banner strong { font-size: 24px; letter-spacing: -0.02em; }
 .form-banner p { margin: 0; color: rgba(255, 255, 255, 0.92); font-size: 14.5px; line-height: 1.45; }
 .form-banner small { color: #cdeef0; font-size: 13px; font-weight: 600; }
+
+/* Banner de lado a lado, sem cantos, com a foto clareando para o branco. */
+.modal-form > .form-banner { margin: -23px -26px 0; border-radius: 0; background-color: #fff; }
+.form-banner::before { background: linear-gradient(180deg, rgba(255, 255, 255, 0) 40%, rgba(255, 255, 255, 0.85) 66%, #fff 100%); }
+.form-banner-body { color: #2a3236; }
+.form-banner-eyebrow { background: #e6f4f5; color: #127a84; }
+.form-banner strong { color: #127a84; }
+.form-banner p { color: #2a3236; }
