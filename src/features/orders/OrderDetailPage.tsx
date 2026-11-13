@@ -241,10 +241,12 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
           return <section key={phase} className="panel od-card od-evidence">
             <div className="od-step-head">
               <span className="eyebrow">ETAPA • AGUARDANDO {word.toUpperCase()}</span>
-              {passed && <button type="button" className="od-media-button" onClick={() => setMediaPhase(phase)}>
-                <Images size={15} /> Ver fotos e vídeos</button>}
+              <span className="od-step-actions">
+                {canEdit && <EarlySchedule order={order} kind={phase === 'DELIVERY' ? 'delivery' : 'pickup'} busy={busy} onSave={saveSchedule} />}
+                {passed && <button type="button" className="od-media-button" onClick={() => setMediaPhase(phase)}>
+                  <Images size={15} /> Ver fotos e vídeos</button>}
+              </span>
             </div>
-            {canEdit && <EarlySchedule order={order} kind={phase === 'DELIVERY' ? 'delivery' : 'pickup'} busy={busy} onSave={saveSchedule} />}
             {phase === 'DELIVERY' && departure && !passed && <div className="od-notice" role="note">
               <span className="od-notice-icon"><Megaphone size={16} /></span>
               <div><strong>Comunicado ao cliente</strong>
