@@ -43,3 +43,13 @@
 /* Nome da filial no mês a mês: clicar troca a filial. */
 .finance-month-branch { justify-self: center; }
 .finance-month-branch select { padding: 5px 28px 5px 12px; border: 0; border-radius: 99px; background-color: #e5f4f5; color: var(--teal-dark); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+
+/* Mês a mês unificado: Entradas e Saídas clicáveis e o que sobrou, numa linha. */
+.finance-month-figures { grid-template-columns: repeat(3, 1fr); }
+.finance-month-figures button, .finance-month-figures .net { display: grid; gap: 4px; padding: 14px; border: 2px solid transparent; border-radius: 12px; font: inherit; text-align: center; cursor: pointer; }
+.finance-month-figures .net { background: #f4f6f6; color: var(--ink); cursor: default; }
+.finance-month-figures button.selected.inflow { border-color: #2e9b5f; }
+.finance-month-figures button.selected.outflow { border-color: #d4412d; }
+
+/* Só o saldo ficou no topo: ocupa a largura toda. */
+.finance-summary { grid-template-columns: 1fr !important; }

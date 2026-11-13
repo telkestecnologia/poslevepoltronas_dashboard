@@ -237,20 +237,6 @@ export function FinancePage({ credentials }: { credentials: string }) {
             📅 {dateLabel(from)} a {dateLabel(to)} • {selectedBranchLabel} <ChevronDown size={14} /></button>
           {loading && <span className="finance-loading" role="status">Atualizando dados...</span>}
         </div>
-        <button type="button" className={`panel finance-summary-card finance-kind inflow${kindFilter === 'INFLOW' ? ' selected' : ''}`}
-          aria-pressed={kindFilter === 'INFLOW'} onClick={() => setKindFilter(current => current === 'INFLOW' ? 'ALL' : 'INFLOW')}>
-          <span>⬆ Entradas no período</span><strong>{currency(report.inflowCents)}</strong>
-          <small>{kindFilter === 'INFLOW' ? 'Mostrando só as entradas no extrato' : 'Clique para ver só as entradas'}</small>
-        </button>
-        <button type="button" className={`panel finance-summary-card finance-kind outflow${kindFilter === 'OUTFLOW' ? ' selected' : ''}`}
-          aria-pressed={kindFilter === 'OUTFLOW'} onClick={() => setKindFilter(current => current === 'OUTFLOW' ? 'ALL' : 'OUTFLOW')}>
-          <span>⬇ Saídas no período</span><strong>{currency(report.outflowCents)}</strong>
-          <small>{kindFilter === 'OUTFLOW' ? 'Mostrando só as saídas no extrato' : 'Clique para ver só as saídas'}</small>
-        </button>
-        <div className="panel finance-summary-card">
-          <span>Resultado do período</span><strong>{currency(report.netCents)}</strong>
-          <small>Entradas menos saídas</small>
-        </div>
       </div>
 
       <div className="finance-visuals">
@@ -269,13 +255,15 @@ export function FinancePage({ credentials }: { credentials: string }) {
                 </select></label></div>
               <button type="button" aria-label="Próximo mês" disabled={shownIndex >= months.length - 1} onClick={() => setMonthIndex(shownIndex + 1)}><ChevronRight size={20} /></button>
             </div>
+            {/* Um card só (igual ao app): o mês das setas, com Entradas e Saídas que filtram o extrato e o que sobrou. */}
             <div className="finance-month-figures">
-              <div className="inflow"><span>⬆ Entrou</span><strong>{currency(shownMonth.inflowCents)}</strong></div>
-              <div className="outflow"><span>⬇ Saiu</span><strong>{currency(shownMonth.outflowCents)}</strong></div>
+              <button type="button" className={`inflow${kindFilter === 'INFLOW' ? ' selected' : ''}`} aria-pressed={kindFilter === 'INFLOW'}
+                onClick={() => setKindFilter(current => current === 'INFLOW' ? 'ALL' : 'INFLOW')}><span>⬆ Entradas</span><strong>{currency(shownMonth.inflowCents)}</strong></button>
+              <button type="button" className={`outflow${kindFilter === 'OUTFLOW' ? ' selected' : ''}`} aria-pressed={kindFilter === 'OUTFLOW'}
+                onClick={() => setKindFilter(current => current === 'OUTFLOW' ? 'ALL' : 'OUTFLOW')}><span>⬇ Saídas</span><strong>{currency(shownMonth.outflowCents)}</strong></button>
+              <div className="net"><span>{shownMonth.inflowCents - shownMonth.outflowCents >= 0 ? 'Sobrou' : 'Faltou'}</span>
+                <strong className={shownMonth.inflowCents - shownMonth.outflowCents >= 0 ? '' : 'finance-negative'}>{currency(Math.abs(shownMonth.inflowCents - shownMonth.outflowCents))}</strong></div>
             </div>
-            <p className={shownMonth.inflowCents - shownMonth.outflowCents >= 0 ? 'finance-positive' : 'finance-negative'}>
-              {shownMonth.inflowCents - shownMonth.outflowCents >= 0 ? 'Sobrou' : 'Faltou'} {currency(Math.abs(shownMonth.inflowCents - shownMonth.outflowCents))}</p>
-            <small>{shownIndex + 1} de {months.length} meses</small>
           </div>}
         </section>
         <section className="panel finance-branches" aria-labelledby="finance-branches-title">
