@@ -3,6 +3,7 @@ import { BadgeDollarSign, CreditCard, QrCode, Save } from 'lucide-react'
 import { api, type PaymentOptions, type PricingCatalog, type PricingPlan } from '../../api'
 import { currency } from '../../data/orders'
 import { getMessage } from '../../utils/errors'
+import cover from '../../assets/pagamentos-capa.webp'
 import './payments.css'
 
 /** Até 12x sem juros na fatura do Asaas (o mesmo limite do backend). */
@@ -115,10 +116,12 @@ export function PaymentsPricingPage({ credentials }: { credentials: string }) {
   const dailyCents = toCents(daily)
 
   return <>
-    <div className="page-heading">
-      <div>
-        <span className="eyebrow">CONFIGURAÇÕES • PÓS LEVE</span>
-        <h1>Pagamentos e preços</h1>
+    {/* Capa com a ilustração das proprietárias, clareando para o branco, com o título por cima (igual ao app). */}
+    <div className="pay-cover" style={{ backgroundImage: `url(${cover})` }}>
+      <div className="pay-cover-body">
+        <span className="pay-cover-badge"><BadgeDollarSign size={14} /> PAGAMENTOS E PREÇOS</span>
+        <h1>Como a Pós Leve recebe</h1>
+        <p>Formas de pagamento, diária e planos usados no site e pela Isa no WhatsApp.</p>
       </div>
     </div>
 
