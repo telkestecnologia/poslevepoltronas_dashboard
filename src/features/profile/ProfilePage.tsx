@@ -3,11 +3,14 @@ import { NotificationToggle } from './NotificationToggle'
 import { ArrowRight, ChevronRight, KeyRound, Mail, Plus, UserPlus, UserRound, Users, X } from 'lucide-react'
 import { FormIntro } from '../../components/FormIntro'
 import { api, type AccessLevel, type Account, type Branch, type TeamMember, type TeamMemberInput } from '../../api'
-import { branchLabel } from '../../utils/branches'
+import { branchLabel, onlyOfficialBranches } from '../../utils/branches'
 import { EmptyState } from '../../components/common'
 import { getMessage } from '../../utils/errors'
 import { formatPhone } from '../../utils/phone'
 import './profile.css'
+
+// Valor da opção "Todas as filiais" (acesso a todos os dados).
+const ALL_BRANCHES = '__ALL__'
 
 const roles = ['Administrador', 'Gerente', 'Atendimento', 'Financeiro', 'Logística', 'Entregador']
 const accessLabels: Record<AccessLevel, { label: string; hint: string }> = {
@@ -269,12 +272,15 @@ function MemberDialog({ credentials, member, areas, branches, onAreas, onClose, 
       <label>Nível de acesso<select value={form.access} onChange={event => set('access', event.target.value as AccessLevel)}>
         {(Object.keys(accessLabels) as AccessLevel[]).map(level => <option key={level} value={level}>{accessLabels[level].label}</option>)}</select></label>
       <small className="field-help">{accessLabels[form.access].hint}</small>
-      {form.access === 'NONE' && <>
-        <label>Filial do parceiro<select value={form.branchId ?? ''} onChange={event => set('branchId', event.target.value)}>
-          <option value="">Nenhuma ainda (não vê nada)</option>
-          {branches.map(branch => <option key={branch.id} value={branch.id}>{branchLabel(branch.name)}</option>)}</select></label>
-        <small className="field-help">O parceiro vê só os pedidos, poltronas, agenda, financeiro e conversas do WhatsApp desta filial.</small>
-      </>}
+      {/* Todas as filiais = vê todos os dados; uma filial = parceiro que vê só os dados dela. */}
+      <label>Filial do parceiro<select value={form.access === 'ALL' ? ALL_BRANCHES : form.branchId ?? ''}
+        onChange={event => { const value = event.target.value; setForm(current => value === ALL_BRANCHES
+          ? { ...current, access: 'ALL', branchId: null } : { ...current, access: 'NONE', branchId: value }) }}>
+        {form.access === 'NONE' && !form.branchId && <option value="" disabled>Escolha a filial</option>}
+        <option value={ALL_BRANCHES}>Todas as filiais</option>
+        {onlyOfficialBranches(branches, branch => branch.name).map(branch => <option key={branch.id} value={branch.id}>{branchLabel(branch.name)}</option>)}</select></label>
+      <small className="field-help">{form.access === 'ALL' ? 'Vê os pedidos, poltronas, agenda, financeiro e conversas de todas as filiais.'
+        : 'O parceiro vê só os pedidos, poltronas, agenda, financeiro e conversas do WhatsApp desta filial.'}</small>
       {member && !member.self && <label className="branch-option"><input type="checkbox" checked={form.enabled ?? true}
         onChange={event => set('enabled', event.target.checked)} /><span>Acesso ativo</span></label>}
       <label>{member ? 'Nova senha' : 'Senha'} {member && <span className="optional">(opcional)</span>}
