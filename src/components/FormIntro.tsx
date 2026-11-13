@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import leaves from '../assets/folhas-logo.png'
 import './FormIntro.css'
 
 /**
@@ -11,7 +12,14 @@ export function FormIntro({ icon, title, image, eyebrow, signature, portraits, c
   if (portraits) {
     // Retratos redondos lado a lado, um encaixado no outro, com o recado de boas-vindas embaixo (igual ao app).
     return <div className="form-welcome">
-      <div className="form-welcome-portraits">{portraits.map(src => <img key={src} src={src} alt="" />)}</div>
+      {/* Folhas do logo: grandes e clarinhas nos cantos, e um raminho de cada lado dos retratos. */}
+      <img className="form-welcome-leaf corner top" src={leaves} alt="" aria-hidden="true" />
+      <img className="form-welcome-leaf corner bottom" src={leaves} alt="" aria-hidden="true" />
+      <div className="form-welcome-portraits">
+        <img className="form-welcome-leaf sprig" src={leaves} alt="" aria-hidden="true" />
+        {portraits.map((src, index) => <span key={src} className={`form-welcome-ring ring-${index}`}><img src={src} alt="" /></span>)}
+        <img className="form-welcome-leaf sprig mirror" src={leaves} alt="" aria-hidden="true" />
+      </div>
       <strong>{title}</strong>
       <p>{children}</p>
     </div>

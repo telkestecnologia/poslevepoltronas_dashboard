@@ -45,3 +45,18 @@
 .form-welcome-portraits img + img { margin-left: -16px; }
 .form-welcome strong { color: #127a84; font-size: 22px; letter-spacing: -0.02em; }
 .form-welcome p { margin: 0; color: #2a3236; font-size: 14.5px; line-height: 1.45; }
+
+/* Folhas do logo e anéis em degradê nos retratos (cadastro de usuário). */
+.form-welcome { position: relative; overflow: hidden; border-color: #d9eef0; border-radius: 22px; background: linear-gradient(180deg, #e9f6f7 0%, #fff 100%); }
+.form-welcome > strong, .form-welcome > p, .form-welcome-portraits { position: relative; }
+.form-welcome-leaf.corner { position: absolute; width: 150px; opacity: 0.13; pointer-events: none; }
+.form-welcome-leaf.corner.top { top: -18px; left: -46px; }
+.form-welcome-leaf.corner.bottom { right: -50px; bottom: -30px; transform: scaleX(-1) rotate(-18deg); }
+.form-welcome-portraits { align-items: center; }
+.form-welcome-portraits .form-welcome-leaf.sprig { width: 54px; height: auto; border: 0; border-radius: 0; box-shadow: none; background: none; margin: 0 -2px; transform: rotate(-12deg); }
+.form-welcome-portraits .form-welcome-leaf.sprig.mirror { transform: scaleX(-1) rotate(-12deg); }
+.form-welcome-ring { display: grid; place-items: center; width: 100px; height: 100px; padding: 3px; border-radius: 50%; box-shadow: 0 6px 16px rgba(13, 52, 56, 0.12); }
+.form-welcome-ring.ring-0 { background: linear-gradient(135deg, #1fa5c9, #3dbb9a, #8cc66a); }
+.form-welcome-ring.ring-1 { margin-left: -14px; background: linear-gradient(135deg, #f47a52, #c9a35a, #7cc36a); }
+.form-welcome-portraits .form-welcome-ring img { width: 94px; height: 94px; border: 3px solid #fff; box-shadow: none; margin: 0; }
+.form-welcome-portraits img + img { margin-left: 0; }
