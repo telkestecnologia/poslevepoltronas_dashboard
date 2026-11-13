@@ -34,3 +34,7 @@
 .profile-cover { position: relative; height: 380px; margin: 0 -22px; background-size: cover; background-position: center top; }
 .profile-cover::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(255, 255, 255, 0) 70%, #fff 100%); }
 .profile-hello { margin: -6px 0 0 !important; color: #127a84; font-size: 24px !important; letter-spacing: -0.02em; }
+
+/* Foto quadrada das proprietárias na recepção: a capa mostra a cena inteira. */
+.profile-cover { height: auto; aspect-ratio: 1 / 1; background-position: center; }
+.profile-cover::after { background: linear-gradient(180deg, rgba(255, 255, 255, 0) 62%, #fff 100%); }

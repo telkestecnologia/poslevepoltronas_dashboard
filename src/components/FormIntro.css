@@ -27,3 +27,7 @@
 .form-banner strong { color: #127a84; }
 .form-banner p { color: #2a3236; }
 
+
+/* Foto em pé (as duas na poltrona): banner mais alto, preso no topo, clareando só embaixo. */
+.form-banner { min-height: 560px; background-position: center top; }
+.form-banner::before { background: linear-gradient(180deg, rgba(255, 255, 255, 0) 60%, rgba(255, 255, 255, 0.85) 76%, #fff 100%); }
