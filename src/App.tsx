@@ -147,6 +147,7 @@ function App() {
             error={dialog.error}
             onClose={dialog.closeModal}
             onChairSave={dialog.saveChair}
+            onDelete={dialog.deleteChair}
           />
         ))}
     </div>

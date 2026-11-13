@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ArrowLeft, Armchair, CheckCircle2, ChevronRight, MapPin, PauseCircle, Plus, Wrench } from 'lucide-react'
+import { ArrowLeft, Armchair, CheckCircle2, ChevronRight, MapPin, PauseCircle, Plus, Search, Wrench } from 'lucide-react'
 import { api, type Branch, type BranchInput, type Chair, type Municipality } from '../../api'
 import { BranchModal } from './BranchModal'
 import { EmptyState } from '../../components/common'
@@ -18,10 +18,13 @@ type Props = {
   saving: boolean
   formError: string
   onUpdateBranch: (branch: Branch, data: BranchInput) => Promise<void>
+  onEditChair: (chair: Chair) => void
+  onNewChair: () => void
+  modalOpen: boolean
   onToggleFreeShipping: (branch: Branch) => Promise<void>
 }
 
-export function BranchesPage({ branches, activeCounts, onNewBranch, onToggleFreeShipping, credentials, municipalities, saving, formError, onUpdateBranch }: Props) {
+export function BranchesPage({ branches, activeCounts, onNewBranch, onToggleFreeShipping, credentials, municipalities, saving, formError, onUpdateBranch, onEditChair, onNewChair, modalOpen }: Props) {
   const [enteredId, setEnteredId] = useState<string | null>(null)
   const entered = branches.find(branch => branch.id === enteredId)
   const [busyId, setBusyId] = useState<string | null>(null)
@@ -58,7 +61,7 @@ export function BranchesPage({ branches, activeCounts, onNewBranch, onToggleFree
       </section>
       <section className="panel branch-section">
         <h2>Poltronas da filial</h2>
-        <BranchChairs credentials={credentials} branchId={entered.id} />
+        <BranchChairs credentials={credentials} branchId={entered.id} reload={modalOpen} onEdit={onEditChair} onNew={onNewChair} />
       </section>
     </>
   }
@@ -155,7 +158,10 @@ const chairStatus: Record<string, { label: string; plural: string; tone: string 
 }
 
 /** Poltronas da filial, na própria página da filial. */
-function BranchChairs({ credentials, branchId }: { credentials: string; branchId: string }) {
+function BranchChairs({ credentials, branchId, reload, onEdit, onNew }: {
+  credentials: string; branchId: string; reload: boolean; onEdit: (chair: Chair) => void; onNew: () => void
+}) {
+  const [search, setSearch] = useState('')
   const [chairs, setChairs] = useState<Chair[] | null>(null)
   const [error, setError] = useState('')
   const [filter, setFilter] = useState<string | null>(null)
@@ -165,10 +171,12 @@ function BranchChairs({ credentials, branchId }: { credentials: string; branchId
       .then(page => { if (active) setChairs(page.items) })
       .catch(cause => { if (active) setError(getMessage(cause)) })
     return () => { active = false }
-  }, [credentials, branchId])
+  }, [credentials, branchId, reload])
   if (error) return <div className="form-error" role="alert">{error}</div>
   if (!chairs) return <p className="branch-muted">Carregando poltronas...</p>
-  const shown = chairs.filter(chair => !filter || chair.status === filter)
+  const term = search.trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+  const shown = chairs.filter(chair => (!filter || chair.status === filter)
+    && (!term || `${chair.code} ${chair.model} ${chair.notes ?? ''}`.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().includes(term)))
   return <>
     {/* Botões com contador (igual ao app): clicar mostra só aquelas poltronas; clicar de novo mostra todas. */}
     <div className="branch-chair-buttons">{(['ACTIVE', 'MAINTENANCE', 'INACTIVE'] as const).map(status => {
@@ -178,11 +186,17 @@ function BranchChairs({ credentials, branchId }: { credentials: string; branchId
         <Icon size={20} /><strong>{chairs.filter(chair => chair.status === status).length}</strong><span>{chairStatus[status].plural}</span>
       </button>
     })}</div>
+    {/* Busca com lupa e, ao lado, o botão pequeno de nova poltrona (igual ao app). */}
+    <div className="branch-chair-tools">
+      <label className="branch-chair-search"><Search size={16} aria-hidden="true" />
+        <input type="search" value={search} onChange={event => setSearch(event.target.value)} placeholder="Buscar poltrona" aria-label="Buscar poltrona" /></label>
+      <button type="button" className="button primary admin-only" onClick={onNew}><Plus size={16} /> Nova</button>
+    </div>
     {shown.length === 0 ? <p className="branch-muted">{chairs.length === 0 ? 'Nenhuma poltrona nesta filial.' : 'Nenhuma poltrona nesta situação.'}</p>
-      : <div className="branch-chairs">{shown.map(chair => <div key={chair.id} className={`branch-chair ${chairStatus[chair.status]?.tone ?? ''}`}>
+      : <div className="branch-chairs">{shown.map(chair => <button type="button" key={chair.id} onClick={() => onEdit(chair)} className={`branch-chair ${chairStatus[chair.status]?.tone ?? ''}`}>
         <span className="branch-chair-icon"><Armchair size={18} /></span>
         <span className="branch-chair-text"><strong>{chair.code}</strong><small>{chair.model}{chair.notes ? ` • ${chair.notes}` : ''}</small></span>
         <span className="branch-chair-status">{chairStatus[chair.status]?.label ?? chair.status}</span>
-      </div>)}</div>}
+      </button>)}</div>}
   </>
 }

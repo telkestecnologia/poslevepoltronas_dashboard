@@ -10,6 +10,7 @@ export function ChairModal({
   error,
   onClose,
   onChairSave,
+  onDelete,
 }: {
   modal: { kind: 'newChair' } | { kind: 'editChair'; chair: Chair }
   branches: Branch[]
@@ -23,6 +24,8 @@ export function ChairModal({
     status: ChairStatus
     branchId: string
   }) => Promise<void>
+  /** Excluir poltrona (só sem pedidos). */
+  onDelete?: (chair: Chair) => Promise<void>
 }) {
   const chair = modal.kind === 'editChair' ? modal.chair : null
   const [code, setCode] = useState(chair?.code ?? '')
@@ -124,6 +127,9 @@ export function ChairModal({
             </div>
           )}
           <div className="modal-actions">
+            {chair && onDelete && <button type="button" className="button chair-delete" disabled={saving}
+              onClick={() => { if (window.confirm(`Excluir a poltrona ${chair.code}? Ela e os bloqueios dela serão apagados e isso não pode ser desfeito. Se ela já teve pedidos, deixe como Inativa.`)) void onDelete(chair) }}>
+              Excluir poltrona</button>}
             <button type="button" className="button secondary" onClick={onClose} disabled={saving}>
               Cancelar
             </button>

@@ -335,6 +335,23 @@ export function useDashboard() {
   }
 
   // Mutations refresh the page they changed before closing the form.
+  async function deleteChair(chair: Chair) {
+    if (credentials === null) return
+    setSaving(true)
+    setFormError('')
+    try {
+      await api.deleteChair(credentials, chair.id)
+      showNotice('Poltrona excluída.')
+      setModal(null)
+      applyPageData(await loadPage(credentials, page === 'branches' ? 'branches' : 'chairs', chairQuery, rentalDate))
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) logout()
+      else setFormError(getMessage(error))
+    } finally {
+      setSaving(false)
+    }
+  }
+
   async function saveChair(data: {
     code: string
     model: string
@@ -363,7 +380,7 @@ export function useDashboard() {
         })
         showNotice('Poltrona cadastrada com sucesso.')
       }
-      applyPageData(await loadPage(credentials, 'chairs', chairQuery, rentalDate))
+      applyPageData(await loadPage(credentials, page === 'branches' ? 'branches' : 'chairs', chairQuery, rentalDate))
       setModal(null)
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) logout()
@@ -581,6 +598,10 @@ export function useDashboard() {
       saving,
       formError,
       onUpdateBranch: updateBranchInline,
+      // Poltronas na página da filial: clicar edita, Nova cadastra; a lista recarrega quando a janela fecha.
+      onEditChair: (chair: Chair) => openModal({ kind: 'editChair', chair }),
+      onNewChair: () => openModal({ kind: 'newChair' }),
+      modalOpen: modal !== null,
       onToggleFreeShipping: toggleBranchFreeShipping,
     },
     couriersPage: {
@@ -617,6 +638,7 @@ export function useDashboard() {
       error: formError,
       closeModal,
       saveChair,
+      deleteChair,
       saveBranch,
       saveCourier,
     },
