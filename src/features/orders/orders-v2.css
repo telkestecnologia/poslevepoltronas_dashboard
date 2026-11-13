@@ -54,3 +54,8 @@
 .order-pill-icon { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--teal-dark); color: #fff; }
 .order-pill select { border: 0; outline: 0; background: transparent; color: var(--teal-dark); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; padding-right: 8px; }
 .order-pill select:disabled { opacity: 0.55; cursor: default; }
+
+/* Pílulas discretas: fundo branco, borda fina e ícone pequeno (igual ao app). */
+.order-pill { gap: 6px !important; padding: 0 12px !important; min-height: 38px; border: 1px solid #e3ebea; background: #fff !important; }
+.order-pill-icon { width: auto !important; height: auto !important; background: transparent !important; color: var(--teal-dark) !important; }
+.order-pill select { color: var(--ink) !important; font-weight: 500 !important; }
