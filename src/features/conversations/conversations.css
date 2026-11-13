@@ -247,9 +247,9 @@
 .wa-recap .wa-summary-alert h3 { color: #b8321f; }
 
 /* Análise da IA no resumo do atendimento. */
-.wa-ai { display: grid; gap: 8px; padding: 12px 14px; border-radius: 12px; background: #e8f6ef; }
-.wa-ai h3 { color: #0b6b52; font-size: 13px; text-transform: none; letter-spacing: 0; }
-.wa-ai h4 { margin: 0 0 2px; color: #13866a; font-size: 11.5px; font-weight: 700; text-transform: uppercase; }
+.wa-ai { display: grid; gap: 8px; padding: 12px 14px; border-radius: 12px; background: #f1effd; }
+.wa-ai h3 { color: #4535b8; font-size: 13px; text-transform: none; letter-spacing: 0; }
+.wa-ai h4 { margin: 0 0 2px; color: #5b4bd6; font-size: 11.5px; font-weight: 700; text-transform: uppercase; }
 .wa-ai .wa-summary-alert { margin: 0; }
 .wa-ai .wa-summary-alert h4 { color: #b8321f; }
 .wa-ai-loading { color: #667781 !important; font-style: italic; }
