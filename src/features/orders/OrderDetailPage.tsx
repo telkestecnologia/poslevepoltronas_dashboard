@@ -240,15 +240,14 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
           const canEdit = canChangeSchedule && step <= index
           if (!passed && !current && !canEdit) return null
           const word = phase === 'DELIVERY' ? 'entrega' : 'retirada'
-          return <section key={phase} className={`panel od-card od-evidence${current ? ' now' : ''}`}>
+          return <section key={phase} className={`panel od-card od-evidence${current ? ' now' : ''}${current && openPhase !== phase ? ' pulsing' : ''}`}>
             <div className="od-step-head">
               {/* O conteúdo da etapa (fotos e comunicado) só aparece ao clicar no nome (igual ao app). */}
               {current || (phase === 'DELIVERY' && departure && !passed)
                 ? <button type="button" className="od-step-toggle" aria-expanded={openPhase === phase}
                   onClick={() => setOpenPhase(value => value === phase ? null : phase)}>
                   <span className="eyebrow">ETAPA • AGUARDANDO {word.toUpperCase()}</span>
-                  <span className={`od-pulse${openPhase === phase ? ' open' : ''}${current ? ' now' : ''}`}>
-                    {openPhase === phase ? <ChevronUp size={14} /> : <ChevronDown size={14} />}</span></button>
+</button>
                 : <span className="eyebrow">ETAPA • AGUARDANDO {word.toUpperCase()}</span>}
               <span className="od-step-actions">
                 {canEdit && <EarlySchedule order={order} kind={phase === 'DELIVERY' ? 'delivery' : 'pickup'} busy={busy} current={current} onSave={saveSchedule} />}
@@ -263,6 +262,10 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
             </div>}
             {openPhase === phase && current && <OrderEvidencePanel key={`${order.id}:${order.status}:${word}`} credentials={credentials} orderId={order.id}
               status={order.status} couriers={couriers} phase={phase} />}
+            {/* Setinha no canto inferior direito do card: abre e fecha a etapa (igual ao app). */}
+            {(current || (phase === 'DELIVERY' && departure && !passed)) && <button type="button" className={`od-corner-chevron${current ? ' now' : ''}`}
+              aria-label={openPhase === phase ? 'Fechar etapa' : 'Abrir etapa'} onClick={() => setOpenPhase(value => value === phase ? null : phase)}>
+              {openPhase === phase ? <ChevronUp size={15} /> : <ChevronDown size={15} />}</button>}
           </section>
         })}
         {mediaPhase && <MediaCarousel credentials={credentials} orderId={order.id} phase={mediaPhase} couriers={couriers}

@@ -238,3 +238,13 @@
 /* Etapa atual com o fundo laranja-clarinho, o mesmo do botão Alterar; o botão fica branco. */
 .od-evidence.now { background: #fef0ea; border-color: #fbd9c9; }
 .od-evidence.now .od-media-button.now { background: #fff; }
+
+/* Card da etapa atual: linha laranja ao redor e pulsando de leve enquanto está fechado (igual ao app). */
+.od-evidence.now { border: 1.5px solid #f47a52; }
+.od-evidence.pulsing { animation: od-card-pulse 1.8s ease-in-out infinite; }
+@keyframes od-card-pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.012); opacity: 0.88; } }
+@media (prefers-reduced-motion: reduce) { .od-evidence.pulsing { animation: none; } }
+
+.od-corner-chevron { justify-self: end; align-self: end; display: grid; place-items: center; width: 26px; height: 26px; margin-left: auto; border: 0;
+  border-radius: 50%; background: #1a9baa; color: #fff; cursor: pointer; }
+.od-corner-chevron.now { background: #f47a52; }
