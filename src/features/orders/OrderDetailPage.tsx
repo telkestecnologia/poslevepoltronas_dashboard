@@ -233,6 +233,22 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
           <CheckCircle2 size={22} /><div><h2>Pedido concluído</h2><p>A poltrona já foi retirada e o aluguel está encerrado.</p></div>
         </section>}
 
+        {/* Fotos e vídeos por etapa (igual ao app): os da entrega em "Aguardando entrega", os da retirada em "Aguardando retirada". */}
+        {!contractOnly && (step < 0 || step >= statusFlow.indexOf('DELIVERY_PENDING')) && <section className="panel od-card od-evidence">
+          <span className="eyebrow">ETAPA • AGUARDANDO ENTREGA</span>
+          {departure && <div className="od-notice" role="note">
+            <span className="od-notice-icon"><Megaphone size={16} /></span>
+            <div><strong>Comunicado ao cliente</strong>
+              <p>✓ Avisado pelo WhatsApp que a poltrona saiu para entrega em {dateTimeLabel(departure.at)}.</p></div>
+          </div>}
+          <OrderEvidencePanel key={`${order.id}:${order.status}:entrega`} credentials={credentials} orderId={order.id}
+            status={order.status} couriers={couriers} phase="DELIVERY" />
+        </section>}
+        {!contractOnly && (step < 0 || step >= statusFlow.indexOf('PICKUP_PENDING')) && <section className="panel od-card od-evidence">
+          <span className="eyebrow">ETAPA • AGUARDANDO RETIRADA</span>
+          <OrderEvidencePanel key={`${order.id}:${order.status}:retirada`} credentials={credentials} orderId={order.id}
+            status={order.status} couriers={couriers} phase="PICKUP" />
+        </section>}
         <section className="panel od-card" aria-labelledby="od-logistics-title">
           <div className="od-card-head"><h2 id="od-logistics-title"><Truck size={18} /> Entrega e retirada</h2></div>
           <div className="od-schedule">
@@ -296,15 +312,6 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
           </div>}
         </section>
 
-        {!contractOnly && <section className="panel od-card od-evidence">
-          {departure && <div className="od-notice" role="note">
-            <span className="od-notice-icon"><Megaphone size={16} /></span>
-            <div><strong>Comunicado ao cliente</strong>
-              <p>✓ Avisado pelo WhatsApp que a poltrona saiu para entrega em {dateTimeLabel(departure.at)}.</p></div>
-          </div>}
-          <OrderEvidencePanel key={`${order.id}:${order.status}`} credentials={credentials} orderId={order.id}
-            status={order.status} couriers={couriers} />
-        </section>}
 
         {!contractOnly && <section className="panel od-card" aria-labelledby="od-issues-title">
           <div className="od-card-head">

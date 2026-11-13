@@ -5,11 +5,12 @@ import { api, type Courier, type OrderEvidence, type OrderStatus } from '../../a
 import { getMessage } from '../../utils/errors'
 import './evidence-upload.css'
 
-type Props = { credentials: string; orderId: string; status: OrderStatus; couriers: Courier[] }
+/** phase: só as fotos e vídeos de uma etapa (entrega em "Aguardando entrega", retirada em "Aguardando retirada"). */
+type Props = { credentials: string; orderId: string; status: OrderStatus; couriers: Courier[]; phase?: 'DELIVERY' | 'PICKUP' }
 
 const phases = [
   { value: 'DELIVERY', label: 'Na entrega', empty: 'Nenhuma foto ou vídeo da entrega enviado.' },
-  { value: 'PICKUP', label: 'Na devolução', empty: 'Nenhuma foto ou vídeo da devolução enviado.' },
+  { value: 'PICKUP', label: 'Na retirada', empty: 'Nenhuma foto ou vídeo da retirada enviado.' },
 ] as const
 
 function timeLabel(value: string) {
@@ -21,10 +22,10 @@ function sizeLabel(bytes: number) {
 }
 
 function mediaLabel(item: OrderEvidence) {
-  return `${item.kind === 'PHOTO' ? 'Foto' : 'Vídeo'} da ${item.phase === 'DELIVERY' ? 'entrega' : 'devolução'}`
+  return `${item.kind === 'PHOTO' ? 'Foto' : 'Vídeo'} da ${item.phase === 'DELIVERY' ? 'entrega' : 'retirada'}`
 }
 
-export function OrderEvidencePanel({ credentials, orderId, status, couriers }: Props) {
+export function OrderEvidencePanel({ credentials, orderId, status, couriers, phase: only }: Props) {
   const [items, setItems] = useState<OrderEvidence[]>([])
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
@@ -92,10 +93,10 @@ export function OrderEvidencePanel({ credentials, orderId, status, couriers }: P
     return items.find(item => item.courierId === id)?.uploadedByName || couriers.find(courier => courier.id === id)?.name || id
   }
 
-  return <section className="order-section order-evidence" aria-labelledby="order-evidence-title">
+  return <section className="order-section order-evidence" aria-labelledby={`order-evidence-title${only ?? ''}`}>
     <div className="order-evidence-heading">
       <div>
-        <h3 id="order-evidence-title">Fotos e vídeos da entrega e da devolução</h3>
+        <h3 id={`order-evidence-title${only ?? ''}`}>{only ? `Fotos e vídeos da ${only === 'DELIVERY' ? 'entrega' : 'retirada'}` : 'Fotos e vídeos da entrega e da retirada'}</h3>
         <p className="order-muted">Registros enviados pelo app para documentar a condição da poltrona. O envio é feito só pelo app.</p>
       </div>
       <button className="button secondary" type="button" disabled={loading}
@@ -105,10 +106,10 @@ export function OrderEvidencePanel({ credentials, orderId, status, couriers }: P
     </div>
     {error && <p className="form-error" role="alert">{error}</p>}
     {loading && items.length === 0 && <p className="order-muted" role="status">Carregando registros...</p>}
-    {!loading && !error && phases.map(phase => {
+    {!loading && !error && phases.filter(phase => !only || phase.value === only).map(phase => {
       const phaseItems = items.filter(item => item.phase === phase.value)
       return <div className="order-evidence-phase" key={phase.value}>
-        <h4>{phase.label} <span>{phaseItems.length}</span></h4>
+        {only ? null : <h4>{phase.label} <span>{phaseItems.length}</span></h4>}
         {phaseItems.length === 0
           ? <p className="order-muted">{phase.empty}</p>
           : <div className="order-evidence-grid">{phaseItems.map(item =>
