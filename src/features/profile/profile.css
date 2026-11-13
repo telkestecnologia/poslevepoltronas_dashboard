@@ -42,3 +42,6 @@
 /* Cabeças perto do topo e cartão mais acima. */
 .profile-cover { aspect-ratio: auto; height: 300px; background-position: center top; }
 .profile-cover { height: 270px; }
+/* Cartão começa na altura dos joelhos. */
+.profile-cover { height: 190px; }
+.profile-cover::after { background: linear-gradient(180deg, rgba(255, 255, 255, 0) 55%, #fff 100%); }

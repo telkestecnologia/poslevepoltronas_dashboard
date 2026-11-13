@@ -35,3 +35,13 @@
 /* Foto deitada das duas (cadastro de usuário): banner mais baixo, clareando a partir do meio. */
 .form-banner { min-height: 340px; background-position: center top; }
 .form-banner::before { background: linear-gradient(180deg, rgba(255, 255, 255, 0) 56%, rgba(255, 255, 255, 0.85) 76%, #fff 100%); }
+
+/* Boas-vindas com os retratos das proprietárias (cadastro de usuário). */
+.form-welcome { display: grid; justify-items: center; gap: 6px; padding: 26px 20px 20px; border: 1px solid #e7e6e2; border-radius: 16px;
+  background: linear-gradient(180deg, #e6f4f5 0%, #fff 100%); text-align: center; }
+.form-welcome-portraits { display: flex; margin-bottom: 6px; }
+.form-welcome-portraits img { width: 96px; height: 96px; border: 4px solid #fff; border-radius: 50%; object-fit: cover; background: #cdeef0;
+  box-shadow: 0 6px 16px rgba(13, 52, 56, 0.12); }
+.form-welcome-portraits img + img { margin-left: -16px; }
+.form-welcome strong { color: #127a84; font-size: 22px; letter-spacing: -0.02em; }
+.form-welcome p { margin: 0; color: #2a3236; font-size: 14.5px; line-height: 1.45; }

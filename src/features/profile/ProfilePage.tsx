@@ -3,7 +3,8 @@ import { NotificationToggle } from './NotificationToggle'
 import { ArrowRight, ChevronRight, KeyRound, Mail, Plus, Sparkles, UserRound, Users, X } from 'lucide-react'
 import { FormIntro } from '../../components/FormIntro'
 import owners from '../../assets/fundadoras-capa.webp'
-import founders from '../../assets/cadastro-equipe.webp'
+import renata from '../../assets/renata.webp'
+import isadora from '../../assets/isadora.webp'
 import { api, type AccessLevel, type Account, type Branch, type BranchInput, type Municipality, type TeamMember, type TeamMemberInput } from '../../api'
 import { BranchModal } from '../branches/BranchModal'
 import { branchLabel, onlyOfficialBranches } from '../../utils/branches'
@@ -283,7 +284,7 @@ function MemberDialog({ credentials, member, areas, branches, onAreas, onClose, 
 
   return <Modal title={member ? 'Editar usuário' : 'Cadastrar usuário'} eyebrow="EQUIPE" onClose={onClose} busy={busy}>
     <form className="modal-form" onSubmit={event => void submit(event)}>
-      {!member && <FormIntro icon={<Sparkles size={13} />} title="Boas-vindas à Pós Leve" image={founders}>
+      {!member && <FormIntro icon={<Sparkles size={13} />} title="Boas-vindas à Pós Leve" portraits={[renata, isadora]}>
         Preencha os dados de quem vai fazer parte do time. Ela entra no painel e no app com o e-mail e a senha que você criar aqui.</FormIntro>}
       <label>Nome completo<input value={form.name} onChange={event => set('name', event.target.value)} maxLength={120} required autoFocus placeholder="Ex.: Isadora Ivo" /></label>
       <label>E-mail<input type="email" value={form.email} onChange={event => set('email', event.target.value)} required autoComplete="off" placeholder="nome@poslevepoltronas.com.br" /></label>
