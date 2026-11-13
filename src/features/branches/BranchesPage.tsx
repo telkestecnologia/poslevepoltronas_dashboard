@@ -3,7 +3,7 @@ import { ArrowLeft, Armchair, CheckCircle2, ChevronRight, MapPin, PauseCircle, P
 import { api, type Branch, type BranchInput, type Chair, type Municipality } from '../../api'
 import { BranchModal } from './BranchModal'
 import { EmptyState } from '../../components/common'
-import { branchLabel, OFFICIAL_BRANCH_COUNT, chairName } from '../../utils/branches'
+import { branchLabel, chairName } from '../../utils/branches'
 import { getMessage } from '../../utils/errors'
 import './branches.css'
 
@@ -72,11 +72,10 @@ export function BranchesPage({ branches, activeCounts, onNewBranch, onToggleFree
           <span className="eyebrow">FILIAIS • PÓS LEVE</span>
           <h1>Filiais</h1>
         </div>
-        {branches.length < OFFICIAL_BRANCH_COUNT && (
-          <button className="button primary admin-only branch-new-small" onClick={onNewBranch}>
-            <Plus size={15} /> Nova filial
-          </button>
-        )}
+        {/* Só o administrador cadastra filiais. */}
+        <button className="button primary admin-only branch-new-small" onClick={onNewBranch}>
+          <Plus size={15} /> Nova filial
+        </button>
       </div>
       {error && <div className="form-error branch-page-error" role="alert">{error}</div>}
       <section className="panel table-panel">

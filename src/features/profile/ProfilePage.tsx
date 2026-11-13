@@ -2,7 +2,8 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { NotificationToggle } from './NotificationToggle'
 import { ArrowRight, ChevronRight, KeyRound, Mail, Plus, UserPlus, UserRound, Users, X } from 'lucide-react'
 import { FormIntro } from '../../components/FormIntro'
-import { api, type AccessLevel, type Account, type Branch, type TeamMember, type TeamMemberInput } from '../../api'
+import { api, type AccessLevel, type Account, type Branch, type BranchInput, type Municipality, type TeamMember, type TeamMemberInput } from '../../api'
+import { BranchModal } from '../branches/BranchModal'
 import { branchLabel, onlyOfficialBranches } from '../../utils/branches'
 import { EmptyState } from '../../components/common'
 import { getMessage } from '../../utils/errors'
@@ -102,7 +103,7 @@ export function ProfilePage({ credentials, onCredentialsChanged, partner = false
       onCredentialsChanged={onCredentialsChanged}
       onDone={() => { setDialog(null); setNotice('E-mail alterado. Use o novo e-mail para entrar, aqui e no app.') }} />}
     {dialog?.kind === 'member' && <MemberDialog credentials={credentials} member={dialog.member} areas={areas} branches={branches} onAreas={setAreas}
-      onClose={() => setDialog(null)} onSaved={() => { setDialog(null); void load() }} />}
+      onClose={() => setDialog(null)} onSaved={() => { setDialog(null); void load() }} onBranchesChanged={() => void load()} />}
   </>
 }
 
@@ -188,10 +189,32 @@ function EmailDialog({ credentials, current, onClose, onDone, onCredentialsChang
   </Modal>
 }
 
-function MemberDialog({ credentials, member, areas, branches, onAreas, onClose, onSaved }: {
+function MemberDialog({ credentials, member, areas, branches, onAreas, onClose, onSaved, onBranchesChanged }: {
   credentials: string; member: TeamMember | null; areas: string[]; branches: Branch[]; onAreas: (areas: string[]) => void
-  onClose: () => void; onSaved: () => void
+  onClose: () => void; onSaved: () => void; onBranchesChanged: () => void
 }) {
+  const [newBranch, setNewBranch] = useState<{ municipalities: Municipality[]; saving: boolean; error: string } | null>(null)
+  const branchName = (id?: string | null) => {
+    const branch = branches.find(item => item.id === id)
+    return branch ? branchLabel(branch.name) : 'a filial escolhida'
+  }
+  async function openNewBranch() {
+    try {
+      setNewBranch({ municipalities: await api.municipalities(credentials), saving: false, error: '' })
+    } catch (failure) {
+      setError(getMessage(failure))
+    }
+  }
+  async function saveBranch(data: BranchInput) {
+    setNewBranch(current => current && { ...current, saving: true, error: '' })
+    try {
+      await api.createBranch(credentials, data)
+      setNewBranch(null)
+      onBranchesChanged()
+    } catch (failure) {
+      setNewBranch(current => current && { ...current, saving: false, error: getMessage(failure) })
+    }
+  }
   const [form, setForm] = useState<TeamMemberInput>({
     name: member?.name ?? '', email: member?.email ?? '', phone: member?.phone ?? '', area: member?.area ?? areas[0] ?? '',
     jobTitle: member?.jobTitle ?? roles[2], access: member?.access ?? 'NONE', password: '', enabled: member?.enabled ?? true,
@@ -269,18 +292,18 @@ function MemberDialog({ credentials, member, areas, branches, onAreas, onClose, 
       </div> : <button type="button" className="profile-link" onClick={() => setAddingCity(true)}>+ Cadastrar nova cidade</button>}
       <label>Cargo<select value={form.jobTitle} onChange={event => set('jobTitle', event.target.value)}>
         {[...new Set([...roles, form.jobTitle].filter(Boolean))].map(role => <option key={role} value={role}>{role}</option>)}</select></label>
-      <label>Nível de acesso<select value={form.access} onChange={event => set('access', event.target.value as AccessLevel)}>
-        {(Object.keys(accessLabels) as AccessLevel[]).map(level => <option key={level} value={level}>{accessLabels[level].label}</option>)}</select></label>
-      <small className="field-help">{accessLabels[form.access].hint}</small>
-      {/* Todas as filiais = vê todos os dados; uma filial = parceiro que vê só os dados dela. */}
-      <label>Filial do parceiro<select value={form.access === 'ALL' ? ALL_BRANCHES : form.branchId ?? ''}
+      {/* Nível de acesso: todos os dados ou só os de uma filial (pedidos, poltronas, agenda, financeiro e conversas dela). */}
+      <label>Nível de acesso<select value={form.access === 'ALL' ? ALL_BRANCHES : form.branchId ?? ''}
         onChange={event => { const value = event.target.value; setForm(current => value === ALL_BRANCHES
           ? { ...current, access: 'ALL', branchId: null } : { ...current, access: 'NONE', branchId: value }) }}>
         {form.access === 'NONE' && !form.branchId && <option value="" disabled>Escolha a filial</option>}
-        <option value={ALL_BRANCHES}>Todas as filiais</option>
+        <option value={ALL_BRANCHES}>Vê todos os dados (todas as filiais)</option>
         {onlyOfficialBranches(branches, branch => branch.name).map(branch => <option key={branch.id} value={branch.id}>{branchLabel(branch.name)}</option>)}</select></label>
-      <small className="field-help">{form.access === 'ALL' ? 'Vê os pedidos, poltronas, agenda, financeiro e conversas de todas as filiais.'
-        : 'O parceiro vê só os pedidos, poltronas, agenda, financeiro e conversas do WhatsApp desta filial.'}</small>
+      <small className="field-help">{form.access === 'ALL' ? 'Vê pedidos, poltronas, agenda, financeiro e conversas de todas as filiais.'
+        : form.branchId ? `Vê só o que é de ${branchName(form.branchId)}: pedidos, poltronas, agenda, financeiro e conversas do WhatsApp. Não vê as outras filiais.`
+          : 'Escolha a filial em que a pessoa trabalha.'}</small>
+      {/* Só o administrador chega aqui (a equipe é dele); a filial nova entra na lista ao salvar. */}
+      <button type="button" className="profile-link" onClick={() => void openNewBranch()}>+ Cadastrar nova filial</button>
       {member && !member.self && <label className="branch-option"><input type="checkbox" checked={form.enabled ?? true}
         onChange={event => set('enabled', event.target.checked)} /><span>Acesso ativo</span></label>}
       <label>{member ? 'Nova senha' : 'Senha'} {member && <span className="optional">(opcional)</span>}
@@ -294,5 +317,7 @@ function MemberDialog({ credentials, member, areas, branches, onAreas, onClose, 
         <button type="submit" className="button primary" disabled={busy}>{busy ? 'Salvando...' : member ? 'Salvar alterações' : 'Cadastrar usuário'} <ArrowRight size={17} /></button>
       </div>
     </form>
+    {newBranch && <BranchModal modal={{ kind: 'newBranch' }} municipalities={newBranch.municipalities} saving={newBranch.saving}
+      error={newBranch.error} onClose={() => setNewBranch(null)} onSave={saveBranch} />}
   </Modal>
 }

@@ -13,19 +13,24 @@ function officialIndex(name: string) {
   return officialBranches.findIndex(branch => branch.pattern.test(normalized))
 }
 
+// Filiais de teste (dev, teste, sertão) não aparecem; filiais novas cadastradas aparecem depois das oficiais.
+const testBranch = /\bdev\b|\btestes?\b|\bsertao\b/
+
+/** Filial que aparece no painel: uma das oficiais ou uma nova (só as de teste ficam fora). */
 export function isOfficialBranch(name: string) {
-  return officialIndex(name) >= 0
+  return officialIndex(name) >= 0 || !testBranch.test(name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase())
 }
 
 export function branchLabel(name: string) {
   return officialBranches[officialIndex(name)]?.label ?? name
 }
 
-/** Mantém somente as filiais oficiais, sempre na mesma ordem. */
+/** As três oficiais, sempre na mesma ordem, e depois as novas; as de teste ficam fora. */
 export function onlyOfficialBranches<T>(items: T[], nameOf: (item: T) => string) {
+  const order = (item: T) => { const index = officialIndex(nameOf(item)); return index < 0 ? officialBranches.length : index }
   return items
     .filter(item => isOfficialBranch(nameOf(item)))
-    .sort((a, b) => officialIndex(nameOf(a)) - officialIndex(nameOf(b)))
+    .sort((a, b) => order(a) - order(b) || nameOf(a).localeCompare(nameOf(b), 'pt-BR'))
 }
 
 /**
