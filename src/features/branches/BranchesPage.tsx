@@ -1,6 +1,7 @@
-import { useState } from 'react'
-import { ArrowLeft, Armchair, ChevronRight, MapPin, Pencil, Plus } from 'lucide-react'
-import type { Branch } from '../../api'
+import { useEffect, useState } from 'react'
+import { ArrowLeft, Armchair, ChevronRight, MapPin, Plus } from 'lucide-react'
+import { api, type Branch, type BranchInput, type Chair, type Municipality } from '../../api'
+import { BranchModal } from './BranchModal'
 import { EmptyState } from '../../components/common'
 import { branchLabel, OFFICIAL_BRANCH_COUNT } from '../../utils/branches'
 import { getMessage } from '../../utils/errors'
@@ -12,10 +13,15 @@ type Props = {
   onNewBranch: () => void
   onEditBranch: (branch: Branch) => void
   onOpenChairs: (branch: Branch) => void
+  credentials: string
+  municipalities: Municipality[]
+  saving: boolean
+  formError: string
+  onUpdateBranch: (branch: Branch, data: BranchInput) => Promise<void>
   onToggleFreeShipping: (branch: Branch) => Promise<void>
 }
 
-export function BranchesPage({ branches, activeCounts, onNewBranch, onEditBranch, onOpenChairs, onToggleFreeShipping }: Props) {
+export function BranchesPage({ branches, activeCounts, onNewBranch, onToggleFreeShipping, credentials, municipalities, saving, formError, onUpdateBranch }: Props) {
   const [enteredId, setEnteredId] = useState<string | null>(null)
   const entered = branches.find(branch => branch.id === enteredId)
   const [busyId, setBusyId] = useState<string | null>(null)
@@ -42,11 +48,17 @@ export function BranchesPage({ branches, activeCounts, onNewBranch, onEditBranch
         <div className="branch-enter-body">
           <h1>{branchLabel(entered.name)}</h1>
           <p>{activeCounts[entered.id] ?? 0} poltronas ativas • {entered.municipalities.length} cidades • {entered.active ? 'Atendendo' : 'Pausada'}</p>
-          <div className="branch-enter-actions">
-            <button type="button" className="button secondary admin-only" onClick={() => onEditBranch(entered)}><Pencil size={17} /> Editar filial</button>
-            <button type="button" className="button primary" onClick={() => onOpenChairs(entered)}><Armchair size={17} /> Poltronas da filial</button>
-          </div>
         </div>
+      </section>
+      {/* Tudo da filial numa página só (igual ao app): os dados (administrador) e as poltronas dela. */}
+      <section className="panel branch-section admin-only">
+        <h2>Dados da filial</h2>
+        <BranchModal key={entered.id} inline modal={{ kind: 'editBranch', branch: entered }} municipalities={municipalities}
+          saving={saving} error={formError} onClose={() => {}} onSave={data => onUpdateBranch(entered, data)} />
+      </section>
+      <section className="panel branch-section">
+        <h2>Poltronas da filial</h2>
+        <BranchChairs credentials={credentials} branchId={entered.id} />
       </section>
     </>
   }
@@ -135,4 +147,29 @@ function branchPhoto(name: string) {
   if (/\bserra\b|\bibiapaba\b/.test(text)) return '/filiais/filial-serra.webp'
   if (/\bsobral\b/.test(text)) return '/filiais/filial-sobral.webp'
   return '/filiais/filial-fortaleza.webp'
+}
+
+const chairStatus: Record<string, { label: string; tone: string }> = {
+  ACTIVE: { label: 'Ativa', tone: 'active' }, MAINTENANCE: { label: 'Em manutenção', tone: 'maintenance' }, INACTIVE: { label: 'Inativa', tone: 'inactive' },
+}
+
+/** Poltronas da filial, na própria página da filial. */
+function BranchChairs({ credentials, branchId }: { credentials: string; branchId: string }) {
+  const [chairs, setChairs] = useState<Chair[] | null>(null)
+  const [error, setError] = useState('')
+  useEffect(() => {
+    let active = true
+    void api.chairs(credentials, { page: 0, size: 100, search: '', status: 'ALL', branchId })
+      .then(page => { if (active) setChairs(page.items) })
+      .catch(cause => { if (active) setError(getMessage(cause)) })
+    return () => { active = false }
+  }, [credentials, branchId])
+  if (error) return <div className="form-error" role="alert">{error}</div>
+  if (!chairs) return <p className="branch-muted">Carregando poltronas...</p>
+  if (chairs.length === 0) return <p className="branch-muted">Nenhuma poltrona nesta filial.</p>
+  return <div className="branch-chairs">{chairs.map(chair => <div key={chair.id} className={`branch-chair ${chairStatus[chair.status]?.tone ?? ''}`}>
+    <span className="branch-chair-icon"><Armchair size={18} /></span>
+    <span className="branch-chair-text"><strong>{chair.code}</strong><small>{chair.model}{chair.notes ? ` • ${chair.notes}` : ''}</small></span>
+    <span className="branch-chair-status">{chairStatus[chair.status]?.label ?? chair.status}</span>
+  </div>)}</div>
 }

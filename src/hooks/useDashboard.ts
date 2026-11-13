@@ -395,6 +395,23 @@ export function useDashboard() {
     }
   }
 
+  /** Salva a filial editada direto na página dela (sem a janela de edição). */
+  async function updateBranchInline(branch: Branch, data: BranchInput) {
+    if (credentials === null) return
+    setSaving(true)
+    setFormError('')
+    try {
+      await api.updateBranch(credentials, branch.id, data)
+      showNotice('Filial atualizada com sucesso.')
+      applyPageData(await loadPage(credentials, 'branches', chairQuery, rentalDate))
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) logout()
+      else setFormError(getMessage(error))
+    } finally {
+      setSaving(false)
+    }
+  }
+
   async function toggleBranchFreeShipping(branch: Branch) {
     if (credentials === null) throw new Error('Entre novamente para continuar.')
     try {
@@ -559,6 +576,11 @@ export function useDashboard() {
       onEditBranch: (branch: Branch) => openModal({ kind: 'editBranch', branch }),
       // Poltronas saiu do menu: abre pela filial, já filtrada nela.
       onOpenChairs: (branch: Branch) => navigate('chairs', { branchId: branch.id }),
+      credentials: credentials ?? '',
+      municipalities,
+      saving,
+      formError,
+      onUpdateBranch: updateBranchInline,
       onToggleFreeShipping: toggleBranchFreeShipping,
     },
     couriersPage: {

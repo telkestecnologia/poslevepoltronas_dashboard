@@ -9,6 +9,7 @@ export function BranchModal({
   error,
   onClose,
   onSave,
+  inline,
 }: {
   modal: { kind: 'newBranch' } | { kind: 'editBranch'; branch: Branch }
   municipalities: Municipality[]
@@ -16,6 +17,8 @@ export function BranchModal({
   error: string
   onClose: () => void
   onSave: (data: BranchInput) => Promise<void>
+  /** Dentro da página da filial: o formulário aparece direto, sem a janela por cima. */
+  inline?: boolean
 }) {
   const branch = modal.kind === 'editBranch' ? modal.branch : null
   const [name, setName] = useState(branch?.name ?? '')
@@ -81,28 +84,7 @@ export function BranchModal({
     void onSave({ name: name.trim(), municipalities: priced, active })
   }
 
-  return (
-    <div
-      className="modal-backdrop"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose()
-      }}
-    >
-      <section
-        className="modal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="branch-modal-title"
-      >
-        <div className="modal-head">
-          <div>
-            <span className="eyebrow">PÓS LEVE • FILIAIS</span>
-            <h2 id="branch-modal-title">{branch ? 'Editar filial' : 'Nova filial'}</h2>
-          </div>
-          <button className="icon-button" aria-label="Fechar" onClick={onClose}>
-            <X size={20} />
-          </button>
-        </div>
+  const form = (
         <form onSubmit={submit} className="modal-form">
           <label>
             Nome da filial
@@ -234,15 +216,42 @@ export function BranchModal({
             </div>
           )}
           <div className="modal-actions">
-            <button type="button" className="button secondary" onClick={onClose} disabled={saving}>
+            {!inline && <button type="button" className="button secondary" onClick={onClose} disabled={saving}>
               Cancelar
-            </button>
+            </button>}
             <button type="submit" className="button primary" disabled={saving}>
               {saving ? 'Salvando...' : branch ? 'Salvar alterações' : 'Criar filial'}{' '}
               <ArrowRight size={17} />
             </button>
           </div>
         </form>
+  )
+
+  if (inline) return <div className="branch-inline-form">{form}</div>
+
+  return (
+    <div
+      className="modal-backdrop"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose()
+      }}
+    >
+      <section
+        className="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="branch-modal-title"
+      >
+        <div className="modal-head">
+          <div>
+            <span className="eyebrow">PÓS LEVE • FILIAIS</span>
+            <h2 id="branch-modal-title">{branch ? 'Editar filial' : 'Nova filial'}</h2>
+          </div>
+          <button className="icon-button" aria-label="Fechar" onClick={onClose}>
+            <X size={20} />
+          </button>
+        </div>
+        {form}
       </section>
     </div>
   )

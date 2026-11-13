@@ -8,3 +8,20 @@
 .branch-enter-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
 .branch-enter-actions .button { min-height: 48px; padding: 0 22px; font-size: 15px; }
 @media (max-width: 640px) { .branch-enter { min-height: 360px; } .branch-enter-body { padding: 22px; } .branch-enter-actions .button { flex: 1; justify-content: center; } }
+
+/* Dados e poltronas da filial na mesma página. */
+.branch-enter { min-height: 220px !important; margin-bottom: 16px; }
+.branch-section { display: grid; gap: 12px; margin-bottom: 16px; padding: 20px 22px; }
+.branch-section h2 { margin: 0; font-size: 18px; }
+.branch-inline-form form { display: grid; gap: 14px; }
+.branch-muted { margin: 0; color: var(--muted); }
+.branch-chairs { display: grid; gap: 8px; }
+.branch-chair { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 12px; background: #eaf6f6; }
+.branch-chair.maintenance { background: #fdf1ea; }
+.branch-chair.inactive { background: #f1f3f3; }
+.branch-chair-icon { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--teal); color: #fff; }
+.branch-chair.maintenance .branch-chair-icon { background: var(--coral); }
+.branch-chair.inactive .branch-chair-icon { background: #a3b0b3; }
+.branch-chair-text { display: grid; flex: 1; gap: 2px; min-width: 0; }
+.branch-chair-text small { color: var(--muted); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.branch-chair-status { font-size: 12px; font-weight: 700; color: var(--teal-dark); }
