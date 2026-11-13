@@ -220,7 +220,7 @@ export function FinancePage({ credentials }: { credentials: string }) {
         </div>
         <div className="modal-actions">
           <button type="button" className="button secondary" onClick={() => setFilterOpen(false)}>Cancelar</button>
-          <button type="button" className="button primary" onClick={applyFilter}>Aplicar</button>
+          <button type="button" className="button primary" onClick={applyFilter}>Buscar</button>
         </div>
       </section>
     </div>}
@@ -260,8 +260,8 @@ export function FinancePage({ credentials }: { credentials: string }) {
                 onClick={() => setKindFilter(current => current === 'INFLOW' ? 'ALL' : 'INFLOW')}><span>⬆ Entradas</span><strong>{currency(shownMonth.inflowCents)}</strong></button>
               <button type="button" className={`outflow${kindFilter === 'OUTFLOW' ? ' selected' : ''}`} aria-pressed={kindFilter === 'OUTFLOW'}
                 onClick={() => setKindFilter(current => current === 'OUTFLOW' ? 'ALL' : 'OUTFLOW')}><span>⬇ Saídas</span><strong>{currency(shownMonth.outflowCents)}</strong></button>
-              <div className="net"><span>{shownMonth.inflowCents - shownMonth.outflowCents >= 0 ? 'Sobrou' : 'Faltou'}</span>
-                <strong className={shownMonth.inflowCents - shownMonth.outflowCents >= 0 ? '' : 'finance-negative'}>{currency(Math.abs(shownMonth.inflowCents - shownMonth.outflowCents))}</strong></div>
+              <div className="net"><span>Resultado</span>
+                <strong className={shownMonth.inflowCents - shownMonth.outflowCents >= 0 ? '' : 'finance-negative'}>{currency(shownMonth.inflowCents - shownMonth.outflowCents)}</strong></div>
             </div>
           </div>}
         </section>

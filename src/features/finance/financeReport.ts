@@ -48,7 +48,7 @@ export async function downloadFinanceReport({ report, entries, from, to, branch 
     { label: 'Saldo acumulado', value: report.balanceCents, color: [42, 50, 54] as const },
     { label: 'Entrou no período', value: report.inflowCents, color: inflow },
     { label: 'Saiu no período', value: report.outflowCents, color: outflow },
-    { label: 'Sobrou', value: report.netCents, color: [42, 50, 54] as const },
+    { label: 'Resultado', value: report.netCents, color: [42, 50, 54] as const },
   ]
   const gap = 8
   const boxWidth = (width - margin * 2 - gap * (totals.length - 1)) / totals.length

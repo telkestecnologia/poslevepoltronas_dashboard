@@ -82,3 +82,6 @@
 .finance-branch-tile strong { color: var(--c); font-size: 15px; }
 .finance-branch-tile small { color: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: 1px; }
 .finance-branch-tile b { color: var(--ink); font-size: 17px; white-space: nowrap; }
+
+/* No modal de datas o calendário aparece no lugar, acima do botão Buscar (não flutua por cima dele). */
+.finance-filter-modal .overview-rentals-calendar { position: static; width: 100%; max-width: none; margin-top: 8px; box-shadow: none; }
