@@ -80,6 +80,20 @@ export function AgendaPage({ credentials, onOpenOrder }: Props) {
   const [branch, setBranch] = useState('ALL')
   // Sem filtro de entregador na tela: a agenda mostra todos.
   const [calendarOpen, setCalendarOpen] = useState(false)
+  const [kindFilter, setKindFilter] = useState<Kind | null>(null)
+  const [openOrders, setOpenOrders] = useState<{ delivery: Order[]; pickup: Order[] } | null>(null)
+  useEffect(() => {
+    let active = true
+    const branchId = branch === 'ALL' ? undefined : branch
+    void Promise.all([
+      fetchAllOrders(credentials, { source: 'CHECKOUT', statuses: ['PAYMENT_CONFIRMED', 'DELIVERY_PENDING'], branchId }),
+      fetchAllOrders(credentials, { source: 'CHECKOUT', statuses: ['IN_USE', 'PICKUP_PENDING'], branchId }),
+    ]).then(([delivery, pickup]) => { if (active) setOpenOrders({ delivery, pickup }) }, () => {})
+    return () => { active = false }
+  }, [credentials, branch])
+  const inCity = (order: Order) => city === 'ALL' || order.municipalityCode === city
+  const kindTotals = { delivery: openOrders?.delivery.filter(inCity).length, pickup: openOrders?.pickup.filter(inCity).length }
+  const kindOrders = kindFilter === null || !openOrders ? null : openOrders[kindFilter]
   const courier = 'ALL' as string
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState('')
@@ -181,13 +195,23 @@ export function AgendaPage({ credentials, onOpenOrder }: Props) {
     counts.set(item.date, count)
   }
 
-  const selectedItems = items.filter(item => item.date === selectedDate)
+  // Com Entregas ou Retiradas escolhido, a lista mostra todas as pendentes daquele tipo, agrupadas por dia (igual ao app).
+  const kindItems: AgendaItem[] | null = kindFilter === null || kindOrders === null ? null : kindOrders
+    .filter(order => (branch === 'ALL' || order.branchId === branch) && (city === 'ALL' || order.municipalityCode === city))
+    .map((order): AgendaItem => kindFilter === 'delivery'
+      ? { key: `${order.id}:delivery`, kind: 'delivery', date: order.start, time: order.deliveryTime, done: false, order }
+      : { key: `${order.id}:pickup`, kind: 'pickup', date: order.end, time: order.pickupTime, done: false, order })
+    .sort((a, b) => a.date.localeCompare(b.date) || (a.time ?? '99:99').localeCompare(b.time ?? '99:99'))
+  const selectedItems = kindItems ?? items.filter(item => item.date === selectedDate)
     .sort((a, b) => (a.time ?? '99:99').localeCompare(b.time ?? '99:99')
       || cityLabel(a.order).localeCompare(cityLabel(b.order), 'pt-BR')
       || a.order.customerName.localeCompare(b.order.customerName, 'pt-BR'))
-  const grouped = [...new Map(selectedItems.map(item => [item.order.municipalityCode, cityLabel(item.order)]))]
-    .sort((a, b) => a[1].localeCompare(b[1], 'pt-BR'))
-    .map(([code, label]) => ({ code, label, items: selectedItems.filter(item => item.order.municipalityCode === code) }))
+  const grouped = kindItems
+    ? [...new Set(kindItems.map(item => item.date))].map(date => ({ code: date, label: dayFormatter.format(dateFromIso(date)),
+      items: kindItems.filter(item => item.date === date) }))
+    : [...new Map(selectedItems.map(item => [item.order.municipalityCode, cityLabel(item.order)]))]
+      .sort((a, b) => a[1].localeCompare(b[1], 'pt-BR'))
+      .map(([code, label]) => ({ code, label, items: selectedItems.filter(item => item.order.municipalityCode === code) }))
   const deliveryCount = selectedItems.filter(item => item.kind === 'delivery').length
   const pickupCount = selectedItems.length - deliveryCount
 
@@ -221,11 +245,15 @@ export function AgendaPage({ credentials, onOpenOrder }: Props) {
         </select></label>
     </div>
     {/* Hoje em dois cartões coloridos (igual ao app): entregas e retiradas. */}
+    {/* Clicar em Entregas mostra todas as entregas a fazer; em Retiradas, todas as retiradas. Clicar de novo volta para o dia. */}
     <div className="agenda-today-tiles" aria-live="polite">
-      <div className="delivery"><span className="agenda-today-icon"><Truck size={18} /></span>
-        <strong>{todayCount?.deliveries ?? 0}</strong><small>{todayCount?.deliveries === 1 ? 'entrega hoje' : 'entregas hoje'}</small></div>
-      <div className="pickup"><span className="agenda-today-icon"><Undo2 size={18} /></span>
-        <strong>{todayCount?.pickups ?? 0}</strong><small>{todayCount?.pickups === 1 ? 'retirada hoje' : 'retiradas hoje'}</small></div>
+      {(['delivery', 'pickup'] as const).map(kind => <button type="button" key={kind} aria-pressed={kindFilter === kind}
+        className={`${kind}${kindFilter === kind ? ' selected' : ''}`} onClick={() => setKindFilter(kindFilter === kind ? null : kind)}>
+        <span className="agenda-today-icon">{kind === 'delivery' ? <Truck size={18} /> : <Undo2 size={18} />}</span>
+        <strong>{(kind === 'delivery' ? kindTotals.delivery : kindTotals.pickup) ?? '—'}</strong>
+        <small>{kind === 'delivery' ? 'Entregas' : 'Retiradas'} • {(kind === 'delivery' ? todayCount?.deliveries : todayCount?.pickups) ?? 0} hoje</small>
+        <em>{kindFilter === kind ? 'Clique para voltar ao dia' : 'Clique para ver todas'}</em>
+      </button>)}
     </div>
 
 
@@ -235,7 +263,7 @@ export function AgendaPage({ credentials, onOpenOrder }: Props) {
         <div className="agenda-day-heading">
           <span className="eyebrow">DIA SELECIONADO</span>
           {/* Dia escolhido com o ícone do calendário ao lado (igual ao Financeiro); o calendário abre num modal. */}
-          <div className="agenda-day-title"><h2>{dayFormatter.format(dateFromIso(selectedDate))}</h2>
+          <div className="agenda-day-title"><h2>{kindFilter ? (kindFilter === 'delivery' ? 'Todas as entregas' : 'Todas as retiradas') : dayFormatter.format(dateFromIso(selectedDate))}</h2>
             <button type="button" className="finance-date-icon" aria-label="Abrir calendário" title="Abrir calendário"
               onClick={() => setCalendarOpen(true)}><CalendarDays size={19} /></button></div>
           <p>{selectedItems.length} {selectedItems.length === 1 ? 'serviço previsto' : 'serviços previstos'}
