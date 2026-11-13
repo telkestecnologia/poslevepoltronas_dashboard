@@ -15,7 +15,7 @@ import { brazilPhoneDigits, displayPhone } from '../../utils/phone'
 import { OrderEvidencePanel } from './OrderEvidencePanel'
 import { EarlySchedule } from './EarlySchedule'
 import { MediaCarousel } from './MediaCarousel'
-import chairPicture from '../../assets/poltrona-cliente.webp'
+import chairPicture from '../../assets/poltrona-cliente.png'
 
 type Props = { credentials: string; id: string; onBack: () => void }
 
