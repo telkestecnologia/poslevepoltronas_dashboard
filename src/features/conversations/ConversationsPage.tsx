@@ -97,7 +97,7 @@ export function ConversationsPage({ credentials, selectedId, onSelect }: Props) 
 
   async function toggleAssignment(item: Conversation) {
     const takingOver = item.state !== 'HUMAN'
-    const text = takingOver ? 'A Isa para de responder e você passa a atender. Se não responder em 3 minutos, a conversa volta para a Isa.'
+    const text = takingOver ? 'A Isa para de responder e você passa a atender. Se a cliente ficar 3 minutos esperando sua resposta, a conversa volta para a Isa.'
       : 'A Isa volta a responder este cliente sozinha.'
     if (!window.confirm(`${takingOver ? 'Assumir a conversa?' : 'Devolver para a Isa?'}\n\n${text}`)) return
     setBusy(true)
@@ -270,7 +270,7 @@ export function ConversationsPage({ credentials, selectedId, onSelect }: Props) 
             {chatError && <p className="wa-note wa-error">{chatError}</p>}
             {windowClosed ? <p className="wa-note">Passaram 24 horas desde a última mensagem do cliente. O WhatsApp só libera nova mensagem quando ele escrever de novo.</p>
               : <p className="wa-note">{selected.state === 'HUMAN'
-                ? 'Você está atendendo: a Isa não responde. Se você ficar 3 minutos sem responder, a conversa volta sozinha para a Isa.'
+                ? 'Você está atendendo: a Isa não responde. Se a cliente ficar 3 minutos esperando sua resposta, a conversa volta sozinha para a Isa.'
                 : 'A Isa está atendendo. Para digitar, clique em “Assumir conversa”. Clique numa mensagem do cliente para responder a ela.'}</p>}
             {replyTo && <div className="wa-quote"><div><strong>Respondendo a</strong><span>{replyTo.content}</span></div>
               <button type="button" aria-label="Cancelar resposta" onClick={() => setReplyTo(null)}><X size={16} /></button></div>}
