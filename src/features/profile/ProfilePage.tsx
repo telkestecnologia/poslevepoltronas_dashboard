@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { NotificationToggle } from './NotificationToggle'
 import { ArrowRight, ChevronRight, KeyRound, Mail, Plus, Sparkles, UserRound, Users, X } from 'lucide-react'
 import { FormIntro } from '../../components/FormIntro'
+import owners from '../../assets/proprietarias.webp'
 import founders from '../../assets/fundadoras.webp'
 import { api, type AccessLevel, type Account, type Branch, type BranchInput, type Municipality, type TeamMember, type TeamMemberInput } from '../../api'
 import { BranchModal } from '../branches/BranchModal'
@@ -58,15 +59,18 @@ export function ProfilePage({ credentials, onCredentialsChanged, partner = false
     {error && <div className="form-error" role="alert">{error}</div>}
 
     <div className="profile-grid">
-      <section className="panel profile-card">
-        <h2><UserRound size={18} /> Meus dados</h2>
+      <section className={`panel profile-card${partner ? '' : ' with-cover'}`}>
+        {/* Administrador: capa com a foto das proprietárias e a saudação (igual ao app). */}
+        {!partner && <div className="profile-cover" style={{ backgroundImage: `url(${owners})` }} role="img" aria-label="Proprietárias da Pós Leve" />}
+        {partner ? <h2><UserRound size={18} /> Meus dados</h2>
+          : <h2 className="profile-hello">Olá, {account?.name.split(' ')[0] ?? ''}</h2>}
         <div className="profile-me">
           <span className="profile-avatar">{initials}</span>
           <div>
             <strong>{account?.name ?? '—'}</strong>
             <small>{account?.email}</small>
             {account?.phone && <small>WhatsApp {formatPhone(account.phone)}</small>}
-            <span className="profile-pill">{partner ? 'Parceiro • vê os dados da sua filial' : account ? accessLabels[account.access].label : ''}</span>
+            <span className="profile-pill">{partner ? 'Parceiro • vê os dados da sua filial' : account ? `${accessLabels[account.access].label} e decide quem vê o quê` : ''}</span>
           </div>
         </div>
         <div className="profile-actions">
