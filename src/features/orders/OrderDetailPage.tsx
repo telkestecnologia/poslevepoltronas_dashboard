@@ -1,7 +1,7 @@
 import { timeLabel } from '../../utils/time'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  AlertCircle, ArrowLeft, ArrowRight, CalendarClock, Check, CheckCircle2, Info, MapPin, Megaphone, MessageCircle, Phone, RefreshCw, Truck, X, Images,
+  AlertCircle, ArrowLeft, ArrowRight, CalendarClock, Check, ChevronDown, ChevronUp, CheckCircle2, Info, MapPin, Megaphone, MessageCircle, Phone, RefreshCw, Truck, X, Images,
 } from 'lucide-react'
 import './order-detail.css'
 import { api, ApiError, type Courier, type Order } from '../../api'
@@ -40,6 +40,7 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
   const [busy, setBusy] = useState(false)
   const [mediaPhase, setMediaPhase] = useState<'DELIVERY' | 'PICKUP' | null>(null)
   const [timelineAll, setTimelineAll] = useState(false)
+  const [openPhase, setOpenPhase] = useState<'DELIVERY' | 'PICKUP' | null>(null)
   const [error, setError] = useState('')
   const [saved, setSaved] = useState('')
   const [statusNote, setStatusNote] = useState('')
@@ -241,19 +242,25 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
           const word = phase === 'DELIVERY' ? 'entrega' : 'retirada'
           return <section key={phase} className="panel od-card od-evidence">
             <div className="od-step-head">
-              <span className="eyebrow">ETAPA • AGUARDANDO {word.toUpperCase()}</span>
+              {/* O conteúdo da etapa (fotos e comunicado) só aparece ao clicar no nome (igual ao app). */}
+              {current || (phase === 'DELIVERY' && departure && !passed)
+                ? <button type="button" className="od-step-toggle" aria-expanded={openPhase === phase}
+                  onClick={() => setOpenPhase(value => value === phase ? null : phase)}>
+                  <span className="eyebrow">ETAPA • AGUARDANDO {word.toUpperCase()}</span>
+                  {openPhase === phase ? <ChevronUp size={16} /> : <ChevronDown size={16} />}</button>
+                : <span className="eyebrow">ETAPA • AGUARDANDO {word.toUpperCase()}</span>}
               <span className="od-step-actions">
                 {canEdit && <EarlySchedule order={order} kind={phase === 'DELIVERY' ? 'delivery' : 'pickup'} busy={busy} onSave={saveSchedule} />}
                 {passed && <button type="button" className="od-media-button" onClick={() => setMediaPhase(phase)}>
                   <Images size={15} /> Ver fotos e vídeos</button>}
               </span>
             </div>
-            {phase === 'DELIVERY' && departure && !passed && <div className="od-notice" role="note">
+            {openPhase === phase && phase === 'DELIVERY' && departure && !passed && <div className="od-notice" role="note">
               <span className="od-notice-icon"><Megaphone size={16} /></span>
               <div><strong>Comunicado ao cliente</strong>
                 <p>✓ Avisado pelo WhatsApp que a poltrona saiu para entrega em {dateTimeLabel(departure.at)}.</p></div>
             </div>}
-            {current && <OrderEvidencePanel key={`${order.id}:${order.status}:${word}`} credentials={credentials} orderId={order.id}
+            {openPhase === phase && current && <OrderEvidencePanel key={`${order.id}:${order.status}:${word}`} credentials={credentials} orderId={order.id}
               status={order.status} couriers={couriers} phase={phase} />}
           </section>
         })}

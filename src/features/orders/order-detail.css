@@ -216,3 +216,7 @@
 .od-step-actions { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .od-step-when { color: #7a8287; font-size: 13px; }
 .od-early-modal { width: min(100%, 420px); }
+
+/* Nome da etapa que abre e fecha o conteúdo. */
+.od-step-toggle { display: inline-flex; align-items: center; gap: 6px; padding: 0; border: 0; background: none; color: #127a84; cursor: pointer; }
+.od-step-toggle .eyebrow { color: inherit; }
