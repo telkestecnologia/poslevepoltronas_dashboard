@@ -91,6 +91,23 @@ export function FinancePage({ credentials }: { credentials: string }) {
 
   useEffect(() => { setMonthIndex(null) }, [from, to, branchId])
 
+  // Resultado por filial (igual ao app): lançamentos de todas as filiais no mês mostrado nas setas.
+  const monthList = report?.monthly ?? []
+  const shownMonthStart = monthList.length ? monthList[Math.min(monthIndex ?? monthList.length - 1, monthList.length - 1)].start : null
+  const monthKey = shownMonthStart ? `${shownMonthStart}|${reloadKey}` : ''
+  const [monthLoaded, setMonthLoaded] = useState<{ key: string; entries: FinancialEntry[] } | null>(null)
+  useEffect(() => {
+    if (!shownMonthStart) return
+    let active = true
+    const [year, month] = shownMonthStart.split('-').map(Number)
+    const last = new Date(Date.UTC(year, month, 0)).toISOString().slice(0, 10)
+    void loadAllEntries(credentials, { from: shownMonthStart, to: last < today() ? last : today(), branchId: '' })
+      .then(entries => { if (active) setMonthLoaded({ key: monthKey, entries }) })
+      .catch(() => { if (active) setMonthLoaded({ key: monthKey, entries: [] }) })
+    return () => { active = false }
+  }, [credentials, monthKey, shownMonthStart])
+  const monthEntries = monthLoaded?.key === monthKey ? monthLoaded.entries : null
+
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [statementFrom, setStatementFrom] = useState(from)
@@ -139,7 +156,6 @@ export function FinancePage({ credentials }: { credentials: string }) {
   const visibleEntries = statementFiltered
     ? matches.slice(statementPage * pageSize, (statementPage + 1) * pageSize)
     : report?.entries ?? []
-  const visibleBranchResults = onlyOfficialBranches((allReport ?? report)?.branches ?? [], branch => branch.branchName)
   const selectedBranch = branches.find(item => item.id === branchId)
   const selectedBranchLabel = selectedBranch ? branchLabel(selectedBranch.name) : 'Todas as filiais'
   const months = report?.monthly ?? []
@@ -158,7 +174,6 @@ export function FinancePage({ credentials }: { credentials: string }) {
     setPage(0)
     setFilterOpen(false)
   }
-  const maxBranchFlow = Math.max(1, ...visibleBranchResults.map(branch => branch.inflowCents + branch.outflowCents))
 
   // Relatório geral (o mesmo do app): todos os lançamentos do período e da filial escolhidos.
   async function generateReport() {
@@ -268,20 +283,27 @@ export function FinancePage({ credentials }: { credentials: string }) {
         </section>
         <section className="panel finance-branches" aria-labelledby="finance-branches-title">
           <div className="finance-panel-heading"><div><span className="eyebrow">FILIAIS</span>
-            <h2 id="finance-branches-title">Resultado por filial</h2></div></div>
-          {visibleBranchResults.length === 0
-            ? <div className="finance-branch-empty"><Wallet size={22} /> Sem movimentações no período.</div>
-            : <div className="finance-branch-list">{visibleBranchResults.map(branch =>
-              <div className="finance-branch-row" key={branch.branchId}>
-                <strong>{branchLabel(branch.branchName)}</strong>
-                <span>Entradas {currency(branch.inflowCents)}</span>
-                <span>Saídas {currency(branch.outflowCents)}</span>
-                <b>{currency(branch.inflowCents - branch.outflowCents)}</b>
-                <div className="finance-branch-meter" aria-hidden="true">
-                  <i className="inflow" style={{ width: `${branch.inflowCents / maxBranchFlow * 100}%` }} />
-                  <i className="outflow" style={{ width: `${branch.outflowCents / maxBranchFlow * 100}%` }} />
-                </div>
-              </div>)}</div>}
+            <h2 id="finance-branches-title">Resultado por filial{shownMonth ? ` • ${monthName.format(new Date(`${shownMonth.start}T12:00:00Z`))}` : ''}</h2></div></div>
+          {monthEntries === null ? <div className="finance-branch-empty">Carregando o mês...</div>
+            : <div className="finance-branch-days">{onlyOfficialBranches(branches, branch => branch.name).map(branch => {
+              const list = monthEntries.filter(entry => entry.branchId === branch.id)
+              const inflow = list.filter(entry => entry.kind === 'INFLOW').reduce((sum, entry) => sum + entry.amountCents, 0)
+              const outflow = list.filter(entry => entry.kind !== 'INFLOW').reduce((sum, entry) => sum + entry.amountCents, 0)
+              const days = [...new Set(list.map(entry => entry.occurredAt.slice(0, 10)))].sort().reverse()
+              return <div key={branch.id} className={`finance-branch-card region-${regionOf(branch.name)}`}>
+                <div className="finance-branch-head"><i aria-hidden="true" /><strong>{branchLabel(branch.name)}</strong>
+                  <b className={inflow - outflow < 0 ? 'finance-negative' : ''}>{currency(inflow - outflow)}</b></div>
+                <small>⬆ {currency(inflow)} • ⬇ {currency(outflow)}</small>
+                {days.length === 0 ? <em>Sem movimentação neste mês.</em> : days.map(day => {
+                  const ofDay = list.filter(entry => entry.occurredAt.startsWith(day))
+                  const dayIn = ofDay.filter(entry => entry.kind === 'INFLOW').reduce((sum, entry) => sum + entry.amountCents, 0)
+                  const dayOut = ofDay.filter(entry => entry.kind !== 'INFLOW').reduce((sum, entry) => sum + entry.amountCents, 0)
+                  return <div key={day} className="finance-day"><span>{day.slice(8, 10)}/{day.slice(5, 7)}</span>
+                    {dayIn > 0 && <span className="in">⬆ {currency(dayIn)}</span>}
+                    {dayOut > 0 && <span className="out">⬇ {currency(dayOut)}</span>}</div>
+                })}
+              </div>
+            })}</div>}
         </section>
       </div>
 
@@ -351,4 +373,11 @@ export function FinancePage({ credentials }: { credentials: string }) {
       </section>
     </div>}
   </>
+}
+
+function regionOf(name: string) {
+  const text = normalize(name)
+  if (/serra|ibiapaba/.test(text)) return 'serra'
+  if (/sobral/.test(text)) return 'sobral'
+  return 'fortaleza'
 }

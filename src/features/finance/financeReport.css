@@ -53,3 +53,23 @@
 
 /* Só o saldo ficou no topo: ocupa a largura toda. */
 .finance-summary { grid-template-columns: 1fr !important; }
+
+/* Nome da filial no mês a mês sem fundo: só o nome e a seta. */
+.finance-month-branch select { background-color: transparent; }
+
+/* Resultado por filial: todas, uma abaixo da outra, com os dias e valores do mês (cor de cada região). */
+.finance-branch-days { display: grid; gap: 10px; }
+.finance-branch-card { --c: #1f78b4; --soft: #e9f3fb; display: grid; gap: 6px; padding: 12px 14px; border-radius: 12px; background: var(--soft); }
+.finance-branch-card.region-serra { --c: #2e8b57; --soft: #eaf6ee; }
+.finance-branch-card.region-sobral { --c: #c4702c; --soft: #fcf1e6; }
+.finance-branch-head { display: flex; align-items: center; gap: 8px; }
+.finance-branch-head i { width: 10px; height: 10px; border-radius: 50%; background: var(--c); }
+.finance-branch-head strong { flex: 1; color: var(--ink); }
+.finance-branch-head b { color: var(--c); }
+.finance-branch-card small { color: var(--muted); }
+.finance-branch-card em { color: var(--muted); font-size: 13px; }
+.finance-day { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.finance-day span:first-child { min-width: 44px; color: var(--c); font-weight: 700; }
+.finance-day .in, .finance-day .out { padding: 2px 9px; border-radius: 99px; background: rgba(255, 255, 255, 0.8); font-size: 12.5px; font-weight: 700; }
+.finance-day .in { color: #1f7a4a; }
+.finance-day .out { color: #b8321f; }
