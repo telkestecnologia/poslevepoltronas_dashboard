@@ -251,3 +251,7 @@
 
 /* Enquanto carrega, o espaço já tem o tamanho da foto (a janela não muda de tamanho). */
 .media-carousel-stage.loading { background: #f6f5f2; color: #7a8287; font-size: 14px; }
+
+/* Poltrona da Pós Leve ao lado do nome do cliente. */
+.od-name { display: flex; align-items: center; gap: 12px; }
+.od-name img { width: 44px; height: 60px; object-fit: contain; flex: none; }

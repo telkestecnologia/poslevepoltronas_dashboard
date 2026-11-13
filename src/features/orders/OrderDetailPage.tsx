@@ -15,6 +15,7 @@ import { brazilPhoneDigits, displayPhone } from '../../utils/phone'
 import { OrderEvidencePanel } from './OrderEvidencePanel'
 import { EarlySchedule } from './EarlySchedule'
 import { MediaCarousel } from './MediaCarousel'
+import chairPicture from '../../assets/poltrona-cliente.png'
 
 type Props = { credentials: string; id: string; onBack: () => void }
 
@@ -181,7 +182,7 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
     <header className="od-header">
       <div className="od-header-main">
         <span className="eyebrow">PEDIDO • {chairName(order.chairCode, order.branchName).toUpperCase()}</span>
-        <h1>{order.customerName}</h1>
+        <h1 className="od-name"><img src={chairPicture} alt="" aria-hidden="true" />{order.customerName}</h1>
         <p><MapPin size={14} /> {order.municipalityName}/{order.municipalityUf} • {branchLabel(order.branchName)}
           <span className="od-dot" aria-hidden="true">•</span> Entrada em {dateTimeLabel(order.createdAt)}</p>
       </div>
