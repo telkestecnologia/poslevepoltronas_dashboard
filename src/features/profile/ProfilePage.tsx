@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { NotificationToggle } from './NotificationToggle'
-import { ArrowRight, ChevronRight, KeyRound, Mail, Plus, UserRound, Users, X } from 'lucide-react'
+import { ArrowRight, ChevronRight, KeyRound, Mail, Plus, UserPlus, UserRound, Users, X } from 'lucide-react'
+import { FormIntro } from '../../components/FormIntro'
 import { api, type AccessLevel, type Account, type Branch, type TeamMember, type TeamMemberInput } from '../../api'
 import { branchLabel } from '../../utils/branches'
 import { EmptyState } from '../../components/common'
@@ -251,6 +252,8 @@ function MemberDialog({ credentials, member, areas, branches, onAreas, onClose, 
 
   return <Modal title={member ? 'Editar usuário' : 'Cadastrar usuário'} eyebrow="EQUIPE" onClose={onClose} busy={busy}>
     <form className="modal-form" onSubmit={event => void submit(event)}>
+      {!member && <FormIntro icon={<UserPlus size={24} />} title="Boas-vindas à equipe">
+        Preencha os dados da pessoa. Ela entra no painel e no app com o e-mail e a senha que você criar aqui.</FormIntro>}
       <label>Nome completo<input value={form.name} onChange={event => set('name', event.target.value)} maxLength={120} required autoFocus placeholder="Ex.: Isadora Ivo" /></label>
       <label>E-mail<input type="email" value={form.email} onChange={event => set('email', event.target.value)} required autoComplete="off" placeholder="nome@poslevepoltronas.com.br" /></label>
       <label>Celular com WhatsApp<input type="tel" inputMode="numeric" value={formatPhone(form.phone)} onChange={event => set('phone', event.target.value.replace(/\D/g, '').slice(0, 11))} required placeholder="(85) 99999-9999" /></label>

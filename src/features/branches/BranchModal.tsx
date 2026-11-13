@@ -1,5 +1,6 @@
 import { useRef, useState, type FormEvent } from 'react'
-import { ArrowRight, Plus, X } from 'lucide-react'
+import { ArrowRight, Plus, Store, X } from 'lucide-react'
+import { FormIntro } from '../../components/FormIntro'
 import type { Branch, BranchInput, Municipality } from '../../api'
 
 export function BranchModal({
@@ -86,6 +87,8 @@ export function BranchModal({
 
   const form = (
         <form onSubmit={submit} className="modal-form">
+          {!inline && !branch && <FormIntro icon={<Store size={24} />} title="Nova filial">
+            Dê um nome à filial e escolha as cidades que ela atende, com o valor do frete.</FormIntro>}
           {/* Na página da filial fica só o Atendendo; no cadastro aparece o nome. */}
           {!inline && (
           <label>

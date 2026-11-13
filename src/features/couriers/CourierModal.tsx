@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
-import { ArrowRight, X } from 'lucide-react'
+import { ArrowRight, Bike, X } from 'lucide-react'
+import { FormIntro } from '../../components/FormIntro'
 import type { Courier, CourierInput } from '../../api'
 import { formatPhone } from '../../utils/phone'
 
@@ -43,6 +44,8 @@ export function CourierModal({ modal, saving, error, onClose, onSave }: Props) {
       <h2 id="courier-modal-title">{courier ? 'Editar entregador' : 'Novo entregador'}</h2></div>
       <button className="icon-button" aria-label="Fechar" onClick={onClose} disabled={saving}><X size={20} /></button></div>
     <form onSubmit={submit} className="modal-form">
+      {!courier && <FormIntro icon={<Bike size={24} />} title="Novo entregador">
+        Ele usa o e-mail e a senha daqui para entrar no app de entregas.</FormIntro>}
       <label>Nome completo<input value={name} onChange={event => setName(event.target.value)}
         maxLength={100} required autoFocus placeholder="Nome do entregador" /></label>
       <label>E-mail de acesso<input type="email" value={email} onChange={event => setEmail(event.target.value)}

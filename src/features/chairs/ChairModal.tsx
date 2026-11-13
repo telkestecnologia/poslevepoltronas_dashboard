@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
-import { ArrowRight, X } from 'lucide-react'
+import { ArrowRight, PlusCircle, X } from 'lucide-react'
+import { FormIntro } from '../../components/FormIntro'
 import type { Branch, Chair, ChairStatus } from '../../api'
 import { branchLabel, isOfficialBranch } from '../../utils/branches'
 
@@ -64,6 +65,8 @@ export function ChairModal({
           </button>
         </div>
         <form onSubmit={submit} className="modal-form">
+          {!chair && <FormIntro icon={<PlusCircle size={24} />} title="Nova poltrona">
+            Informe o código e a filial. Ativa, ela já pode ser alugada no site e no WhatsApp.</FormIntro>}
           <>
             <label>
               Código da poltrona

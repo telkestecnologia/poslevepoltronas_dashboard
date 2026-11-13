@@ -1,0 +1,8 @@
+/* Cadastros mais acolhedores (igual ao app): boas-vindas, campos que se destacam ao focar e botão principal arredondado. */
+.form-intro { display: flex; align-items: center; gap: 14px; padding: 16px 18px; border-radius: 14px; background: #e6f4f5; }
+.form-intro-icon { display: grid; flex: none; place-items: center; width: 48px; height: 48px; border-radius: 50%; background: #127a84; color: #fff; }
+.form-intro strong { display: block; color: #127a84; font-size: 16px; }
+.form-intro p { margin: 2px 0 0; color: #2a3236; font-size: 14px; line-height: 1.45; }
+.modal-form input, .modal-form select, .modal-form textarea { transition: border-color 0.15s ease, box-shadow 0.15s ease; }
+.modal-form input:focus, .modal-form select:focus, .modal-form textarea:focus { border-color: #1a9baa; box-shadow: 0 0 0 3px #d7eeeb; outline: none; }
+.modal-form .modal-actions .button.primary { border-radius: 999px; padding-inline: 22px; }
