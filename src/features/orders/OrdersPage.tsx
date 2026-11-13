@@ -1,25 +1,26 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ArrowRight, ChevronLeft, ChevronRight, ClipboardList, RefreshCw, Search, X } from 'lucide-react'
+import { ArrowRight, ChevronLeft, ChevronRight, ClipboardList, RefreshCw, Search, X, PenLine, Clock, SearchCheck, Truck, Armchair, Undo2, BadgeCheck, XCircle, TriangleAlert, type LucideIcon } from 'lucide-react'
 import './orders.css'
 import { api, type Branch, type Order, type OrderPage, type OrderQuery, type OrderStatus } from '../../api'
 import { EmptyState } from '../../components/common'
 import { dateLabel, orderStatusLabel, usePolling } from '../../data/orders'
 import { replaceQuery } from '../../router'
 import { branchLabel, onlyOfficialBranches, chairName } from '../../utils/branches'
+import './orders-v2.css'
 import { getMessage } from '../../utils/errors'
 
 // Os mesmos cartões do app. Clicar em um filtra a lista (no servidor); clicar de novo limpa.
-type Summary = { key: string; label: string; statuses?: OrderStatus[]; issues?: boolean; tone: string }
+type Summary = { key: string; label: string; statuses?: OrderStatus[]; issues?: boolean; tone: string; icon: LucideIcon }
 const summaries: Summary[] = [
-  { key: 'contrato', label: 'Aguardando contrato', statuses: ['PENDING_CONTRACT'], tone: 'waiting' },
-  { key: 'pix', label: 'Aguardando pagamento', statuses: ['PENDING_PAYMENT'], tone: 'waiting' },
-  { key: 'analise', label: 'Pagamento em análise', statuses: ['PAYMENT_REVIEW'], tone: 'danger' },
-  { key: 'entregar', label: 'Entregar', statuses: ['PAYMENT_CONFIRMED', 'DELIVERY_PENDING'], tone: 'action' },
-  { key: 'em-uso', label: 'Em uso', statuses: ['IN_USE'], tone: 'moving' },
-  { key: 'retirar', label: 'Retirar', statuses: ['PICKUP_PENDING'], tone: 'action' },
-  { key: 'concluidos', label: 'Concluídos', statuses: ['COMPLETED'], tone: 'done' },
-  { key: 'encerrados', label: 'Cancelados ou expirados', statuses: ['EXPIRED', 'CANCELLED'], tone: 'closed' },
-  { key: 'problemas', label: 'Problemas em aberto', issues: true, tone: 'danger' },
+  { key: 'contrato', label: 'Aguardando contrato', statuses: ['PENDING_CONTRACT'], tone: 'waiting', icon: PenLine },
+  { key: 'pix', label: 'Aguardando pagamento', statuses: ['PENDING_PAYMENT'], tone: 'waiting', icon: Clock },
+  { key: 'analise', label: 'Pagamento em análise', statuses: ['PAYMENT_REVIEW'], tone: 'danger', icon: SearchCheck },
+  { key: 'entregar', label: 'Entregar', statuses: ['PAYMENT_CONFIRMED', 'DELIVERY_PENDING'], tone: 'action', icon: Truck },
+  { key: 'em-uso', label: 'Em uso', statuses: ['IN_USE'], tone: 'moving', icon: Armchair },
+  { key: 'retirar', label: 'Retirar', statuses: ['PICKUP_PENDING'], tone: 'action', icon: Undo2 },
+  { key: 'concluidos', label: 'Concluídos', statuses: ['COMPLETED'], tone: 'done', icon: BadgeCheck },
+  { key: 'encerrados', label: 'Cancelados ou expirados', statuses: ['EXPIRED', 'CANCELLED'], tone: 'closed', icon: XCircle },
+  { key: 'problemas', label: 'Problemas em aberto', issues: true, tone: 'danger', icon: TriangleAlert },
 ]
 
 const PAGE_SIZE = 20
@@ -126,8 +127,9 @@ export function OrdersPage({ credentials, params, onOpenOrder }: Props) {
         return <button type="button" key={item.key} aria-pressed={selected}
           className={`panel order-summary-card tone-${item.tone}${selected ? ' selected' : ''}${value === 0 ? ' zero' : ''}`}
           onClick={() => setFilter({ resumo: selected ? undefined : item.key })}>
-          <small><i aria-hidden="true" />{item.label}</small>
-          <strong>{shown ? value : '—'}</strong>
+          <span className="order-summary-top"><span className="order-summary-icon"><item.icon size={16} /></span>
+            <strong>{shown ? value : '—'}</strong></span>
+          <small>{item.label}</small>
         </button>
       })}
     </div>
@@ -162,8 +164,9 @@ export function OrdersPage({ credentials, params, onOpenOrder }: Props) {
           </tr></thead><tbody>{shown.items.map(order => {
             const issues = openIssuesOf(order)
             return <tr key={order.id} className="order-row" onClick={() => onOpenOrder(order.id)}>
-              <td><div className="courier-identity"><strong>{order.customerName}</strong>
-                <small>{order.municipalityName} • {branchLabel(order.branchName)}</small></div></td>
+              <td><div className="order-client"><span className={`order-avatar status-${order.status.toLowerCase()}`}>{order.customerName.split(' ').filter(Boolean).map(part => part[0]).slice(0, 2).join('').toUpperCase()}</span>
+                <div className="courier-identity"><strong>{order.customerName}</strong>
+                <small>{order.municipalityName} • {branchLabel(order.branchName)}</small></div></div></td>
               <td>{dateLabel(order.start)} a {dateLabel(order.end)}</td>
               <td>{chairName(order.chairCode, order.branchName)}</td>
               <td><span className={`order-status status-${order.status.toLowerCase()}`}>{orderStatusLabel(order)}</span></td>
