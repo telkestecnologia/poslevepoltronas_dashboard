@@ -24,7 +24,7 @@ export function useMenuCounts(credentials: string | null): Partial<Record<Page, 
       setCounts(current => ({
         conversations: conversations.status === 'fulfilled'
           ? conversations.value.items.filter(item => item.needsAttention).length : current.conversations,
-        orders: deliveries.status === 'fulfilled' ? deliveries.value.total : current.orders,
+        agenda: deliveries.status === 'fulfilled' ? deliveries.value.total : current.agenda,
       }))
     }
     void check()

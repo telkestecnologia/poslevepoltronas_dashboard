@@ -36,3 +36,9 @@
 .agenda-item-status { padding: 2px 9px; border-radius: 99px; background: #f4f6f6; }
 .agenda-item-status.past { background: #fde8e4; }
 .agenda-note { margin-top: 14px; color: var(--muted); font-size: 12px; text-align: center; }
+
+/* Calendário em modal, aberto pelo ícone ao lado do dia. */
+.agenda-layout { grid-template-columns: 1fr !important; }
+.agenda-day-title { display: flex; align-items: center; gap: 10px; }
+.agenda-calendar-modal { display: grid; gap: 12px; width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 40px); overflow: auto; }
+.agenda-calendar-modal .agenda-calendar { margin: 0; }

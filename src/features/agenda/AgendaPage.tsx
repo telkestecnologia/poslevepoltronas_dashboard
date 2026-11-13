@@ -1,11 +1,12 @@
 import { timeShort } from '../../utils/time'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowRight, Building2, CalendarCheck, ChevronLeft, ChevronRight, MapPin, RefreshCw, Truck, Undo2 } from 'lucide-react'
+import { ArrowRight, Building2, CalendarCheck, ChevronLeft, ChevronRight, MapPin, RefreshCw, Truck, Undo2, CalendarDays } from 'lucide-react'
 import { api, type Branch, type Courier, type Order, type OrderQuery, type OrderStatus } from '../../api'
 import { fetchAllOrders, usePolling } from '../../data/orders'
 import { branchLabel, onlyOfficialBranches, chairName } from '../../utils/branches'
 import { getMessage } from '../../utils/errors'
 import '../orders/orders-v2.css'
+import '../finance/financeReport.css'
 import './agenda.css'
 import { brazilPhoneDigits, displayPhone } from '../../utils/phone'
 
@@ -78,6 +79,7 @@ export function AgendaPage({ credentials, onOpenOrder }: Props) {
   const [city, setCity] = useState('ALL')
   const [branch, setBranch] = useState('ALL')
   // Sem filtro de entregador na tela: a agenda mostra todos.
+  const [calendarOpen, setCalendarOpen] = useState(false)
   const courier = 'ALL' as string
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState('')
@@ -188,7 +190,6 @@ export function AgendaPage({ credentials, onOpenOrder }: Props) {
     .map(([code, label]) => ({ code, label, items: selectedItems.filter(item => item.order.municipalityCode === code) }))
   const deliveryCount = selectedItems.filter(item => item.kind === 'delivery').length
   const pickupCount = selectedItems.length - deliveryCount
-  const unassignedCount = selectedItems.filter(item => !item.done && !item.order.courierId).length
 
   async function refresh() {
     setRefreshing(true)
@@ -229,6 +230,55 @@ export function AgendaPage({ credentials, onOpenOrder }: Props) {
 
 
     <div className="agenda-layout">
+
+      <section className={`agenda-day-panel panel${loading ? ' is-loading' : ''}`} aria-label="Serviços do dia selecionado" aria-busy={loading}>
+        <div className="agenda-day-heading">
+          <span className="eyebrow">DIA SELECIONADO</span>
+          {/* Dia escolhido com o ícone do calendário ao lado (igual ao Financeiro); o calendário abre num modal. */}
+          <div className="agenda-day-title"><h2>{dayFormatter.format(dateFromIso(selectedDate))}</h2>
+            <button type="button" className="finance-date-icon" aria-label="Abrir calendário" title="Abrir calendário"
+              onClick={() => setCalendarOpen(true)}><CalendarDays size={19} /></button></div>
+          <p>{selectedItems.length} {selectedItems.length === 1 ? 'serviço previsto' : 'serviços previstos'}
+            {grouped.length > 0 ? ` em ${grouped.length} ${grouped.length === 1 ? 'cidade' : 'cidades'}` : ''}</p>
+        </div>
+        <div className="agenda-day-summary">
+          <span><strong>{deliveryCount}</strong> {deliveryCount === 1 ? 'entrega' : 'entregas'}</span>
+          <span><strong>{pickupCount}</strong> {pickupCount === 1 ? 'retirada' : 'retiradas'}</span>
+        </div>
+        {grouped.length === 0 ? <div className="agenda-empty"><CalendarCheck size={30} /><strong>Dia livre</strong><span>Nenhuma entrega ou retirada neste dia.</span></div>
+          : grouped.map(group => <div className="agenda-city-group" key={group.code}>
+            <div className="agenda-city-heading"><h3>{group.label}</h3><span>{group.items.length} {group.items.length === 1 ? 'serviço' : 'serviços'}</span></div>
+            {group.items.map(item => <article className={`agenda-item ${item.kind}`} key={item.key} role="button" tabIndex={0}
+              aria-label={`${item.kind === 'delivery' ? 'Entrega' : 'Retirada'} de ${item.order.customerName}: abrir pedido`}
+              onClick={() => onOpenOrder(item.order.id)}
+              onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onOpenOrder(item.order.id) } }}>
+              <div className="agenda-item-time"><strong>{timeShort(item.time) || '--:--'}</strong>
+                <span className={`agenda-kind-icon ${item.kind}`}>{item.kind === 'delivery' ? <Truck size={16} /> : <Undo2 size={16} />}</span></div>
+              <div className="agenda-item-body">
+              <div className="agenda-item-top">
+                <span className={`agenda-kind ${item.kind}`}>{item.kind === 'delivery' ? 'Entrega' : 'Retirada'}</span>
+                <span className={`agenda-item-status${!item.done && item.date < today ? ' past' : ''}`}>
+                  {itemStatus(item, today)}</span>
+              </div>
+              <h4>{item.order.customerName}</h4>
+              <p>{chairName(item.order.chairCode, item.order.branchName)} • {branchLabel(item.order.branchName)}</p>
+              <p>{item.order.address}, {group.label}</p>
+              <div className="agenda-item-footer">
+                <span>{item.order.courierId ? courierNames.get(item.order.courierId) ?? '' : ''}</span>
+                <a href={`tel:${brazilPhoneDigits(item.order.customerPhone)}`} onClick={event => event.stopPropagation()}>{displayPhone(item.order.customerPhone)}</a>
+                <span className="agenda-open">Abrir pedido <ArrowRight size={13} /></span>
+              </div>
+              {(item.order.stockStart && item.order.stockStart !== item.order.start)
+                || (item.order.stockEnd && item.order.stockEnd !== item.order.end)
+                ? <small className="agenda-stock-note">Estoque bloqueado de {shortFormatter.format(dateFromIso(item.order.stockStart ?? item.order.start))} a {shortFormatter.format(dateFromIso(item.order.stockEnd ?? item.order.end))}</small>
+                : null}
+              </div>
+            </article>)}
+          </div>)}
+      </section>
+    </div>
+    {calendarOpen && <div className="modal-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) setCalendarOpen(false) }}>
+      <div className="agenda-calendar-modal" role="dialog" aria-modal="true" aria-label="Calendário">
       <section className="agenda-calendar panel" aria-label="Calendário de serviços">
         <div className="agenda-calendar-heading">
           <div><span className="eyebrow">SERVIÇOS PREVISTOS</span>
@@ -257,7 +307,7 @@ export function AgendaPage({ credentials, onOpenOrder }: Props) {
             return <button key={date} type="button" className={`agenda-calendar-day${date === selectedDate ? ' selected' : ''}${date === today ? ' today' : ''}`}
               aria-label={`${dayFormatter.format(dateFromIso(date))}: ${count?.deliveries ?? 0} entregas e ${count?.pickups ?? 0} retiradas`}
               aria-pressed={date === selectedDate} aria-current={date === today ? 'date' : undefined}
-              onClick={() => setSelectedDate(date)}>
+              onClick={() => { setSelectedDate(date); setCalendarOpen(false) }}>
               <span className="agenda-calendar-number">{view === 'week' ? `${date.slice(8)}/${date.slice(5, 7)}` : Number(date.slice(-2))}</span>
               <span className="agenda-calendar-counts" aria-hidden="true">
                 {!!count?.deliveries && <span className="agenda-count delivery">{count.deliveries}</span>}
@@ -268,51 +318,9 @@ export function AgendaPage({ credentials, onOpenOrder }: Props) {
         </div>
         <div className="agenda-legend"><span><i className="delivery" /> Entregas</span><span><i className="pickup" /> Retiradas</span><small>o número é a quantidade do dia</small></div>
       </section>
-
-      <section className={`agenda-day-panel panel${loading ? ' is-loading' : ''}`} aria-label="Serviços do dia selecionado" aria-busy={loading}>
-        <div className="agenda-day-heading">
-          <span className="eyebrow">DIA SELECIONADO</span>
-          <h2>{dayFormatter.format(dateFromIso(selectedDate))}</h2>
-          <p>{selectedItems.length} {selectedItems.length === 1 ? 'serviço previsto' : 'serviços previstos'}
-            {grouped.length > 0 ? ` em ${grouped.length} ${grouped.length === 1 ? 'cidade' : 'cidades'}` : ''}</p>
-        </div>
-        <div className="agenda-day-summary">
-          <span><strong>{deliveryCount}</strong> {deliveryCount === 1 ? 'entrega' : 'entregas'}</span>
-          <span><strong>{pickupCount}</strong> {pickupCount === 1 ? 'retirada' : 'retiradas'}</span>
-          {unassignedCount > 0 && <span className="needs-courier"><strong>{unassignedCount}</strong> sem entregador</span>}
-        </div>
-        {grouped.length === 0 ? <div className="agenda-empty"><CalendarCheck size={30} /><strong>Dia livre</strong><span>Nenhuma entrega ou retirada neste dia.</span></div>
-          : grouped.map(group => <div className="agenda-city-group" key={group.code}>
-            <div className="agenda-city-heading"><h3>{group.label}</h3><span>{group.items.length} {group.items.length === 1 ? 'serviço' : 'serviços'}</span></div>
-            {group.items.map(item => <article className={`agenda-item ${item.kind}`} key={item.key} role="button" tabIndex={0}
-              aria-label={`${item.kind === 'delivery' ? 'Entrega' : 'Retirada'} de ${item.order.customerName}: abrir pedido`}
-              onClick={() => onOpenOrder(item.order.id)}
-              onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onOpenOrder(item.order.id) } }}>
-              <div className="agenda-item-time"><strong>{timeShort(item.time) || '--:--'}</strong>
-                <span className={`agenda-kind-icon ${item.kind}`}>{item.kind === 'delivery' ? <Truck size={16} /> : <Undo2 size={16} />}</span></div>
-              <div className="agenda-item-body">
-              <div className="agenda-item-top">
-                <span className={`agenda-kind ${item.kind}`}>{item.kind === 'delivery' ? 'Entrega' : 'Retirada'}</span>
-                <span className={`agenda-item-status${!item.done && item.date < today ? ' past' : ''}`}>
-                  {itemStatus(item, today)}</span>
-              </div>
-              <h4>{item.order.customerName}</h4>
-              <p>{chairName(item.order.chairCode, item.order.branchName)} • {branchLabel(item.order.branchName)}</p>
-              <p>{item.order.address}, {group.label}</p>
-              <div className="agenda-item-footer">
-                <span>{item.order.courierId ? courierNames.get(item.order.courierId) ?? 'Entregador não encontrado' : 'Sem entregador'}</span>
-                <a href={`tel:${brazilPhoneDigits(item.order.customerPhone)}`} onClick={event => event.stopPropagation()}>{displayPhone(item.order.customerPhone)}</a>
-                <span className="agenda-open">Abrir pedido <ArrowRight size={13} /></span>
-              </div>
-              {(item.order.stockStart && item.order.stockStart !== item.order.start)
-                || (item.order.stockEnd && item.order.stockEnd !== item.order.end)
-                ? <small className="agenda-stock-note">Estoque bloqueado de {shortFormatter.format(dateFromIso(item.order.stockStart ?? item.order.start))} a {shortFormatter.format(dateFromIso(item.order.stockEnd ?? item.order.end))}</small>
-                : null}
-              </div>
-            </article>)}
-          </div>)}
-      </section>
-    </div>
+        <button type="button" className="button secondary" onClick={() => setCalendarOpen(false)}>Fechar</button>
+      </div>
+    </div>}
     <p className="agenda-note">As datas e os horários vêm dos pedidos. Dias extras de estoque bloqueado não alteram esta agenda. Pedidos sem pagamento confirmado não aparecem.</p>
   </>
 }

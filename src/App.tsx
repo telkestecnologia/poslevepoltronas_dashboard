@@ -98,8 +98,11 @@ function App() {
             revenue={overviewPage.revenue}
             onRefresh={overviewPage.onRefresh}
           >
-            <AttentionPanel credentials={session.credentials}
-              onOpen={target => navigate(target.page, { id: target.id, chairStatus: target.chairStatus })} />
+            {/* A lista de avisos saiu da tela; o painel segue escondido só para as notificações do computador. */}
+            <div hidden><AttentionPanel credentials={session.credentials}
+              onOpen={target => navigate(target.page, { id: target.id, chairStatus: target.chairStatus })} /></div>
+            <OrdersPage credentials={session.credentials} params={params}
+              onOpenOrder={id => navigate('orders', { id, fromList: true })} />
           </OverviewPage>
         )}
         {page === 'finance' && <FinancePage credentials={session.credentials} />}

@@ -1,6 +1,5 @@
 import { useState, type ReactNode } from 'react'
 import {
-  CalendarDays,
   Check,
   ChevronRight,
   Home,
@@ -26,8 +25,7 @@ const navigation = [
   { page: 'overview', label: 'Visão geral', icon: Home },
   { page: 'finance', label: 'Financeiro', icon: Wallet },
   { page: 'branches', label: 'Filiais', icon: MapPin },
-  { page: 'agenda', label: 'Agenda', icon: CalendarDays },
-  { page: 'orders', label: 'Pedidos', icon: ClipboardList },
+  { page: 'agenda', label: 'Pedidos', icon: ClipboardList },
   { page: 'conversations', label: 'Atendimento', icon: MessagesSquare },
   { page: 'ai', label: 'O que a Isa sabe', icon: Sparkles },
   { page: 'payments', label: 'Pagamentos e preços', icon: BadgeDollarSign },

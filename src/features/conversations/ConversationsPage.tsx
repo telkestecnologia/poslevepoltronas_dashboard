@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ArrowLeft, Globe, MessageCircle, Paperclip, RefreshCw, Send, X } from 'lucide-react'
+import { ArrowLeft, MessageCircle, Paperclip, RefreshCw, Send, X, MessagesSquare } from 'lucide-react'
 import { api, sendConversationAttachment, type Conversation, type ConversationMessage } from '../../api'
 import { conversationState, customerLabel, customerNumber, nameColor, stageTone } from '../../utils/conversations'
 import { MessageImages, WhatsAppText } from './WhatsAppText'
@@ -32,6 +32,7 @@ export function ConversationsPage({ credentials, selectedId, onSelect }: Props) 
   const [filter, setFilter] = useState<Filter>('ALL')
   const [draft, setDraft] = useState('')
   const [replyTo, setReplyTo] = useState<ConversationMessage | null>(null)
+  const [summaryOpen, setSummaryOpen] = useState(false)
   const fileInput = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
   const thread = useRef<HTMLDivElement>(null)
@@ -164,8 +165,8 @@ export function ConversationsPage({ credentials, selectedId, onSelect }: Props) 
           const rowState = conversationState(item)
           const whatsAppRow = item.channel === 'WHATSAPP'
           return <button key={item.id} type="button" className={`wa-row${item.id === selectedId ? ' active' : ''}`} onClick={() => open(item.id)}>
-            <span className="wa-avatar" style={{ background: whatsAppRow ? '#25d366' : '#dfe5e7' }}>
-              {whatsAppRow ? <MessageCircle size={22} color="#fff" /> : <Globe size={22} color="#667781" />}</span>
+            <span className="wa-avatar" style={{ background: whatsAppRow ? '#25d366' : '#127a84' }}>
+              {whatsAppRow ? <MessageCircle size={22} color="#fff" /> : <MessagesSquare size={21} color="#fff" />}</span>
             <span className="wa-row-body">
               <span className="wa-row-top"><strong>{customerLabel(item)}{customerNumber(item) && <small className="wa-number"> {customerNumber(item)}</small>}</strong>
                 <small className={item.needsAttention ? 'unread' : ''}>{timeLabel(item.lastMessageAt)}</small></span>
@@ -191,12 +192,31 @@ export function ConversationsPage({ credentials, selectedId, onSelect }: Props) 
           <header className="wa-chat-head">
             <button type="button" className="wa-back" aria-label="Voltar para a lista" onClick={() => onSelect(null)}><ArrowLeft size={20} /></button>
             <div className="wa-chat-title"><strong>{customerLabel(selected)}{customerNumber(selected) && <small className="wa-number"> {customerNumber(selected)}</small>}</strong>
-              <small className="wa-chat-meta"><span className={`wa-state ${state.tone}`}>{state.label}</span>
+              <small className="wa-chat-meta"><button type="button" className={`wa-state wa-state-link ${state.tone}`} onClick={() => setSummaryOpen(true)}
+                title="Ver o resumo do atendimento">{state.label} ⓘ</button>
                 {` • ${selected.channel === 'WHATSAPP' ? 'WhatsApp' : 'Site'} • desde ${new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(selected.startedAt))}`}</small>
               <span className={`wa-stage ${stageTone(selected.stage ?? 'Primeiro contato').tone}`}>{stageTone(selected.stage ?? 'Primeiro contato').icon} Etapa: {selected.stage ?? 'Primeiro contato'}</span></div>
             <button type="button" className={`wa-assign${selected.state === 'HUMAN' ? ' outline' : ''}`} disabled={busy} onClick={() => void toggleAssignment(selected)}>
               {selected.state === 'HUMAN' ? 'Devolver para a Isa' : 'Assumir conversa'}</button>
           </header>
+          {summaryOpen && <div className="modal-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) setSummaryOpen(false) }}>
+            <section className="modal wa-summary" role="dialog" aria-modal="true" aria-label="Resumo do atendimento">
+              <div className="modal-head"><div><h2>Resumo do atendimento</h2></div>
+                <button className="icon-button" aria-label="Fechar" onClick={() => setSummaryOpen(false)}><X size={20} /></button></div>
+              <dl>{[
+                ['Situação', state.label],
+                ['Etapa', selected.stage ?? 'Primeiro contato'],
+                ['Canal', selected.channel === 'WHATSAPP' ? 'WhatsApp' : 'Chat do site'],
+                ['Cliente', [customerLabel(selected), customerNumber(selected)].filter(Boolean).join(' • ')],
+                ['Quem atende', selected.state === 'HUMAN' ? selected.staffName ?? 'Equipe' : 'Isa (assistente)'],
+                ['Mensagens', String(selected.messageCount)],
+                ['Início', summaryDate.format(new Date(selected.startedAt))],
+                ['Última mensagem', summaryDate.format(new Date(selected.lastMessageAt))],
+              ].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
+              {selected.needsAttention && selected.lastCustomerMessage && <p className="wa-summary-alert"><strong>⚠️ A Isa não soube responder</strong>
+                “{selected.lastCustomerMessage}”</p>}
+            </section>
+          </div>}
           <div className="wa-thread" ref={thread}>
             {messages.map((message, index) => {
               const customer = message.role === 'CUSTOMER'
@@ -256,3 +276,5 @@ function quoteOf(text: string) {
   const line = text.replace(/\s+/g, ' ').trim()
   return line.length > 120 ? `${line.slice(0, 117)}...` : line
 }
+
+const summaryDate = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
