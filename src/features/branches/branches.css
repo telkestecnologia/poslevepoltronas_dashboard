@@ -25,3 +25,9 @@
 .branch-chair-text { display: grid; flex: 1; gap: 2px; min-width: 0; }
 .branch-chair-text small { color: var(--muted); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .branch-chair-status { font-size: 12px; font-weight: 700; color: var(--teal-dark); }
+
+/* Cidades e frete como abre e fecha. */
+.municipality-picker summary { cursor: pointer; padding: 10px 0; list-style: none; }
+.municipality-picker summary::-webkit-details-marker { display: none; }
+.municipality-picker summary::after { content: " ▾"; color: var(--teal-dark); }
+.municipality-picker[open] summary::after { content: " ▴"; }

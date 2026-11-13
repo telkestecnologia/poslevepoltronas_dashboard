@@ -94,11 +94,12 @@ export function BranchModal({
               maxLength={100}
               placeholder="Ex.: Serra da Ibiapaba"
               required
-              autoFocus
+              autoFocus={!inline}
             />
           </label>
-          <div className="municipality-picker">
-            <strong>Municípios atendidos</strong>
+          {/* Na página da filial, cidades e frete abre e fecha (começa fechado). */}
+          <details className="municipality-picker" open={!inline}>
+            <summary><strong>Cidades atendidas e frete ({areas.length})</strong></summary>
             <div className="municipality-picker-row">
               <label>
                 UF
@@ -201,7 +202,7 @@ export function BranchModal({
               A cobertura inclui todos os CEPs dos municípios escolhidos, inclusive zona rural.
               Use 0,00 para zerar apenas este município; o botão na lista de filiais zera todos temporariamente.
             </small>
-          </div>
+          </details>
           <label className="branch-option">
             <input
               type="checkbox"
