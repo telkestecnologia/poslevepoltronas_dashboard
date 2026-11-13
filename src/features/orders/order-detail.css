@@ -255,3 +255,4 @@
 /* Poltrona da Pós Leve ao lado do nome do cliente. */
 .od-name { display: flex; align-items: center; gap: 12px; }
 .od-name img { width: 44px; height: 60px; object-fit: contain; flex: none; }
+.od-name img { width: 56px; height: 56px; border-radius: 14px; object-fit: cover; }
