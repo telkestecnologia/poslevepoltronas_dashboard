@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ArrowDown, ArrowUp, CalendarCog, ChevronDown, ChevronLeft, ChevronRight, Download, RefreshCw, Search, Wallet, X } from 'lucide-react'
+import { Banknote, CalendarCog, Check, Copy, CreditCard, FileText, ChevronDown, ChevronLeft, ChevronRight, RefreshCw, Search, Wallet, X } from 'lucide-react'
 import { api, type Branch, type FinanceQuery, type FinancialEntry, type FinancialReport } from '../../api'
 import { branchLabel, onlyOfficialBranches } from '../../utils/branches'
 import { getMessage } from '../../utils/errors'
@@ -197,8 +197,6 @@ export function FinancePage({ credentials }: { credentials: string }) {
         <h1>Financeiro</h1>
       </div>
       <div className="finance-actions">
-        <button type="button" className="button secondary" onClick={() => void generateReport()}
-          disabled={!report || reportBusy}><Download size={16} /> {reportBusy ? 'Baixando...' : 'Baixar relatório em PDF'}</button>
         <button type="button" className="button secondary" onClick={() => setReloadKey(key => key + 1)}
           disabled={loading}><RefreshCw size={16} /> Atualizar</button>
       </div>
@@ -239,10 +237,12 @@ export function FinancePage({ credentials }: { credentials: string }) {
       <div className="finance-visuals">
         <section className="panel finance-chart" aria-labelledby="finance-chart-title">
           <div className="finance-panel-heading">
-            <div><h2 id="finance-chart-title">Hoje <small className="finance-today">{dateLabel(today())}</small></h2></div>
+            <div className="finance-today-title"><h2 id="finance-chart-title">Hoje <small className="finance-today">{dateLabel(today())}</small></h2>
             {/* Ícone de editar as datas (De e Até): abre o modal com o calendário (igual ao app). */}
             <button type="button" className="finance-date-icon" onClick={openFilter} title={`Mudar as datas (${dateLabel(from)} a ${dateLabel(to)})`}
               aria-label={`Mudar as datas (${dateLabel(from)} a ${dateLabel(to)})`}><CalendarCog size={19} /></button>
+            <button type="button" className="finance-date-icon pdf" onClick={() => void generateReport()} disabled={!report || reportBusy}
+              title="Baixar relatório em PDF" aria-label="Baixar relatório em PDF"><FileText size={19} /></button></div>
           </div>
           {!shownMonth ? <div className="finance-branch-empty"><Wallet size={22} /> Sem movimentação no período.</div> : <div className="finance-month">
             <div className="finance-month-nav">
@@ -310,11 +310,10 @@ export function FinancePage({ credentials }: { credentials: string }) {
             <thead><tr><th>Data</th><th>Descrição</th><th>Filial</th><th>Meio</th><th>Valor</th></tr></thead>
             <tbody>{visibleEntries.map(entry => <tr key={entry.id} className={`finance-row ${entry.kind === 'INFLOW' ? 'inflow' : 'outflow'}`}>
               <td>{dateTime.format(new Date(entry.occurredAt))}</td>
-              <td><span className={`finance-entry-icon ${entry.kind.toLowerCase()}`}>
-                {entry.kind === 'INFLOW' ? <ArrowUp size={16} /> : <ArrowDown size={16} />}</span>
-                <span className="finance-entry-description"><em className="finance-kind-tag">{entry.kind === 'INFLOW' ? '💰 Entrada' : '💸 Saída'}</em><strong>{entry.description}</strong>
-                  <small>{entry.category}{entry.reference ? ` • Ref. ${entry.reference}` : ''}</small></span></td>
-              <td>{branchLabel(entry.branchName)}</td><td>{entry.paymentMethod}</td>
+              <td><span className={`finance-entry-icon ${entry.kind.toLowerCase()}`}><MethodIcon method={entry.paymentMethod} /></span>
+                <span className="finance-entry-description"><strong>{entryTitle(entry.description)}</strong>
+                  {entry.reference && <small className="finance-ref">Ref. {entry.reference} <CopyButton text={entry.reference} /></small>}</span></td>
+              <td>{branchLabel(entry.branchName)}</td><td>{methodLabel(entry.paymentMethod)}</td>
               <td className={entry.kind === 'INFLOW' ? 'finance-positive' : 'finance-negative'}>
                 {entry.kind === 'INFLOW' ? '+' : '−'} {currency(entry.amountCents)}</td>
             </tr>)}</tbody>
@@ -322,9 +321,8 @@ export function FinancePage({ credentials }: { credentials: string }) {
           <ul className="finance-entry-list">{visibleEntries.map(entry => <li key={entry.id} className={`finance-row ${entry.kind === 'INFLOW' ? 'inflow' : 'outflow'}`}>
             <details>
               <summary>
-                <span className={`finance-entry-icon ${entry.kind.toLowerCase()}`}>
-                  {entry.kind === 'INFLOW' ? <ArrowUp size={16} /> : <ArrowDown size={16} />}</span>
-                <span className="finance-entry-description"><strong>{entry.description}</strong>
+                <span className={`finance-entry-icon ${entry.kind.toLowerCase()}`}><MethodIcon method={entry.paymentMethod} /></span>
+                <span className="finance-entry-description"><strong>{entryTitle(entry.description)}</strong>
                   <small>{dateTime.format(new Date(entry.occurredAt))}</small></span>
                 <b className={entry.kind === 'INFLOW' ? 'finance-positive' : 'finance-negative'}>
                   {entry.kind === 'INFLOW' ? '+' : '−'} {currency(entry.amountCents)}</b>
@@ -332,9 +330,9 @@ export function FinancePage({ credentials }: { credentials: string }) {
               </summary>
               <dl>
                 <div><dt>Filial</dt><dd>{branchLabel(entry.branchName)}</dd></div>
-                <div><dt>Meio</dt><dd>{entry.paymentMethod}</dd></div>
-                <div><dt>Categoria</dt><dd>{entry.category}</dd></div>
-                {entry.reference && <div><dt>Referência</dt><dd>{entry.reference}</dd></div>}
+                <div><dt>Meio</dt><dd>{methodLabel(entry.paymentMethod)}</dd></div>
+                <div><dt>Categoria</dt><dd>{categoryLabel(entry.category)}</dd></div>
+                {entry.reference && <div><dt>Referência</dt><dd>{entry.reference} <CopyButton text={entry.reference} /></dd></div>}
               </dl>
             </details>
           </li>)}</ul></>}
@@ -366,4 +364,38 @@ function shortBranch(name: string) {
   if (/sobral/.test(text)) return 'Sobral'
   if (/fortaleza/.test(text)) return 'Fortaleza'
   return branchLabel(name)
+}
+
+/** "Recebimento PIX do pedido abc123" → "Recebimento PIX": o código fica na referência (igual ao app). */
+function entryTitle(description: string) {
+  return description.replace(/\s+(do|de|ao) pedido\s+\S+$/i, '').trim() || description
+}
+
+function methodLabel(method: string) {
+  const text = normalize(method)
+  if (text.includes('pix')) return 'Pix'
+  if (text.includes('cart')) return 'Cartão'
+  return method
+}
+
+function categoryLabel(category: string) {
+  const words = category.replace(/_/g, ' ').toLowerCase()
+  return words.charAt(0).toUpperCase() + words.slice(1)
+}
+
+/** Ícone do meio de pagamento: Pix (logo), cartão ou dinheiro. */
+function MethodIcon({ method }: { method: string }) {
+  const text = normalize(method)
+  if (text.includes('pix')) return <svg width="15" height="15" viewBox="0 0 512 512" aria-hidden="true"><path fill="currentColor" d="M242.4 292.5c5.4-5.4 14.7-5.4 20.1 0l77.5 77.5c14.3 14.3 33.3 22.1 53.5 22.1h15.2l-97.8 97.8c-30.6 30.5-80.2 30.5-110.8 0l-98.2-98.2h9.4c20.2 0 39.2-7.9 53.5-22.1l77.6-77.1zm20.1-73.6c-6.4 5.5-14.6 5.6-20.1 0l-77.6-77.1c-14.3-15.2-33.3-22.2-53.5-22.2h-9.4l98.1-98.12c30.7-30.65 80.3-30.65 110.9 0l97.8 97.82h-15.2c-20.2 0-39.2 7.9-53.5 22.2l-77.5 77.4zm-149.9-73.9c13.9 0 26.7 5.6 37.5 15.5l77.6 77.6c7.2 6.3 16.7 10.8 26.2 10.8 10.4 0 19.9-4.5 27.1-10.8l77.5-77.5c9.9-9.8 23.5-15.5 37.5-15.5h38l58.7 58.7c30.5 30.6 30.5 80.2 0 110.8L434 371.5h-38c-14 0-27.6-5.7-37.5-16.5l-77.5-77.5c-14-14-38.4-14-52.4.1l-77.6 77.4c-10.8 10.8-23.6 16.5-37.5 16.5H80.78l-58.29-58.6c-30.65-30.6-30.65-80.2 0-110.8L80.78 145h31.82z"/></svg>
+  if (text.includes('cart')) return <CreditCard size={16} />
+  return <Banknote size={16} />
+}
+
+/** Copia a referência (código do pedido) e mostra "Copiado" por 2 segundos. */
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false)
+  return <button type="button" className="finance-copy" onClick={event => {
+    event.preventDefault()
+    void navigator.clipboard.writeText(text).then(() => { setCopied(true); window.setTimeout(() => setCopied(false), 2000) })
+  }}>{copied ? <Check size={13} /> : <Copy size={13} />} {copied ? 'Copiado' : 'Copiar'}</button>
 }

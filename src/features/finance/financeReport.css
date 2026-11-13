@@ -91,3 +91,13 @@
 /* Ícone de editar as datas ao lado de Hoje. */
 .finance-date-icon { display: grid; place-items: center; width: 40px; height: 40px; border: 0; border-radius: 50%; background: #e5f4f5; color: var(--teal-dark); cursor: pointer; }
 .finance-date-icon:hover { background: #d3eced; }
+
+/* Ícones de calendário e PDF ao lado da data; referência com copiar (igual ao app). */
+.finance-today-title { display: flex; align-items: center; gap: 8px; }
+.finance-date-icon { width: 34px !important; height: 34px !important; }
+.finance-date-icon.pdf { background: #fdecea; color: #c0392b; }
+.finance-date-icon:disabled { opacity: 0.5; cursor: default; }
+.finance-entry-icon.inflow { background: #e5f5ec; color: #1f7a4a; }
+.finance-entry-icon.outflow { background: #fde8e4; color: #b8321f; }
+.finance-ref { display: inline-flex; align-items: center; gap: 6px; }
+.finance-copy { display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border: 0; border-radius: 99px; background: #e5f4f5; color: var(--teal-dark); font: inherit; font-size: 11.5px; font-weight: 700; cursor: pointer; }
