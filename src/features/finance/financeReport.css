@@ -73,3 +73,12 @@
 .finance-day .in, .finance-day .out { padding: 2px 9px; border-radius: 99px; background: rgba(255, 255, 255, 0.8); font-size: 12.5px; font-weight: 700; }
 .finance-day .in { color: #1f7a4a; }
 .finance-day .out { color: #b8321f; }
+
+/* Resultado por filial simples: três lado a lado, mês (3 letras) e valor. */
+.finance-branch-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.finance-branch-tile { --c: #1f78b4; --soft: #e9f3fb; display: grid; justify-items: center; gap: 4px; padding: 16px 8px; border-radius: 12px; background: var(--soft); text-align: center; }
+.finance-branch-tile.region-serra { --c: #2e8b57; --soft: #eaf6ee; }
+.finance-branch-tile.region-sobral { --c: #c4702c; --soft: #fcf1e6; }
+.finance-branch-tile strong { color: var(--c); font-size: 15px; }
+.finance-branch-tile small { color: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: 1px; }
+.finance-branch-tile b { color: var(--ink); font-size: 17px; white-space: nowrap; }

@@ -283,27 +283,17 @@ export function FinancePage({ credentials }: { credentials: string }) {
         </section>
         <section className="panel finance-branches" aria-labelledby="finance-branches-title">
           <div className="finance-panel-heading"><div><span className="eyebrow">FILIAIS</span>
-            <h2 id="finance-branches-title">Resultado por filial{shownMonth ? ` • ${monthName.format(new Date(`${shownMonth.start}T12:00:00Z`))}` : ''}</h2></div></div>
-          {monthEntries === null ? <div className="finance-branch-empty">Carregando o mês...</div>
-            : <div className="finance-branch-days">{onlyOfficialBranches(branches, branch => branch.name).map(branch => {
-              const list = monthEntries.filter(entry => entry.branchId === branch.id)
-              const inflow = list.filter(entry => entry.kind === 'INFLOW').reduce((sum, entry) => sum + entry.amountCents, 0)
-              const outflow = list.filter(entry => entry.kind !== 'INFLOW').reduce((sum, entry) => sum + entry.amountCents, 0)
-              const days = [...new Set(list.map(entry => entry.occurredAt.slice(0, 10)))].sort().reverse()
-              return <div key={branch.id} className={`finance-branch-card region-${regionOf(branch.name)}`}>
-                <div className="finance-branch-head"><i aria-hidden="true" /><strong>{branchLabel(branch.name)}</strong>
-                  <b className={inflow - outflow < 0 ? 'finance-negative' : ''}>{currency(inflow - outflow)}</b></div>
-                <small>⬆ {currency(inflow)} • ⬇ {currency(outflow)}</small>
-                {days.length === 0 ? <em>Sem movimentação neste mês.</em> : days.map(day => {
-                  const ofDay = list.filter(entry => entry.occurredAt.startsWith(day))
-                  const dayIn = ofDay.filter(entry => entry.kind === 'INFLOW').reduce((sum, entry) => sum + entry.amountCents, 0)
-                  const dayOut = ofDay.filter(entry => entry.kind !== 'INFLOW').reduce((sum, entry) => sum + entry.amountCents, 0)
-                  return <div key={day} className="finance-day"><span>{day.slice(8, 10)}/{day.slice(5, 7)}</span>
-                    {dayIn > 0 && <span className="in">⬆ {currency(dayIn)}</span>}
-                    {dayOut > 0 && <span className="out">⬇ {currency(dayOut)}</span>}</div>
-                })}
-              </div>
-            })}</div>}
+            <h2 id="finance-branches-title">Resultado por filial</h2></div></div>
+          {/* Simples (igual ao app): as três filiais lado a lado, com o mês (3 letras) e o valor do mês das setas. */}
+          <div className="finance-branch-tiles">{onlyOfficialBranches(branches, branch => branch.name).map(branch => {
+            const net = (monthEntries ?? []).filter(entry => entry.branchId === branch.id)
+              .reduce((sum, entry) => sum + (entry.kind === 'INFLOW' ? entry.amountCents : -entry.amountCents), 0)
+            return <div key={branch.id} className={`finance-branch-tile region-${regionOf(branch.name)}`}>
+              <strong>{shortBranch(branch.name)}</strong>
+              <small>{shownMonthStart ? monthAbbr(shownMonthStart) : '—'}</small>
+              <b className={net < 0 ? 'finance-negative' : ''}>{monthEntries === null ? '…' : currency(net)}</b>
+            </div>
+          })}</div>
         </section>
       </div>
 
@@ -380,4 +370,15 @@ function regionOf(name: string) {
   if (/serra|ibiapaba/.test(text)) return 'serra'
   if (/sobral/.test(text)) return 'sobral'
   return 'fortaleza'
+}
+
+const monthNames = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ']
+const monthAbbr = (iso: string) => monthNames[Number(iso.slice(5, 7)) - 1] ?? ''
+
+function shortBranch(name: string) {
+  const text = normalize(name)
+  if (/serra|ibiapaba/.test(text)) return 'Ibiapaba'
+  if (/sobral/.test(text)) return 'Sobral'
+  if (/fortaleza/.test(text)) return 'Fortaleza'
+  return branchLabel(name)
 }
