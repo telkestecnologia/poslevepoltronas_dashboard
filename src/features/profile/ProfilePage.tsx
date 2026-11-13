@@ -90,10 +90,10 @@ export function ProfilePage({ credentials, onCredentialsChanged, partner = false
         {!team ? <p className="profile-loading">Carregando equipe…</p>
           : team.length === 0 ? <EmptyState icon={Users} title="Nenhum usuário" text="Cadastre quem usa o painel, o cargo, onde atua e o que pode ver." />
             : <div className="table-scroll"><table><thead><tr>
-              <th>NOME</th><th>CARGO E ÁREA</th><th>WHATSAPP</th><th>ACESSO</th><th><span className="sr-only">Ação</span></th>
+              <th>NOME</th><th>ÁREA</th><th>WHATSAPP</th><th>ACESSO</th><th><span className="sr-only">Ação</span></th>
             </tr></thead><tbody>{team.map(member => <tr key={member.id}>
               <td><div className="courier-identity"><strong>{member.name}{member.self ? ' (você)' : ''}</strong><small>{member.email}</small></div></td>
-              <td>{[member.jobTitle, member.area].filter(Boolean).join(' • ') || '—'}</td>
+              <td>{member.area || '—'}</td>
               <td>{member.phone ? formatPhone(member.phone) : '—'}</td>
               <td><span className={`courier-access ${member.enabled && member.access === 'ALL' ? 'active' : 'inactive'}`}>
                 {!member.enabled ? 'Desativado' : member.access === 'ALL' ? accessLabels.ALL.label : `Parceiro • ${branchName(member.branchId)}`}</span></td>
@@ -296,8 +296,6 @@ function MemberDialog({ credentials, member, areas, branches, onAreas, onClose, 
         <input value={newCity} onChange={event => setNewCity(event.target.value)} placeholder="Ex.: Crateús/CE" aria-label="Nova cidade" />
         <button type="button" className="button secondary" onClick={() => void saveCity()}>Adicionar</button>
       </div> : <button type="button" className="profile-link" onClick={() => setAddingCity(true)}>+ Cadastrar nova cidade</button>}
-      <label>Cargo<select value={form.jobTitle} onChange={event => set('jobTitle', event.target.value)}>
-        {[...new Set([...roles, form.jobTitle].filter(Boolean))].map(role => <option key={role} value={role}>{role}</option>)}</select></label>
       {/* Nível de acesso: todos os dados ou só os de uma filial (pedidos, poltronas, agenda, financeiro e conversas dela). */}
       <label>Nível de acesso<select value={form.access === 'ALL' ? ALL_BRANCHES : form.branchId ?? ''}
         onChange={event => { const value = event.target.value; setForm(current => value === ALL_BRANCHES
