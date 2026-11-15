@@ -1,15 +1,15 @@
 import { useRef, useState } from 'react'
 import { currency } from '../../data/orders'
-import left from '../../assets/cabo-left.webp'
-import right from '../../assets/cabo-right.webp'
+import puller from '../../assets/cabo-puxando.png'
+import pusher from '../../assets/cabo-empurrando.png'
 
 type Plan = { id: string; name: string; days: number; priceCents: number }
 
 const STEP = 1000 // R$ 10,00 por passo
 
 /**
- * Cabo de guerra dos preços (igual ao app): as duas proprietárias puxam as cordas dos planos. Arrastar o controle muda
- * o preço; quanto mais alto, mais a personagem se inclina fazendo força, e notas de R$ 100 voam. O preço vai para o
+ * Cabo de guerra dos preços (igual ao app): a Isadora puxa a corda presa ao controle do primeiro plano e a Renata
+ * empurra o cartão. Arrastar o controle muda o preço; quanto mais alto, mais força elas fazem, e notas de R$ 100 voam. O preço vai para o
  * campo do plano (salva no botão de salvar). O teto é o total em diárias avulsas, como o servidor exige.
  */
 export function PriceTug({ plans, dailyCents, locked, onChange }: {
@@ -36,13 +36,15 @@ export function PriceTug({ plans, dailyCents, locked, onChange }: {
   return <div className="tug">
     <div className="tug-head"><strong>Cabo de guerra dos preços 💪</strong>
       <span>Arraste o controle de cada plano: quanto mais alto o preço, mais força elas fazem.</span></div>
-    <div className="tug-stage">
-      {first && <div className="tug-frame"><img src={left} alt="Renata puxando a corda" style={{ transform: `translateX(${-first.tension * 10}px) rotate(${-first.tension * 13}deg) scale(${1.02 + first.tension * 0.06})` }} /></div>}
-      {last && <div className="tug-frame"><img src={right} alt="Isadora puxando a corda" style={{ transform: `translateX(${last.tension * 10}px) rotate(${last.tension * 13}deg) scale(${1.02 + last.tension * 0.06})` }} /></div>}
+    <div className="tug-sliders">
+    {/* Isadora puxa a corda do primeiro plano; Renata empurra o cartão. */}
+    {first && <img className="tug-puller" src={puller} alt="Isadora puxando a corda"
+      style={{ transform: `translateX(${first.tension * 6}px) rotate(${first.tension * 9}deg)` }} />}
+    {last && <img className="tug-pusher" src={pusher} alt="Renata empurrando"
+      style={{ transform: `translateX(${last.tension * 4}px) rotate(${last.tension * 8}deg)` }} />}
       {notes.map(note => <span key={note.id} className="tug-note" aria-hidden="true"
         style={{ left: `${note.x * 100}%`, ['--drift' as string]: `${note.drift}px`, ['--spin' as string]: `${note.spin}deg` }}
         onAnimationEnd={() => setNotes(current => current.filter(item => item.id !== note.id))}>💵</span>)}
-    </div>
     {ranges.map(({ plan, min, max }, index) => {
       const tone = index === 0 ? 'coral' : index === ranges.length - 1 ? 'deep' : 'teal'
       const perDay = plan.days > 0 ? Math.round(plan.priceCents / plan.days) : 0
@@ -51,9 +53,11 @@ export function PriceTug({ plans, dailyCents, locked, onChange }: {
         <span className="tug-slider-head"><span>{plan.name} • {plan.days} dias</span><strong>{currency(plan.priceCents)}</strong></span>
         <input type="range" min={min} max={max} step={STEP} value={Math.min(max, Math.max(min, plan.priceCents))} disabled={locked}
           style={{ ['--fill' as string]: `${ratio * 100}%` }} aria-label={`Preço do plano ${plan.name}`}
-          onChange={event => { onChange(plan.id, Number(event.target.value)); burst(index === 0 ? 0.25 : index === ranges.length - 1 ? 0.75 : 0.5) }} />
+          onChange={event => { onChange(plan.id, Number(event.target.value)); burst(index === 0 ? 0.7 : 0.35) }} />
+        {index === 0 && <span className="tug-rope" aria-hidden="true" style={{ left: `calc(${ratio * 100}% )` }} />}
         <span className="tug-slider-foot"><small>{currency(min)}</small><small>{currency(perDay)} por dia</small><small>{currency(max)}</small></span>
       </label>
     })}
+    </div>
   </div>
 }
