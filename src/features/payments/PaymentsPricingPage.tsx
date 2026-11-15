@@ -204,7 +204,8 @@ export function PaymentsPricingPage({ credentials }: { credentials: string }) {
           plans={plans.map(plan => ({ id: plan.id, name: plan.name, days: Number(plan.days), priceCents: toCents(plan.price) }))} />
         {/* Editor dos planos (igual ao app): uma linha por plano com nome, dias e preço sempre à mostra, a diária calculada
             e a conferência (economia sobre as diárias avulsas e até quantos dias o plano vale). */}
-        <div className="pay-plan-table" role="table" aria-label="Planos">
+        {/* Planos em vidro (igual ao app): linhas translúcidas sobre um fundo suave com as cores da marca. */}
+        <div className="pay-plan-table pay-glass" role="table" aria-label="Planos">
           <div className="pay-plan-row head" role="row">
             <span role="columnheader">Plano</span><span role="columnheader">Dias</span><span role="columnheader">Preço (R$)</span>
             <span role="columnheader">Diária</span><span role="columnheader">Conferência</span><span role="columnheader">Mais procurado</span>
