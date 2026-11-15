@@ -144,3 +144,7 @@
 .tug-rope { position: absolute; top: 37px; right: -46px; height: 4px; border-radius: 2px; background: #b58a55; pointer-events: none; }
 @media (prefers-reduced-motion: reduce) { .tug-puller, .tug-pusher { transition: none; } }
 @media (max-width: 760px) { .tug-sliders { padding: 0 92px 10px 52px; } .tug-puller { width: 100px; } .tug-pusher { width: 66px; } .tug-rope { right: -30px; } }
+
+/* Imagem Preços e Pagamentos, inteira e de lado a lado. */
+.pay-banner { display: block; width: 100%; height: auto; margin-bottom: 18px; border-radius: 18px; }
+@media (max-width: 760px) { .pay-banner { border-radius: 0; } }

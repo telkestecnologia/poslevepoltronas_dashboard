@@ -3,6 +3,7 @@ import { BadgeDollarSign, CreditCard, QrCode, Save } from 'lucide-react'
 import { api, type PaymentOptions, type PricingCatalog, type PricingPlan } from '../../api'
 import { currency } from '../../data/orders'
 import { getMessage } from '../../utils/errors'
+import banner from '../../assets/precos-pagamentos.webp'
 import './payments.css'
 
 /** Até 12x sem juros na fatura do Asaas (o mesmo limite do backend). */
@@ -115,6 +116,8 @@ export function PaymentsPricingPage({ credentials }: { credentials: string }) {
   const dailyCents = toCents(daily)
 
   return <>
+    {/* Imagem "Preços e Pagamentos" com as proprietárias, de lado a lado e inteira (igual ao app). */}
+    <img className="pay-banner" src={banner} alt="Preços e pagamentos da Pós Leve" />
     {/* Resumo simples e didático: como a Pós Leve recebe hoje, em três quadrinhos (igual ao app). */}
     <div className="pay-summary">
       <div><span className="eyebrow">CONFIGURAÇÕES • PÓS LEVE</span><h1>Como a Pós Leve recebe</h1>
