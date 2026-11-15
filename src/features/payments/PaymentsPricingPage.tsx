@@ -4,6 +4,7 @@ import { api, type PaymentOptions, type PricingCatalog, type PricingPlan } from 
 import { currency } from '../../data/orders'
 import { getMessage } from '../../utils/errors'
 import banner from '../../assets/precos-pagamentos.webp'
+import { PriceRuler, planTone } from './PriceRuler'
 import './payments.css'
 
 /** Até 12x sem juros na fatura do Asaas (o mesmo limite do backend). */
@@ -116,8 +117,6 @@ export function PaymentsPricingPage({ credentials }: { credentials: string }) {
   const dailyCents = toCents(daily)
 
   return <>
-    {/* Imagem "Preços e Pagamentos" com as proprietárias, de lado a lado e inteira (igual ao app). */}
-    <img className="pay-banner" src={banner} alt="Preços e pagamentos da Pós Leve" />
     {/* Resumo simples e didático: como a Pós Leve recebe hoje, em três quadrinhos (igual ao app). */}
     <div className="pay-summary">
       <div><span className="eyebrow">CONFIGURAÇÕES • PÓS LEVE</span><h1>Como a Pós Leve recebe</h1>
@@ -133,6 +132,8 @@ export function PaymentsPricingPage({ credentials }: { credentials: string }) {
     {loadError && <div className="form-error" role="alert">{loadError}</div>}
     {!loadError && (!options || !catalog) && <p className="pay-muted">Carregando configurações...</p>}
 
+    {/* Imagem "Preços e Pagamentos", inteira e de lado a lado, entre o resumo e as formas de pagamento (igual ao app). */}
+    {options && catalog && <img className="pay-banner" src={banner} alt="Preços e pagamentos da Pós Leve" />}
     {options && catalog && <div className="pay-layout">
       <form className="panel pay-section" onSubmit={event => void savePayment(event)}>
         <div className="notification-channel-head">
@@ -175,7 +176,7 @@ export function PaymentsPricingPage({ credentials }: { credentials: string }) {
       <form className="panel pay-section" onSubmit={event => void savePricing(event)}>
         <div className="notification-channel-head">
           <span className="notification-channel-icon"><BadgeDollarSign size={21} /></span>
-          <div><h2>Diária e planos</h2><p>Do período mínimo até o menor plano vale a diária avulsa. A partir de cada plano, cada dia sai pela diária dele (preço ÷ dias) até o próximo plano; acima do maior plano, vale a diária dele. O frete continua por filial.</p></div>
+          <div><p>Do período mínimo até o menor plano vale a diária avulsa. A partir de cada plano, cada dia sai pela diária dele (preço ÷ dias) até o próximo plano; acima do maior plano, vale a diária dele. O frete continua por filial.</p></div>
         </div>
 
         <div className="pay-grid">
@@ -198,6 +199,9 @@ export function PaymentsPricingPage({ credentials }: { credentials: string }) {
           </label>
         </div>
 
+        {/* Régua didática: quanto custa cada dia, do período mínimo ao máximo (cresce animada). */}
+        <PriceRuler dailyCents={dailyCents} minDays={Number(minDays)} maxDays={Number(maxDays)}
+          plans={plans.map(plan => ({ id: plan.id, name: plan.name, days: Number(plan.days), priceCents: toCents(plan.price) }))} />
         {/* Editor dos planos (igual ao app): uma linha por plano com nome, dias e preço sempre à mostra, a diária calculada
             e a conferência (economia sobre as diárias avulsas e até quantos dias o plano vale). */}
         <div className="pay-plan-table" role="table" aria-label="Planos">
@@ -205,29 +209,30 @@ export function PaymentsPricingPage({ credentials }: { credentials: string }) {
             <span role="columnheader">Plano</span><span role="columnheader">Dias</span><span role="columnheader">Preço (R$)</span>
             <span role="columnheader">Diária</span><span role="columnheader">Conferência</span><span role="columnheader">Mais procurado</span>
           </div>
-          {[...plans].sort((a, b) => Number(a.days) - Number(b.days)).map(plan => {
+          {[...plans].sort((a, b) => Number(a.days) - Number(b.days)).map((plan, position, list) => {
             const days = Number(plan.days)
             const price = toCents(plan.price)
             const next = plans.map(other => Number(other.days)).filter(other => other > days).sort((a, b) => a - b)[0]
             const planDaily = days > 0 && Number.isFinite(price) ? Math.round(price / days) : NaN
             const avulsa = Number.isFinite(dailyCents) && days > 0 ? days * dailyCents : NaN
             const savings = Number.isFinite(price) && Number.isFinite(avulsa) ? avulsa - price : NaN
-            return <div key={plan.id} className={`pay-plan-row${plan.popular ? ' popular' : ''}`} role="row">
+            return <div key={plan.id} className={`pay-plan-row tone-${planTone(position, list.length)}${plan.popular ? ' popular' : ''}`} role="row"
+              style={{ animationDelay: `${position * 140}ms` }}>
               <input aria-label="Nome do plano" value={plan.name} maxLength={60} disabled={pricingBusy} required
                 onChange={event => updatePlan(plan.id, { name: event.target.value })} />
               <input aria-label="Dias" type="number" min={Number(minDays) || 1} max={Number(maxDays) || MAX_DAYS} value={plan.days} disabled={pricingBusy} required
                 onChange={event => updatePlan(plan.id, { days: event.target.value })} />
-              <input aria-label="Preço em reais" inputMode="decimal" value={plan.price} disabled={pricingBusy} required
+              <input className="pay-price-input" aria-label="Preço em reais" inputMode="decimal" value={plan.price} disabled={pricingBusy} required
                 onChange={event => updatePlan(plan.id, { price: event.target.value })}
                 onBlur={() => { if (Number.isFinite(price)) updatePlan(plan.id, { price: toText(price) }) }} />
-              <span className="pay-plan-calc">{Number.isFinite(planDaily) ? currency(planDaily) : '—'}</span>
+              <span key={`daily-${plan.price}-${plan.days}`} className="pay-plan-calc pay-bump">{Number.isFinite(planDaily) ? currency(planDaily) : '—'}</span>
               <span className="pay-plan-checks">
                 {Number.isFinite(savings) && <span className={`pay-check${savings >= 0 ? '' : ' bad'}`}>
                   {savings >= 0 ? `Economia de ${currency(savings)}` : 'Mais caro que as avulsas'}</span>}
                 {days > 0 && <span className="pay-check muted">{next ? `${days} a ${next - 1} dias` : `${days}+ dias`}</span>}
               </span>
-              <label className="pay-popular"><input type="radio" name="popular" checked={plan.popular} disabled={pricingBusy}
-                onChange={() => updatePlan(plan.id, { popular: true })} /><span className="sr-only">Mais procurado</span></label>
+              <label className={`pay-popular pay-star${plan.popular ? ' on' : ''}`}><input type="radio" name="popular" checked={plan.popular} disabled={pricingBusy}
+                onChange={() => updatePlan(plan.id, { popular: true })} /><span aria-hidden="true">{plan.popular ? '★' : '☆'}</span><span className="sr-only">Mais procurado</span></label>
             </div>
           })}
         </div>
