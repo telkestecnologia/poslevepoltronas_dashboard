@@ -46,7 +46,8 @@ export function PriceTug({ plans, dailyCents, locked, onChange }: {
         style={{ left: `${note.x * 100}%`, ['--drift' as string]: `${note.drift}px`, ['--spin' as string]: `${note.spin}deg` }}
         onAnimationEnd={() => setNotes(current => current.filter(item => item.id !== note.id))}>💵</span>)}
     {ranges.map(({ plan, min, max }, index) => {
-      const tone = index === 0 ? 'coral' : index === ranges.length - 1 ? 'deep' : 'teal'
+      // O plano do meio em laranja (igual ao app).
+      const tone = index === 0 ? 'teal' : index === ranges.length - 1 ? 'deep' : 'coral'
       const perDay = plan.days > 0 ? Math.round(plan.priceCents / plan.days) : 0
       const ratio = Math.max(0, Math.min(1, (plan.priceCents - min) / Math.max(1, max - min)))
       return <label key={plan.id} className={`tug-slider tone-${tone}`}>
