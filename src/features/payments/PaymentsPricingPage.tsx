@@ -3,7 +3,6 @@ import { BadgeDollarSign, CreditCard, QrCode, Save } from 'lucide-react'
 import { api, type PaymentOptions, type PricingCatalog, type PricingPlan } from '../../api'
 import { currency } from '../../data/orders'
 import { getMessage } from '../../utils/errors'
-import { PriceTug } from './PriceTug'
 import './payments.css'
 
 /** Até 12x sem juros na fatura do Asaas (o mesmo limite do backend). */
@@ -196,11 +195,6 @@ export function PaymentsPricingPage({ credentials }: { credentials: string }) {
           </label>
         </div>
 
-        {/* Cabo de guerra dos preços: arrastar muda o preço do plano (vai para o campo dele abaixo). */}
-        {Number.isFinite(dailyCents) && <PriceTug dailyCents={dailyCents} locked={pricingBusy}
-          plans={plans.map(plan => ({ id: plan.id, name: plan.name, days: Number(plan.days), priceCents: toCents(plan.price) }))
-            .filter(plan => Number.isFinite(plan.priceCents))}
-          onChange={(id, cents) => { updatePlan(id, { price: toText(cents) }); setPricingNote(null) }} />}
         {/* Editor dos planos (igual ao app): uma linha por plano com nome, dias e preço sempre à mostra, a diária calculada
             e a conferência (economia sobre as diárias avulsas e até quantos dias o plano vale). */}
         <div className="pay-plan-table" role="table" aria-label="Planos">
