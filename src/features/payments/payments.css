@@ -91,3 +91,22 @@
 .pay-plan-range { margin: 0; font-size: 13.5px; line-height: 1.45; }
 .pay-plan-edit { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 10px; border: 0; border-top: 1px solid #e7e6e2; background: #fff; color: #127a84; font: inherit; font-weight: 700; cursor: pointer; }
 .pay-plan-fields { display: grid; gap: 10px; padding: 0 16px 16px; }
+
+/* Editor dos planos: tabela de preços. */
+.pay-plan-table { display: grid; gap: 8px; }
+.pay-plan-row { display: grid; grid-template-columns: minmax(150px, 2fr) 80px 120px 110px minmax(160px, 2fr) 90px; align-items: center; gap: 10px;
+  padding: 10px 12px; border: 1px solid #e7e6e2; border-radius: 12px; background: #fff; }
+.pay-plan-row.head { padding: 0 12px; border: 0; background: none; color: #7a8287; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+.pay-plan-row.popular { border-color: #f47a52; box-shadow: 0 0 0 1px #f47a52 inset; }
+.pay-plan-row input:not([type=radio]) { width: 100%; min-height: 40px; }
+.pay-plan-calc { padding: 9px 10px; border-radius: 10px; background: #e6f4f5; color: #127a84; font-weight: 700; text-align: center; }
+.pay-plan-checks { display: flex; flex-wrap: wrap; gap: 6px; }
+.pay-check { padding: 3px 9px; border-radius: 99px; background: #e9f6f1; color: #268d70; font-size: 12.5px; font-weight: 600; }
+.pay-check.bad { background: #fde8e4; color: #a3392a; }
+.pay-check.muted { background: #f6f5f2; color: #7a8287; }
+.pay-plan-row .pay-popular { justify-self: center; }
+@media (max-width: 900px) {
+  .pay-plan-row { grid-template-columns: 1fr 1fr; }
+  .pay-plan-row.head { display: none; }
+  .pay-plan-row > input:first-child, .pay-plan-checks { grid-column: 1 / -1; }
+}
