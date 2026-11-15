@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { BadgeDollarSign, CreditCard, QrCode, Save } from 'lucide-react'
+import { AlertCircle, BadgeDollarSign, ChevronUp, CreditCard, Pencil, QrCode, Save, Star, TrendingDown } from 'lucide-react'
 import { api, type PaymentOptions, type PricingCatalog, type PricingPlan } from '../../api'
 import { currency } from '../../data/orders'
 import { getMessage } from '../../utils/errors'
@@ -46,6 +46,7 @@ export function PaymentsPricingPage({ credentials }: { credentials: string }) {
   const [maxDays, setMaxDays] = useState('')
   const [minDays, setMinDays] = useState('')
   const [plans, setPlans] = useState<PlanForm[]>([])
+  const [editingPlan, setEditingPlan] = useState<string | null>(null)
   const [paymentBusy, setPaymentBusy] = useState(false)
   const [pricingBusy, setPricingBusy] = useState(false)
   const [paymentNote, setPaymentNote] = useState<{ tone: 'error' | 'ok'; text: string } | null>(null)
@@ -195,44 +196,62 @@ export function PaymentsPricingPage({ credentials }: { credentials: string }) {
           </label>
         </div>
 
-        <div className="pay-plans">
-          {plans.map(plan => {
+        {/* Planos em cartões de preço (igual ao app): nome e dias no topo, preço em destaque, diária, economia e até
+            quando vale. A edição abre em "Editar plano". */}
+        <div className="pay-plans pay-plan-cards">
+          {[...plans].sort((a, b) => Number(a.days) - Number(b.days)).map((plan, position) => {
             const days = Number(plan.days)
             const price = toCents(plan.price)
-            // Próximo plano (por dias): até ele, os dias extras saem pela diária deste plano.
             const next = plans.map(other => Number(other.days)).filter(other => other > days).sort((a, b) => a - b)[0]
             const planDaily = days > 0 && Number.isFinite(price) ? Math.round(price / days) : NaN
-            const savings = Number.isFinite(price) && Number.isFinite(dailyCents) && days > 0 ? days * dailyCents - price : NaN
-            return <fieldset key={plan.id} className="pay-plan">
+            const avulsa = Number.isFinite(dailyCents) && days > 0 ? days * dailyCents : NaN
+            const savings = Number.isFinite(price) && Number.isFinite(avulsa) ? avulsa - price : NaN
+            const example = next ? Math.min(days + 5, next - 1) : days + 5
+            const tone = ['teal', 'coral', 'deep'][position % 3]
+            const editing = editingPlan === plan.id
+            const ratio = Number.isFinite(price) && Number.isFinite(avulsa) && avulsa > 0 ? Math.min(1, price / avulsa) : 0
+            return <fieldset key={plan.id} className={`pay-plan-card tone-${tone}${plan.popular ? ' popular' : ''}`}>
               <legend className="sr-only">Plano {plan.name}</legend>
-              <label className="pay-field pay-plan-name">
-                <span>Nome do plano</span>
-                <input value={plan.name} maxLength={60} disabled={pricingBusy} required
-                  onChange={event => updatePlan(plan.id, { name: event.target.value })} />
-              </label>
-              <label className="pay-field">
-                <span>Dias</span>
-                <input type="number" min={Number(minDays) || 1} max={Number(maxDays) || MAX_DAYS} value={plan.days} disabled={pricingBusy} required
-                  onChange={event => updatePlan(plan.id, { days: event.target.value })} />
-              </label>
-              <label className="pay-field">
-                <span>Preço (R$)</span>
-                <input inputMode="decimal" value={plan.price} disabled={pricingBusy} required
-                  onChange={event => updatePlan(plan.id, { price: event.target.value })}
-                  onBlur={() => { if (Number.isFinite(price)) updatePlan(plan.id, { price: toText(price) }) }} />
-              </label>
-              <label className="pay-popular">
-                <input type="radio" name="popular" checked={plan.popular} disabled={pricingBusy}
-                  onChange={() => updatePlan(plan.id, { popular: true })} />
-                Mais procurado
-              </label>
-              <p className="pay-muted pay-plan-hint">
-                {Number.isFinite(planDaily) && <><strong>Diária de {currency(planDaily)}</strong>{' '}
-                  {next ? `de ${days} a ${next - 1} dias` : `a partir de ${days} dias`}{next ? ` (ex.: ${Math.min(days + 5, next - 1)} dias = ${currency(Math.min(days + 5, next - 1) * planDaily)})` : ''}. </>}
-                {Number.isFinite(savings) && savings >= 0
-                  ? `Economia de ${currency(savings)} sobre ${days} diárias avulsas.`
-                  : Number.isFinite(savings) ? `Mais caro que ${days} diárias avulsas: ajuste o preço.` : ''}
-              </p>
+              <div className="pay-plan-head"><strong>{plan.name || 'Plano sem nome'}</strong><span>{days > 0 ? `${days} dias` : '— dias'}</span></div>
+              <div className="pay-plan-body">
+                {plan.popular && <span className="pay-plan-ribbon"><Star size={11} fill="currentColor" /> MAIS PROCURADO</span>}
+                <div className="pay-plan-price">{Number.isFinite(price) ? currency(price) : 'R$ —'}</div>
+                <div className="pay-muted">{Number.isFinite(planDaily) ? `${currency(planDaily)} por dia` : 'Informe dias e preço'}</div>
+                {Number.isFinite(savings) && <span className={`pay-plan-save${savings >= 0 ? '' : ' bad'}`}>
+                  {savings >= 0 ? <TrendingDown size={14} /> : <AlertCircle size={14} />}
+                  {savings >= 0 ? `Economia de ${currency(savings)}` : `Mais caro que ${days} diárias avulsas`}</span>}
+                {Number.isFinite(avulsa) && avulsa > 0 && <div className="pay-plan-bar-wrap">
+                  <div className="pay-plan-bar"><span style={{ width: `${ratio * 100}%` }} /></div>
+                  <div className="pay-plan-bar-legend"><small>Plano</small><small>{days} diárias avulsas: {currency(avulsa)}</small></div>
+                </div>}
+                {Number.isFinite(planDaily) && <p className="pay-plan-range"><strong>{next ? `De ${days} a ${next - 1} dias` : `A partir de ${days} dias`}</strong>
+                  {` cada dia sai por ${currency(planDaily)}. Ex.: ${example} dias = ${currency(example * planDaily)}.`}</p>}
+              </div>
+              <button type="button" className="pay-plan-edit" aria-expanded={editing} onClick={() => setEditingPlan(editing ? null : plan.id)}>
+                {editing ? <ChevronUp size={16} /> : <Pencil size={15} />} {editing ? 'Fechar edição' : 'Editar plano'}</button>
+              {editing && <div className="pay-plan-fields">
+                <label className="pay-field pay-plan-name">
+                  <span>Nome do plano</span>
+                  <input value={plan.name} maxLength={60} disabled={pricingBusy} required
+                    onChange={event => updatePlan(plan.id, { name: event.target.value })} />
+                </label>
+                <label className="pay-field">
+                  <span>Dias</span>
+                  <input type="number" min={Number(minDays) || 1} max={Number(maxDays) || MAX_DAYS} value={plan.days} disabled={pricingBusy} required
+                    onChange={event => updatePlan(plan.id, { days: event.target.value })} />
+                </label>
+                <label className="pay-field">
+                  <span>Preço (R$)</span>
+                  <input inputMode="decimal" value={plan.price} disabled={pricingBusy} required
+                    onChange={event => updatePlan(plan.id, { price: event.target.value })}
+                    onBlur={() => { if (Number.isFinite(price)) updatePlan(plan.id, { price: toText(price) }) }} />
+                </label>
+                <label className="pay-popular">
+                  <input type="radio" name="popular" checked={plan.popular} disabled={pricingBusy}
+                    onChange={() => updatePlan(plan.id, { popular: true })} />
+                  Mais procurado
+                </label>
+              </div>}
             </fieldset>
           })}
         </div>

@@ -69,3 +69,25 @@
 .pay-tiles small { color: #7a8287; font-size: 12px; }
 .pay-tiles strong { font-size: 15px; color: #2a3236; }
 @media (max-width: 760px) { .pay-summary { grid-template-columns: 1fr; } }
+
+/* Planos em cartões de preço (igual ao app). */
+.pay-plan-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; }
+.pay-plan-card { min-width: 0; margin: 0; padding: 0; overflow: hidden; border: 1px solid #e7e6e2; border-radius: 16px; background: #fff; }
+.pay-plan-card.popular { border: 2px solid #f47a52; }
+.pay-plan-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 16px; color: #fff; }
+.pay-plan-head strong { font-size: 16px; }
+.pay-plan-head span { padding: 3px 10px; border-radius: 99px; background: rgba(255, 255, 255, 0.25); font-size: 13px; font-weight: 700; }
+.tone-teal .pay-plan-head { background: #1a9baa; } .tone-coral .pay-plan-head { background: #f47a52; } .tone-deep .pay-plan-head { background: #127a84; }
+.pay-plan-body { display: grid; gap: 8px; padding: 16px; }
+.pay-plan-ribbon { display: inline-flex; align-items: center; gap: 4px; justify-self: start; padding: 3px 10px; border-radius: 99px; background: #fef0ea; color: #f47a52; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; }
+.pay-plan-price { color: #2a3236; font-size: 30px; font-weight: 700; line-height: 1.1; }
+.pay-plan-save { display: inline-flex; align-items: center; gap: 6px; justify-self: start; padding: 4px 10px; border-radius: 99px; background: #e9f6f1; color: #268d70; font-size: 13px; font-weight: 700; }
+.pay-plan-save.bad { background: #fde8e4; color: #a3392a; }
+.pay-plan-bar-wrap { display: grid; gap: 4px; }
+.pay-plan-bar { height: 8px; overflow: hidden; border-radius: 4px; background: #f6f5f2; }
+.pay-plan-bar span { display: block; height: 100%; border-radius: 4px; }
+.tone-teal .pay-plan-bar span { background: #1a9baa; } .tone-coral .pay-plan-bar span { background: #f47a52; } .tone-deep .pay-plan-bar span { background: #127a84; }
+.pay-plan-bar-legend { display: flex; justify-content: space-between; color: #7a8287; }
+.pay-plan-range { margin: 0; font-size: 13.5px; line-height: 1.45; }
+.pay-plan-edit { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 10px; border: 0; border-top: 1px solid #e7e6e2; background: #fff; color: #127a84; font: inherit; font-weight: 700; cursor: pointer; }
+.pay-plan-fields { display: grid; gap: 10px; padding: 0 16px 16px; }
