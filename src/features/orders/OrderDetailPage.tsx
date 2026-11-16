@@ -182,6 +182,54 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
     return parts.length ? parts : null
   }
   /** Devolve a mensagem de erro (mostrada dentro da janela, que fica por cima da página) ou null se salvou. */
+  // Card de problemas: na página e, no computador, dentro da janela da saída, da entrega e da retirada.
+  function issuesCard(extra: string) {
+    if (!order) return null
+    return <section className={`panel od-card${extra}`} aria-labelledby={`od-issues-title${extra ? "-w" : ""}`}>
+          <div className="od-card-head">
+            <h2 id={`od-issues-title${extra ? "-w" : ""}`}><AlertCircle size={18} /> Encontrou algum problema?
+              {openIssues.length > 0 && <span className="od-count">{openIssues.length} em aberto</span>}
+              {order.issues.length > 0 && openIssues.length === 0 && <span className="od-count resolved">todos resolvidos</span>}</h2>
+            {!issueOpen && <button className="button secondary" onClick={() => setIssueOpen(true)}>Registrar problema</button>}
+          </div>
+          {issueOpen && <form className="od-issue-form" onSubmit={event => {
+            event.preventDefault()
+            void perform(() => api.openOrderIssue(credentials, order.id, issueTitle, issueDescription), 'Problema registrado.',
+              () => { setIssueTitle(''); setIssueDescription(''); setIssueOpen(false) })
+          }}>
+            <label className="order-field">O que aconteceu?
+              <input required maxLength={100} value={issueTitle} onChange={event => setIssueTitle(event.target.value)}
+                placeholder="Ex.: Cliente ausente na entrega" autoFocus /></label>
+            <label className="order-field">Detalhes
+              <textarea required maxLength={1000} rows={3} value={issueDescription} onChange={event => setIssueDescription(event.target.value)}
+                placeholder="Descreva o ocorrido para a equipe" /></label>
+            <div className="od-actions">
+              <button type="button" className="button secondary" disabled={busy} onClick={() => setIssueOpen(false)}>Cancelar</button>
+              <button className="button primary" disabled={busy}>Registrar</button>
+            </div>
+          </form>}
+          {issues.length === 0 && !issueOpen && <p className="order-muted">Nenhum problema registrado neste pedido.</p>}
+          {issues.map(issue => <article key={issue.id} className={`od-issue${issue.status === 'OPEN' ? ' open' : ''}`}>
+            <div className="od-issue-head"><strong>{issue.title}</strong>
+              <span className={`order-status ${issue.status === 'OPEN' ? 'status-issue_open' : 'status-completed'}`}>
+                {issue.status === 'OPEN' ? 'Em aberto' : 'Resolvido'}</span></div>
+            <p>{issue.description}</p>
+            <small>Aberto por {actorLabel(issue.openedBy, couriers)} em {dateTimeLabel(issue.openedAt)}</small>
+            {issue.status === 'RESOLVED'
+              ? <p className="od-resolution"><strong>Resolução:</strong> {issue.resolution}
+                {issue.resolvedBy && <small> — {actorLabel(issue.resolvedBy, couriers)}{issue.resolvedAt ? `, ${dateTimeLabel(issue.resolvedAt)}` : ''}</small>}</p>
+              : <form className="od-resolve" onSubmit={event => {
+                event.preventDefault()
+                void perform(() => api.resolveOrderIssue(credentials, order.id, issue.id, resolutions[issue.id] ?? ''), 'Problema resolvido.',
+                  () => setResolutions(current => ({ ...current, [issue.id]: '' })))
+              }}>
+                <input aria-label={`Resolução de ${issue.title}`} required maxLength={1000} placeholder="Como foi resolvido?"
+                  value={resolutions[issue.id] ?? ''} onChange={event => setResolutions(current => ({ ...current, [issue.id]: event.target.value }))} />
+                <button className="button secondary" disabled={busy || !(resolutions[issue.id] ?? '').trim()}>Resolver</button>
+              </form>}
+          </article>)}
+        </section>
+  }
   async function saveSchedule(changes: Parameters<typeof api.changeOrderSchedule>[2]) {
     setBusy(true)
     setError('')
@@ -285,7 +333,8 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
       })}
     </ol>}
     {/* No computador: a jornada inteira numa linha ligada (substitui as etapas acima). */}
-    {step >= 0 && <OrderJourney order={order} couriers={couriers} onOpenMedia={setMediaPhase} renderActions={stepActions} />}
+    {step >= 0 && <OrderJourney order={order} couriers={couriers} onOpenMedia={setMediaPhase} renderActions={stepActions}
+      renderSide={key => !contractOnly && ['DEPARTURE', 'DELIVERY_PENDING', 'PICKUP_PENDING'].includes(key) ? issuesCard(' oj-issues') : null} />}
     {/* Sem pagamento confirmado não há pedido: só as etapas do atendimento, com o que aconteceu de fato. */}
     {step < 0 && <AttendanceSteps order={order} />}
 
@@ -380,50 +429,7 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
         </section>
 
 
-        {!contractOnly && <section className="panel od-card" aria-labelledby="od-issues-title">
-          <div className="od-card-head">
-            <h2 id="od-issues-title"><AlertCircle size={18} /> Encontrou algum problema?
-              {openIssues.length > 0 && <span className="od-count">{openIssues.length} em aberto</span>}
-              {order.issues.length > 0 && openIssues.length === 0 && <span className="od-count resolved">todos resolvidos</span>}</h2>
-            {!issueOpen && <button className="button secondary" onClick={() => setIssueOpen(true)}>Registrar problema</button>}
-          </div>
-          {issueOpen && <form className="od-issue-form" onSubmit={event => {
-            event.preventDefault()
-            void perform(() => api.openOrderIssue(credentials, order.id, issueTitle, issueDescription), 'Problema registrado.',
-              () => { setIssueTitle(''); setIssueDescription(''); setIssueOpen(false) })
-          }}>
-            <label className="order-field">O que aconteceu?
-              <input required maxLength={100} value={issueTitle} onChange={event => setIssueTitle(event.target.value)}
-                placeholder="Ex.: Cliente ausente na entrega" autoFocus /></label>
-            <label className="order-field">Detalhes
-              <textarea required maxLength={1000} rows={3} value={issueDescription} onChange={event => setIssueDescription(event.target.value)}
-                placeholder="Descreva o ocorrido para a equipe" /></label>
-            <div className="od-actions">
-              <button type="button" className="button secondary" disabled={busy} onClick={() => setIssueOpen(false)}>Cancelar</button>
-              <button className="button primary" disabled={busy}>Registrar</button>
-            </div>
-          </form>}
-          {issues.length === 0 && !issueOpen && <p className="order-muted">Nenhum problema registrado neste pedido.</p>}
-          {issues.map(issue => <article key={issue.id} className={`od-issue${issue.status === 'OPEN' ? ' open' : ''}`}>
-            <div className="od-issue-head"><strong>{issue.title}</strong>
-              <span className={`order-status ${issue.status === 'OPEN' ? 'status-issue_open' : 'status-completed'}`}>
-                {issue.status === 'OPEN' ? 'Em aberto' : 'Resolvido'}</span></div>
-            <p>{issue.description}</p>
-            <small>Aberto por {actorLabel(issue.openedBy, couriers)} em {dateTimeLabel(issue.openedAt)}</small>
-            {issue.status === 'RESOLVED'
-              ? <p className="od-resolution"><strong>Resolução:</strong> {issue.resolution}
-                {issue.resolvedBy && <small> — {actorLabel(issue.resolvedBy, couriers)}{issue.resolvedAt ? `, ${dateTimeLabel(issue.resolvedAt)}` : ''}</small>}</p>
-              : <form className="od-resolve" onSubmit={event => {
-                event.preventDefault()
-                void perform(() => api.resolveOrderIssue(credentials, order.id, issue.id, resolutions[issue.id] ?? ''), 'Problema resolvido.',
-                  () => setResolutions(current => ({ ...current, [issue.id]: '' })))
-              }}>
-                <input aria-label={`Resolução de ${issue.title}`} required maxLength={1000} placeholder="Como foi resolvido?"
-                  value={resolutions[issue.id] ?? ''} onChange={event => setResolutions(current => ({ ...current, [issue.id]: event.target.value }))} />
-                <button className="button secondary" disabled={busy || !(resolutions[issue.id] ?? '').trim()}>Resolver</button>
-              </form>}
-          </article>)}
-        </section>}
+        {!contractOnly && issuesCard('')}
         {/* No computador o histórico completo fica aqui, largo e agrupado por dia (substitui a linha do tempo lateral). */}
         <OrderHistoryFull order={order} couriers={couriers} />
       </div>

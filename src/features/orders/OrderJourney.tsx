@@ -39,12 +39,14 @@ function currentIndex(order: Order) {
  * Jornada do pedido (só no computador): todas as etapas numa linha, ligadas por um traço que vai se preenchendo.
  * Cada etapa diz o que é, quando aconteceu (ou quando está prevista) e quem fez.
  */
-export function OrderJourney({ order, couriers, onOpenMedia, renderActions }: {
+export function OrderJourney({ order, couriers, onOpenMedia, renderActions, renderSide }: {
   order: Order; couriers: Pick<Courier, 'id' | 'name'>[]
   /** Abre as fotos e vídeos da entrega ou da retirada. */
   onOpenMedia?: (phase: 'DELIVERY' | 'PICKUP') => void
   /** O que dá para fazer em cada etapa (avançar, dia e horário, fotos...), mostrado dentro da janela da bolinha. */
   renderActions?: (key: string, state: { done: boolean; current: boolean }) => ReactNode
+  /** Card ao lado do título da janela (registro de problemas na saída, na entrega e na retirada). */
+  renderSide?: (key: string) => ReactNode
 }) {
   const [opened, setOpened] = useState<number | null>(null)
   const steps = stepsOf(order)
@@ -82,15 +84,15 @@ export function OrderJourney({ order, couriers, onOpenMedia, renderActions }: {
       })}
     </ol>
     {opened !== null && <StepWindow order={order} couriers={couriers} steps={steps} index={opened} now={now}
-      onOpenMedia={onOpenMedia} onClose={() => setOpened(null)}
+      onOpenMedia={onOpenMedia} onClose={() => setOpened(null)} side={renderSide?.(steps[opened].key)}
       actions={renderActions?.(steps[opened].key, { done: opened < now, current: opened === now })} />}
   </section>
 }
 
 /** Janela de uma etapa: o que ela significa, quando aconteceu e tudo o que foi feito nela (pelo histórico). */
-function StepWindow({ order, couriers, steps, index, now, onOpenMedia, onClose, actions }: {
+function StepWindow({ order, couriers, steps, index, now, onOpenMedia, onClose, actions, side }: {
   order: Order; couriers: Pick<Courier, 'id' | 'name'>[]; steps: Step[]; index: number; now: number
-  onOpenMedia?: (phase: 'DELIVERY' | 'PICKUP') => void; onClose: () => void; actions?: ReactNode
+  onOpenMedia?: (phase: 'DELIVERY' | 'PICKUP') => void; onClose: () => void; actions?: ReactNode; side?: ReactNode
 }) {
   const step = steps[index]
   const done = index < now
@@ -115,7 +117,7 @@ function StepWindow({ order, couriers, steps, index, now, onOpenMedia, onClose, 
   const Icon = step.icon
   return <div className="modal-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) onClose() }}>
     <section className={`modal oj-window ${done ? 'done' : current ? 'current' : 'next'}`} role="dialog" aria-modal="true" aria-labelledby="oj-window-title">
-      <div className={`oj-window-intro${['DEPARTURE', 'DELIVERY_PENDING', 'PICKUP_PENDING'].includes(step.key) ? ' with-art' : ''}`}>
+      <div className={`oj-window-intro${side ? ' with-side' : ''}`}>
       <div className="oj-window-intro-text">
       <header className="oj-window-head">
         <span className="oj-window-icon"><Icon size={24} /></span>
@@ -129,8 +131,7 @@ function StepWindow({ order, couriers, steps, index, now, onOpenMedia, onClose, 
         {current && <div><span className="oj-live" />Esta é a etapa em andamento agora.</div>}
       </div>
       </div>
-      {['DEPARTURE', 'DELIVERY_PENDING', 'PICKUP_PENDING'].includes(step.key) &&
-        <img className="oj-window-art" src="/entregador.webp" alt="Entregador da Pós Leve colocando a poltrona embalada na caminhonete" />}
+      {side && <div className="oj-window-side">{side}</div>}
       </div>
       {actions && <div className="oj-window-actions">{actions}</div>}
       <h3>O que foi feito</h3>
