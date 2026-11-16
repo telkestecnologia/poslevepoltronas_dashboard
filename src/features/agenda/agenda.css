@@ -53,3 +53,69 @@
 .agenda-today-tiles > button em { color: rgba(255, 255, 255, 0.75); font-size: 11.5px; font-style: normal; }
 .agenda-today-tiles > button.delivery .agenda-today-icon { color: var(--teal-dark); }
 .agenda-today-tiles > button.pickup .agenda-today-icon { color: var(--coral); }
+
+/* ---------- Computador: agenda mais limpa, com hierarquia clara (o celular não muda) ---------- */
+@media (min-width: 901px) {
+  /* Cartões de hoje: ícone grande à esquerda, número em destaque e a explicação embaixo. */
+  .dashboard-shell .agenda-today-tiles { gap: 18px; margin-bottom: 22px; }
+  .dashboard-shell .agenda-today-tiles > button {
+    position: relative; overflow: hidden; grid-template-columns: 64px minmax(0, 1fr); grid-template-rows: auto auto auto;
+    column-gap: 18px; row-gap: 2px; align-items: center; padding: 22px 26px; border: 0; border-radius: 20px;
+    box-shadow: 0 10px 26px rgba(15, 63, 68, 0.14); transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .dashboard-shell .agenda-today-tiles > button.delivery { background: linear-gradient(135deg, #1a9baa 0%, #0f5f68 100%); }
+  .dashboard-shell .agenda-today-tiles > button.pickup { background: linear-gradient(135deg, #f0907e 0%, #d65f4b 100%); }
+  .dashboard-shell .agenda-today-tiles > button::after {
+    content: ''; position: absolute; right: -40px; top: -40px; width: 170px; height: 170px; border-radius: 50%; background: rgba(255, 255, 255, 0.1);
+  }
+  .dashboard-shell .agenda-today-tiles > button:hover { transform: translateY(-3px); box-shadow: 0 16px 34px rgba(15, 63, 68, 0.2); }
+  .dashboard-shell .agenda-today-tiles > button.selected { box-shadow: 0 0 0 4px #fff, 0 0 0 7px rgba(18, 114, 125, 0.35), 0 16px 34px rgba(15, 63, 68, 0.2); }
+  .dashboard-shell .agenda-today-tiles > button.pickup.selected { box-shadow: 0 0 0 4px #fff, 0 0 0 7px rgba(232, 116, 97, 0.4), 0 16px 34px rgba(15, 63, 68, 0.2); }
+  .dashboard-shell .agenda-today-icon { grid-row: 1 / 4; width: 64px; height: 64px; margin: 0; border-radius: 18px; box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12); }
+  .dashboard-shell .agenda-today-icon svg { width: 28px; height: 28px; }
+  .dashboard-shell .agenda-today-tiles > button strong { font-family: 'Outfit', sans-serif; font-size: 42px; line-height: 1; }
+  .dashboard-shell .agenda-today-tiles > button small { font-size: 15px; }
+  .dashboard-shell .agenda-today-tiles > button em { font-size: 12.5px; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(255, 255, 255, 0.4); }
+
+  /* Painel do dia */
+  .dashboard-shell .agenda-day-panel { padding: 28px 30px; border-radius: 20px; }
+  .dashboard-shell .agenda-day-heading h2 { font-size: 26px; text-transform: capitalize; }
+  .dashboard-shell .agenda-day-heading p { font-size: 14px; }
+  .dashboard-shell .agenda-day-summary { gap: 10px; margin-bottom: 26px; }
+  .dashboard-shell .agenda-day-summary span { padding: 8px 14px; border-radius: 99px; font-size: 13.5px; }
+  .dashboard-shell .agenda-day-summary span:nth-child(1) { background: #e3f4f2; color: #12727d; }
+  .dashboard-shell .agenda-day-summary span:nth-child(2) { background: #fdebe6; color: #c4532c; }
+  .dashboard-shell .agenda-day-summary strong { color: inherit; font-size: 15px; }
+
+  /* Cidade: título com o número de serviços em destaque legível. */
+  .dashboard-shell .agenda-city-group + .agenda-city-group { margin-top: 30px; }
+  .dashboard-shell .agenda-city-heading { align-items: center; padding-bottom: 10px; border-bottom: 2px solid #e4ecea; }
+  .dashboard-shell .agenda-city-heading h3 { font-size: 19px; color: #1f3340; }
+  .dashboard-shell .agenda-city-heading h3::before { content: '📍 '; }
+  .dashboard-shell .agenda-city-heading span { padding: 4px 12px; background: #e3f4f2; color: #12727d; font-size: 12.5px; }
+
+  /* Serviço: faixa de horário colorida à esquerda e o conteúdo organizado. */
+  .dashboard-shell .agenda-item {
+    margin-top: 14px; gap: 0; padding: 0 !important; overflow: hidden; border-radius: 16px !important;
+    box-shadow: 0 1px 2px rgba(15, 63, 68, 0.04); transition: transform 0.18s, box-shadow 0.18s;
+  }
+  .dashboard-shell .agenda-item:hover { transform: translateY(-2px); background: #fff; box-shadow: 0 12px 28px rgba(15, 63, 68, 0.1); }
+  .dashboard-shell .agenda-item-time { width: 112px; padding: 20px 10px; gap: 10px; align-content: center; }
+  .dashboard-shell .agenda-item.delivery .agenda-item-time { background: #e3f4f2; }
+  .dashboard-shell .agenda-item.pickup .agenda-item-time { background: #fdebe6; }
+  .dashboard-shell .agenda-item-time strong { font-family: 'Outfit', sans-serif; font-size: 26px; }
+  .dashboard-shell .agenda-kind-icon { width: 44px; height: 44px; background: #fff !important; box-shadow: 0 4px 10px rgba(15, 63, 68, 0.08); }
+  .dashboard-shell .agenda-item-body { gap: 4px; padding: 16px 20px; }
+  .dashboard-shell .agenda-item-top { margin-bottom: 4px; }
+  .dashboard-shell .agenda-kind { padding: 3px 10px; border-radius: 99px; font-size: 12px; }
+  .dashboard-shell .agenda-item-status { padding: 4px 12px; font-size: 12px; }
+  .dashboard-shell .agenda-item h4 { margin: 0 0 2px; font-size: 18px; color: #1f3340; }
+  .dashboard-shell .agenda-item p { margin-top: 0; color: #55696f; font-size: 13.5px; }
+  .dashboard-shell .agenda-item-footer { align-items: center; margin-top: 12px; padding-top: 12px; font-size: 13px; }
+  .dashboard-shell .agenda-item-footer a { padding: 6px 12px; border-radius: 99px; background: #f1f7f6; }
+  .dashboard-shell .agenda-item-footer a::before { content: '📞 '; }
+  .dashboard-shell .agenda-open { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 99px; background: #12727d; color: #fff; }
+  .dashboard-shell .agenda-item.pickup .agenda-open { background: #d65f4b; }
+  .dashboard-shell .agenda-empty { padding: 50px 16px; }
+  .dashboard-shell .agenda-note { font-size: 13px; }
+}
