@@ -14,7 +14,7 @@ import { branchLabel, chairName } from '../../utils/branches'
 import { getMessage } from '../../utils/errors'
 import { brazilPhoneDigits, displayPhone } from '../../utils/phone'
 import { OrderEvidencePanel } from './OrderEvidencePanel'
-import { EarlySchedule } from './EarlySchedule'
+import { EarlySchedule, InlineSchedule } from './EarlySchedule'
 import { MediaCarousel } from './MediaCarousel'
 import { AttendanceSteps } from './AttendanceSteps'
 import { OrderHistoryFull, OrderJourney } from './OrderJourney'
@@ -147,7 +147,7 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
   function stepActions(key: string, { done, current }: { done: boolean; current: boolean }) {
     if (!order) return null
     const phase = key === 'DEPARTURE' ? 'DEPARTURE' : key === 'DELIVERY_PENDING' ? 'DELIVERY' : key === 'PICKUP_PENDING' ? 'PICKUP' : null
-    const scheduleKind = phase === 'DEPARTURE' ? 'delivery' : phase === 'PICKUP' ? 'pickup' : null
+    const scheduleKind = phase === 'DEPARTURE' || phase === 'DELIVERY' ? 'delivery' : phase === 'PICKUP' ? 'pickup' : null
     const parts: ReactNode[] = []
     if (current && nextStatus && !contractOnly) parts.push(<div key="advance" className="oj-action oj-advance">
       <h4>Concluiu esta etapa? Avance para “{statusLabels[nextStatus].toLowerCase()}”</h4>
@@ -155,16 +155,17 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
       <div className="od-next-form">
         <label className="order-field"><span>Observação <span className="optional">(opcional)</span></span>
           <input value={statusNote} onChange={event => setStatusNote(event.target.value)} maxLength={300}
-            placeholder="Ex.: entrega reagendada com o cliente" /></label>
+            placeholder="Ex.: poltrona instalada e cliente orientado" /></label>
         <button className="button primary" disabled={busy || !!missingEvidence} onClick={advance}>Avançar <ArrowRight size={16} /></button>
       </div>
       {missingEvidence && <p className="oj-blocked">🔒 {missingEvidence}</p>}
     </div>)
     if (phase && step >= 0 && !contractOnly) {
       if (canChangeSchedule && scheduleKind && !done) parts.push(<div key="schedule" className="oj-action oj-schedule">
-        <h4>{scheduleKind === 'delivery' ? 'Dia e horário da entrega' : 'Dia e horário da retirada'}</h4>
-        <p>{scheduleKind === 'delivery' ? 'Dá para antecipar ou adiar a entrega.' : 'Dá para antecipar a retirada ou prorrogar o aluguel.'}</p>
-        <EarlySchedule order={order} kind={scheduleKind} busy={busy} current={current} onSave={saveSchedule} /></div>)
+        <h4>{scheduleKind === 'delivery' ? '📅 Reagendar a entrega' : '📅 Reagendar ou prorrogar a retirada'}</h4>
+        <p>{scheduleKind === 'delivery' ? 'Escolha no calendário o novo dia e digite o horário combinado com o cliente.'
+          : 'Escolha no calendário o novo dia da retirada e o horário.'}</p>
+        <InlineSchedule order={order} kind={scheduleKind} busy={busy} onSave={saveSchedule} /></div>)
       if (phase === 'DEPARTURE') parts.push(<div key="departure" className="od-notice" role="note">
         <span className="od-notice-icon"><Megaphone size={16} /></span>
         <div><strong>Comunicado ao cliente</strong>

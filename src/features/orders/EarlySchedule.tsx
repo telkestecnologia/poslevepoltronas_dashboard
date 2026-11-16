@@ -79,3 +79,56 @@ export function EarlySchedule({ order, kind, busy, current, onSave }: {
     </div>, document.body)}
   </>
 }
+
+/**
+ * Reagendar direto na janela da etapa (sem abrir outra janela): calendário com o novo dia e o horário.
+ * Entrega: antecipar ou adiar. Retirada: antecipar ou prorrogar a locação.
+ */
+export function InlineSchedule({ order, kind, busy, onSave }: {
+  order: Order; kind: 'delivery' | 'pickup'; busy: boolean
+  onSave: (changes: { deliveryDate?: string | null; deliveryTime?: string | null; pickupDate?: string | null; pickupTime?: string | null }) => Promise<string | null>
+}) {
+  const delivery = kind === 'delivery'
+  const day = delivery ? order.deliveryDate ?? order.start : order.pickupDate ?? order.end
+  const time = delivery ? order.deliveryTime : order.pickupTime
+  const moved = delivery ? !!order.deliveryDate : !!order.pickupDate
+  const [date, setDate] = useState('')
+  const [hour, setHour] = useState('')
+  const [error, setError] = useState('')
+  const [done, setDone] = useState('')
+  const today = todayIso()
+  const min = delivery ? today : [order.deliveryDate ?? order.start, today].sort()[1]
+  const max = delivery ? order.pickupDate ?? order.end : undefined
+  const changedDate = date && date !== day ? date : null
+  const hourOk = validTime(hour)
+
+  async function save() {
+    setError('')
+    setDone('')
+    const failure = await onSave(delivery ? { deliveryDate: changedDate, deliveryTime: hourOk ? hour : null }
+      : { pickupDate: changedDate, pickupTime: hourOk ? hour : null })
+    if (failure) { setError(failure); return }
+    setDone(`Reagendado para ${dayLabel(changedDate ?? day)}${hourOk ? ` às ${hour}` : ''}.`)
+    setDate('')
+    setHour('')
+  }
+
+  return <div className="od-inline-schedule">
+    <div className="od-inline-now"><CalendarClock size={18} />
+      <span>{moved ? 'Combinada' : 'Prevista'} para <b>{dayLabel(day)}</b>{time ? <> às <b>{time.slice(0, 5)}</b></> : ' (sem horário)'}</span></div>
+    {!delivery && <p className="field-help od-extend-help">Para <strong>prorrogar</strong>, escolha um dia depois de {shortDay(day)}.
+      A poltrona fica bloqueada nos dias a mais (se estiver livre). O valor não muda sozinho: combine a cobrança com o cliente.</p>}
+    <div className="od-inline-fields">
+      <RentalDatePicker label={delivery ? 'Novo dia da entrega' : 'Novo dia da retirada'} date={date || day} minDate={min} maxDate={max}
+        onChange={value => { setDate(value); setError(''); setDone('') }} />
+      <label className="order-field"><span>Novo horário</span>
+        <input type="text" inputMode="numeric" placeholder={time ? time.slice(0, 5) : '14:00'} maxLength={5} value={hour}
+          onChange={event => { setHour(maskTime(event.target.value)); setDone('') }} aria-invalid={hour !== '' && !hourOk} /></label>
+      <button type="button" className="button primary" disabled={busy || (hour !== '' && !hourOk) || (!changedDate && !hourOk)}
+        onClick={() => void save()}><CalendarClock size={16} /> Reagendar</button>
+    </div>
+    {hour !== '' && !hourOk && <p className="field-help od-time-error">Use o formato 24 h, por exemplo 14:30.</p>}
+    {error && <div className="form-error" role="alert">{error}</div>}
+    {done && <p className="od-inline-done" role="status">✓ {done}</p>}
+  </div>
+}

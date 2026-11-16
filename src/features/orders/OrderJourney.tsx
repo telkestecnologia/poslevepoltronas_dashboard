@@ -115,6 +115,8 @@ function StepWindow({ order, couriers, steps, index, now, onOpenMedia, onClose, 
   const Icon = step.icon
   return <div className="modal-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) onClose() }}>
     <section className={`modal oj-window ${done ? 'done' : current ? 'current' : 'next'}`} role="dialog" aria-modal="true" aria-labelledby="oj-window-title">
+      <div className={`oj-window-intro${['DEPARTURE', 'DELIVERY_PENDING', 'PICKUP_PENDING'].includes(step.key) ? ' with-art' : ''}`}>
+      <div className="oj-window-intro-text">
       <header className="oj-window-head">
         <span className="oj-window-icon"><Icon size={24} /></span>
         <div><span className="oj-tag">{done ? 'Feito' : current ? 'Agora' : 'Próxima'} • etapa {index + 1} de {steps.length}</span>
@@ -125,6 +127,10 @@ function StepWindow({ order, couriers, steps, index, now, onOpenMedia, onClose, 
         {doneEvent && <div><CheckCircle2 size={16} /><span>Concluída em <b>{dateTimeLabel(doneEvent.at)}</b> por <b>{actorLabel(doneEvent.actor, couriers)}</b></span></div>}
         {!done && step.planned && <div><CalendarClock size={16} /><span>Prevista para <b>{weekdayDateLabel(step.planned)}</b></span></div>}
         {current && <div><span className="oj-live" />Esta é a etapa em andamento agora.</div>}
+      </div>
+      </div>
+      {['DEPARTURE', 'DELIVERY_PENDING', 'PICKUP_PENDING'].includes(step.key) &&
+        <img className="oj-window-art" src="/entregador.webp" alt="Entregador da Pós Leve colocando a poltrona embalada na caminhonete" />}
       </div>
       {actions && <div className="oj-window-actions">{actions}</div>}
       <h3>O que foi feito</h3>
