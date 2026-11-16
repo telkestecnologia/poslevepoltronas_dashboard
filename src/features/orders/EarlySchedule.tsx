@@ -2,14 +2,23 @@ import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { CalendarClock, X } from 'lucide-react'
 import type { Order } from '../../api'
+import { RentalDatePicker } from '../overview/RentalDatePicker'
 
 const dayLabel = (iso: string) => new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' })
   .format(new Date(`${iso}T12:00:00Z`))
+const shortDay = (iso: string) => dayLabel(iso).slice(0, 5)
 const todayIso = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Fortaleza' })
+/** Horário sempre em 24 h (o campo nativo de hora mostra AM/PM em navegadores em inglês). */
+const maskTime = (value: string) => {
+  const digits = value.replace(/\D/g, '').slice(0, 4)
+  return digits.length > 2 ? `${digits.slice(0, 2)}:${digits.slice(2)}` : digits
+}
+const validTime = (value: string) => /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(value)
 
 /**
  * Entrega ou retirada antecipada ou posterior (igual ao app): um botão discreto "Dia e horário" ao lado da etapa,
- * que abre uma janela pequena com o dia e o horário. Dias fora do bloqueio conferem se a poltrona está livre.
+ * que abre uma janela pequena com o dia e o horário. Na retirada, é também onde se prorroga a locação (retirada
+ * posterior). Dias fora do bloqueio conferem se a poltrona está livre; o preço não muda.
  */
 export function EarlySchedule({ order, kind, busy, current, onSave }: {
   order: Order; kind: 'delivery' | 'pickup'; busy: boolean
@@ -28,27 +37,38 @@ export function EarlySchedule({ order, kind, busy, current, onSave }: {
   const min = delivery ? today : [order.deliveryDate ?? order.start, today].sort()[1]
   const max = delivery ? order.pickupDate ?? order.end : undefined
   const changedDate = date && date !== day ? date : null
+  const hourOk = validTime(hour)
+  const title = delivery ? 'Entrega antecipada ou posterior' : 'Prorrogar ou antecipar a retirada'
   const close = () => { setOpen(false); setDate(''); setHour('') }
 
   async function save() {
-    const ok = await onSave(delivery ? { deliveryDate: changedDate, deliveryTime: hour || null } : { pickupDate: changedDate, pickupTime: hour || null })
+    const changedHour = hourOk ? hour : null
+    const ok = await onSave(delivery ? { deliveryDate: changedDate, deliveryTime: changedHour } : { pickupDate: changedDate, pickupTime: changedHour })
     if (ok) close()
   }
 
   return <>
     <span className="od-step-when">{moved ? 'Combinada' : 'Prevista'} para {dayLabel(day)}{time ? ` às ${time.slice(0, 5)}` : ''}</span>
-    <button type="button" className={`od-media-button${current ? ' now' : ''}`} onClick={() => setOpen(true)}><CalendarClock size={15} /><span className="od-change"><small>ALTERAR</small>Dia e horário</span></button>
+    <button type="button" className={`od-media-button${current ? ' now' : ''}`} onClick={() => setOpen(true)}
+      title={delivery ? undefined : 'Mudar o dia da retirada ou prorrogar a locação do cliente'}>
+      <CalendarClock size={15} /><span className="od-change"><small>{delivery ? 'ALTERAR' : 'ALTERAR OU PRORROGAR'}</small>Dia e horário</span></button>
     {open && createPortal(<div className="modal-backdrop" onMouseDown={event => { if (event.target === event.currentTarget && !busy) close() }}>
-      <section className="modal od-early-modal" role="dialog" aria-modal="true" aria-label={delivery ? 'Entrega antecipada ou posterior' : 'Retirada antecipada ou posterior'}>
+      <section className="modal od-early-modal" role="dialog" aria-modal="true" aria-label={title}>
         <div className="modal-head"><div><span className="eyebrow">PEDIDO • {order.customerName}</span>
-          <h2>{delivery ? 'Entrega antecipada ou posterior' : 'Retirada antecipada ou posterior'}</h2></div>
+          <h2>{title}</h2></div>
           <button className="icon-button" aria-label="Fechar" onClick={close} disabled={busy}><X size={20} /></button></div>
         <form className="modal-form" onSubmit={event => { event.preventDefault(); void save() }}>
           <p className="field-help">{moved ? 'Combinada' : 'Prevista'} para {dayLabel(day)}{time ? ` às ${time.slice(0, 5)}` : ''}.</p>
-          <label>Dia<input type="date" value={date || day} min={min} max={max} onChange={event => setDate(event.target.value)} /></label>
-          <label>Horário<input type="time" value={hour} onChange={event => setHour(event.target.value)} /></label>
+          {!delivery && <p className="field-help od-extend-help">Para <strong>prorrogar</strong> a locação do cliente, escolha um dia
+            depois de {shortDay(day)}. A poltrona fica bloqueada nos dias a mais (se estiver livre). O valor não muda sozinho:
+            combine a cobrança dos dias extras com o cliente.</p>}
+          <RentalDatePicker label="Dia" date={date || day} minDate={min} maxDate={max} onChange={setDate} />
+          <label>Horário<input type="text" inputMode="numeric" placeholder={time ? time.slice(0, 5) : '14:00'} maxLength={5}
+            value={hour} onChange={event => setHour(maskTime(event.target.value))}
+            aria-invalid={hour !== '' && !hourOk} /></label>
+          {hour !== '' && !hourOk && <p className="field-help od-time-error">Use o formato 24 h, por exemplo 14:30.</p>}
           <div className="modal-actions"><button type="button" className="button secondary" onClick={close} disabled={busy}>Cancelar</button>
-            <button type="submit" className="button primary" disabled={busy || (!changedDate && !hour)}>Salvar</button></div>
+            <button type="submit" className="button primary" disabled={busy || (hour !== '' && !hourOk) || (!changedDate && !hourOk)}>Salvar</button></div>
         </form>
       </section>
     </div>, document.body)}

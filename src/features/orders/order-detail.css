@@ -216,6 +216,12 @@
 .od-step-actions { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .od-step-when { color: #7a8287; font-size: 13px; }
 .od-early-modal { width: min(100%, 420px); }
+.od-extend-help { margin: -8px 0 0; padding: 10px 12px; border-radius: 10px; background: #eef7f5; color: #2f5a5f; line-height: 1.45; }
+.od-time-error { margin: -12px 0 0; color: #b3412f; }
+/* Calendário em pt-BR dentro da janela: aberto no fluxo (a janela rola), não por cima dela. */
+.od-early-modal .overview-rentals-date { font-size: 12px; color: #40535e; gap: 8px; min-width: 0; }
+.od-early-modal .overview-rentals-date-trigger { min-height: 46px; padding: 0 14px; border-color: #dce6e5; border-radius: 10px; font-size: 14px; }
+.od-early-modal .overview-rentals-calendar { position: static; width: 100%; max-width: none; margin-top: 4px; box-shadow: none; }
 
 /* Nome da etapa que abre e fecha o conteúdo. */
 .od-step-toggle { display: inline-flex; align-items: center; gap: 6px; padding: 0; border: 0; background: none; color: #127a84; cursor: pointer; }
