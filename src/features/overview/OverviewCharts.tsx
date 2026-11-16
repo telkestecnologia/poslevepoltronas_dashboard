@@ -63,7 +63,7 @@ export function OverviewCharts({ credentials, rentals }: { credentials: string; 
   return <section className="overview-charts" aria-label="Gráficos da operação">
     <MonthlyChart report={report} />
     <OccupancyChart rentals={rentals} />
-    <BranchRevenue report={report} />
+    <BranchRevenue report={report} rentals={rentals} />
     <PaymentMix methods={methods} />
   </section>
 }
@@ -149,8 +149,13 @@ function OccupancyChart({ rentals }: { rentals: RentalOverview }) {
 }
 
 /** Quanto cada filial recebeu no período, em barras deitadas com a fatia de cada uma. */
-function BranchRevenue({ report }: { report: FinancialReport | null }) {
-  const branches = onlyOfficialBranches(report?.branches ?? [], branch => branch.branchName)
+function BranchRevenue({ report, rentals }: { report: FinancialReport | null; rentals: RentalOverview }) {
+  // Todas as filiais aparecem, mesmo as que ainda não receberam nada no período (com R$ 0).
+  const received = new Map((report?.branches ?? []).map(branch => [branch.branchId, branch]))
+  const all = rentals.rentedChairsByBranch.map(branch => received.get(branch.branchId)
+    ?? { branchId: branch.branchId, branchName: branch.branchName, inflowCents: 0, outflowCents: 0 })
+  for (const branch of report?.branches ?? []) if (!all.some(item => item.branchId === branch.branchId)) all.push(branch)
+  const branches = onlyOfficialBranches(all, branch => branch.branchName)
   const total = branches.reduce((sum, branch) => sum + branch.inflowCents, 0)
   const max = Math.max(1, ...branches.map(branch => branch.inflowCents))
   return <article className="panel oc-card oc-branches">

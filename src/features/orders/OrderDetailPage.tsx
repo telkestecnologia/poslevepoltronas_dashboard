@@ -16,6 +16,7 @@ import { OrderEvidencePanel } from './OrderEvidencePanel'
 import { EarlySchedule } from './EarlySchedule'
 import { MediaCarousel } from './MediaCarousel'
 import { AttendanceSteps } from './AttendanceSteps'
+import { OrderHistoryFull, OrderJourney } from './OrderJourney'
 import logoSymbol from '../../assets/logo-simbolo.png'
 
 type Props = { credentials: string; id: string; onBack: () => void }
@@ -218,6 +219,8 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
         </li>
       })}
     </ol>}
+    {/* No computador: a jornada inteira numa linha ligada (substitui as etapas acima). */}
+    {step >= 0 && <OrderJourney order={order} couriers={couriers} />}
     {/* Sem pagamento confirmado não há pedido: só as etapas do atendimento, com o que aconteceu de fato. */}
     {step < 0 && <AttendanceSteps order={order} />}
 
@@ -356,6 +359,8 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
               </form>}
           </article>)}
         </section>}
+        {/* No computador o histórico completo fica aqui, largo e agrupado por dia (substitui a linha do tempo lateral). */}
+        <OrderHistoryFull order={order} couriers={couriers} />
       </div>
 
       <aside className="od-side">
@@ -405,7 +410,7 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
           {step < 0 && <p className="order-muted">O entregador pode ser escolhido depois do pagamento confirmado.</p>}
         </section>}
 
-        <section className="panel od-card" aria-labelledby="od-history-title">
+        <section className="panel od-card od-history-side" aria-labelledby="od-history-title">
           {/* Só os acontecimentos mais recentes; a linha do tempo inteira, do início ao fim, aparece em "Ver tudo" (igual ao app). */}
           <div className="od-step-head">
             <h2 id="od-history-title" className="od-side-title">Linha do tempo</h2>
