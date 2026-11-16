@@ -4,7 +4,6 @@ import type { AiKnowledge, AiKnowledgeInput, AiUnansweredQuestion } from '../../
 import { EmptyState } from '../../components/common'
 import { getMessage } from '../../utils/errors'
 import { AiEditorModal, type AiEditor } from './AiEditorModal'
-import { IsaReportButton } from './IsaReportButton'
 import { WhatsAppText } from '../conversations/WhatsAppText'
 import './ai.css'
 
@@ -40,6 +39,9 @@ export function AiContextPage({ credentials, knowledge, unanswered, onCreateKnow
   const [editor, setEditor] = useState<AiEditor | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  // Dúvida aberta para responder ali mesmo (clicar no card abre o campo da resposta).
+  const [answeringId, setAnsweringId] = useState<string | null>(null)
+  const [answerDraft, setAnswerDraft] = useState('')
   const visibleKnowledge = knowledge.filter(entry => matches(`${entry.question} ${entry.answer}`, search))
   const visibleUnanswered = unanswered.filter(entry => matches(entry.question, search))
 
@@ -106,9 +108,7 @@ export function AiContextPage({ credentials, knowledge, unanswered, onCreateKnow
       <div className="page-heading with-action ai-page-heading">
         <div>
           <span className="eyebrow">ATENDIMENTO • PÓS LEVE</span>
-          {/* PDF do relatório geral do atendimento, ao lado do título (só o administrador). */}
-          <div className="ai-title-row"><h1>O que a Isa sabe</h1>
-            <span className="admin-only"><IsaReportButton credentials={credentials} /></span></div>
+          <div className="ai-title-row"><h1>O que a Isa sabe</h1></div>
         </div>
         <div className="ai-heading-actions">
           <button className="button secondary" type="button" onClick={onRefresh}>
@@ -125,8 +125,7 @@ export function AiContextPage({ credentials, knowledge, unanswered, onCreateKnow
         <div className="isa-hero-glow" aria-hidden="true" />
         <div className="isa-hero-copy">
           <span className="isa-hero-eyebrow"><Sparkles size={14} /> ATENDIMENTO • PÓS LEVE</span>
-          <div className="ai-title-row"><h1>O que a Isa sabe</h1>
-            <span className="admin-only"><IsaReportButton credentials={credentials} /></span></div>
+          <div className="ai-title-row"><h1>O que a Isa sabe</h1></div>
           <p>Tudo o que a Isa responde no WhatsApp e no site vem daqui. Quanto mais você ensina, melhor ela atende.</p>
           <div className="isa-hero-stats">
             <button type="button" className={`isa-stat known${tab === 'knowledge' ? ' active' : ''}`} onClick={() => switchTab('knowledge')}>
@@ -226,12 +225,40 @@ export function AiContextPage({ credentials, knowledge, unanswered, onCreateKnow
         ) : (
           <div className="ai-entry-list">
             {visibleUnanswered.map(entry => (
-              <article className="ai-entry ai-pending" key={entry.id}>
+              <article className={`ai-entry ai-pending${answeringId === entry.id ? ' answering' : ''}`} key={entry.id}
+                onClick={event => {
+                  if ((event.target as HTMLElement).closest('button, textarea, a')) return
+                  if (answeringId !== entry.id) { setAnsweringId(entry.id); setAnswerDraft('') }
+                }}>
                 <div className="ai-entry-meta">
                   <span>DÚVIDA DO CLIENTE</span>
-                  <small>Última vez em {dateLabel(entry.lastAskedAt)}</small>
+                  <small>Última vez em {dateLabel(entry.lastAskedAt)} · {entry.occurrences} {entry.occurrences === 1 ? 'vez' : 'vezes'}</small>
                 </div>
                 <h3>{entry.question}</h3>
+                {answeringId !== entry.id && <span className="ai-pending-cta admin-only">✍️ Clique para responder</span>}
+                {/* Responder ali mesmo: a resposta vai para "Perguntas e respostas" e a Isa passa a saber. */}
+                {answeringId === entry.id && <div className="ai-pending-answer admin-only">
+                  <label>Sua resposta para a Isa usar
+                    <textarea autoFocus rows={5} maxLength={4000} value={answerDraft} onChange={event => setAnswerDraft(event.target.value)}
+                      placeholder="Escreva a resposta como a Isa deve falar com o cliente." /></label>
+                  <div className="ai-pending-buttons">
+                    <button type="button" className="button primary" disabled={busy || !answerDraft.trim()} onClick={async () => {
+                      setBusy(true)
+                      setError('')
+                      try {
+                        await onAnswerUnanswered(entry.id, answerDraft.trim())
+                        setAnsweringId(null)
+                        setAnswerDraft('')
+                      } catch (cause) {
+                        setError(getMessage(cause))
+                      } finally {
+                        setBusy(false)
+                      }
+                    }}>{busy ? 'Salvando...' : 'Salvar resposta'}</button>
+                    <button type="button" className="button secondary" disabled={busy} onClick={() => setAnsweringId(null)}>Cancelar</button>
+                    <button type="button" className="ai-remove" disabled={busy} onClick={() => void removeUnanswered(entry)}><Trash2 size={15} /> Excluir dúvida</button>
+                  </div>
+                </div>}
                 <div className="ai-entry-actions">
                   <span className="ai-occurrences">{entry.occurrences} {entry.occurrences === 1 ? 'ocorrência' : 'ocorrências'}</span>
                   <button type="button" className="button primary admin-only" disabled={busy} onClick={() => openEditor({ kind: 'answer', pending: entry })}>
