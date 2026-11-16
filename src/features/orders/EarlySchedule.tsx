@@ -24,7 +24,8 @@ export function EarlySchedule({ order, kind, busy, current, onSave }: {
   order: Order; kind: 'delivery' | 'pickup'; busy: boolean
   /** Etapa atual do processo: o botão fica em laranja. */
   current?: boolean
-  onSave: (changes: { deliveryDate?: string | null; deliveryTime?: string | null; pickupDate?: string | null; pickupTime?: string | null }) => Promise<boolean>
+  /** Devolve a mensagem de erro, ou null quando salvou. */
+  onSave: (changes: { deliveryDate?: string | null; deliveryTime?: string | null; pickupDate?: string | null; pickupTime?: string | null }) => Promise<string | null>
 }) {
   const delivery = kind === 'delivery'
   const day = delivery ? order.deliveryDate ?? order.start : order.pickupDate ?? order.end
@@ -33,18 +34,21 @@ export function EarlySchedule({ order, kind, busy, current, onSave }: {
   const [open, setOpen] = useState(false)
   const [date, setDate] = useState('')
   const [hour, setHour] = useState('')
+  const [error, setError] = useState('')
   const today = todayIso()
   const min = delivery ? today : [order.deliveryDate ?? order.start, today].sort()[1]
   const max = delivery ? order.pickupDate ?? order.end : undefined
   const changedDate = date && date !== day ? date : null
   const hourOk = validTime(hour)
   const title = delivery ? 'Entrega antecipada ou posterior' : 'Prorrogar ou antecipar a retirada'
-  const close = () => { setOpen(false); setDate(''); setHour('') }
+  const close = () => { setOpen(false); setDate(''); setHour(''); setError('') }
 
   async function save() {
+    setError('')
     const changedHour = hourOk ? hour : null
-    const ok = await onSave(delivery ? { deliveryDate: changedDate, deliveryTime: changedHour } : { pickupDate: changedDate, pickupTime: changedHour })
-    if (ok) close()
+    const failure = await onSave(delivery ? { deliveryDate: changedDate, deliveryTime: changedHour } : { pickupDate: changedDate, pickupTime: changedHour })
+    if (failure) setError(failure)
+    else close()
   }
 
   return <>
@@ -62,11 +66,12 @@ export function EarlySchedule({ order, kind, busy, current, onSave }: {
           {!delivery && <p className="field-help od-extend-help">Para <strong>prorrogar</strong> a locação do cliente, escolha um dia
             depois de {shortDay(day)}. A poltrona fica bloqueada nos dias a mais (se estiver livre). O valor não muda sozinho:
             combine a cobrança dos dias extras com o cliente.</p>}
-          <RentalDatePicker label="Dia" date={date || day} minDate={min} maxDate={max} onChange={setDate} />
+          <RentalDatePicker label="Dia" date={date || day} minDate={min} maxDate={max} onChange={value => { setDate(value); setError('') }} />
           <label>Horário<input type="text" inputMode="numeric" placeholder={time ? time.slice(0, 5) : '14:00'} maxLength={5}
             value={hour} onChange={event => setHour(maskTime(event.target.value))}
             aria-invalid={hour !== '' && !hourOk} /></label>
           {hour !== '' && !hourOk && <p className="field-help od-time-error">Use o formato 24 h, por exemplo 14:30.</p>}
+          {error && <div className="form-error" role="alert">{error}</div>}
           <div className="modal-actions"><button type="button" className="button secondary" onClick={close} disabled={busy}>Cancelar</button>
             <button type="submit" className="button primary" disabled={busy || (hour !== '' && !hourOk) || (!changedDate && !hourOk)}>Salvar</button></div>
         </form>

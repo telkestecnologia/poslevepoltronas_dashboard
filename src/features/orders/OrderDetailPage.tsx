@@ -128,10 +128,21 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
     ...statusFlow.slice(1).map(status => ({ key: status, label: stepLabel(status) })),
   ]
   const displayStep = order.status === 'PAYMENT_CONFIRMED' ? 1 : displayRows.findIndex(row => row.key === order.status)
+  /** Devolve a mensagem de erro (mostrada dentro da janela, que fica por cima da página) ou null se salvou. */
   async function saveSchedule(changes: Parameters<typeof api.changeOrderSchedule>[2]) {
-    let ok = false
-    await perform(() => api.changeOrderSchedule(credentials, order!.id, changes, ''), 'Dia e horário atualizados.', () => { ok = true })
-    return ok
+    setBusy(true)
+    setError('')
+    try {
+      const changed = await api.changeOrderSchedule(credentials, order!.id, changes, '')
+      revision.current += 1
+      setOrder(changed)
+      setSaved('Dia e horário atualizados.')
+      return null
+    } catch (cause) {
+      return getMessage(cause)
+    } finally {
+      setBusy(false)
+    }
   }
   const stockDiffers = order.stockStart && order.stockEnd && (order.stockStart !== order.start || order.stockEnd !== order.end)
   const departure = [...order.history].reverse().find(event => event.action === 'DELIVERY_DEPARTURE_NOTIFIED')

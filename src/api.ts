@@ -303,6 +303,8 @@ async function request<T>(credentials: string, path: string, init: RequestInit =
                     ? 'Passaram 24 horas desde a última mensagem do cliente. O WhatsApp só libera nova mensagem quando ele escrever de novo.'
                   : path.startsWith('/blocks')
                   ? 'A poltrona já tem um bloqueio em parte do período.'
+                  : path.startsWith('/orders') && path.endsWith('/schedule')
+                    ? 'A poltrona já está reservada em parte desses dias (outro pedido ou bloqueio). Escolha outra data ou troque a poltrona do pedido.'
                   : path.startsWith('/orders')
                     ? 'A operação não é permitida no estado atual do pedido.'
                   : path.startsWith('/chairs/')
