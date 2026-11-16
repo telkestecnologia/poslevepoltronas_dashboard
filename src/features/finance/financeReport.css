@@ -200,3 +200,6 @@
   .dashboard-shell .finance-branch-tile b { margin-top: 2px; color: #14262f; text-shadow: none; }
   .dashboard-shell .finance-branch-tile b.finance-negative { color: #c4532c; }
 }
+@media (min-width: 901px) {
+  .dashboard-shell .finance-branch-tile.region-sobral::before { background-size: cover; background-position: center; }
+}
