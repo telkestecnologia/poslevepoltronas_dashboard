@@ -158,3 +158,7 @@
 .dashboard-shell .finance-month-nav .finance-month-center { flex: 1; }
 .dashboard-shell .finance-month-nav .finance-month-center label, .dashboard-shell .finance-month-nav .finance-month-center select { width: auto; max-width: 100%; }
 .dashboard-shell .finance-month-nav .finance-month-center select { field-sizing: content; }
+@media (min-width: 901px) {
+  /* Sobral: foto mais aproximada para preencher o quadrado todo. */
+  .dashboard-shell .finance-branch-tile.region-sobral { background-size: auto, 190%; background-position: center, center 70%; }
+}
