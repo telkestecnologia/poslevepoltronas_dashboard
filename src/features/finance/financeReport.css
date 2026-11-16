@@ -174,3 +174,10 @@
   .finance-heading-balance small { color: rgba(255, 255, 255, 0.65); font-size: 12px; }
   .dashboard-shell .finance-summary { display: none; }
 }
+@media (min-width: 901px) {
+  /* Saldo no topo: discreto, nas mesmas cores claras da página. */
+  .finance-heading-balance { padding: 10px 28px; border: 1px solid #dcebe8; background: rgba(255, 255, 255, 0.7); box-shadow: none; color: #12727d; }
+  .finance-heading-balance span { color: #6b7f86; }
+  .finance-heading-balance strong { color: #12727d; font-size: 30px; }
+  .finance-heading-balance small { color: #8fa2a5; }
+}
