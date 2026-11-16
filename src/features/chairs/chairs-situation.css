@@ -35,3 +35,17 @@
 .chair-fixed-branch { display: grid; gap: 6px; margin: 0; }
 .chair-fixed-branch span { font-size: 12px; font-weight: 700; color: #40535e; }
 .chair-fixed-branch strong { display: flex; align-items: center; min-height: 46px; padding: 0 14px; border: 1px solid #dce6e5; border-radius: 10px; background: #f4f8f8; color: var(--ink); font-weight: 600; }
+
+/* Janela da poltrona compacta: cabe na tela sem rolar (campos em pares, menos espaço). */
+.chair-modal-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+.modal-backdrop > .modal.chair-modal .modal-head { padding: 18px 26px 14px; }
+.modal-backdrop > .modal.chair-modal .modal-head h2 { font-size: 22px; }
+.modal-backdrop > .modal.chair-modal .modal-form { gap: 14px; padding: 16px 26px 20px; }
+.modal-backdrop > .modal.chair-modal .modal-form label { gap: 6px; }
+.modal-backdrop > .modal.chair-modal .form-intro { gap: 12px; padding: 10px 14px; }
+.modal-backdrop > .modal.chair-modal .form-intro-icon { width: 36px; height: 36px; }
+.modal-backdrop > .modal.chair-modal .form-intro-icon svg { width: 20px; height: 20px; }
+.modal-backdrop > .modal.chair-modal .form-intro strong { font-size: 15px; }
+.modal-backdrop > .modal.chair-modal .form-intro p { font-size: 13.5px; line-height: 1.35; }
+.modal-backdrop > .modal.chair-modal textarea { min-height: 0; height: auto; padding-top: 10px; padding-bottom: 10px; }
+.chair-fixed-branch { gap: 6px; }

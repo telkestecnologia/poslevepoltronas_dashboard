@@ -75,9 +75,11 @@ export function ChairModal({
         </div>
         <form onSubmit={submit} className="modal-form">
           {!chair && <FormIntro icon={<PlusCircle size={24} />} title="Nova poltrona">
-            {fixedBranch ? <>Informe o código. Ela entra na filial <strong>{branchLabel(fixedBranch.name)}</strong> e, ativa, já pode ser alugada no site e no WhatsApp.</>
+            {fixedBranch ? <>Informe o código e o modelo. Ela entra nesta filial e, ativa, já pode ser alugada no site e no WhatsApp.</>
               : 'Informe o código e a filial. Ativa, ela já pode ser alugada no site e no WhatsApp.'}</FormIntro>}
           <>
+            {/* Campos em pares (código e modelo; filial e situação) para a janela caber sem rolar. */}
+            <div className="chair-modal-row">
             <label>
               Código da poltrona
               <input
@@ -101,6 +103,8 @@ export function ChairModal({
                 autoFocus={Boolean(chair)}
               />
             </label>
+            </div>
+            <div className="chair-modal-row">
             {fixedBranch ? <p className="chair-fixed-branch"><span>Filial</span><strong>{branchLabel(fixedBranch.name)}</strong></p> : <label>
               Filial
               <select value={branchId} onChange={(e) => setBranchId(e.target.value)} required>
@@ -123,13 +127,14 @@ export function ChairModal({
                 </select>
               </label>
             )}
+            </div>
             <label>
-              Observações <span className="optional">(opcional)</span>
+              <span>Observações <span className="optional">(opcional)</span></span>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 maxLength={500}
-                rows={3}
+                rows={2}
                 placeholder="Informações úteis sobre o equipamento"
               />
             </label>
