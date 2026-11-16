@@ -157,3 +157,4 @@
 .finance-month-center select { width: auto; text-align: center; text-align-last: center; }
 .dashboard-shell .finance-month-nav .finance-month-center { flex: 1; }
 .dashboard-shell .finance-month-nav .finance-month-center label, .dashboard-shell .finance-month-nav .finance-month-center select { width: auto; max-width: 100%; }
+.dashboard-shell .finance-month-nav .finance-month-center select { field-sizing: content; }
