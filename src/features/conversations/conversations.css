@@ -314,3 +314,11 @@
   .wa-recap-next { border: 1px solid #c6e8dc; }
   .wa-recap-next p { font-size: 15px; }
 }
+
+/* Computador: a conversa ocupa a tela inteira, encostada no topo branco e de lado a lado. */
+@media (min-width: 901px) {
+  .content:has(.wa) { max-width: none; padding: 0; }
+  .page-heading.wa-page-heading { display: none; }
+  .wa { height: calc(100vh - 68px); min-height: 480px; border: 0; border-radius: 0; }
+  .wa-list { border-right: 1px solid #e4ecea; }
+}
