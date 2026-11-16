@@ -31,7 +31,8 @@ export function ConversationsPage({ credentials, selectedId, onSelect }: Props) 
   const [selected, setSelected] = useState<Conversation | null>(null)
   const [messages, setMessages] = useState<ConversationMessage[]>([])
   const [chatError, setChatError] = useState('')
-  const [filter, setFilter] = useState<Filter>('ALL')
+  // Sem "Tudo": começa em Pediu ajuda, que vem primeiro e em destaque.
+  const [filter, setFilter] = useState<Filter>('HELP')
   // No computador, a lista de contatos recolhe (igual ao menu) para a conversa ficar mais larga.
   const [listHidden, setListHidden] = useState(false)
   const [draft, setDraft] = useState('')
@@ -173,11 +174,11 @@ export function ConversationsPage({ credentials, selectedId, onSelect }: Props) 
         {whatsApp === 'ERROR' && <div className="wa-demo wa-error">Não foi possível buscar as conversas do WhatsApp agora. Aparecem só as do site.</div>}
         {listError && <div className="wa-demo wa-error">{listError}</div>}
         <div className="wa-filters" role="tablist" aria-label="Filtrar conversas">
-          {([['ALL', 'Tudo'], ['HELP', `Pediu ajuda${helpCount ? ` ${helpCount}` : ''}`], ['WHATSAPP', 'WhatsApp'], ['SITE', 'Site']] as const)
+          {([['HELP', `Pediu ajuda${helpCount ? ` ${helpCount}` : ''}`], ['WHATSAPP', 'WhatsApp'], ['SITE', 'Site']] as const)
             .map(([value, label]) => <button key={value} type="button" role="tab" aria-selected={filter === value}
-              className={filter === value ? 'selected' : ''} onClick={() => setFilter(value)}>{label}</button>)}
+              className={`${filter === value ? 'selected' : ''}${value === 'HELP' ? ' wa-filter-help' : ''}`} onClick={() => setFilter(value)}>{label}</button>)}
         </div>
-        {visible.length === 0 && <p className="wa-empty">{loaded ? 'Nenhuma conversa neste filtro.' : 'Carregando conversas…'}</p>}
+        {visible.length === 0 && <p className="wa-empty">{loaded ? (filter === 'HELP' ? 'Ninguém pediu ajuda agora. 🎉' : 'Nenhuma conversa neste filtro.') : 'Carregando conversas…'}</p>}
         {visible.map(item => {
           const rowState = conversationState(item)
           const whatsAppRow = item.channel === 'WHATSAPP'

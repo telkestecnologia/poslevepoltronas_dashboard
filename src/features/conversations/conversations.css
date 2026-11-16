@@ -336,3 +336,7 @@
     color: #fff; font-size: 12.5px; font-weight: 700; }
   .wa-assign { padding: 10px 18px; font-size: 14px; }
 }
+
+/* "Pediu ajuda" em destaque: primeiro filtro, em coral. */
+.wa-filters .wa-filter-help { background: #fdebe6; color: #c4532c; font-weight: 800; }
+.wa-filters .wa-filter-help.selected { background: linear-gradient(135deg, #f0907e, #d65f4b); color: #fff; box-shadow: 0 6px 14px rgba(214, 95, 75, 0.3); }
