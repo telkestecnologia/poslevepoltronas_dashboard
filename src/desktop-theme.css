@@ -350,3 +350,29 @@
   .dashboard-shell .modal-actions { gap: 12px; }
   .dashboard-shell .agenda-calendar-modal { width: min(760px, calc(100vw - 64px)); }
 }
+
+/* ---------- Computador: letras maiores, mais contraste e mais presença ---------- */
+@media (min-width: 901px) {
+  :root { --ink: #14262f; --muted: #50646b; --d-ink: #14262f; --d-muted: #50646b; }
+  body { color: #22343d; }
+  /* Tudo da área de conteúdo um pouco maior (o Atendimento, que ocupa a tela inteira, fica como está). */
+  .dashboard-shell .content:not(:has(.wa)) { zoom: 1.1; }
+  .dashboard-shell .content:not(:has(.wa)) .modal { max-height: calc((100vh - 48px) / 1.1); }
+
+  /* Títulos com mais impacto. */
+  .dashboard-shell .page-heading h1 { font-size: 38px; font-weight: 800; letter-spacing: -0.04em; color: #0f2a33; }
+  .dashboard-shell .page-heading p { color: #50646b; }
+  .dashboard-shell .panel h2 { color: #0f2a33; letter-spacing: -0.02em; }
+  .dashboard-shell .eyebrow { background: #d7efec; color: #0d5c64; font-weight: 800; }
+
+  /* Textos de apoio mais legíveis. */
+  .dashboard-shell .order-muted, .dashboard-shell .field-help, .dashboard-shell .pay-muted { color: #55696f; }
+  .dashboard-shell td { color: #3b4f56; }
+  .dashboard-shell th { color: #5f777c; }
+
+  /* Menu e topo com letra maior. */
+  .nav-item { font-size: 15px; }
+  .sidebar-section-label { font-size: 11px; }
+  .breadcrumbs { font-size: 14px; }
+  .breadcrumbs strong { font-size: 14px; }
+}

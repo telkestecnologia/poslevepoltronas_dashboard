@@ -332,8 +332,8 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
           <section><h3><CalendarClock size={16} /> Período e horários</h3>
             <dl className="od-ficha-grid">
               <div><dt>Período cobrado</dt><dd>{dateLabel(order.start)} a {dateLabel(order.end)}</dd></div>
-              <div><dt>Entrega</dt><dd>{weekdayDateLabel(order.deliveryDate ?? order.start)}{order.deliveryTime ? ` às ${timeLabel(order.deliveryTime)}` : ' • sem horário'}</dd></div>
-              <div><dt>Retirada</dt><dd>{weekdayDateLabel(order.pickupDate ?? order.end)}{order.pickupTime ? ` às ${timeLabel(order.pickupTime)}` : ' • sem horário'}</dd></div>
+              <div><dt>Entrega</dt><dd>{weekdayDateLabel(order.deliveryDate ?? order.start)}{order.deliveryTime ? ` ${timeLabel(order.deliveryTime)}` : ' • sem horário'}</dd></div>
+              <div><dt>Retirada</dt><dd>{weekdayDateLabel(order.pickupDate ?? order.end)}{order.pickupTime ? ` ${timeLabel(order.pickupTime)}` : ' • sem horário'}</dd></div>
             </dl></section>
           <section><h3><MapPin size={16} /> Endereço de entrega</h3>
             <p className="od-ficha-address"><strong>{order.address}</strong>
