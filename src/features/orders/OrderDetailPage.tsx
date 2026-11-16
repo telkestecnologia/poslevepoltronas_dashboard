@@ -429,7 +429,20 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
         })}
         {mediaPhase && <MediaCarousel credentials={credentials} orderId={order.id} phase={mediaPhase} couriers={couriers}
           customer={order.customerName} onClose={() => setMediaPhase(null)} />}
-        <section className="panel od-card" aria-labelledby="od-logistics-title">
+        {/* No computador: entrega e retirada contadas numa frase, com os dias e o local em destaque. */}
+        <section className="od-logistics-statement" aria-label="Entrega e retirada">
+          <small><Truck size={15} /> Entrega e retirada</small>
+          <p>A poltrona chega <mark>{weekdayDateLabel(order.deliveryDate ?? order.start)}</mark>
+            {order.deliveryTime ? <> <mark>{timeLabel(order.deliveryTime)}</mark></> : ' (sem horário combinado)'}
+            {' '}em <mark>{order.municipalityName}/{order.municipalityUf}</mark> e volta <mark className="back">{weekdayDateLabel(order.pickupDate ?? order.end)}</mark>
+            {order.pickupTime ? <> <mark className="back">{timeLabel(order.pickupTime)}</mark></> : ' (sem horário combinado)'}.</p>
+          {stockDiffers && <em className="od-logistics-stock"><CalendarClock size={14} /> Estoque bloqueado de {dateLabel(order.stockStart!)} a {dateLabel(order.stockEnd!)}.</em>}
+          <div className="od-logistics-where">
+            <span><MapPin size={15} /> {order.address}{order.postalCode ? ` • CEP ${order.postalCode}` : ''}</span>
+            <a target="_blank" rel="noopener noreferrer" href={mapUrl}><MapPin size={15} /> Abrir mapa</a>
+          </div>
+        </section>
+        <section className="panel od-card od-logistics-card" aria-labelledby="od-logistics-title">
           <div className="od-card-head"><h2 id="od-logistics-title"><Truck size={18} /> Entrega e retirada</h2></div>
           <div className="od-schedule">
             <div className="od-schedule-item delivery">

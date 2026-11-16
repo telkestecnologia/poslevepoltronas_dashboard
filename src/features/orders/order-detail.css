@@ -298,3 +298,26 @@
 .od-ficha-address strong { color: #1f3340; font-size: 15px; }
 .od-ficha-address span { color: #6b7f86; font-size: 13.5px; }
 .od-ficha .order-map-button { justify-self: start; }
+
+/* Entrega e retirada como frase (computador): faixa escura, tipografia grande, valores sublinhados à mão. */
+.od-logistics-statement { display: none; }
+@media (min-width: 901px) {
+  .od .od-logistics-card { display: none; }
+  .od-logistics-statement { position: relative; display: grid; gap: 14px; overflow: hidden; padding: 28px 32px; border-radius: 18px;
+    background: #0f4f57; box-shadow: 0 14px 34px rgba(11, 79, 87, 0.22); color: #fff; }
+  .od-logistics-statement::after { content: '🚚'; position: absolute; right: 18px; bottom: -34px; font-size: 150px; opacity: 0.07;
+    filter: grayscale(1) brightness(3); pointer-events: none; }
+  .od-logistics-statement small { display: inline-flex; align-items: center; gap: 7px; color: #8fd3cc; font-size: 13px; font-weight: 700; }
+  .od-logistics-statement p { position: relative; z-index: 1; margin: 0; max-width: 880px; color: #fff; font-family: 'Outfit', sans-serif;
+    font-size: 27px; font-weight: 500; line-height: 1.4; letter-spacing: -0.01em; }
+  .od-logistics-statement mark { padding: 0 2px; background: linear-gradient(transparent 68%, rgba(243, 209, 107, 0.55) 68%, rgba(243, 209, 107, 0.55) 92%, transparent 92%);
+    color: #fff; font-weight: 700; text-transform: capitalize; }
+  .od-logistics-statement mark.back { background: linear-gradient(transparent 68%, rgba(232, 116, 97, 0.6) 68%, rgba(232, 116, 97, 0.6) 92%, transparent 92%); }
+  .od-logistics-stock { color: rgba(255, 255, 255, 0.75); font-size: 13px; font-style: normal; display: inline-flex; align-items: center; gap: 6px; }
+  .od-logistics-where { position: relative; z-index: 1; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;
+    padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, 0.14); color: rgba(255, 255, 255, 0.82); font-size: 14px; }
+  .od-logistics-where span { display: inline-flex; align-items: center; gap: 7px; }
+  .od-logistics-where a { display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: 99px; background: #fff; color: #0f4f57;
+    font-weight: 700; font-size: 14px; transition: transform 0.15s; }
+  .od-logistics-where a:hover { transform: translateY(-1px); }
+}
