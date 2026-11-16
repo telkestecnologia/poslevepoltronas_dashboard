@@ -18,10 +18,25 @@ export function desktopNotificationsOn() {
   return desktopNotificationsWanted() && typeof Notification !== 'undefined' && Notification.permission === 'granted'
 }
 
+/**
+ * Notificações já ativadas: no primeiro clique da pessoa no painel, pede a permissão do navegador sozinho
+ * (o navegador só deixa pedir depois de um clique). Se ela desligou no Perfil, não pede.
+ */
+export function autoRequestNotifications() {
+  if (typeof Notification === 'undefined' || Notification.permission !== 'default' || !desktopNotificationsWanted()) return
+  const ask = () => {
+    window.removeEventListener('pointerdown', ask)
+    if (Notification.permission === 'default') void Notification.requestPermission()
+  }
+  window.addEventListener('pointerdown', ask, { once: true })
+}
+
+const blockedText = 'Bloqueadas pelo navegador. Clique no cadeado ao lado do endereço do site, em Notificações escolha Permitir e recarregue a página.'
+
 /** Liga e desliga os avisos urgentes no computador. Fica no Perfil, como no app. */
 export function NotificationToggle() {
   const [on, setOn] = useState(desktopNotificationsOn)
-  const [message, setMessage] = useState('')
+  const [message, setMessage] = useState(() => typeof Notification !== 'undefined' && Notification.permission === 'denied' && desktopNotificationsWanted() ? blockedText : '')
 
   async function toggle() {
     if (typeof Notification === 'undefined') return setMessage('Este navegador não mostra notificações.')
@@ -31,7 +46,7 @@ export function NotificationToggle() {
       return
     }
     const permission = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission()
-    if (permission !== 'granted') return setMessage('O navegador bloqueou as notificações. Libere nas configurações do site.')
+    if (permission !== 'granted') return setMessage(blockedText)
     try { localStorage.setItem(notifyKey, 'on') } catch { /* sem armazenamento local */ }
     setMessage('')
     setOn(true)
