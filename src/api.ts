@@ -261,6 +261,17 @@ export class ApiError extends Error {
   }
 }
 
+/** Motivo do erro mandado pelo backend em `message` (só nos erros esperados), com ponto final; null se não veio. */
+export async function serverMessage(response: Response): Promise<string | null> {
+  try {
+    const body = await response.clone().json() as { message?: unknown }
+    const text = typeof body?.message === 'string' ? body.message.trim() : ''
+    return text ? (/[.!?…]$/.test(text) ? text : `${text}.`) : null
+  } catch {
+    return null
+  }
+}
+
 async function request<T>(credentials: string, path: string, init: RequestInit = {}): Promise<T> {
   let response: Response
   try {
@@ -315,7 +326,10 @@ async function request<T>(credentials: string, path: string, init: RequestInit =
                     ? 'Esta pergunta já existe no contexto da IA.'
                   : 'Já existe um cadastro igual nesta locadora.'
                 : 'Não foi possível concluir a operação. Tente novamente.'
-    throw new ApiError(response.status, message)
+    // O motivo escrito pelo backend (ex.: "A poltrona já está bloqueada em parte do período") explica melhor que a
+    // frase por código. Login (401) e acesso (403) mantêm os textos daqui, que dizem o que fazer.
+    const fromServer = response.status === 401 || response.status === 403 ? null : await serverMessage(response)
+    throw new ApiError(response.status, fromServer ?? message)
   }
   if (response.status === 204) return undefined as T
   return response.json() as Promise<T>
