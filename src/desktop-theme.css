@@ -414,3 +414,24 @@
   .login-art .login-art-top, .login-art .login-art-copy, .login-art .login-art-bottom { position: relative; z-index: 2; }
   .login-art .login-art-copy { max-width: 56%; }
 }
+
+/* Login no computador: lado direito no mesmo verde, com o formulário num cartão branco elegante. */
+@media (min-width: 901px) {
+  .login-panel { background:
+      radial-gradient(520px 420px at 85% 10%, rgba(255, 255, 255, 0.14), transparent 70%),
+      radial-gradient(420px 360px at 10% 95%, rgba(243, 209, 107, 0.16), transparent 70%),
+      linear-gradient(150deg, #1a9baa 0%, #137882 55%, #0f5f68 100%); }
+  .login-card { position: relative; width: min(100%, 440px); padding: 40px 40px 34px; border-radius: 28px; background: #fff;
+    box-shadow: 0 30px 70px rgba(4, 40, 46, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.4); }
+  .login-card::before { content: ''; position: absolute; top: -14px; left: 40px; right: 40px; height: 14px; border-radius: 14px 14px 0 0;
+    background: rgba(255, 255, 255, 0.35); }
+  .login-icon { width: 60px; height: 60px; margin-bottom: 22px; border-radius: 18px; background: linear-gradient(135deg, #1fb0bf, #12727d); color: #fff;
+    box-shadow: 0 10px 22px rgba(18, 114, 125, 0.3); }
+  .login-card h2 { font-size: 34px; color: #0f2a33; }
+  .login-card > p { margin-bottom: 26px; }
+  .login-form input { height: 50px; border: 1.5px solid #dbe7e5; border-radius: 14px; background: #f7fbfa; font-size: 15px; }
+  .login-form input:focus { border-color: #1a9baa; background: #fff; box-shadow: 0 0 0 4px rgba(26, 155, 170, 0.14); outline: 0; }
+  .login-submit { min-height: 52px; border-radius: 14px; background: linear-gradient(135deg, #f0907e, #d65f4b) !important; box-shadow: 0 10px 22px rgba(214, 95, 75, 0.35); font-size: 15px; }
+  .login-submit:hover { filter: brightness(1.05); }
+  .login-footnote { color: rgba(255, 255, 255, 0.75); }
+}
