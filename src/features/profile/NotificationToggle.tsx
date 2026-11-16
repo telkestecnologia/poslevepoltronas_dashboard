@@ -31,25 +31,27 @@ export function autoRequestNotifications() {
   window.addEventListener('pointerdown', ask, { once: true })
 }
 
-const blockedText = 'Bloqueadas pelo navegador. Clique no cadeado ao lado do endereço do site, em Notificações escolha Permitir e recarregue a página.'
+const blockedText = 'Ligadas. Falta o navegador permitir: cadeado do site → Notificações → Permitir.'
 
 /** Liga e desliga os avisos urgentes no computador. Fica no Perfil, como no app. */
 export function NotificationToggle() {
-  const [on, setOn] = useState(desktopNotificationsOn)
+  // Ligada por padrão (preferência da pessoa); ela desliga ou liga quando quiser.
+  const [on, setOn] = useState(desktopNotificationsWanted)
   const [message, setMessage] = useState(() => typeof Notification !== 'undefined' && Notification.permission === 'denied' && desktopNotificationsWanted() ? blockedText : '')
 
   async function toggle() {
     if (typeof Notification === 'undefined') return setMessage('Este navegador não mostra notificações.')
     if (on) {
       setOn(false)
+      setMessage('')
       try { localStorage.setItem(notifyKey, 'off') } catch { /* sem armazenamento local */ }
       return
     }
+    try { localStorage.setItem(notifyKey, 'on') } catch { /* sem armazenamento local */ }
+    setOn(true)
     const permission = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission()
     if (permission !== 'granted') return setMessage(blockedText)
-    try { localStorage.setItem(notifyKey, 'on') } catch { /* sem armazenamento local */ }
     setMessage('')
-    setOn(true)
     new Notification('Pós Leve • Notificações ativadas', { body: 'Você vai receber aqui os avisos urgentes do painel.', icon: '/logo-pos-leve-icon.webp' })
   }
 
