@@ -259,3 +259,52 @@
   /* Resumo ao lado da imagem: título em cima e os três números embaixo, sem apertar o texto. */
   .content:has(> .pay-summary) > .pay-summary { grid-template-columns: minmax(0, 1fr); align-content: center; gap: 18px; }
 }
+
+/* ---------- Computador: aproveitar a largura toda ---------- */
+@media (min-width: 901px) {
+  /* Formas de pagamento numa faixa: Pix, Cartão e parcelamento lado a lado. */
+  .dashboard-shell .pay-layout { grid-template-columns: minmax(0, 1fr); gap: 22px; }
+  .dashboard-shell .pay-layout > form:first-child { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; column-gap: 16px; }
+  .dashboard-shell .pay-layout > form:first-child > * { grid-column: 1 / -1; }
+  .dashboard-shell .pay-layout > form:first-child > .pay-toggle:nth-of-type(1) { grid-column: 1; }
+  .dashboard-shell .pay-layout > form:first-child > .pay-toggle:nth-of-type(2) { grid-column: 2; grid-row: 2; }
+  .dashboard-shell .pay-layout > form:first-child > .pay-field { grid-column: 3; grid-row: 2; }
+  .dashboard-shell .pay-layout > form:first-child > .pay-toggle { min-height: 100%; }
+
+  /* Preços: configurações e régua à esquerda, planos em destaque à direita. */
+  .dashboard-shell .pay-layout > form:last-child { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.55fr); align-items: start; column-gap: 28px; row-gap: 18px; }
+  .dashboard-shell .pay-layout > form:last-child > * { grid-column: 1; }
+  .dashboard-shell .pay-layout > form:last-child > .notification-channel-head,
+  .dashboard-shell .pay-layout > form:last-child > .pay-footer { grid-column: 1 / -1; }
+  .dashboard-shell .pay-layout > form:last-child > .pay-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .dashboard-shell .pay-layout > form:last-child > .pay-plan-table { grid-column: 2; grid-row: 2 / span 2; }
+
+  /* Tabela dos planos com título, campos bonitos e movimento. */
+  .dashboard-shell .pay-plan-table { gap: 12px; padding: 20px !important; border: 1px solid #e4ecea !important; border-radius: 18px !important;
+    background: linear-gradient(180deg, #f7fbfa 0%, #fff 60%) !important; }
+  .dashboard-shell .pay-plan-table::before { content: '🏷️ Planos de locação'; color: #1f3340; font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 700; }
+  .dashboard-shell .pay-plan-table::after { content: 'Mude nome, dias ou preço: a diária e a economia se atualizam na hora. A estrela marca o plano mais procurado.';
+    order: -1; margin-top: -8px; color: #6b7f86; font-size: 13px; line-height: 1.5; }
+  .dashboard-shell .pay-plan-table::before { order: -2; }
+  .dashboard-shell .pay-plan-row { grid-template-columns: minmax(120px, 1.5fr) 64px 112px 100px minmax(0, 1.6fr) 52px; gap: 10px; padding: 14px 16px; border-radius: 14px;
+    transition: transform 0.2s, box-shadow 0.2s; }
+  .dashboard-shell .pay-plan-row:not(.head):hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(15, 63, 68, 0.1) !important; }
+  .dashboard-shell .pay-plan-row.head { padding: 0 16px; }
+  .dashboard-shell .pay-plan-row input:not([type=radio]) { min-height: 42px; padding: 0 12px; border: 1.5px solid #dbe7e5; border-radius: 10px; background: #fff;
+    color: #1f3340; font: inherit; font-size: 14px; transition: border-color 0.15s, box-shadow 0.15s; }
+  .dashboard-shell .pay-plan-row input:not([type=radio]):focus { border-color: #1a9baa; outline: 0; box-shadow: 0 0 0 4px rgba(26, 155, 170, 0.12); }
+  .dashboard-shell .pay-plan-row > input:first-child { font-weight: 700; }
+  .dashboard-shell .pay-plan-row .pay-price-input { font-size: 15px; font-weight: 800; text-align: right; }
+  .dashboard-shell .pay-plan-row.tone-teal .pay-price-input { color: #1a9baa; border-color: #a9dfe5; }
+  .dashboard-shell .pay-plan-row.tone-coral .pay-price-input { color: #d65f4b; border-color: #f5c3b8; }
+  .dashboard-shell .pay-plan-row.tone-deep .pay-price-input { color: #12727d; border-color: #a7d3d8; }
+  .dashboard-shell .pay-plan-calc { padding: 10px 8px; border-radius: 12px; color: #fff; font-size: 14.5px; }
+  .dashboard-shell .pay-plan-row.tone-teal .pay-plan-calc { background: linear-gradient(135deg, #2cc0cf, #1a9baa); }
+  .dashboard-shell .pay-plan-row.tone-coral .pay-plan-calc { background: linear-gradient(135deg, #f59a88, #e0705c); }
+  .dashboard-shell .pay-plan-row.tone-deep .pay-plan-calc { background: linear-gradient(135deg, #1a9baa, #0f5f68); }
+  .dashboard-shell .pay-plan-row.popular { position: relative; margin-top: 12px; background: linear-gradient(135deg, #fffaf0, #fff 55%) !important; }
+  .dashboard-shell .pay-plan-row.popular::before { content: '★ MAIS PROCURADO'; position: absolute; top: -11px; left: 16px; padding: 3px 10px; border-radius: 99px;
+    background: linear-gradient(135deg, #f3d16b, #d9a93a); color: #4a3500; font-size: 10.5px; font-weight: 800; letter-spacing: 0.06em; box-shadow: 0 4px 10px rgba(168, 128, 31, 0.3); }
+  .dashboard-shell .pay-star span[aria-hidden] { font-size: 26px; transition: transform 0.2s; }
+  .dashboard-shell .pay-star:hover span[aria-hidden] { transform: scale(1.2); }
+}
