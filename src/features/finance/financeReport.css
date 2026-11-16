@@ -181,3 +181,9 @@
   .finance-heading-balance strong { color: #12727d; font-size: 30px; }
   .finance-heading-balance small { color: #8fa2a5; }
 }
+@media (min-width: 901px) {
+  /* Saldo como uma faixa que ocupa a linha toda entre o título e o Atualizar. */
+  .dashboard-shell .finance-heading > div:first-child { flex: none; }
+  .finance-heading-balance { flex: 1; display: flex; align-items: baseline; justify-content: center; gap: 14px; margin: 0 28px; padding: 18px 28px; border-radius: 16px; }
+  .finance-heading-balance strong { font-size: 32px; }
+}
