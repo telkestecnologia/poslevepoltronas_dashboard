@@ -400,3 +400,8 @@
     mix-blend-mode: normal; opacity: 1; filter: none; border-radius: 26px; box-shadow: 0 30px 60px rgba(4, 40, 46, 0.35);
     border: 6px solid rgba(255, 255, 255, 0.18); }
 }
+@media (min-width: 901px) {
+  .login-art .login-art-copy { max-width: 58%; }
+  .login-art .login-art-copy h1 { font-size: clamp(36px, 3.4vw, 50px); }
+  .login-art .login-chair { right: 5%; width: 34%; height: 62%; bottom: 13%; }
+}
