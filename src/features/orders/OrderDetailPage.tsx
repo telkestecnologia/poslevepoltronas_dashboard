@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { timeLabel } from '../../utils/time'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  AlertCircle, ArrowLeft, ArrowRight, CalendarClock, Check, ChevronDown, ChevronUp, CheckCircle2, Info, MapPin, Megaphone, MessageCircle, Phone, RefreshCw, Truck, X, Images,
+  FileText, AlertCircle, ArrowLeft, ArrowRight, CalendarClock, Check, ChevronDown, ChevronUp, CheckCircle2, Info, MapPin, Megaphone, MessageCircle, Phone, RefreshCw, Truck, X, Images,
 } from 'lucide-react'
 import './order-detail.css'
 import { api, ApiError, type Courier, type Order } from '../../api'
@@ -44,6 +44,7 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
   const [busy, setBusy] = useState(false)
   const [mediaPhase, setMediaPhase] = useState<'DELIVERY' | 'PICKUP' | null>(null)
   const [timelineAll, setTimelineAll] = useState(false)
+  const [fichaOpen, setFichaOpen] = useState(false)
   const [openPhase, setOpenPhase] = useState<'DEPARTURE' | 'DELIVERY' | 'PICKUP' | null>(null)
   const [error, setError] = useState('')
   const [saved, setSaved] = useState('')
@@ -308,12 +309,48 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
       </div>
       <div className="od-header-side">
         <span className={`order-status od-status status-${order.status.toLowerCase()}`}>{orderStatusLabel(order)}</span>
+        {/* Ficha do cliente (igual ao app): tudo do pedido numa janela só. */}
+        <button type="button" className="od-ficha-button" onClick={() => setFichaOpen(true)}><FileText size={16} /> Ficha do cliente</button>
         {openIssues.length > 0 && <span className="order-status status-issue_open od-status">
           {openIssues.length} {openIssues.length === 1 ? 'problema em aberto' : 'problemas em aberto'}</span>}
         <button className="icon-button" aria-label="Atualizar pedido" title="Atualizar pedido" onClick={() => void load()}>
           <RefreshCw size={17} /></button>
       </div>
     </header>
+    {fichaOpen && <div className="modal-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) setFichaOpen(false) }}>
+      <section className="modal od-ficha" role="dialog" aria-modal="true" aria-labelledby="od-ficha-title">
+        <div className="modal-head"><div><span className="eyebrow">FICHA DO CLIENTE</span><h2 id="od-ficha-title">{order.customerName}</h2></div>
+          <button className="icon-button" aria-label="Fechar" onClick={() => setFichaOpen(false)}><X size={20} /></button></div>
+        <div className="od-ficha-body">
+          <div className="od-ficha-status"><span className={`order-status status-${order.status.toLowerCase()}`}>{orderStatusLabel(order)}</span>
+            <span>Pedido feito em {dateTimeLabel(order.createdAt)}</span></div>
+          <section><h3><Phone size={16} /> Contato</h3>
+            <div className="od-ficha-contact">
+              <a className="od-contact-link" href={`tel:${phoneDigits}`}><Phone size={15} /> {displayPhone(order.customerPhone)}</a>
+              <a className="od-contact-link whatsapp" href={`https://wa.me/55${phoneDigits}`} target="_blank" rel="noopener noreferrer"><MessageCircle size={15} /> WhatsApp</a>
+            </div></section>
+          <section><h3><CalendarClock size={16} /> Período e horários</h3>
+            <dl className="od-ficha-grid">
+              <div><dt>Período cobrado</dt><dd>{dateLabel(order.start)} a {dateLabel(order.end)}</dd></div>
+              <div><dt>Entrega</dt><dd>{weekdayDateLabel(order.deliveryDate ?? order.start)}{order.deliveryTime ? ` às ${timeLabel(order.deliveryTime)}` : ' • sem horário'}</dd></div>
+              <div><dt>Retirada</dt><dd>{weekdayDateLabel(order.pickupDate ?? order.end)}{order.pickupTime ? ` às ${timeLabel(order.pickupTime)}` : ' • sem horário'}</dd></div>
+            </dl></section>
+          <section><h3><MapPin size={16} /> Endereço de entrega</h3>
+            <p className="od-ficha-address"><strong>{order.address}</strong>
+              <span>{order.municipalityName}/{order.municipalityUf} • {order.postalCode ? `CEP ${order.postalCode}` : 'sem CEP'}</span></p>
+            <a className="order-map-button" target="_blank" rel="noopener noreferrer" href={mapUrl}><MapPin size={16} /> Abrir mapa</a></section>
+          <section><h3><Truck size={16} /> Poltrona e valores</h3>
+            <dl className="od-ficha-grid">
+              <div><dt>Poltrona</dt><dd>{chairName(order.chairCode, order.branchName)}</dd></div>
+              <div><dt>Filial</dt><dd>{branchLabel(order.branchName)}</dd></div>
+              <div><dt>Entregador</dt><dd>{courier?.name ?? 'Ainda não atribuído'}</dd></div>
+              {order.source === 'CHECKOUT' && <div><dt>Aluguel</dt><dd>{currency(order.rentalCents)}</dd></div>}
+              <div><dt>Frete</dt><dd>{order.freightCents ? currency(order.freightCents) : 'Grátis'}</dd></div>
+              {order.source === 'CHECKOUT' && <div className="od-ficha-total"><dt>Total</dt><dd>{currency(order.totalCents)}</dd></div>}
+            </dl></section>
+        </div>
+      </section>
+    </div>}
 
     {saved && <div className="toast od-toast" role="status"><Check size={18} />{saved}
       <button aria-label="Fechar mensagem" onClick={() => setSaved('')}><X size={16} /></button></div>}
