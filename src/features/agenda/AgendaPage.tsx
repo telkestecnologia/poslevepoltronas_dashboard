@@ -289,6 +289,12 @@ export function AgendaPage({ credentials, onOpenOrder }: Props) {
                   {itemStatus(item, today)}</span>
               </div>
               <h4>{item.order.customerName}</h4>
+              {/* No computador: iniciais, nome e telefone na mesma linha. */}
+              <div className="agenda-item-person">
+                <span className="agenda-item-initials" aria-hidden="true">{item.order.customerName.split(/\s+/).filter(Boolean).slice(0, 2).map(word => word[0]).join('').toUpperCase()}</span>
+                <strong>{item.order.customerName}</strong>
+                <a className="agenda-item-phone" href={`tel:${brazilPhoneDigits(item.order.customerPhone)}`} onClick={event => event.stopPropagation()}>{displayPhone(item.order.customerPhone)}</a>
+              </div>
               <p>{chairName(item.order.chairCode, item.order.branchName)} • {branchLabel(item.order.branchName)}</p>
               <p>{item.order.address}, {group.label}</p>
               <div className="agenda-item-footer">

@@ -119,3 +119,38 @@
   .dashboard-shell .agenda-empty { padding: 50px 16px; }
   .dashboard-shell .agenda-note { font-size: 13px; }
 }
+
+/* Nome com telefone ao lado: só no computador (no celular fica como antes). */
+.agenda-item-person { display: none; }
+@media (min-width: 901px) {
+  .dashboard-shell .agenda-item h4 { display: none; }
+  .dashboard-shell .agenda-item-footer a { display: none; }
+  .agenda-item-person { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 4px 0 6px; }
+  .agenda-item-initials { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; color: #fff; font-size: 15px; font-weight: 800;
+    background: linear-gradient(135deg, #1fb0bf, #12727d); box-shadow: 0 4px 10px rgba(18, 114, 125, 0.25); }
+  .agenda-item.pickup .agenda-item-initials { background: linear-gradient(135deg, #f0907e, #d65f4b); box-shadow: 0 4px 10px rgba(214, 95, 75, 0.25); }
+  .agenda-item-person strong { color: #1f3340; font-family: 'Outfit', sans-serif; font-size: 21px; letter-spacing: -0.01em; }
+  .agenda-item-phone { display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; border-radius: 99px; background: #f1f7f6;
+    color: #12727d; font-size: 13.5px; font-weight: 700; transition: background 0.15s; }
+  .agenda-item-phone::before { content: '📞'; font-size: 12px; }
+  .agenda-item-phone:hover { background: #e3f4f2; }
+
+  /* Card com mais personalidade: faixa do horário em degradê e brilho suave. */
+  .dashboard-shell .agenda-item { position: relative; border-color: #e1ebe9 !important; }
+  .dashboard-shell .agenda-item::after { content: ''; position: absolute; right: -60px; top: -60px; width: 180px; height: 180px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(26, 155, 170, 0.08), transparent 70%); pointer-events: none; }
+  .dashboard-shell .agenda-item.pickup::after { background: radial-gradient(circle, rgba(232, 116, 97, 0.1), transparent 70%); }
+  .dashboard-shell .agenda-item.delivery .agenda-item-time { background: linear-gradient(180deg, #e3f4f2 0%, #cfeeea 100%); }
+  .dashboard-shell .agenda-item.pickup .agenda-item-time { background: linear-gradient(180deg, #fdebe6 0%, #fbd9cf 100%); }
+  .dashboard-shell .agenda-item-time strong { font-size: 30px; }
+  .dashboard-shell .agenda-item p { padding-left: 54px; }
+  .dashboard-shell .agenda-item-footer { justify-content: flex-end; }
+  .dashboard-shell .agenda-item-footer > span:first-child:empty { display: none; }
+  .dashboard-shell .agenda-item-footer > span:first-child { margin-right: auto; }
+
+  /* Abrir pedido: botão grande e claro. */
+  .dashboard-shell .agenda-open { gap: 8px; padding: 11px 22px; font-size: 14.5px; box-shadow: 0 6px 16px rgba(18, 114, 125, 0.25); transition: transform 0.15s; }
+  .dashboard-shell .agenda-item.pickup .agenda-open { box-shadow: 0 6px 16px rgba(214, 95, 75, 0.25); }
+  .dashboard-shell .agenda-item:hover .agenda-open { transform: translateX(3px); }
+  .dashboard-shell .agenda-open svg { width: 16px; height: 16px; }
+}
