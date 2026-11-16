@@ -84,3 +84,26 @@
     .isa-bubble, .isa-hero-img, .isa-spark, .isa-bubble.typing i { animation: none; opacity: 1; }
   }
 }
+
+/* ---------- Perguntas e respostas (computador): orientação + exemplo de mensagem ---------- */
+.ai-answer { display: none; }
+@media (min-width: 901px) {
+  .ai-entry .ai-entry-plain { display: none; }
+  .dashboard-shell .ai-entry { gap: 14px; padding: 24px 26px; border-radius: 18px; }
+  .dashboard-shell .ai-entry-meta span { padding: 4px 10px; border-radius: 99px; background: #e3f4f2; color: #12727d; font-size: 11px; }
+  .dashboard-shell .ai-entry h3 { display: flex; align-items: flex-start; gap: 10px; font-size: 19px; line-height: 1.35; color: #1f3340; }
+  .dashboard-shell .ai-entry h3::before { content: '❓'; flex: none; font-size: 16px; line-height: 1.6; }
+  .ai-answer { display: grid; gap: 16px; }
+  .ai-answer.with-sample { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); align-items: start; }
+  .ai-answer-label { display: block; margin-bottom: 8px; color: #6b7f86; font-size: 11.5px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+  .ai-answer-guide { padding: 16px 18px; border: 1px solid #e4ecea; border-radius: 14px; background: #f7faf9; }
+  .ai-answer-guide p { margin: 0; color: #40535e; font-size: 14px; line-height: 1.65; white-space: pre-line; }
+  .ai-answer-sample { padding: 16px 18px; border-radius: 14px; background: #efeae2;
+    background-image: radial-gradient(rgba(0, 0, 0, 0.035) 1px, transparent 1px); background-size: 16px 16px; }
+  .ai-answer-sample .ai-answer-label { color: #54656f; }
+  .ai-answer-bubble { position: relative; max-width: 520px; margin-left: auto; padding: 10px 14px 12px; border-radius: 12px 4px 12px 12px;
+    background: #d9fdd3; box-shadow: 0 1px 1px rgba(11, 20, 26, 0.13); }
+  .ai-answer-author { display: block; margin-bottom: 4px; color: #06a77d; font-size: 12.5px; font-weight: 700; }
+  .ai-answer-bubble .wa-text { margin: 0; color: #111b21; font-size: 14px; line-height: 1.55; white-space: pre-wrap; }
+  .dashboard-shell .ai-entry-actions { padding-top: 14px; border-top: 1px solid #edf2f1; }
+}

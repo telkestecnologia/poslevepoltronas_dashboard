@@ -287,7 +287,7 @@
   /* A conversa usa toda a largura da tela. */
   .content:has(.wa) { max-width: none; }
   .page-heading.wa-page-heading h1 { font-size: 28px; }
-  .wa { position: relative; height: calc(100vh - 205px); min-height: 520px; grid-template-columns: 360px minmax(0, 1fr); }
+  .wa { position: relative; height: calc(100vh - 250px); min-height: 520px; grid-template-columns: 360px minmax(0, 1fr); }
   .wa.wa-list-hidden { grid-template-columns: 0 minmax(0, 1fr); }
   .wa.wa-list-hidden .wa-list { visibility: hidden; border-right: 0; }
   .wa-list-toggle {

@@ -5,6 +5,7 @@ import { EmptyState } from '../../components/common'
 import { getMessage } from '../../utils/errors'
 import { AiEditorModal, type AiEditor } from './AiEditorModal'
 import { IsaReportButton } from './IsaReportButton'
+import { WhatsAppText } from '../conversations/WhatsAppText'
 import './ai.css'
 
 type Props = {
@@ -195,7 +196,9 @@ export function AiContextPage({ credentials, knowledge, unanswered, onCreateKnow
                   <small>Atualizada em {dateLabel(entry.updatedAt)} · {entry.status === 'INDEXED' ? 'Disponível para a IA' : entry.status === 'FAILED' ? 'Falha na indexação' : 'Indexando'}</small>
                 </div>
                 <h3>{entry.question}</h3>
-                <p>{entry.answer}</p>
+                <p className="ai-entry-plain">{entry.answer}</p>
+                {/* No computador: a orientação para a Isa de um lado e o exemplo de mensagem, como no WhatsApp, do outro. */}
+                <AnswerView answer={entry.answer} />
                 <div className="ai-entry-actions">
                   <button type="button" className="button secondary admin-only" disabled={busy} onClick={() => openEditor({ kind: 'knowledge', entry })}>
                     <Pencil size={15} /> Editar
@@ -249,4 +252,21 @@ export function AiContextPage({ credentials, knowledge, unanswered, onCreateKnow
       )}
     </>
   )
+}
+
+/** Separa a orientação ("como responder") do exemplo de mensagem ("Modelo/Exemplo de resposta:"). */
+function AnswerView({ answer }: { answer: string }) {
+  const match = /(modelo|exemplo)s? de resposta\s*:?/i.exec(answer)
+  const guide = (match ? answer.slice(0, match.index) : answer).trim()
+  const sample = match ? answer.slice(match.index + match[0].length).trim() : ''
+  return <div className={`ai-answer${sample ? ' with-sample' : ''}`}>
+    <div className="ai-answer-guide">
+      <span className="ai-answer-label">🧭 Como a Isa deve responder</span>
+      <p>{guide}</p>
+    </div>
+    {sample && <div className="ai-answer-sample">
+      <span className="ai-answer-label">💬 Exemplo de mensagem da Isa</span>
+      <div className="ai-answer-bubble"><span className="ai-answer-author">Isa (assistente)</span><WhatsAppText text={sample} /></div>
+    </div>}
+  </div>
 }
