@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ArrowLeft, Paperclip, RefreshCw, Send, X, MessagesSquare } from 'lucide-react'
+import { ArrowLeft, ChevronLeft, ChevronRight, Paperclip, RefreshCw, Send, X, MessagesSquare } from 'lucide-react'
 import { api, sendConversationAttachment, type Conversation, type ConversationAnalysis, type ConversationMessage } from '../../api'
 import { conversationState, customerLabel, customerNumber, nameColor, stageTone } from '../../utils/conversations'
 import { MessageImages, WhatsAppText } from './WhatsAppText'
@@ -32,6 +32,8 @@ export function ConversationsPage({ credentials, selectedId, onSelect }: Props) 
   const [messages, setMessages] = useState<ConversationMessage[]>([])
   const [chatError, setChatError] = useState('')
   const [filter, setFilter] = useState<Filter>('ALL')
+  // No computador, a lista de contatos recolhe (igual ao menu) para a conversa ficar mais larga.
+  const [listHidden, setListHidden] = useState(false)
   const [draft, setDraft] = useState('')
   const [replyTo, setReplyTo] = useState<ConversationMessage | null>(null)
   const [summaryOpen, setSummaryOpen] = useState(false)
@@ -157,12 +159,15 @@ export function ConversationsPage({ credentials, selectedId, onSelect }: Props) 
   const windowClosed = selected?.channel === 'WHATSAPP' && selected.windowOpen === false
 
   return <>
-    <div className="page-heading with-action">
+    <div className="page-heading with-action wa-page-heading">
       <div><span className="eyebrow">WHATSAPP E SITE • ISA</span><h1>Atendimento</h1></div>
       <button className="button secondary" type="button" onClick={() => void loadList()}><RefreshCw size={16} /> Atualizar</button>
     </div>
 
-    <div className={`wa${selectedId ? ' wa-open' : ''}`}>
+    <div className={`wa${selectedId ? ' wa-open' : ''}${listHidden ? ' wa-list-hidden' : ''}`}>
+      <button type="button" className="wa-list-toggle" onClick={() => setListHidden(value => !value)}
+        aria-label={listHidden ? 'Mostrar contatos' : 'Esconder contatos'} title={listHidden ? 'Mostrar contatos' : 'Esconder contatos'}>
+        {listHidden ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}</button>
       <aside className="wa-list">
         {whatsApp === 'NOT_CONFIGURED' && <div className="wa-demo">As conversas do WhatsApp ainda não estão ligadas ao servidor. Por enquanto aparecem só as do site.</div>}
         {whatsApp === 'ERROR' && <div className="wa-demo wa-error">Não foi possível buscar as conversas do WhatsApp agora. Aparecem só as do site.</div>}

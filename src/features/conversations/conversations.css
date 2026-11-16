@@ -277,3 +277,40 @@
   .wa-thread { min-height: 0; }
   .wa-chat-head, .wa-composer { flex: none; }
 }
+
+/* Botão de recolher os contatos: só no computador. */
+.wa-list-toggle { display: none; }
+
+@media (min-width: 901px) {
+  /* Título enxuto para a conversa ganhar altura. */
+  .page-heading.wa-page-heading { margin-bottom: 16px; }
+  /* A conversa usa toda a largura da tela. */
+  .content:has(.wa) { max-width: none; }
+  .page-heading.wa-page-heading h1 { font-size: 28px; }
+  .wa { position: relative; height: calc(100vh - 205px); min-height: 520px; grid-template-columns: 360px minmax(0, 1fr); transition: grid-template-columns 0.25s; }
+  .wa.wa-list-hidden { grid-template-columns: 0 minmax(0, 1fr); }
+  .wa.wa-list-hidden .wa-list { visibility: hidden; border-right: 0; }
+  .wa-list-toggle {
+    position: absolute; z-index: 5; top: 50%; left: 360px; display: grid; place-items: center; width: 28px; height: 56px;
+    margin: -28px 0 0 -14px; border: 1px solid #dfe7e5; border-radius: 99px; background: #fff; color: #12727d;
+    box-shadow: 0 4px 12px rgba(15, 63, 68, 0.12); cursor: pointer; transition: left 0.25s, background 0.2s;
+  }
+  .wa-list-toggle:hover { background: #e3f4f2; }
+  .wa.wa-list-hidden .wa-list-toggle { left: 14px; }
+  .wa-thread { padding: 18px 6%; }
+
+  /* Resumo do atendimento: mais espaço, títulos claros e rolagem para ler tudo. */
+  .modal.wa-summary { width: min(720px, calc(100vw - 48px)); max-height: calc(100vh - 60px); overflow: hidden; }
+  .wa-summary .modal-head { padding: 24px 30px 18px; }
+  .wa-summary-meta { margin: 0; padding: 14px 30px; border-bottom: 1px solid #edf2f1; background: #f7faf9; color: #55696f; font-size: 13.5px; line-height: 1.5; }
+  .wa-summary .wa-recap { gap: 14px; padding: 20px 30px 28px; overflow-y: auto; }
+  .wa-recap h3 { margin-bottom: 8px; font-size: 12.5px; letter-spacing: 0.06em; }
+  .wa-recap p, .wa-recap ul { font-size: 14.5px; line-height: 1.6; }
+  .wa-recap ul { display: grid; gap: 4px; }
+  .wa-recap-box, .wa-recap-next, .wa-ai, .wa-recap .wa-summary-alert { padding: 16px 18px; border-radius: 14px; }
+  .wa-ai { gap: 12px; border: 1px solid #e3defb; }
+  .wa-ai h3 { font-size: 15px; }
+  .wa-ai > div { padding-top: 10px; border-top: 1px solid rgba(91, 75, 214, 0.12); }
+  .wa-recap-next { border: 1px solid #c6e8dc; }
+  .wa-recap-next p { font-size: 15px; }
+}
