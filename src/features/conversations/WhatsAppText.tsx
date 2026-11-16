@@ -16,7 +16,7 @@ function formatted(text: string, key: string): ReactNode[] {
 }
 
 /** Telefone do Brasil escrito na mensagem: (85) 93577-4756, 85 935774756, +55 85 9..., etc. */
-const PHONE = /((?:\+?55[\s.-]?)?\(?[1-9]\d\)?[\s.-]?9?[\s.-]?\d{4}[\s.-]?\d{4})/g
+const PHONE = /((?:\+?55[\s.-]?)?\(?\b[1-9]\d\)?[\s.-]?9?[\s.-]?\d{4}[\s.-]?\d{4}\b)/g
 
 /** Número escrito pelo cliente vira link: clicar abre a conversa com ele no WhatsApp. */
 function withPhones(text: string, key: string): ReactNode[] {
