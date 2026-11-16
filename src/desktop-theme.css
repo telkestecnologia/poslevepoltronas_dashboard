@@ -388,3 +388,7 @@
   .modal-backdrop > .modal .modal-form { gap: 20px; padding: 26px 34px 32px; }
   .modal-backdrop > .modal.chair-modal { width: min(1000px, calc(100vw - 64px)); }
 }
+@media (min-width: 901px) {
+  /* Ícones do menu todos da mesma cor (sem uma cor por área). */
+  .main-nav .nav-item { --nav-tone: rgba(255, 255, 255, 0.92) !important; --nav-tone-solid: #12727d !important; }
+}
