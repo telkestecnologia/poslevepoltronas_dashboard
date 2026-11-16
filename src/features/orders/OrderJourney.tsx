@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import { Armchair, CalendarClock, CheckCircle2, ClipboardCheck, CreditCard, Images, PackageCheck, Truck, Undo2, X, type LucideIcon } from 'lucide-react'
+import { ArrowRight, Armchair, CalendarClock, CheckCircle2, ClipboardCheck, CreditCard, Images, PackageCheck, Truck, Undo2, X, type LucideIcon } from 'lucide-react'
 import type { Courier, Order } from '../../api'
 import { actorLabel, dateTimeLabel, eventKind, eventKinds, eventLabel, weekdayDateLabel } from '../../data/orders'
 import './order-journey.css'
@@ -39,7 +39,7 @@ function currentIndex(order: Order) {
  * Jornada do pedido (só no computador): todas as etapas numa linha, ligadas por um traço que vai se preenchendo.
  * Cada etapa diz o que é, quando aconteceu (ou quando está prevista) e quem fez.
  */
-export function OrderJourney({ order, couriers, onOpenMedia, renderActions, renderSide }: {
+export function OrderJourney({ order, couriers, onOpenMedia, renderActions, renderSide, advance }: {
   order: Order; couriers: Pick<Courier, 'id' | 'name'>[]
   /** Abre as fotos e vídeos da entrega ou da retirada. */
   onOpenMedia?: (phase: 'DELIVERY' | 'PICKUP') => void
@@ -47,6 +47,8 @@ export function OrderJourney({ order, couriers, onOpenMedia, renderActions, rend
   renderActions?: (key: string, state: { done: boolean; current: boolean }) => ReactNode
   /** Card ao lado do título da janela (registro de problemas na saída, na entrega e na retirada). */
   renderSide?: (key: string) => ReactNode
+  /** Concluir a etapa atual (avança o pedido); blocked explica por que ainda não dá. */
+  advance?: { label: string; blocked: string; busy: boolean; run: () => void } | null
 }) {
   const [opened, setOpened] = useState<number | null>(null)
   const steps = stepsOf(order)
@@ -85,33 +87,20 @@ export function OrderJourney({ order, couriers, onOpenMedia, renderActions, rend
     </ol>
     {opened !== null && <StepWindow order={order} couriers={couriers} steps={steps} index={opened} now={now}
       onOpenMedia={onOpenMedia} onClose={() => setOpened(null)} side={renderSide?.(steps[opened].key)}
-      actions={renderActions?.(steps[opened].key, { done: opened < now, current: opened === now })} />}
+      actions={renderActions?.(steps[opened].key, { done: opened < now, current: opened === now })}
+      advance={opened === now ? advance : null} />}
   </section>
 }
 
 /** Janela de uma etapa: o que ela significa, quando aconteceu e tudo o que foi feito nela (pelo histórico). */
-function StepWindow({ order, couriers, steps, index, now, onOpenMedia, onClose, actions, side }: {
+function StepWindow({ order, couriers, steps, index, now, onOpenMedia, onClose, actions, side, advance }: {
   order: Order; couriers: Pick<Courier, 'id' | 'name'>[]; steps: Step[]; index: number; now: number
   onOpenMedia?: (phase: 'DELIVERY' | 'PICKUP') => void; onClose: () => void; actions?: ReactNode; side?: ReactNode
+  advance?: { label: string; blocked: string; busy: boolean; run: () => void } | null
 }) {
   const step = steps[index]
   const done = index < now
   const current = index === now
-  const timeOf = (position: number) => {
-    const event = order.history.find(item => steps[position].actions.includes(item.action))
-    return event ? Date.parse(event.at) : null
-  }
-  // A etapa vai do fim da etapa anterior até o momento em que foi concluída (ou até agora, se é a atual).
-  let start = -Infinity
-  for (let position = index - 1; position >= 0; position--) {
-    const time = timeOf(position)
-    if (time !== null) { start = time; break }
-  }
-  const end = done ? timeOf(index) ?? Infinity : current ? Infinity : -Infinity
-  const events = order.history.filter(event => {
-    const time = Date.parse(event.at)
-    return time > start && time <= end
-  })
   const doneEvent = done ? order.history.find(event => step.actions.includes(event.action)) : undefined
   const media = step.key === 'DELIVERY_PENDING' ? 'DELIVERY' : step.key === 'PICKUP_PENDING' ? 'PICKUP' : null
   const Icon = step.icon
@@ -134,22 +123,14 @@ function StepWindow({ order, couriers, steps, index, now, onOpenMedia, onClose, 
       {side && <div className="oj-window-side">{side}</div>}
       </div>
       {actions && <div className="oj-window-actions">{actions}</div>}
-      <h3>O que foi feito</h3>
-      {events.length === 0 ? <p className="oj-window-empty">{done || current ? 'Nada registrado nesta etapa.' : 'Esta etapa ainda não começou.'}</p>
-        : <ol className="oj-window-list">{events.map((event, position) => {
-          const kind = eventKind(event.action)
-          return <li key={`${event.at}-${position}`} className={`kind-${kind}`}>
-            <span className="oj-window-dot">{eventKinds[kind].emoji}</span>
-            <div><strong>{eventLabel(event.action)}</strong>
-              <small>{dateTimeLabel(event.at)} • por {actorLabel(event.actor, couriers)}</small>
-              {event.note && <p>{event.note}</p>}</div>
-          </li>
-        })}</ol>}
       <div className="modal-actions">
         {media && (done || current) && onOpenMedia && <button type="button" className="button secondary" onClick={() => { onClose(); onOpenMedia(media) }}>
           <Images size={16} /> Ver fotos e vídeos</button>}
-        <button type="button" className="button primary" onClick={onClose}>Fechar</button>
+        <button type="button" className="button secondary" onClick={onClose}>Fechar</button>
+        {advance && <button type="button" className="button primary" disabled={advance.busy || !!advance.blocked}
+          title={advance.blocked || undefined} onClick={advance.run}>{advance.label} <ArrowRight size={16} /></button>}
       </div>
+      {advance?.blocked && <p className="oj-blocked">🔒 {advance.blocked}</p>}
     </section>
   </div>
 }

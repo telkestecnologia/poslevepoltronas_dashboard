@@ -19,6 +19,8 @@ import { MediaCarousel } from './MediaCarousel'
 import { AttendanceSteps } from './AttendanceSteps'
 import { OrderHistoryFull, OrderJourney } from './OrderJourney'
 import logoSymbol from '../../assets/logo-simbolo.png'
+import leaves from '../../assets/folhas-logo.png'
+import './ficha.css'
 
 type Props = { credentials: string; id: string; onBack: () => void }
 
@@ -145,22 +147,11 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
   ]
   const displayStep = order.status === 'PAYMENT_CONFIRMED' ? 1 : displayRows.findIndex(row => row.key === order.status)
   // Ações de cada etapa, mostradas na janela da bolinha da jornada (no computador).
-  function stepActions(key: string, { done, current }: { done: boolean; current: boolean }) {
+  function stepActions(key: string, { done }: { done: boolean; current: boolean }) {
     if (!order) return null
     const phase = key === 'DEPARTURE' ? 'DEPARTURE' : key === 'DELIVERY_PENDING' ? 'DELIVERY' : key === 'PICKUP_PENDING' ? 'PICKUP' : null
     const scheduleKind = phase === 'DEPARTURE' || phase === 'DELIVERY' ? 'delivery' : phase === 'PICKUP' ? 'pickup' : null
     const parts: ReactNode[] = []
-    if (current && nextStatus && !contractOnly) parts.push(<div key="advance" className="oj-action oj-advance">
-      <h4>Concluiu esta etapa? Avance para “{statusLabels[nextStatus].toLowerCase()}”</h4>
-      <p>O cliente e a equipe passam a ver a nova etapa.</p>
-      <div className="od-next-form">
-        <label className="order-field"><span>Observação <span className="optional">(opcional)</span></span>
-          <input value={statusNote} onChange={event => setStatusNote(event.target.value)} maxLength={300}
-            placeholder="Ex.: poltrona instalada e cliente orientado" /></label>
-        <button className="button primary" disabled={busy || !!missingEvidence} onClick={advance}>Avançar <ArrowRight size={16} /></button>
-      </div>
-      {missingEvidence && <p className="oj-blocked">🔒 {missingEvidence}</p>}
-    </div>)
     if (phase && step >= 0 && !contractOnly) {
       if (canChangeSchedule && scheduleKind && !done) parts.push(<div key="schedule" className="oj-action oj-schedule">
         <h4>{scheduleKind === 'delivery' ? '📅 Reagendar a entrega' : '📅 Reagendar ou prorrogar a retirada'}</h4>
@@ -318,37 +309,36 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
       </div>
     </header>
     {fichaOpen && <div className="modal-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) setFichaOpen(false) }}>
-      <section className="modal od-ficha" role="dialog" aria-modal="true" aria-labelledby="od-ficha-title">
-        <div className="modal-head"><div><span className="eyebrow">FICHA DO CLIENTE</span><h2 id="od-ficha-title">{order.customerName}</h2></div>
-          <button className="icon-button" aria-label="Fechar" onClick={() => setFichaOpen(false)}><X size={20} /></button></div>
-        <div className="od-ficha-body">
-          <div className="od-ficha-status"><span className={`order-status status-${order.status.toLowerCase()}`}>{orderStatusLabel(order)}</span>
-            <span>Pedido feito em {dateTimeLabel(order.createdAt)}</span></div>
-          <section><h3><Phone size={16} /> Contato</h3>
-            <div className="od-ficha-contact">
-              <a className="od-contact-link" href={`tel:${phoneDigits}`}><Phone size={15} /> {displayPhone(order.customerPhone)}</a>
-              <a className="od-contact-link whatsapp" href={`https://wa.me/55${phoneDigits}`} target="_blank" rel="noopener noreferrer"><MessageCircle size={15} /> WhatsApp</a>
-            </div></section>
-          <section><h3><CalendarClock size={16} /> Período e horários</h3>
-            <dl className="od-ficha-grid">
-              <div><dt>Período cobrado</dt><dd>{dateLabel(order.start)} a {dateLabel(order.end)}</dd></div>
-              <div><dt>Entrega</dt><dd>{weekdayDateLabel(order.deliveryDate ?? order.start)}{order.deliveryTime ? ` ${timeLabel(order.deliveryTime)}` : ' • sem horário'}</dd></div>
-              <div><dt>Retirada</dt><dd>{weekdayDateLabel(order.pickupDate ?? order.end)}{order.pickupTime ? ` ${timeLabel(order.pickupTime)}` : ' • sem horário'}</dd></div>
-            </dl></section>
-          <section><h3><MapPin size={16} /> Endereço de entrega</h3>
-            <p className="od-ficha-address"><strong>{order.address}</strong>
-              <span>{order.municipalityName}/{order.municipalityUf} • {order.postalCode ? `CEP ${order.postalCode}` : 'sem CEP'}</span></p>
-            <a className="order-map-button" target="_blank" rel="noopener noreferrer" href={mapUrl}><MapPin size={16} /> Abrir mapa</a></section>
-          <section><h3><Truck size={16} /> Poltrona e valores</h3>
-            <dl className="od-ficha-grid">
-              <div><dt>Poltrona</dt><dd>{chairName(order.chairCode, order.branchName)}</dd></div>
-              <div><dt>Filial</dt><dd>{branchLabel(order.branchName)}</dd></div>
-              <div><dt>Entregador</dt><dd>{courier?.name ?? 'Ainda não atribuído'}</dd></div>
-              {order.source === 'CHECKOUT' && <div><dt>Aluguel</dt><dd>{currency(order.rentalCents)}</dd></div>}
-              <div><dt>Frete</dt><dd>{order.freightCents ? currency(order.freightCents) : 'Grátis'}</dd></div>
-              {order.source === 'CHECKOUT' && <div className="od-ficha-total"><dt>Total</dt><dd>{currency(order.totalCents)}</dd></div>}
-            </dl></section>
+      {/* Ficha do cliente com cara de ficha de atendimento: papel claro, folhas da logo, campos sublinhados e a tabela do pedido. */}
+      <section className="modal od-ficha" role="dialog" aria-modal="true" aria-label={`Ficha de ${order.customerName}`}>
+        <img className="od-ficha-leaf top" src={leaves} alt="" aria-hidden="true" />
+        <img className="od-ficha-leaf bottom" src={leaves} alt="" aria-hidden="true" />
+        <button className="icon-button od-ficha-close" aria-label="Fechar" onClick={() => setFichaOpen(false)}><X size={20} /></button>
+        <header className="od-ficha-title"><span>Ficha de</span><em>atendimento</em></header>
+        <div className="od-ficha-fields">
+          <p><b>Nome:</b><span>{order.customerName}</span></p>
+          <p><b>Telefone:</b><span><a href={`tel:${phoneDigits}`}>{displayPhone(order.customerPhone)}</a>
+            <a className="od-ficha-wa" href={`https://wa.me/55${phoneDigits}`} target="_blank" rel="noopener noreferrer"><MessageCircle size={14} /> WhatsApp</a></span></p>
+          <p><b>Endereço:</b><span>{order.address} • {order.municipalityName}/{order.municipalityUf}{order.postalCode ? ` • CEP ${order.postalCode}` : ''}
+            <a className="od-ficha-map" target="_blank" rel="noopener noreferrer" href={mapUrl}><MapPin size={14} /> mapa</a></span></p>
+          <p><b>Poltrona:</b><span>{chairName(order.chairCode, order.branchName)} • {branchLabel(order.branchName)}</span></p>
+          <p><b>Situação:</b><span><i className={`order-status status-${order.status.toLowerCase()}`}>{orderStatusLabel(order)}</i>
+            <small>pedido feito em {dateTimeLabel(order.createdAt)}</small></span></p>
         </div>
+        <table className="od-ficha-table">
+          <thead><tr><th>Data</th><th>Procedimento</th><th>Valor</th></tr></thead>
+          <tbody>
+            <tr><td>{dateLabel(order.start)} a {dateLabel(order.end)}</td><td>Aluguel da poltrona</td>
+              <td>{order.source === 'CHECKOUT' ? currency(order.rentalCents) : '—'}</td></tr>
+            <tr><td>{weekdayDateLabel(order.deliveryDate ?? order.start)}{order.deliveryTime ? ` ${timeLabel(order.deliveryTime)}` : ''}</td>
+              <td>Entrega e instalação</td><td>{order.freightCents ? currency(order.freightCents) : 'Frete grátis'}</td></tr>
+            <tr><td>{weekdayDateLabel(order.pickupDate ?? order.end)}{order.pickupTime ? ` ${timeLabel(order.pickupTime)}` : ''}</td>
+              <td>Retirada da poltrona</td><td>—</td></tr>
+            <tr><td /><td>Entregador: {courier?.name ?? 'ainda não atribuído'}</td><td /></tr>
+          </tbody>
+          {order.source === 'CHECKOUT' && <tfoot><tr><td /><td>Total</td><td>{currency(order.totalCents)}</td></tr></tfoot>}
+        </table>
+        <footer className="od-ficha-foot">@poslevepoltronas</footer>
       </section>
     </div>}
 
@@ -371,7 +361,9 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
     </ol>}
     {/* No computador: a jornada inteira numa linha ligada (substitui as etapas acima). */}
     {step >= 0 && <OrderJourney order={order} couriers={couriers} onOpenMedia={setMediaPhase} renderActions={stepActions}
-      renderSide={key => !contractOnly && ['DEPARTURE', 'DELIVERY_PENDING', 'PICKUP_PENDING'].includes(key) ? issuesCard(' oj-issues') : null} />}
+      advance={nextStatus && !contractOnly ? { label: 'Concluir etapa', blocked: missingEvidence, busy, run: advance } : null}
+      renderSide={key => ['DEPARTURE', 'DELIVERY_PENDING', 'PICKUP_PENDING'].includes(key)
+        ? <img className="oj-window-art" src="/entregador.webp" alt="Entregador da Pós Leve colocando a poltrona embalada na caminhonete" /> : null} />}
     {/* Sem pagamento confirmado não há pedido: só as etapas do atendimento, com o que aconteceu de fato. */}
     {step < 0 && <AttendanceSteps order={order} />}
 
@@ -466,7 +458,7 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
         </section>
 
 
-        {!contractOnly && issuesCard('')}
+        {!contractOnly && issuesCard(' od-issues-main')}
         {/* No computador o histórico completo fica aqui, largo e agrupado por dia (substitui a linha do tempo lateral). */}
         <OrderHistoryFull order={order} couriers={couriers} />
       </div>
@@ -503,7 +495,8 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
           </div>}
         </section>
 
-        {!contractOnly && <section className="panel od-card" aria-labelledby="od-courier-title">
+        {!contractOnly && issuesCard(' od-issues-side')}
+        {!contractOnly && <section className="panel od-card od-courier-card" aria-labelledby="od-courier-title">
           <h2 id="od-courier-title" className="od-side-title">Entregador</h2>
           <select className="od-select admin-only" aria-label="Entregador do pedido" value={order.courierId ?? ''}
             disabled={busy || step < 0 || order.status === 'COMPLETED'}

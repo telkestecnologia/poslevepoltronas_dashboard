@@ -1,0 +1,38 @@
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&display=swap');
+
+/* Ficha do cliente: como uma ficha de atendimento impressa, nas cores da Pós Leve. */
+.modal.od-ficha { position: relative; width: min(760px, calc(100vw - 48px)); padding: 46px 52px 34px; overflow-x: hidden;
+  background: radial-gradient(600px 300px at 0% 0%, rgba(26, 155, 170, 0.1), transparent 70%),
+    radial-gradient(500px 280px at 100% 100%, rgba(232, 116, 97, 0.1), transparent 70%), #fbf8f3; }
+.od-ficha-leaf { position: absolute; width: 150px; opacity: 0.55; pointer-events: none; }
+.od-ficha-leaf.top { top: -22px; left: -34px; transform: rotate(-12deg); }
+.od-ficha-leaf.bottom { right: -36px; bottom: -26px; transform: scaleX(-1) rotate(-18deg); }
+.od-ficha-close { position: absolute; top: 16px; right: 16px; }
+.od-ficha-title { display: grid; justify-items: center; margin-bottom: 26px; line-height: 1; }
+.od-ficha-title span { color: #12727d; font-family: 'Outfit', sans-serif; font-size: 40px; font-weight: 700; letter-spacing: -0.02em; }
+.od-ficha-title em { margin-top: -4px; color: #c4532c; font-family: 'Dancing Script', cursive; font-size: 46px; font-style: normal; font-weight: 600; }
+.od-ficha-fields { position: relative; display: grid; gap: 14px; margin-bottom: 26px; }
+.od-ficha-fields p { display: grid; grid-template-columns: 96px minmax(0, 1fr); align-items: end; gap: 10px; margin: 0; }
+.od-ficha-fields b { color: #3e4e53; font-family: 'Outfit', sans-serif; font-size: 16px; }
+.od-ficha-fields span { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; min-height: 30px; padding: 0 2px 4px;
+  border-bottom: 1.5px solid #c8b8a6; color: #1f3340; font-size: 15.5px; font-weight: 600; }
+.od-ficha-fields a { color: #12727d; }
+.od-ficha-fields small { color: #7a8287; font-weight: 400; }
+.od-ficha-fields i { font-style: normal; }
+.od-ficha-wa, .od-ficha-map { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 99px; background: #e5f4ea;
+  color: #1f7a4a !important; font-size: 12.5px; }
+.od-ficha-map { background: #e3f4f2; color: #12727d !important; }
+.od-ficha-table { position: relative; width: 100%; min-width: 0; border-collapse: separate; border-spacing: 0; overflow: hidden; border-radius: 6px; }
+.od-ficha-table th { padding: 13px 16px; background: #12727d; color: #fff; font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 600;
+  letter-spacing: 0; text-align: left; }
+.od-ficha-table td { padding: 13px 16px; border-top: 2px solid #fbf8f3; background: #e8f3f1; color: #1f3340; font-size: 14px; }
+.od-ficha-table td + td, .od-ficha-table th + th { border-left: 2px solid #fbf8f3; }
+.od-ficha-table td:last-child, .od-ficha-table th:last-child { text-align: right; white-space: nowrap; }
+.od-ficha-table tbody tr:nth-child(even) td { background: #f0f7f6; }
+.od-ficha-table tfoot td { background: #fdebe6; color: #c4532c; font-family: 'Outfit', sans-serif; font-size: 17px; font-weight: 700; }
+.od-ficha-foot { margin-top: 22px; color: #8a7a68; font-family: 'Outfit', sans-serif; font-size: 15px; text-align: center; }
+@media (max-width: 640px) {
+  .modal.od-ficha { padding: 40px 18px 24px; }
+  .od-ficha-fields p { grid-template-columns: 1fr; gap: 2px; }
+  .od-ficha-title span { font-size: 30px; } .od-ficha-title em { font-size: 36px; }
+}

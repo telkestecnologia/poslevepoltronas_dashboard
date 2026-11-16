@@ -40,9 +40,12 @@ function pricingError(daily: number, minDays: number, maxDays: number, plans: Pl
   return ''
 }
 
+// Última leitura guardada: ao voltar para a tela ela aparece na hora e se atualiza por trás.
+let cached: { options: PaymentOptions; catalog: PricingCatalog } | null = null
+
 export function PaymentsPricingPage({ credentials }: { credentials: string }) {
   const [loadError, setLoadError] = useState('')
-  const [options, setOptions] = useState<PaymentOptions | null>(null)
+  const [options, setOptions] = useState<PaymentOptions | null>(() => cached?.options ?? null)
   const [catalog, setCatalog] = useState<PricingCatalog | null>(null)
   const [daily, setDaily] = useState('')
   const [maxDays, setMaxDays] = useState('')
@@ -63,8 +66,9 @@ export function PaymentsPricingPage({ credentials }: { credentials: string }) {
 
   useEffect(() => {
     let active = true
+    if (cached) fillPricing(cached.catalog)
     Promise.all([api.paymentOptions(credentials), api.pricing(credentials)])
-      .then(([payment, pricing]) => { if (active) { setOptions(payment); fillPricing(pricing) } })
+      .then(([payment, pricing]) => { cached = { options: payment, catalog: pricing }; if (active) { setOptions(payment); fillPricing(pricing) } })
       .catch(cause => { if (active) setLoadError(getMessage(cause)) })
     return () => { active = false }
   }, [credentials])
