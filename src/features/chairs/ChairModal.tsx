@@ -25,8 +25,8 @@ export function ChairModal({
     status: ChairStatus
     branchId: string
   }) => Promise<void>
-  /** Excluir poltrona (só sem pedidos). */
-  onDelete?: (chair: Chair) => Promise<void>
+  /** Excluir poltrona: fica Inativa com o motivo registrado na observação. */
+  onDelete?: (chair: Chair, reason: string) => Promise<void>
 }) {
   const chair = modal.kind === 'editChair' ? modal.chair : null
   const [code, setCode] = useState(chair?.code ?? '')
@@ -131,7 +131,11 @@ export function ChairModal({
           )}
           <div className="modal-actions">
             {chair && onDelete && <button type="button" className="button chair-delete" disabled={saving}
-              onClick={() => { if (window.confirm(`Excluir a poltrona ${chair.code}? Ela e os bloqueios dela serão apagados e isso não pode ser desfeito. Se ela já teve pedidos, deixe como Inativa.`)) void onDelete(chair) }}>
+              onClick={() => {
+                const reason = window.prompt(`Excluir a poltrona ${chair.code}? Ela sai do site e do WhatsApp e fica como Inativa, com o motivo registrado na observação.\n\nMotivo da exclusão:`)
+                if (reason && reason.trim().length >= 3) void onDelete(chair, reason)
+                else if (reason !== null) window.alert('Informe o motivo da exclusão (pelo menos 3 letras).')
+              }}>
               Excluir poltrona</button>}
             <button type="button" className="button secondary" onClick={onClose} disabled={saving}>
               Cancelar

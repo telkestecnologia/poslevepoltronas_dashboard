@@ -83,8 +83,11 @@ export function ProfilePage({ credentials, onCredentialsChanged, partner = false
       </section>
 
       {!partner && <section className="panel table-panel profile-team">
-        <div className="profile-team-head">
-          <h2><Users size={18} /> Equipe</h2>
+        {/* Título "Equipe" centralizado, grande, com o ícone num círculo e linhas dos lados (igual ao app). */}
+        <div className="profile-team-hero">
+          <span className="profile-team-icon"><Users size={26} /></span>
+          <h2><span />Equipe<span /></h2>
+          <p>{team ? `${team.length} ${team.length === 1 ? 'pessoa' : 'pessoas'} no time Pós Leve` : 'O time Pós Leve'}</p>
           <button className="button primary" onClick={() => setDialog({ kind: 'member', member: null })}><Plus size={18} /> Cadastrar usuário</button>
         </div>
         {!team ? <p className="profile-loading">Carregando equipe…</p>

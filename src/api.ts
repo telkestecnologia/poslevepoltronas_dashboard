@@ -492,14 +492,12 @@ export const api = {
     credentials: string,
     data: { code: string; model: string; notes: string; branchId: string },
   ) => request<Chair>(credentials, '/chairs', { method: 'POST', body: JSON.stringify(data) }),
-  /** Exclui a poltrona; com pedidos o servidor recusa (409) e o certo é deixar como Inativa. */
-  deleteChair: async (credentials: string, id: string) => {
-    try {
-      await request<void>(credentials, `/chairs/${encodeURIComponent(id)}`, { method: 'DELETE' })
-    } catch (cause) {
-      if (cause instanceof ApiError && cause.status === 409) throw new ApiError(409, 'Esta poltrona já tem pedidos. Em vez de excluir, deixe como Inativa.')
-      throw cause
-    }
+  /**
+   * Exclui a poltrona sem apagar o histórico: ela fica Inativa e a observação registra "Excluída em ... por ... Motivo: ...".
+   * Com pedido em andamento o servidor recusa (409) com a explicação.
+   */
+  deleteChair: async (credentials: string, id: string, reason: string) => {
+    await request<unknown>(credentials, `/chairs/${encodeURIComponent(id)}?reason=${encodeURIComponent(reason.trim())}`, { method: 'DELETE' })
   },
   updateChair: (
     credentials: string,

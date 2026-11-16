@@ -335,13 +335,13 @@ export function useDashboard() {
   }
 
   // Mutations refresh the page they changed before closing the form.
-  async function deleteChair(chair: Chair) {
+  async function deleteChair(chair: Chair, reason: string) {
     if (credentials === null) return
     setSaving(true)
     setFormError('')
     try {
-      await api.deleteChair(credentials, chair.id)
-      showNotice('Poltrona excluída.')
+      await api.deleteChair(credentials, chair.id, reason)
+      showNotice('Poltrona excluída: ficou como Inativa, com o motivo na observação.')
       setModal(null)
       applyPageData(await loadPage(credentials, page === 'branches' ? 'branches' : 'chairs', chairQuery, rentalDate))
     } catch (error) {
