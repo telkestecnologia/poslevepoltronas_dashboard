@@ -4,6 +4,7 @@ import { confirmPasswordReset, requestPasswordReset } from '../api'
 import { getMessage } from '../utils/errors'
 import { formatPhone } from '../utils/phone'
 import './forgot-password.css'
+import { PasswordInput } from './PasswordInput'
 
 const RESEND_SECONDS = 60
 
@@ -84,9 +85,9 @@ export function ForgotPassword({ onClose, onDone }: { onClose: () => void; onDon
         {notice && <div className="forgot-notice" role="status">{notice}</div>}
         <label>Código de 6 dígitos<input className="forgot-code" inputMode="numeric" autoComplete="one-time-code" value={code}
           onChange={event => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="000000" autoFocus required /></label>
-        <label>Nova senha<input type="password" value={password} onChange={event => setPassword(event.target.value)} autoComplete="new-password"
+        <label>Nova senha<PasswordInput value={password} onChange={event => setPassword(event.target.value)} autoComplete="new-password"
           minLength={6} maxLength={72} placeholder="De 6 a 72 caracteres" required /></label>
-        <label>Confirmar nova senha<input type="password" value={confirm} onChange={event => setConfirm(event.target.value)} autoComplete="new-password" required /></label>
+        <label>Confirmar nova senha<PasswordInput value={confirm} onChange={event => setConfirm(event.target.value)} autoComplete="new-password" required /></label>
         {error && <div className="form-error" role="alert">{error}</div>}
         <button className="button primary" type="submit" disabled={busy || code.length !== 6}>
           {busy ? 'Salvando...' : 'Criar nova senha'} <ArrowRight size={17} /></button>

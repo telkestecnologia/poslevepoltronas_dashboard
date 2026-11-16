@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { NotificationToggle } from './NotificationToggle'
 import { ArrowRight, ChevronRight, KeyRound, Mail, Plus, Sparkles, UserRound, Users, X } from 'lucide-react'
 import { FormIntro } from '../../components/FormIntro'
+import { PasswordInput } from '../../components/PasswordInput'
 import owners from '../../assets/fundadoras-capa.webp'
 import renata from '../../assets/renata.webp'
 import isadora from '../../assets/isadora.webp'
@@ -154,9 +155,9 @@ function PasswordDialog({ credentials, email, onClose, onDone, onCredentialsChan
   }
   return <Modal title="Alterar senha" eyebrow="MEUS DADOS" onClose={onClose} busy={busy}>
     <form className="modal-form" onSubmit={event => void submit(event)}>
-      <label>Senha atual<input type="password" value={current} onChange={event => setCurrent(event.target.value)} required autoComplete="current-password" autoFocus /></label>
-      <label>Nova senha<input type="password" value={next} onChange={event => setNext(event.target.value)} required minLength={6} maxLength={72} autoComplete="new-password" placeholder="De 6 a 72 caracteres" /></label>
-      <label>Confirmar nova senha<input type="password" value={confirm} onChange={event => setConfirm(event.target.value)} required autoComplete="new-password" /></label>
+      <label>Senha atual<PasswordInput value={current} onChange={event => setCurrent(event.target.value)} required autoComplete="current-password" autoFocus /></label>
+      <label>Nova senha<PasswordInput value={next} onChange={event => setNext(event.target.value)} required minLength={6} maxLength={72} autoComplete="new-password" placeholder="De 6 a 72 caracteres" /></label>
+      <label>Confirmar nova senha<PasswordInput value={confirm} onChange={event => setConfirm(event.target.value)} required autoComplete="new-password" /></label>
       {error && <div className="form-error" role="alert">{error}</div>}
       <div className="modal-actions"><button type="button" className="button secondary" onClick={onClose} disabled={busy}>Cancelar</button>
         <button type="submit" className="button primary" disabled={busy}>{busy ? 'Salvando...' : 'Salvar nova senha'} <ArrowRight size={17} /></button></div>
@@ -190,7 +191,7 @@ function EmailDialog({ credentials, current, onClose, onDone, onCredentialsChang
     <form className="modal-form" onSubmit={event => void submit(event)}>
       <small className="field-help">E-mail atual: {current}</small>
       <label>Novo e-mail<input type="email" value={email} onChange={event => setEmail(event.target.value)} required autoFocus /></label>
-      <label>Senha atual<input type="password" value={password} onChange={event => setPassword(event.target.value)} required autoComplete="current-password" /></label>
+      <label>Senha atual<PasswordInput value={password} onChange={event => setPassword(event.target.value)} required autoComplete="current-password" /></label>
       {error && <div className="form-error" role="alert">{error}</div>}
       <div className="modal-actions"><button type="button" className="button secondary" onClick={onClose} disabled={busy}>Cancelar</button>
         <button type="submit" className="button primary" disabled={busy}>{busy ? 'Salvando...' : 'Salvar novo e-mail'} <ArrowRight size={17} /></button></div>
@@ -314,9 +315,9 @@ function MemberDialog({ credentials, member, areas, branches, onAreas, onClose, 
       {member && !member.self && <label className="branch-option"><input type="checkbox" checked={form.enabled ?? true}
         onChange={event => set('enabled', event.target.checked)} /><span>Acesso ativo</span></label>}
       <label>{member ? 'Nova senha' : 'Senha'} {member && <span className="optional">(opcional)</span>}
-        <input type="password" value={form.password} onChange={event => set('password', event.target.value)} autoComplete="new-password"
+        <PasswordInput value={form.password} onChange={event => set('password', event.target.value)} autoComplete="new-password"
           placeholder={member ? 'Deixe vazio para manter a atual' : 'Pelo menos 6 caracteres'} /></label>
-      <label>Confirmar senha<input type="password" value={confirm} onChange={event => setConfirm(event.target.value)} autoComplete="new-password" /></label>
+      <label>Confirmar senha<PasswordInput value={confirm} onChange={event => setConfirm(event.target.value)} autoComplete="new-password" /></label>
       {error && <div className="form-error" role="alert">{error}</div>}
       <div className="modal-actions">
         {member && !member.self && <button type="button" className="button profile-remove" onClick={() => void remove()} disabled={busy}>Remover</button>}

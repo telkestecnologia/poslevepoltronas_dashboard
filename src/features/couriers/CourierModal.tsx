@@ -3,6 +3,7 @@ import { ArrowRight, Bike, X } from 'lucide-react'
 import { FormIntro } from '../../components/FormIntro'
 import type { Courier, CourierInput } from '../../api'
 import { formatPhone } from '../../utils/phone'
+import { PasswordInput } from '../../components/PasswordInput'
 
 type Props = {
   modal: { kind: 'newCourier' } | { kind: 'editCourier'; courier: Courier }
@@ -56,7 +57,7 @@ export function CourierModal({ modal, saving, error, onClose, onSave }: Props) {
       <label>Veículo <span className="optional">(opcional)</span><input value={vehicle}
         onChange={event => setVehicle(event.target.value)} maxLength={100} placeholder="Ex.: Fiorino • ABC-1D23" /></label>
       <label>{courier ? 'Nova senha' : 'Senha inicial'} {courier && <span className="optional">(opcional)</span>}
-        <input type="password" value={password} onChange={event => setPassword(event.target.value)}
+        <PasswordInput value={password} onChange={event => setPassword(event.target.value)}
           minLength={6} maxLength={72} required={!courier} autoComplete="new-password"
           placeholder={courier ? 'Deixe vazio para manter a senha atual' : 'Mínimo de 6 caracteres'} /></label>
       <small className="field-help">{courier
