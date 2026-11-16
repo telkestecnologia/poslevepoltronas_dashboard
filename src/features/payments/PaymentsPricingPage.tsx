@@ -6,6 +6,7 @@ import { getMessage } from '../../utils/errors'
 import banner from '../../assets/precos-pagamentos.webp'
 import { PriceRuler, planTone } from './PriceRuler'
 import './payments.css'
+import { announceSaved } from '../../components/SavedToast'
 
 /** Até 12x sem juros na fatura do Asaas (o mesmo limite do backend). */
 const MAX_INSTALLMENTS = 12
@@ -63,6 +64,10 @@ export function PaymentsPricingPage({ credentials }: { credentials: string }) {
     setMinDays(String(value.minDays ?? 1))
     setPlans(value.plans.map(plan => ({ ...plan, price: toText(plan.priceCents), days: String(plan.days) })))
   }
+
+  // Confirmação de salvo no meio da tela.
+  useEffect(() => { if (paymentNote?.tone === 'ok') announceSaved(paymentNote.text) }, [paymentNote])
+  useEffect(() => { if (pricingNote?.tone === 'ok') announceSaved(pricingNote.text) }, [pricingNote])
 
   useEffect(() => {
     let active = true

@@ -1,3 +1,4 @@
+import { announceSaved } from '../components/SavedToast'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   api,
@@ -330,8 +331,9 @@ export function useDashboard() {
     setModal(next)
   }
 
+  // Tudo o que é salvo aparece em destaque no meio da tela.
   function showNotice(message: string) {
-    setNotice(message)
+    announceSaved(message)
   }
 
   // Mutations refresh the page they changed before closing the form.

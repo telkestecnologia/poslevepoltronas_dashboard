@@ -6,6 +6,7 @@ import { getMessage } from '../../utils/errors'
 import { AiEditorModal, type AiEditor } from './AiEditorModal'
 import { WhatsAppText } from '../conversations/WhatsAppText'
 import './ai.css'
+import { announceSaved } from '../../components/SavedToast'
 
 type Props = {
   credentials: string
@@ -247,6 +248,7 @@ export function AiContextPage({ knowledge, unanswered, onCreateKnowledge, onUpda
                       setError('')
                       try {
                         await onAnswerUnanswered(entry.id, answerDraft.trim())
+                        announceSaved('Resposta salva. A Isa já sabe responder essa dúvida.')
                         setAnsweringId(null)
                         setAnswerDraft('')
                       } catch (cause) {
@@ -304,7 +306,7 @@ function AnswerView({ answer, busy, onSave, onRemove }: {
   async function save() {
     const text = match ? `${guide} ${label}\n\n${sampleDraft.trim()}` : sampleDraft.trim()
     if (!sampleDraft.trim()) return
-    if (await onSave(text)) setEditing(false)
+    if (await onSave(text)) { setEditing(false); announceSaved('A mensagem da Isa foi atualizada.') }
   }
 
   return <div className={`ai-answer with-sample${editing ? ' editing' : ''}`}>

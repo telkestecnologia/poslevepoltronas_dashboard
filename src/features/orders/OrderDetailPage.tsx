@@ -14,6 +14,7 @@ import { branchLabel, chairName } from '../../utils/branches'
 import { getMessage } from '../../utils/errors'
 import { brazilPhoneDigits, displayPhone } from '../../utils/phone'
 import { OrderEvidencePanel } from './OrderEvidencePanel'
+import { announceSaved } from '../../components/SavedToast'
 import { EarlySchedule, InlineSchedule } from './EarlySchedule'
 import { MediaCarousel } from './MediaCarousel'
 import { AttendanceSteps } from './AttendanceSteps'
@@ -91,6 +92,9 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
     }).catch(() => {})
     return () => { active = false }
   }, [credentials, id, order?.status])
+
+  // Confirmação de salvo no meio da tela.
+  useEffect(() => { if (saved) announceSaved(saved) }, [saved])
 
   useEffect(() => {
     if (!saved) return
@@ -342,8 +346,6 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
       </section>
     </div>}
 
-    {saved && <div className="toast od-toast" role="status"><Check size={18} />{saved}
-      <button aria-label="Fechar mensagem" onClick={() => setSaved('')}><X size={16} /></button></div>}
     {error && <div className="form-error" role="alert">{error}</div>}
     {noticesOf(order).map(notice => <div key={notice.text} className={`od-notice ${notice.tone}`}>
       {notice.tone === 'danger' ? <AlertCircle size={18} /> : <Info size={18} />}<p>{notice.text}</p></div>)}

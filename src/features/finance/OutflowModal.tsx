@@ -4,6 +4,7 @@ import { FormIntro } from '../../components/FormIntro'
 import { api, type Branch } from '../../api'
 import { branchLabel } from '../../utils/branches'
 import { getMessage } from '../../utils/errors'
+import { announceSaved } from '../../components/SavedToast'
 
 export const OUTFLOW_CATEGORIES = [
   ['MANUTENCAO', 'Manutenção'], ['COMBUSTIVEL', 'Combustível'], ['FRETE', 'Frete e entrega'], ['SALARIOS', 'Salários'],
@@ -47,6 +48,7 @@ export function OutflowModal({ credentials, branches, onClose, onSaved }: {
       const target = branchId === ALL ? { branchIds: branches.map(branch => branch.id) } : { branchId }
       await api.registerOutflow(credentials, { ...target, amountCents: cents, category, paymentMethod: method, description: description.trim(), date })
       onSaved()
+      announceSaved(`Saída de ${money.format(cents / 100)} registrada.`)
       onClose()
     } catch (failure) {
       setError(getMessage(failure))

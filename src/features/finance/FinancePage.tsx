@@ -5,6 +5,7 @@ import { branchLabel, onlyOfficialBranches } from '../../utils/branches'
 import { getMessage } from '../../utils/errors'
 import { RentalDatePicker } from '../overview/RentalDatePicker'
 import { downloadFinanceReport } from './financeReport'
+import { announceSaved } from '../../components/SavedToast'
 import { OUTFLOW_CATEGORIES, OutflowModal } from './OutflowModal'
 import './financeReport.css'
 
@@ -168,7 +169,7 @@ export function FinancePage({ credentials }: { credentials: string }) {
     const split = /\(dividido entre \d+ filiais\)$/.test(entry.description)
     const note = split ? '\n\nA saída foi dividida entre as filiais: todas as partes serão excluídas.' : ''
     if (!window.confirm(`Excluir esta saída?\n\n${entry.description}\n${currency(entry.amountCents)}${note}`)) return
-    api.deleteOutflow(credentials, entry.id).then(() => setReloadKey(key => key + 1)).catch(failure => setError(getMessage(failure)))
+    api.deleteOutflow(credentials, entry.id).then(() => { setReloadKey(key => key + 1); announceSaved('Saída excluída.') }).catch(failure => setError(getMessage(failure)))
   }
 
   function openFilter() {
