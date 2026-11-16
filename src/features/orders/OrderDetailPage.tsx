@@ -53,6 +53,8 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
   const [issueDescription, setIssueDescription] = useState('')
   const [resolutions, setResolutions] = useState<Record<string, string>>({})
   const [pixNote, setPixNote] = useState('')
+  // Fotos e vídeos de cada etapa: entrega e retirada só avançam com pelo menos um registro.
+  const [evidenceCount, setEvidenceCount] = useState<{ DELIVERY: number | null; PICKUP: number | null }>({ DELIVERY: null, PICKUP: null })
   const revision = useRef(0)
 
   const load = useCallback(async () => {
@@ -78,6 +80,14 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
     api.couriers(credentials).then(list => { if (active) setCouriers(list) }).catch(() => {})
     return () => { active = false }
   }, [credentials])
+
+  useEffect(() => {
+    let active = true
+    api.orderEvidence(credentials, id).then(list => {
+      if (active) setEvidenceCount({ DELIVERY: list.filter(item => item.phase === 'DELIVERY').length, PICKUP: list.filter(item => item.phase === 'PICKUP').length })
+    }).catch(() => {})
+    return () => { active = false }
+  }, [credentials, id, order?.status])
 
   useEffect(() => {
     if (!saved) return
@@ -116,6 +126,10 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
   </div>
 
   const step = statusFlow.indexOf(order.status)
+  // Sem foto ou vídeo da entrega (ou da retirada), o pedido não avança.
+  const evidencePhase = order.status === 'DELIVERY_PENDING' ? 'DELIVERY' : order.status === 'PICKUP_PENDING' ? 'PICKUP' : null
+  const missingEvidence = evidencePhase && evidenceCount[evidencePhase] === 0
+    ? `Tire ou insira pelo menos uma foto ou vídeo da ${evidencePhase === 'DELIVERY' ? 'entrega' : 'retirada'} para avançar.` : ''
   const nextStatus = step >= 0 ? statusFlow[step + 1] : undefined
   const contractOnly = order.id.startsWith('wa-contrato-')
   const canChangeSchedule = order.source === 'CHECKOUT' && !contractOnly
@@ -142,8 +156,9 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
         <label className="order-field"><span>Observação <span className="optional">(opcional)</span></span>
           <input value={statusNote} onChange={event => setStatusNote(event.target.value)} maxLength={300}
             placeholder="Ex.: entrega reagendada com o cliente" /></label>
-        <button className="button primary" disabled={busy} onClick={advance}>Avançar <ArrowRight size={16} /></button>
+        <button className="button primary" disabled={busy || !!missingEvidence} onClick={advance}>Avançar <ArrowRight size={16} /></button>
       </div>
+      {missingEvidence && <p className="oj-blocked">🔒 {missingEvidence}</p>}
     </div>)
     if (phase && step >= 0 && !contractOnly) {
       if (canChangeSchedule && scheduleKind && !done) parts.push(<div key="schedule" className="oj-action oj-schedule">
@@ -160,7 +175,8 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
       if (phase !== 'DEPARTURE' && order.status === evidenceStatus) parts.push(<div key="evidence" className="oj-action">
         <h4>Fotos e vídeos {phase === 'DELIVERY' ? 'da entrega' : 'da retirada'}</h4>
         <OrderEvidencePanel key={`${order.id}:${order.status}:${phase}`} credentials={credentials} orderId={order.id}
-          status={order.status} couriers={couriers} phase={phase} /></div>)
+          status={order.status} couriers={couriers} phase={phase}
+          onCount={count => setEvidenceCount(current => current[phase] === count ? current : { ...current, [phase]: count })} /></div>)
     }
     return parts.length ? parts : null
   }
@@ -192,6 +208,7 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
 
   function advance() {
     if (!order || !nextStatus) return
+    if (missingEvidence) { setError(missingEvidence); return }
     if (!window.confirm(`Avançar o pedido de ${order.customerName} para “${statusLabels[nextStatus]}”?`)) return
     void perform(() => api.changeOrderStatus(credentials, order.id, nextStatus, statusNote),
       `Pedido avançado para ${statusLabels[nextStatus].toLowerCase()}.`, () => setStatusNote(''))

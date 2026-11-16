@@ -1,2 +1,17 @@
 /* Ações do visualizador de fotos e vídeos do pedido. */
 .evidence-viewer-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+
+/* Tirar foto, gravar vídeo e inserir arquivos (painel). */
+.evidence-upload-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 6px 0 4px; }
+.evidence-upload-button { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border: 1.5px dashed #a9dfe5; border-radius: 14px;
+  background: #f4fbfb; color: #12727d; font: inherit; text-align: left; cursor: pointer; transition: transform 0.15s, background 0.15s, border-color 0.15s; }
+.evidence-upload-button:hover:not(:disabled) { transform: translateY(-2px); border-style: solid; background: #e3f4f2; }
+.evidence-upload-button:disabled { opacity: 0.55; cursor: wait; }
+.evidence-upload-button svg { flex: none; box-sizing: content-box; padding: 8px; border-radius: 10px; background: #fff; }
+.evidence-upload-button.video { border-color: #f5c3b8; background: #fff7f5; color: #c4532c; }
+.evidence-upload-button.video:hover:not(:disabled) { background: #fdebe6; }
+.evidence-upload-button strong { display: block; font-size: 14px; }
+.evidence-upload-button small { display: block; color: #6b7f86; font-size: 12px; }
+.evidence-upload-status { color: #12727d; font-weight: 700; }
+.oj-blocked { margin: 6px 0 0; padding: 10px 12px; border-radius: 10px; background: #fff4ec; color: #a6573d; font-size: 13px; font-weight: 600; }
+@media (max-width: 640px) { .evidence-upload-actions { grid-template-columns: 1fr; } }

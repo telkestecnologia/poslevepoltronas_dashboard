@@ -151,6 +151,30 @@ export type ConversationMessage = {
   attachments?: { url: string; kind: 'IMAGE' | 'VIDEO' | 'AUDIO' | 'DOCUMENT'; contentType: string; filename: string }[] | null
 }
 
+/** Envia foto (JPEG) ou vídeo (MP4/MOV) da entrega ou da retirada pelo painel. */
+export async function uploadOrderEvidenceFile(credentials: string, orderId: string, phase: 'DELIVERY' | 'PICKUP', file: Blob, name: string) {
+  const form = new FormData()
+  form.append('file', file, name)
+  form.append('phase', phase)
+  form.append('capturedAt', new Date().toISOString())
+  let response: Response
+  try {
+    response = await fetch(`${baseUrl}/api/admin/${encodeURIComponent(tenantSlug)}/orders/${encodeURIComponent(orderId)}/evidence/files`, {
+      method: 'POST', body: form, headers: { Authorization: `Basic ${credentials}` },
+    })
+  } catch {
+    throw new ApiError(0, 'Não foi possível conectar à API. Confira sua internet.')
+  }
+  if (!response.ok) {
+    const message = response.status === 413 ? 'O arquivo é grande demais para enviar.'
+      : response.status === 415 ? 'Envie foto (JPG, PNG ou HEIC vira JPG) ou vídeo MP4/MOV.'
+        : response.status === 409 ? 'Esta etapa do pedido não aceita fotos e vídeos agora.'
+          : `Erro ${response.status} ao enviar o arquivo.`
+    throw new ApiError(response.status, message)
+  }
+  return response.json() as Promise<OrderEvidence>
+}
+
 /** Envia imagem, vídeo, áudio ou PDF (até 16 MB) na conversa, com a mensagem digitada como legenda (igual ao app). */
 export async function sendConversationAttachment(credentials: string, id: string, file: File, caption: string) {
   const form = new FormData()
