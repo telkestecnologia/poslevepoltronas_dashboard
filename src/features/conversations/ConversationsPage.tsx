@@ -174,7 +174,9 @@ export function ConversationsPage({ credentials, selectedId, onSelect }: Props) 
         {whatsApp === 'ERROR' && <div className="wa-demo wa-error">Não foi possível buscar as conversas do WhatsApp agora. Aparecem só as do site.</div>}
         {listError && <div className="wa-demo wa-error">{listError}</div>}
         <div className="wa-filters" role="tablist" aria-label="Filtrar conversas">
-          {([['HELP', `Pediu ajuda${helpCount ? ` ${helpCount}` : ''}`], ['WHATSAPP', 'WhatsApp'], ['SITE', 'Site']] as const)
+          {([['HELP', `Pediu ajuda${helpCount ? ` ${helpCount}` : ''}`],
+            ['WHATSAPP', `WhatsApp ${conversations.filter(item => item.channel === 'WHATSAPP').length}`],
+            ['SITE', `Site ${conversations.filter(item => item.channel === 'SITE').length}`]] as const)
             .map(([value, label]) => <button key={value} type="button" role="tab" aria-selected={filter === value}
               className={`${filter === value ? 'selected' : ''}${value === 'HELP' ? ' wa-filter-help' : ''}`} onClick={() => setFilter(value)}>{label}</button>)}
         </div>
