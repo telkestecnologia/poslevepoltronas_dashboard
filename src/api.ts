@@ -215,6 +215,9 @@ export type AiUnansweredQuestion = {
   occurrences: number
   firstAskedAt: string
   lastAskedAt: string
+  /** Conversa onde a dúvida foi feita da última vez (site ou WhatsApp). */
+  lastConversationId?: string | null
+  channel?: string | null
 }
 export type AiNotificationSettings = { emails: string[]; whatsAppNumbers: string[] }
 

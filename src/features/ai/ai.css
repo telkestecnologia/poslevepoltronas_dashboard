@@ -162,3 +162,9 @@
 .ai-learned-filter button.active { background: #e87461; border-color: #e87461; color: #fff; }
 .ai-learned-filter button.active span { background: rgba(255, 255, 255, 0.25); }
 .ai-learned-filter small { color: var(--muted); font-size: 12.5px; }
+
+/* Ver a conversa onde a dúvida apareceu. */
+.ai-pending-links { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.ai-pending-chat { display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; border: 0; border-radius: 99px; background: #e3f4f2;
+  color: #12727d; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.15s; }
+.ai-pending-chat:hover { background: #cfeee9; }

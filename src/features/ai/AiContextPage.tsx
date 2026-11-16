@@ -19,6 +19,8 @@ type Props = {
   onDeleteUnanswered: (id: string) => Promise<void>
   onRecordUnanswered: (question: string) => Promise<void>
   onRefresh: () => void
+  /** Abre a conversa no Atendimento. */
+  onOpenConversation?: (id: string) => void
   /** Aba Avisos: quem da equipe é avisado quando a Isa não sabe responder. */
   alerts?: ReactNode
 }
@@ -34,7 +36,7 @@ function matches(text: string, search: string) {
   return normalize(text).includes(normalize(search.trim()))
 }
 
-export function AiContextPage({ knowledge, unanswered, onCreateKnowledge, onUpdateKnowledge, onDeleteKnowledge, onAnswerUnanswered, onDeleteUnanswered, onRecordUnanswered, onRefresh, alerts }: Props) {
+export function AiContextPage({ knowledge, unanswered, onCreateKnowledge, onUpdateKnowledge, onDeleteKnowledge, onAnswerUnanswered, onDeleteUnanswered, onRecordUnanswered, onRefresh, onOpenConversation, alerts }: Props) {
   const [tab, setTab] = useState<'knowledge' | 'unanswered' | 'alerts'>('knowledge')
   const [search, setSearch] = useState('')
   const [editor, setEditor] = useState<AiEditor | null>(null)
@@ -247,7 +249,12 @@ export function AiContextPage({ knowledge, unanswered, onCreateKnowledge, onUpda
                   <small>Última vez em {dateLabel(entry.lastAskedAt)} · {entry.occurrences} {entry.occurrences === 1 ? 'vez' : 'vezes'}</small>
                 </div>
                 <h3>{entry.question}</h3>
-                {answeringId !== entry.id && <span className="ai-pending-cta admin-only">✍️ Clique para responder</span>}
+                <div className="ai-pending-links">
+                  {answeringId !== entry.id && <span className="ai-pending-cta admin-only">✍️ Clique para responder</span>}
+                  {entry.lastConversationId && onOpenConversation && <button type="button" className="ai-pending-chat"
+                    onClick={() => onOpenConversation(entry.lastConversationId!)}><MessageCircle size={15} /> Ver a conversa
+                    {entry.channel ? ` (${entry.channel === 'WHATSAPP' ? 'WhatsApp' : 'site'})` : ''}</button>}
+                </div>
                 {/* Responder ali mesmo: a resposta vai para "Perguntas e respostas" e a Isa passa a saber. */}
                 {answeringId === entry.id && <div className="ai-pending-answer admin-only">
                   <label>Sua resposta para a Isa usar
