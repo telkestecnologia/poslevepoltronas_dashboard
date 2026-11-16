@@ -269,3 +269,11 @@
 .wa-recording-label { color: #8696a0; font-size: 14px; }
 @keyframes wa-rec { from { opacity: 1; } to { opacity: 0.25; } }
 @media (prefers-reduced-motion: reduce) { .wa-recording-dot { animation: none; } }
+
+/* Computador: a conversa cabe na tela (rola só dentro) e o campo de digitar fica sempre visível embaixo. */
+@media (min-width: 901px) {
+  .wa { height: calc(100vh - 215px); min-height: 480px; }
+  .wa-list, .wa-chat { min-height: 0; }
+  .wa-thread { min-height: 0; }
+  .wa-chat-head, .wa-composer { flex: none; }
+}
