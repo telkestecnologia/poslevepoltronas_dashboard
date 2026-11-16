@@ -54,7 +54,14 @@ export function ChairModal({
         if (event.target === event.currentTarget) onClose()
       }}
     >
-      <section className="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <section className="modal chair-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        {/* Foto da poltrona (a mesma do app) ao lado do formulário, com o código e a situação. */}
+        <div className="chair-modal-photo" aria-hidden="true">
+          <img src="/poltrona-capa.webp" alt="" />
+          <div><strong>{chair ? `Poltrona ${code}` : code.trim() ? `Poltrona ${code.trim()}` : 'Nova poltrona'}</strong>
+            <span className={`chair-modal-pill ${status.toLowerCase()}`}>{status === 'ACTIVE' ? 'Ativa' : status === 'MAINTENANCE' ? 'Em manutenção' : 'Inativa'}</span></div>
+        </div>
+        <div className="chair-modal-main">
         <div className="modal-head">
           <div>
             <span className="eyebrow">PÓS LEVE • ADMINISTRAÇÃO</span>
@@ -146,6 +153,7 @@ export function ChairModal({
             </button>
           </div>
         </form>
+        </div>
       </section>
     </div>
   )

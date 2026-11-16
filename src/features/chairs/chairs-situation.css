@@ -15,3 +15,18 @@
 .chair-situation-button.tone-in-use { --tone: #0b6f74; --tone-border: #b9d9dc; }
 .chair-situation-button.tone-maintenance { --tone: #e87461; --tone-border: #f6cdbd; }
 @media (max-width: 560px) { .chair-situation-button strong { font-size: 1.3rem; } .chair-situation-button span { font-size: 0.8rem; } }
+
+/* Janela da poltrona: foto à esquerda e formulário à direita (computador). */
+.chair-modal-photo { display: none; }
+@media (min-width: 901px) {
+  .dashboard-shell .modal.chair-modal { display: grid; grid-template-columns: 330px minmax(0, 1fr); width: min(1000px, calc(100vw - 64px)); padding: 0; overflow: hidden; }
+  .chair-modal-photo { position: relative; display: block; min-height: 100%; background: #0f4f57; }
+  .chair-modal-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .chair-modal-photo::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10, 30, 36, 0) 50%, rgba(10, 30, 36, 0.85) 100%); }
+  .chair-modal-photo > div { position: absolute; z-index: 1; left: 24px; right: 24px; bottom: 24px; display: grid; justify-items: start; gap: 8px; color: #fff; }
+  .chair-modal-photo strong { font-family: 'Outfit', sans-serif; font-size: 26px; letter-spacing: -0.02em; }
+  .chair-modal-pill { padding: 4px 12px; border-radius: 99px; background: #3fbf7f; color: #fff; font-size: 12.5px; font-weight: 700; }
+  .chair-modal-pill.maintenance { background: #e87461; }
+  .chair-modal-pill.inactive { background: #7b8a8f; }
+  .chair-modal-main { min-width: 0; max-height: calc((100vh - 48px) / 1.1); overflow-y: auto; }
+}
