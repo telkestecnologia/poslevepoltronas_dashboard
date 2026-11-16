@@ -233,14 +233,15 @@ export function BranchModal({
             {inline && <button type="submit" className="button primary branch-inline-save" disabled={saving}>
               {saving ? 'Salvando...' : 'Salvar alterações'}</button>}
           </details>
-          <label className="branch-option">
+          {/* Na página da filial, ligar e desligar fica no botão ao lado de "Atendendo", no topo. */}
+          {!inline && <label className="branch-option">
             <input
               type="checkbox"
               checked={active}
               onChange={(event) => setActive(event.target.checked)}
             />
             <span>Filial ativa</span>
-          </label>
+          </label>}
           {(localError || error) && (
             <div className="form-error" role="alert">
               {localError || error}

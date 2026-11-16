@@ -39,12 +39,27 @@ export function BranchesPage({ branches, activeCounts, onNewBranch, credentials,
       <section className="branch-enter" style={{ backgroundImage: `url(${branchPhoto(entered.name)})` }}>
         <div className="branch-enter-body">
           <h1>{branchLabel(entered.name)}</h1>
-          <p>{activeCounts[entered.id] ?? 0} poltronas ativas • {entered.municipalities.length} cidades • {entered.active ? 'Atendendo' : 'Pausada'}</p>
+          <div className="branch-enter-status">
+            <p>{activeCounts[entered.id] ?? 0} poltronas ativas • {entered.municipalities.length} cidades</p>
+            {/* Liga e desliga a filial: desligada, o site e a Isa param de oferecer aluguel nela. */}
+            <button type="button" role="switch" aria-checked={entered.active} disabled={saving}
+              className={`branch-switch admin-only${entered.active ? ' on' : ''}`}
+              onClick={() => {
+                const next = !entered.active
+                if (!next && !window.confirm(`Pausar ${branchLabel(entered.name)}?\n\nO site e a Isa deixam de oferecer aluguel nesta filial até ela ser ligada de novo.`)) return
+                void onUpdateBranch(entered, { name: entered.name, active: next,
+                  municipalities: entered.municipalities.map(city => ({ code: city.code, freightCents: city.freightCents })) })
+              }}>
+              <span className="branch-switch-track"><span className="branch-switch-thumb" /></span>
+              <span>{entered.active ? 'Atendendo' : 'Pausada'}</span>
+            </button>
+            <span className="partner-only branch-switch-text">{entered.active ? 'Atendendo' : 'Pausada'}</span>
+          </div>
         </div>
       </section>
       {/* Tudo da filial numa página só (igual ao app): os dados (administrador) e as poltronas dela. */}
       <section className="panel branch-section admin-only">
-        <BranchModal key={entered.id} inline modal={{ kind: 'editBranch', branch: entered }} municipalities={municipalities}
+        <BranchModal key={`${entered.id}:${entered.active}`} inline modal={{ kind: 'editBranch', branch: entered }} municipalities={municipalities}
           saving={saving} error={formError} onClose={() => {}} onSave={data => onUpdateBranch(entered, data)} />
       </section>
       <section className="panel branch-section">

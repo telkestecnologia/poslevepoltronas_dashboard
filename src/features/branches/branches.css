@@ -113,3 +113,15 @@ button.branch-chair:hover { filter: brightness(0.98); }
   .mp-fees .municipality-fee > button { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; color: #8fa2a5; }
   .mp-fees .municipality-fee > button:hover { background: #fdebe6; color: #e87461; }
 }
+
+/* Liga e desliga a filial, no canto inferior esquerdo da foto, ao lado das informações. */
+.branch-enter-status { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.branch-switch { display: inline-flex; align-items: center; gap: 10px; padding: 6px 14px 6px 6px; border: 0; border-radius: 99px;
+  background: rgba(255, 255, 255, 0.18); color: #fff; font: inherit; font-weight: 700; cursor: pointer; backdrop-filter: blur(6px); }
+.branch-switch:disabled { opacity: 0.6; cursor: wait; }
+.branch-switch-track { position: relative; display: block; width: 44px; height: 24px; border-radius: 99px; background: rgba(255, 255, 255, 0.35); transition: background 0.2s; }
+.branch-switch-thumb { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); transition: transform 0.2s; }
+.branch-switch.on .branch-switch-track { background: #3fbf7f; }
+.branch-switch.on .branch-switch-thumb { transform: translateX(20px); }
+.branch-switch-text { color: #e6f4f5; font-weight: 700; }
