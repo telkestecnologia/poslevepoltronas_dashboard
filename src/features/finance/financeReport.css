@@ -187,3 +187,16 @@
   .finance-heading-balance { flex: 1; display: flex; align-items: baseline; justify-content: center; gap: 14px; margin: 0 28px; padding: 18px 28px; border-radius: 16px; }
   .finance-heading-balance strong { font-size: 32px; }
 }
+@media (min-width: 901px) {
+  /* Foto só em cima; embaixo, fundo branco com o nome, o mês e o valor em preto. */
+  .dashboard-shell .finance-branch-tile, .dashboard-shell .finance-branch-tile.region-sobral {
+    align-content: start; gap: 4px; min-height: 0; padding: 120px 14px 14px; border: 1px solid #e4ecea; background: #fff;
+    box-shadow: 0 6px 16px rgba(15, 63, 68, 0.08); color: #14262f; }
+  .dashboard-shell .finance-branch-tile::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 108px;
+    background: var(--tile-photo) center / cover no-repeat; }
+  .dashboard-shell .finance-branch-tile.region-sobral::before { background-size: 160%; background-position: center 70%; }
+  .dashboard-shell .finance-branch-tile strong { color: #14262f; }
+  .dashboard-shell .finance-branch-tile small { padding: 0; background: none; color: #6b7f86; backdrop-filter: none; }
+  .dashboard-shell .finance-branch-tile b { margin-top: 2px; color: #14262f; text-shadow: none; }
+  .dashboard-shell .finance-branch-tile b.finance-negative { color: #c4532c; }
+}
