@@ -318,3 +318,21 @@
   .dashboard-shell .pay-plan-checks { flex-wrap: nowrap; }
   .dashboard-shell .pay-check { white-space: nowrap; }
 }
+
+/* Resumo como frase (computador): faixa escura, tipografia grande e os valores sublinhados à mão. */
+.pay-statement { display: none; }
+@media (min-width: 901px) {
+  .content:has(> .pay-summary) > .pay-summary { position: relative; overflow: hidden; padding: 30px 36px; border: 0;
+    background: #0f4f57; box-shadow: 0 14px 34px rgba(11, 79, 87, 0.22); }
+  .content:has(> .pay-summary) > .pay-summary::after { content: 'R$'; position: absolute; right: -10px; bottom: -58px; color: rgba(255, 255, 255, 0.05);
+    font-family: 'Outfit', sans-serif; font-size: 220px; font-weight: 800; line-height: 1; pointer-events: none; }
+  .content:has(> .pay-summary) > .pay-summary > div:first-child, .content:has(> .pay-summary) .pay-tiles { display: none; }
+  .pay-statement { position: relative; z-index: 1; display: grid; gap: 14px; }
+  .pay-statement small { color: #8fd3cc; font-size: 13px; font-weight: 700; }
+  .pay-statement p { margin: 0; color: #fff; font-family: 'Outfit', sans-serif; font-size: 30px; font-weight: 500; line-height: 1.35; letter-spacing: -0.015em; }
+  .pay-statement mark { padding: 0 2px; background: linear-gradient(transparent 68%, rgba(243, 209, 107, 0.55) 68%, rgba(243, 209, 107, 0.55) 92%, transparent 92%);
+    color: #fff; font-weight: 700; }
+  .pay-statement mark.off { background: linear-gradient(transparent 68%, rgba(232, 116, 97, 0.6) 68%); }
+  .pay-statement em { color: rgba(255, 255, 255, 0.7); font-size: 14px; font-style: normal; }
+  .content:has(> .pay-summary) > .pay-banner { height: 100%; object-fit: cover; }
+}

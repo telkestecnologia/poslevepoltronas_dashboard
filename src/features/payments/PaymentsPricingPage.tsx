@@ -127,6 +127,20 @@ export function PaymentsPricingPage({ credentials }: { credentials: string }) {
           <strong>{options.card ? (options.maxInstallments > 1 ? `Até ${options.maxInstallments}x` : 'À vista') : 'Desligado'}</strong></div>
         <div className="on"><span><BadgeDollarSign size={18} /></span><small>Diária</small><strong>{currency(catalog.dailyRateCents)}</strong></div>
       </div>}
+      {/* No computador: o resumo vira uma frase, como se alguém explicasse em voz alta. */}
+      {options && catalog && (() => {
+        const card = options.card ? (options.maxInstallments > 1 ? `cartão em até ${options.maxInstallments}x` : 'cartão à vista') : null
+        const methods = [options.pix ? 'Pix' : null, card].filter(Boolean) as string[]
+        const cheapest = catalog.plans.filter(plan => plan.days > 0).map(plan => Math.round(plan.priceCents / plan.days)).sort((a, b) => a - b)[0]
+        return <div className="pay-statement">
+          <small>Pagamentos e preços</small>
+          <p>Hoje o cliente paga com {methods.length ? methods.map((method, index) => <span key={method}>
+            {index > 0 && ' ou '}<mark>{method}</mark></span>) : <mark className="off">nenhuma forma ligada</mark>}.
+            {' '}A diária avulsa é <mark>{currency(catalog.dailyRateCents)}</mark>
+            {cheapest && cheapest < catalog.dailyRateCents ? <> e cai para <mark>{currency(cheapest)}</mark> no plano mais longo.</> : '.'}</p>
+          <em>É isso que o site e a Isa oferecem agora. Para mudar, ajuste logo abaixo.</em>
+        </div>
+      })()}
     </div>
 
     {loadError && <div className="form-error" role="alert">{loadError}</div>}
