@@ -2,7 +2,8 @@ import type { Branch, Chair, Courier } from './api'
 
 export type Page = 'overview' | 'finance' | 'chairs' | 'branches' | 'couriers' | 'agenda' | 'orders' | 'conversations' | 'ai' | 'notifications' | 'payments' | 'profile'
 export type Modal =
-  | { kind: 'newChair' }
+  /** branchId: aberta de dentro da filial, a poltrona já é cadastrada nela (sem escolher a filial). */
+  | { kind: 'newChair'; branchId?: string }
   | { kind: 'editChair'; chair: Chair }
   | { kind: 'newBranch' }
   | { kind: 'editBranch'; branch: Branch }

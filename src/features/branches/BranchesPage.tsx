@@ -19,7 +19,8 @@ type Props = {
   formError: string
   onUpdateBranch: (branch: Branch, data: BranchInput) => Promise<void>
   onEditChair: (chair: Chair) => void
-  onNewChair: () => void
+  /** Nova poltrona já na filial aberta. */
+  onNewChair: (branchId: string) => void
   modalOpen: boolean
   onToggleFreeShipping: (branch: Branch) => Promise<void>
 }
@@ -69,7 +70,7 @@ export function BranchesPage({ branches, activeCounts, onNewBranch, credentials,
       </section>
       <section className="panel branch-section">
         <h2>Poltronas da filial</h2>
-        <BranchChairs credentials={credentials} branchId={entered.id} branchName={entered.name} reload={modalOpen} onEdit={onEditChair} onNew={onNewChair} />
+        <BranchChairs credentials={credentials} branchId={entered.id} branchName={entered.name} reload={modalOpen} onEdit={onEditChair} onNew={() => onNewChair(entered.id)} />
       </section>
     </>
   }

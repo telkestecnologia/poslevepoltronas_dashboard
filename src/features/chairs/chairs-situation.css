@@ -30,3 +30,8 @@
   .chair-modal-pill.inactive { background: #7b8a8f; }
   .chair-modal-main { min-width: 0; max-height: calc((100vh - 48px) / 1.1); overflow-y: auto; }
 }
+
+/* Nova poltrona aberta de dentro da filial: a filial aparece fixa, sem seletor. */
+.chair-fixed-branch { display: grid; gap: 6px; margin: 0; }
+.chair-fixed-branch span { font-size: 12px; font-weight: 700; color: #40535e; }
+.chair-fixed-branch strong { display: flex; align-items: center; min-height: 46px; padding: 0 14px; border: 1px solid #dce6e5; border-radius: 10px; background: #f4f8f8; color: var(--ink); font-weight: 600; }

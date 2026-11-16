@@ -603,7 +603,7 @@ export function useDashboard() {
       onUpdateBranch: updateBranchInline,
       // Poltronas na página da filial: clicar edita, Nova cadastra; a lista recarrega quando a janela fecha.
       onEditChair: (chair: Chair) => openModal({ kind: 'editChair', chair }),
-      onNewChair: () => openModal({ kind: 'newChair' }),
+      onNewChair: (branchId: string) => openModal({ kind: 'newChair', branchId }),
       modalOpen: modal !== null,
       onToggleFreeShipping: toggleBranchFreeShipping,
     },

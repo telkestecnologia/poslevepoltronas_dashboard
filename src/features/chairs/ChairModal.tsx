@@ -13,7 +13,7 @@ export function ChairModal({
   onChairSave,
   onDelete,
 }: {
-  modal: { kind: 'newChair' } | { kind: 'editChair'; chair: Chair }
+  modal: { kind: 'newChair'; branchId?: string } | { kind: 'editChair'; chair: Chair }
   branches: Branch[]
   saving: boolean
   error: string
@@ -33,7 +33,9 @@ export function ChairModal({
   const [model, setModel] = useState(chair?.model ?? '')
   const [notes, setNotes] = useState(chair?.notes ?? '')
   const [status, setStatus] = useState<ChairStatus>(chair?.status ?? 'ACTIVE')
-  const [branchId, setBranchId] = useState(chair?.branchId ?? '')
+  // Nova poltrona aberta de dentro da filial: a filial já vem escolhida e não aparece o seletor.
+  const fixedBranch = modal.kind === 'newChair' && modal.branchId ? branches.find(branch => branch.id === modal.branchId) : undefined
+  const [branchId, setBranchId] = useState(chair?.branchId ?? fixedBranch?.id ?? '')
   const title = chair ? 'Editar poltrona' : 'Nova poltrona'
 
   function submit(event: FormEvent) {
@@ -73,7 +75,8 @@ export function ChairModal({
         </div>
         <form onSubmit={submit} className="modal-form">
           {!chair && <FormIntro icon={<PlusCircle size={24} />} title="Nova poltrona">
-            Informe o código e a filial. Ativa, ela já pode ser alugada no site e no WhatsApp.</FormIntro>}
+            {fixedBranch ? <>Informe o código. Ela entra na filial <strong>{branchLabel(fixedBranch.name)}</strong> e, ativa, já pode ser alugada no site e no WhatsApp.</>
+              : 'Informe o código e a filial. Ativa, ela já pode ser alugada no site e no WhatsApp.'}</FormIntro>}
           <>
             <label>
               Código da poltrona
@@ -98,7 +101,7 @@ export function ChairModal({
                 autoFocus={Boolean(chair)}
               />
             </label>
-            <label>
+            {fixedBranch ? <p className="chair-fixed-branch"><span>Filial</span><strong>{branchLabel(fixedBranch.name)}</strong></p> : <label>
               Filial
               <select value={branchId} onChange={(e) => setBranchId(e.target.value)} required>
                 <option value="">Selecione uma filial</option>
@@ -109,7 +112,7 @@ export function ChairModal({
                   </option>
                 ))}
               </select>
-            </label>
+            </label>}
             {chair && (
               <label>
                 Estado operacional
