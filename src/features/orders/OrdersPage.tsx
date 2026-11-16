@@ -55,7 +55,8 @@ export function OrdersPage({ credentials, params, onOpenOrder }: Props) {
 
   useEffect(() => {
     let active = true
-    api.branches(credentials).then(list => { if (active) setBranches(list.filter(branch => branch.active)) }).catch(() => {})
+    // Todas as filiais oficiais, mesmo pausadas (ex.: Região de Sobral), igual ao app.
+    api.branches(credentials).then(list => { if (active) setBranches(list) }).catch(() => {})
     return () => { active = false }
   }, [credentials])
 

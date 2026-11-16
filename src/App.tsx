@@ -10,6 +10,7 @@ import { OrdersPage } from './features/orders/OrdersPage'
 import { OrderDetailPage } from './features/orders/OrderDetailPage'
 import { AgendaPage } from './features/agenda/AgendaPage'
 import { AiContextPage } from './features/ai/AiContextPage'
+import { NewPayments } from './features/finance/NewPayments'
 import { OverviewPage } from './features/overview/OverviewPage'
 import { AiAlertsTab, NotificationsPage } from './features/notifications/NotificationsPage'
 import { FinancePage } from './features/finance/FinancePage'
@@ -92,6 +93,9 @@ function App() {
             </button>
           </div>
         )}
+        {/* Recebimento novo: aviso no Financeiro e na Visão geral (e no computador, com as notificações ligadas). */}
+        <NewPayments credentials={session.credentials} visible={page === 'overview' || page === 'finance'}
+          onOpenFinance={page === 'finance' ? undefined : () => navigate('finance')} />
         {page === 'overview' && !showLoading && !pageError && overviewPage.rentals && overviewPage.revenue && (
           <OverviewPage
             rentals={overviewPage.rentals}

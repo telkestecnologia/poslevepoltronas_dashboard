@@ -225,6 +225,8 @@ export type FinancialEntry = {
   reference: string
   occurredAt: string
   demo: boolean
+  /** Quem pagou (o cliente do pedido), quando o lançamento é um recebimento de pedido. */
+  payerName?: string | null
 }
 export type FinancialReport = {
   mode: 'REAL' | 'DEMO' | 'EMPTY'
@@ -240,6 +242,8 @@ export type FinancialReport = {
   monthly: { start: string; inflowCents: number; outflowCents: number }[]
   branches: { branchId: string; branchName: string; inflowCents: number; outflowCents: number }[]
   entries: FinancialEntry[]
+  /** Nome de quem pagou cada recebimento, pela referência (pedido). */
+  payers?: Record<string, string>
 }
 export type FinanceQuery = { from: string; to: string; branchId: string; page: number; size: number }
 

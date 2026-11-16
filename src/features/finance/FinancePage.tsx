@@ -40,7 +40,7 @@ async function loadAllEntries(credentials: string, query: Omit<FinanceQuery, 'pa
   const entries: FinancialEntry[] = []
   for (let page = 0; page < 100; page++) {
     const report = await api.finance(credentials, { ...query, page, size })
-    entries.push(...report.entries)
+    entries.push(...report.entries.map(entry => ({ ...entry, payerName: report.payers?.[entry.reference] ?? null })))
     if (entries.length >= report.total || report.entries.length < size) break
   }
   return entries
@@ -145,7 +145,7 @@ export function FinancePage({ credentials }: { credentials: string }) {
   const term = normalize(debouncedSearch)
   const matches = allEntries?.filter(entry => kindFilter === 'ALL' || (kindFilter === 'INFLOW') === (entry.kind === 'INFLOW'))
     .filter(entry => term === '' || normalize([
-    entry.description, entry.category, entry.reference, entry.paymentMethod, branchLabel(entry.branchName),
+    entry.description, entry.category, entry.reference, entry.paymentMethod, branchLabel(entry.branchName), entry.payerName ?? '',
   ].join(' ')).includes(term)) ?? []
 
 
@@ -313,7 +313,8 @@ export function FinancePage({ credentials }: { credentials: string }) {
               <td><span className={`finance-entry-icon ${entry.kind.toLowerCase()}`}><MethodIcon method={entry.paymentMethod} /></span>
                 <span className="finance-entry-description"><strong>{entryTitle(entry.description)}</strong>
                   {entry.reference && <small className="finance-ref">Ref. {entry.reference} <CopyButton text={entry.reference} /></small>}</span></td>
-              <td>{branchLabel(entry.branchName)}</td><td>{methodLabel(entry.paymentMethod)}</td>
+              <td>{branchLabel(entry.branchName)}</td><td>{methodLabel(entry.paymentMethod)}
+                {entry.payerName && <small className="finance-payer">Pago por {entry.payerName}</small>}</td>
               <td className={entry.kind === 'INFLOW' ? 'finance-positive' : 'finance-negative'}>
                 {entry.kind === 'INFLOW' ? '+' : '−'} {currency(entry.amountCents)}</td>
             </tr>)}</tbody>
@@ -331,6 +332,7 @@ export function FinancePage({ credentials }: { credentials: string }) {
               <dl>
                 <div><dt>Filial</dt><dd>{branchLabel(entry.branchName)}</dd></div>
                 <div><dt>Meio</dt><dd>{methodLabel(entry.paymentMethod)}</dd></div>
+                {entry.payerName && <div><dt>Pago por</dt><dd>{entry.payerName}</dd></div>}
                 <div><dt>Categoria</dt><dd>{categoryLabel(entry.category)}</dd></div>
                 {entry.reference && <div><dt>Referência</dt><dd>{entry.reference} <CopyButton text={entry.reference} /></dd></div>}
               </dl>

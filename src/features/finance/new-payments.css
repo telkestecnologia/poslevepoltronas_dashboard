@@ -1,0 +1,12 @@
+/* Aviso de recebimento novo (Financeiro e Visão geral). */
+.new-payments { display: grid; gap: 8px; margin-bottom: 16px; padding: 14px 16px; border: 1px solid #b9e3cc; border-radius: 16px; background: #e8f6ef; }
+.new-payments-head { display: flex; align-items: center; gap: 10px; color: #1f7a4a; }
+.new-payments-head strong { flex: 1; font-size: 16px; }
+.new-payments-head button { display: grid; place-items: center; padding: 4px; border: 0; background: none; color: #1f7a4a; cursor: pointer; }
+.new-payments-icon { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: #1f9d61; color: #fff; }
+.new-payments-row { display: flex; align-items: center; gap: 14px; padding: 10px 12px; border: 0; border-radius: 12px; background: rgba(255, 255, 255, 0.7);
+  font: inherit; text-align: left; cursor: pointer; }
+.new-payments-row:disabled { cursor: default; }
+.new-payments-row b { color: #1f7a4a; font-size: 17px; }
+.new-payments-row span { display: grid; gap: 2px; }
+.new-payments-row small { color: #7a8287; }

@@ -105,3 +105,6 @@
 /* Calendário e PDF no cantinho direito do título. */
 .finance-chart .finance-panel-heading > .finance-today-title { flex: 1; }
 .finance-today-title .finance-date-icon:first-of-type { margin-left: auto; }
+
+/* Nome de quem pagou, embaixo do meio. */
+.finance-payer { display: block; color: #7a8287; font-size: 12px; }
