@@ -203,6 +203,8 @@ export type AiKnowledge = {
   question: string
   answer: string
   status: 'PENDING' | 'PROCESSING' | 'INDEXED' | 'FAILED'
+  /** STAFF_LEARNING: a Isa aprendeu sozinha com a resposta da equipe no WhatsApp. */
+  origin?: 'MANUAL' | 'UNANSWERED_QUESTION' | 'STAFF_LEARNING' | string
   createdAt: string
   updatedAt: string
 }

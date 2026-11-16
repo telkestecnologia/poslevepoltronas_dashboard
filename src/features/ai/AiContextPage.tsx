@@ -43,7 +43,11 @@ export function AiContextPage({ knowledge, unanswered, onCreateKnowledge, onUpda
   // Dúvida aberta para responder ali mesmo (clicar no card abre o campo da resposta).
   const [answeringId, setAnsweringId] = useState<string | null>(null)
   const [answerDraft, setAnswerDraft] = useState('')
-  const visibleKnowledge = knowledge.filter(entry => matches(`${entry.question} ${entry.answer}`, search))
+  // Só os aprendidos com a equipe no WhatsApp (para conferir o que a Isa aprendeu sozinha).
+  const [onlyLearned, setOnlyLearned] = useState(false)
+  const learnedCount = knowledge.filter(entry => entry.origin === 'STAFF_LEARNING').length
+  const visibleKnowledge = knowledge.filter(entry => (!onlyLearned || entry.origin === 'STAFF_LEARNING')
+    && matches(`${entry.question} ${entry.answer}`, search))
   const visibleUnanswered = unanswered.filter(entry => matches(entry.question, search))
 
   function switchTab(next: 'knowledge' | 'unanswered' | 'alerts') {
@@ -177,6 +181,11 @@ export function AiContextPage({ knowledge, unanswered, onCreateKnowledge, onUpda
             />
           </div>}
         </div>
+        {tab === 'knowledge' && learnedCount > 0 && <div className="ai-learned-filter">
+          <button type="button" className={onlyLearned ? 'active' : ''} aria-pressed={onlyLearned} onClick={() => setOnlyLearned(value => !value)}>
+            <Sparkles size={14} /> Aprendidos com a equipe <span>{learnedCount}</span></button>
+          <small>A Isa aprende sozinha com o que a equipe responde no WhatsApp. Confira e edite ou remova o que não estiver certo.</small>
+        </div>}
         {error && !editor && <div className="form-error ai-page-error" role="alert">{error}</div>}
         {tab === 'knowledge' && (knowledge.length === 0 ? (
           <EmptyState
@@ -193,6 +202,8 @@ export function AiContextPage({ knowledge, unanswered, onCreateKnowledge, onUpda
               <article className="ai-entry" key={entry.id}>
                 <div className="ai-entry-meta">
                   <span>PERGUNTA</span>
+                  {entry.origin === 'STAFF_LEARNING' && <span className="ai-learned" title="A Isa aprendeu com a resposta da equipe no WhatsApp. Confira e edite ou remova se não estiver certo.">
+                    <Sparkles size={12} /> Aprendido com a equipe</span>}
                   <small>Atualizada em {dateLabel(entry.updatedAt)} · {entry.status === 'INDEXED' ? 'Disponível para a IA' : entry.status === 'FAILED' ? 'Falha na indexação' : 'Indexando'}</small>
                 </div>
                 <h3>{entry.question}</h3>

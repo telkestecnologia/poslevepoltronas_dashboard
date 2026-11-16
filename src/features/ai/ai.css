@@ -153,3 +153,12 @@
 }
 .ai-pending-cta, .ai-pending-answer { display: none; }
 @media (min-width: 901px) { .ai-pending-cta { display: inline-block; } .ai-pending-answer { display: grid; } }
+
+/* Aprendidos com a equipe no WhatsApp: selo no card e filtro acima da lista. */
+.ai-entry-meta .ai-learned { display: inline-flex; align-items: center; gap: 4px; background: #fdf1ea !important; color: #c25a3c !important; }
+.ai-learned-filter { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 4px 0 12px; }
+.ai-learned-filter button { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid #f6cdbd; border-radius: 99px; background: #fff; color: #c25a3c; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.ai-learned-filter button span { padding: 0 7px; border-radius: 99px; background: #fdf1ea; }
+.ai-learned-filter button.active { background: #e87461; border-color: #e87461; color: #fff; }
+.ai-learned-filter button.active span { background: rgba(255, 255, 255, 0.25); }
+.ai-learned-filter small { color: var(--muted); font-size: 12.5px; }
