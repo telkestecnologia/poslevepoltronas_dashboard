@@ -1,0 +1,342 @@
+/*
+ * Tema do painel no computador (a partir de 901px, quando o menu lateral fica fixo).
+ * Só visual: didático, profissional e com as cores da Pós Leve. O celular (até 900px) não muda nada.
+ */
+@media (min-width: 901px) {
+  :root {
+    --d-teal-900: #0b4f57;
+    --d-teal-800: #0f5f68;
+    --d-teal-700: #12727d;
+    --d-teal-500: #1a9baa;
+    --d-teal-100: #e3f4f2;
+    --d-coral: #e87461;
+    --d-coral-100: #fdebe6;
+    --d-gold: #e0a93b;
+    --d-gold-100: #fbf1dc;
+    --d-green: #3f9a62;
+    --d-green-100: #e5f4ea;
+    --d-blue: #3b82c4;
+    --d-blue-100: #e6f0fa;
+    --d-lilac: #8a6cc9;
+    --d-lilac-100: #efe9fa;
+    --d-ink: #1f3340;
+    --d-muted: #6b7f86;
+    --d-line: #e4ecea;
+    --d-shadow: 0 1px 2px rgba(15, 63, 68, 0.04), 0 8px 24px rgba(15, 63, 68, 0.06);
+    --d-shadow-hover: 0 2px 4px rgba(15, 63, 68, 0.05), 0 14px 32px rgba(15, 63, 68, 0.1);
+  }
+
+  /* Fundo da página: claro, com dois brilhos suaves nas cores da marca. */
+  .dashboard-shell {
+    background:
+      radial-gradient(900px 420px at 100% -8%, rgba(26, 155, 170, 0.09), transparent 70%),
+      radial-gradient(700px 380px at 20% 110%, rgba(232, 116, 97, 0.06), transparent 70%),
+      #f4f8f7;
+  }
+
+  /* ---------- Menu lateral: verde-azulado profundo, itens com ícone colorido ---------- */
+  .sidebar {
+    background: linear-gradient(180deg, var(--d-teal-800) 0%, var(--d-teal-900) 100%);
+    border-right: 0;
+    box-shadow: 6px 0 30px rgba(11, 79, 87, 0.12);
+  }
+  .sidebar-brand {
+    padding-bottom: 32px;
+  }
+  .sidebar .brand strong {
+    color: #fff;
+  }
+  .sidebar .brand img {
+    padding: 5px;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  }
+  .sidebar .icon-button {
+    color: rgba(255, 255, 255, 0.7);
+  }
+  .sidebar .icon-button:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+  }
+  .sidebar-section-label {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 10px;
+  }
+  .main-nav {
+    gap: 4px;
+  }
+  .nav-item {
+    position: relative;
+    height: 48px;
+    border-radius: 12px;
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 14px;
+    font-weight: 600;
+    gap: 12px;
+    transition: background 0.18s, color 0.18s, transform 0.18s;
+  }
+  .nav-item > svg {
+    flex: none;
+    box-sizing: content-box;
+    padding: 6px;
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--nav-tone, #fff);
+    transition: background 0.18s, color 0.18s;
+  }
+  .nav-item:hover {
+    background: rgba(255, 255, 255, 0.09);
+    color: #fff;
+    transform: translateX(2px);
+  }
+  .nav-item.selected {
+    background: #fff;
+    color: var(--d-teal-800);
+    font-weight: 700;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.16);
+  }
+  .nav-item.selected:before {
+    display: none;
+  }
+  .nav-item.selected > svg {
+    background: var(--nav-tone-solid, var(--d-teal-500));
+    color: #fff;
+  }
+  /* Uma cor por área: ajuda a reconhecer cada menu num relance. */
+  .main-nav .nav-item:nth-child(1) { --nav-tone: #8fe3dc; --nav-tone-solid: var(--d-teal-500); }
+  .main-nav .nav-item:nth-child(2) { --nav-tone: #9be2b2; --nav-tone-solid: var(--d-green); }
+  .main-nav .nav-item:nth-child(3) { --nav-tone: #ffb4a6; --nav-tone-solid: var(--d-coral); }
+  .main-nav .nav-item:nth-child(4) { --nav-tone: #a9cdf2; --nav-tone-solid: var(--d-blue); }
+  .main-nav .nav-item:nth-child(5) { --nav-tone: #c9b6f2; --nav-tone-solid: var(--d-lilac); }
+  .main-nav .nav-item:nth-child(6) { --nav-tone: #f6d48a; --nav-tone-solid: var(--d-gold); }
+  .main-nav .nav-item:nth-child(7) { --nav-tone: #ffc9a0; --nav-tone-solid: #e08a3c; }
+  .main-nav .nav-item:nth-child(8) { --nav-tone: #b8e6ef; --nav-tone-solid: var(--d-teal-700); }
+
+  .sidebar-user {
+    margin: 0 -2px;
+    padding: 14px 12px;
+    border-top: 0;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.75);
+  }
+  .sidebar-user:hover {
+    background: rgba(255, 255, 255, 0.14);
+  }
+  .sidebar-user img {
+    padding: 3px;
+    border-radius: 10px;
+    background: #fff;
+  }
+  .sidebar-user strong {
+    color: #fff;
+    font-size: 13px;
+  }
+  .sidebar-user small {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 11px;
+  }
+  .sidebar-user:hover > svg {
+    color: #ffb4a6;
+  }
+  .sidebar.collapsed .sidebar-user {
+    padding: 12px 0;
+  }
+  .sidebar.collapsed .nav-item:hover {
+    transform: none;
+  }
+
+  /* ---------- Barra do topo: caminho mais legível ---------- */
+  .topbar {
+    height: 68px;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--d-line);
+    position: sticky;
+    top: 0;
+    z-index: 15;
+  }
+  .breadcrumbs {
+    font-size: 13px;
+    color: #8fa2a5;
+  }
+  .breadcrumbs strong {
+    padding: 5px 12px;
+    border-radius: 99px;
+    background: var(--d-teal-100);
+    color: var(--d-teal-700);
+    font-weight: 700;
+  }
+
+  /* ---------- Títulos das páginas ---------- */
+  .content {
+    padding-top: 32px;
+  }
+  .page-heading h1 {
+    font-size: 34px;
+    font-weight: 700;
+    color: var(--d-ink);
+  }
+  .page-heading p {
+    max-width: 680px;
+    color: var(--d-muted);
+    font-size: 14.5px;
+  }
+  .dashboard-shell .eyebrow {
+    padding: 5px 10px;
+    border-radius: 99px;
+    background: var(--d-teal-100);
+    color: var(--d-teal-700);
+    font-size: 10.5px;
+  }
+  .dashboard-shell .eyebrow.light {
+    background: rgba(255, 255, 255, 0.16);
+    color: #fff;
+  }
+
+  /* ---------- Cartões ---------- */
+  .dashboard-shell .panel {
+    border-color: var(--d-line);
+    border-radius: 18px;
+    box-shadow: var(--d-shadow);
+    transition: box-shadow 0.2s;
+  }
+  .dashboard-shell .panel:hover {
+    box-shadow: var(--d-shadow-hover);
+  }
+  .dashboard-shell .row-icon {
+    border-radius: 12px;
+  }
+
+  /* ---------- Botões ---------- */
+  .dashboard-shell .button {
+    min-height: 44px;
+    border-radius: 12px;
+    font-size: 14px;
+  }
+  .dashboard-shell .button.primary {
+    background: linear-gradient(135deg, #1fb0bf 0%, var(--d-teal-700) 100%);
+    box-shadow: 0 6px 16px rgba(18, 114, 125, 0.22);
+  }
+  .dashboard-shell .button.primary:hover {
+    background: linear-gradient(135deg, #1a9baa 0%, var(--d-teal-800) 100%);
+  }
+  .dashboard-shell .button.secondary {
+    background: #fff;
+    color: var(--d-teal-700);
+    box-shadow: inset 0 0 0 1.5px #cfe6e3;
+  }
+  .dashboard-shell .button.secondary:hover {
+    background: var(--d-teal-100);
+  }
+
+  /* ---------- Tabelas: letras maiores e linhas que destacam ao passar o mouse ---------- */
+  .dashboard-shell th {
+    padding: 14px 22px;
+    background: #f1f7f6;
+    color: #6f8a8e;
+    font-size: 11px;
+  }
+  .dashboard-shell td {
+    padding: 17px 22px;
+    color: #55696f;
+    font-size: 13.5px;
+  }
+  .dashboard-shell tbody tr {
+    transition: background 0.15s;
+  }
+  .dashboard-shell tbody tr:hover {
+    background: #f3faf9;
+  }
+
+  /* ---------- Campos de busca e filtros ---------- */
+  .dashboard-shell .search-field,
+  .dashboard-shell .select-wrap {
+    height: 44px;
+    border-radius: 12px;
+    border-color: #dbe7e5;
+  }
+  .dashboard-shell .search-field:focus-within,
+  .dashboard-shell .select-wrap:focus-within {
+    border-color: var(--d-teal-500);
+    box-shadow: 0 0 0 4px rgba(26, 155, 170, 0.12);
+  }
+  .dashboard-shell .search-field input,
+  .dashboard-shell .select-wrap select {
+    font-size: 13.5px;
+  }
+
+  /* ---------- Etiquetas de situação ---------- */
+  .dashboard-shell .status-badge {
+    padding: 5px 11px;
+    font-size: 12px;
+  }
+
+  /* ---------- Janelas (modais) ---------- */
+  .dashboard-shell .modal {
+    border-radius: 22px;
+    box-shadow: 0 30px 80px rgba(11, 79, 87, 0.25);
+  }
+  .dashboard-shell .modal-backdrop {
+    background: rgba(11, 45, 50, 0.45);
+    backdrop-filter: blur(4px);
+  }
+  .dashboard-shell .modal-form label {
+    font-size: 13.5px;
+  }
+  .dashboard-shell .modal-form input,
+  .dashboard-shell .modal-form select,
+  .dashboard-shell .modal-form textarea {
+    border-radius: 12px;
+    font-size: 14px;
+  }
+  .dashboard-shell .modal-form input:focus,
+  .dashboard-shell .modal-form select:focus,
+  .dashboard-shell .modal-form textarea:focus {
+    border-color: var(--d-teal-500);
+    box-shadow: 0 0 0 4px rgba(26, 155, 170, 0.12);
+  }
+
+  /* ---------- Visão geral ---------- */
+  .overview-rentals-header h2,
+  .overview-revenue-header h2,
+  .finance-panel-heading h2 {
+    font-size: 21px;
+    color: var(--d-ink);
+  }
+  .overview-rentals-header p,
+  .overview-revenue-header p {
+    font-size: 13.5px;
+  }
+  .overview-rentals-branch {
+    border-radius: 16px;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .overview-rentals-branch:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--d-shadow-hover);
+  }
+  .overview-revenue-period-selector button {
+    font-size: 13px;
+  }
+  .overview-revenue-stats div {
+    border-radius: 16px;
+  }
+  .overview-revenue-stats dt {
+    font-size: 12.5px;
+  }
+
+  /* ---------- Financeiro ---------- */
+  .finance-presets button {
+    border-radius: 99px;
+    font-size: 13px;
+  }
+  .finance-entry-description strong {
+    font-size: 14px;
+    color: var(--d-ink);
+  }
+  .finance-entry-description small {
+    font-size: 12px;
+  }
+}
