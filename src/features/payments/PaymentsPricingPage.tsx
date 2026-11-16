@@ -176,7 +176,8 @@ export function PaymentsPricingPage({ credentials }: { credentials: string }) {
       <form className="panel pay-section" onSubmit={event => void savePricing(event)}>
         <div className="notification-channel-head">
           <span className="notification-channel-icon"><BadgeDollarSign size={21} /></span>
-          <div><p>Do período mínimo até o menor plano vale a diária avulsa. A partir de cada plano, cada dia sai pela diária dele (preço ÷ dias) até o próximo plano; acima do maior plano, vale a diária dele. O frete continua por filial.</p></div>
+          {/* Aviso como um post-it colado na parede (igual ao app). */}
+          <div className="pay-postit"><strong>📌 Como o preço funciona</strong><p>Do período mínimo até o menor plano vale a diária avulsa. A partir de cada plano, cada dia sai pela diária dele (preço ÷ dias) até o próximo plano; acima do maior plano, vale a diária dele. O frete continua por filial.</p></div>
         </div>
 
         <div className="pay-grid">
