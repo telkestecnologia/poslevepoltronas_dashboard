@@ -207,6 +207,10 @@ export function FinancePage({ credentials }: { credentials: string }) {
         <span className="eyebrow">GESTÃO • FINANCEIRO</span>
         <h1>Financeiro</h1>
       </div>
+      {/* No computador: o saldo acumulado no meio do topo, ao lado do título. */}
+      {report && <div className="finance-heading-balance">
+        <span>Saldo acumulado</span><strong>{currency((allReport ?? report).balanceCents)}</strong><small>todas as filiais</small>
+      </div>}
       <div className="finance-actions">
         <button type="button" className="button secondary" onClick={() => setReloadKey(key => key + 1)}
           disabled={loading}><RefreshCw size={16} /> Atualizar</button>

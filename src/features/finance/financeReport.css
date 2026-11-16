@@ -162,3 +162,15 @@
   /* Sobral: foto mais aproximada para preencher o quadrado todo. */
   .dashboard-shell .finance-branch-tile.region-sobral { background-size: auto, 190%; background-position: center, center 70%; }
 }
+
+/* Saldo acumulado no topo, entre o título e o Atualizar (computador). */
+.finance-heading-balance { display: none; }
+@media (min-width: 901px) {
+  .dashboard-shell .finance-heading { align-items: center; }
+  .finance-heading-balance { display: grid; justify-items: center; gap: 2px; padding: 12px 34px; border-radius: 18px;
+    background: #0f4f57; box-shadow: 0 12px 28px rgba(11, 79, 87, 0.2); color: #fff; text-align: center; }
+  .finance-heading-balance span { color: #8fd3cc; font-size: 12.5px; font-weight: 700; }
+  .finance-heading-balance strong { font-family: 'Outfit', sans-serif; font-size: 34px; font-weight: 700; line-height: 1.1; letter-spacing: -0.02em; }
+  .finance-heading-balance small { color: rgba(255, 255, 255, 0.65); font-size: 12px; }
+  .dashboard-shell .finance-summary { display: none; }
+}
