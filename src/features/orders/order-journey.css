@@ -162,3 +162,16 @@
   .oj-window-side .oj-window-art { display: block; width: 210px; height: 260px; object-fit: cover; object-position: center 25%; border-radius: 16px;
     box-shadow: 0 10px 24px rgba(15, 63, 68, 0.18); }
 }
+
+@media (min-width: 901px) {
+  /* Reagendar discreto: uma linha só, sem título, ocupando a largura. */
+  .oj-action.oj-schedule { padding: 10px 12px; border: 1px solid #e4ecea; border-radius: 12px; background: #fafcfb; }
+  .oj-schedule .od-inline-schedule { grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 10px 14px; }
+  .oj-schedule .od-inline-now { padding: 0; background: none; color: #55696f; font-size: 13px; white-space: nowrap; }
+  .oj-schedule .od-inline-now svg { width: 16px; height: 16px; color: #8fa2a5; }
+  .oj-schedule .od-inline-fields { grid-template-columns: minmax(0, 1fr) 96px auto; gap: 8px; }
+  .oj-schedule .od-inline-fields .overview-rentals-date > span, .oj-schedule .od-inline-fields .order-field > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .oj-schedule .od-inline-fields .overview-rentals-date-trigger, .oj-schedule .od-inline-fields input { height: 38px; font-size: 13.5px; }
+  .oj-schedule .od-inline-fields .button { min-height: 38px; padding: 0 14px; font-size: 13px; background: #fff; color: #12727d; box-shadow: inset 0 0 0 1.5px #cfe6e3; }
+  .oj-schedule .od-extend-help, .oj-schedule .od-time-error, .oj-schedule .form-error, .oj-schedule .od-inline-done { grid-column: 1 / -1; margin: 0; font-size: 12.5px; }
+}

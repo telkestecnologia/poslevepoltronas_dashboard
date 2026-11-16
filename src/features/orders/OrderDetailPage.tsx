@@ -158,9 +158,6 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
     const parts: ReactNode[] = []
     if (phase && step >= 0 && !contractOnly) {
       if (canChangeSchedule && scheduleKind && !done) parts.push(<div key="schedule" className="oj-action oj-schedule">
-        <h4>{scheduleKind === 'delivery' ? '📅 Reagendar a entrega' : '📅 Reagendar ou prorrogar a retirada'}</h4>
-        <p>{scheduleKind === 'delivery' ? 'Escolha no calendário o novo dia e digite o horário combinado com o cliente.'
-          : 'Escolha no calendário o novo dia da retirada e o horário.'}</p>
         <InlineSchedule order={order} kind={scheduleKind} busy={busy} onSave={saveSchedule} /></div>)
       if (phase === 'DEPARTURE') parts.push(<div key="departure" className="od-notice" role="note">
         <span className="od-notice-icon"><Megaphone size={16} /></span>
