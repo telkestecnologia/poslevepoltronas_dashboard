@@ -122,3 +122,10 @@
 /* Excluir uma saída lançada pela equipe. */
 .finance-delete { display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; padding: 2px 9px; border: 0; border-radius: 99px;
   background: #fdecea; color: #b8321f; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+
+/* Registrar saída maior no computador. */
+@media (min-width: 901px) {
+  .dashboard-shell .modal.outflow-modal { width: min(820px, calc(100vw - 48px)); max-height: calc(100vh - 40px); }
+  .dashboard-shell .outflow-modal .modal-form { gap: 20px; padding: 26px 34px 30px; }
+  .dashboard-shell .outflow-modal .modal-head { padding: 26px 34px 20px; }
+}
