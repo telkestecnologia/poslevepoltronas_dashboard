@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import { BookOpen, MessageCircle, Pencil, Plus, RefreshCw, Search, Sparkles, Trash2 } from 'lucide-react'
+import { BookOpen, Check, MessageCircle, Pencil, Plus, RefreshCw, Search, Sparkles, Trash2 } from 'lucide-react'
 import type { AiKnowledge, AiKnowledgeInput, AiUnansweredQuestion } from '../../api'
 import { EmptyState } from '../../components/common'
 import { getMessage } from '../../utils/errors'
@@ -198,7 +198,15 @@ export function AiContextPage({ credentials, knowledge, unanswered, onCreateKnow
                 <h3>{entry.question}</h3>
                 <p className="ai-entry-plain">{entry.answer}</p>
                 {/* No computador: a orientação para a Isa de um lado e o exemplo de mensagem, como no WhatsApp, do outro. */}
-                <AnswerView answer={entry.answer} />
+                <AnswerView answer={entry.answer} busy={busy}
+                  onSave={async answer => {
+                    setBusy(true)
+                    setError('')
+                    try { await onUpdateKnowledge(entry.id, { question: entry.question, answer }); return true }
+                    catch (cause) { setError(getMessage(cause)); return false }
+                    finally { setBusy(false) }
+                  }}
+                  onRemove={() => void remove(entry)} />
                 <div className="ai-entry-actions">
                   <button type="button" className="button secondary admin-only" disabled={busy} onClick={() => openEditor({ kind: 'knowledge', entry })}>
                     <Pencil size={15} /> Editar
@@ -255,18 +263,54 @@ export function AiContextPage({ credentials, knowledge, unanswered, onCreateKnow
 }
 
 /** Separa a orientação ("como responder") do exemplo de mensagem ("Modelo/Exemplo de resposta:"). */
-function AnswerView({ answer }: { answer: string }) {
+function AnswerView({ answer, busy, onSave, onRemove }: {
+  answer: string; busy: boolean; onSave: (answer: string) => Promise<boolean>; onRemove: () => void
+}) {
   const match = /(modelo|exemplo)s? de resposta\s*:?/i.exec(answer)
   const guide = (match ? answer.slice(0, match.index) : answer).trim()
   const sample = match ? answer.slice(match.index + match[0].length).trim() : ''
-  return <div className={`ai-answer${sample ? ' with-sample' : ''}`}>
-    <div className="ai-answer-guide">
-      <span className="ai-answer-label">🧭 Como a Isa deve responder</span>
-      <p>{guide}</p>
+  const label = match ? match[0].trim().replace(/:?$/, ':') : 'Modelo de resposta:'
+  const [editing, setEditing] = useState(false)
+  const [guideDraft, setGuideDraft] = useState(guide)
+  const [sampleDraft, setSampleDraft] = useState(sample)
+
+  function start() {
+    setGuideDraft(guide)
+    setSampleDraft(sample)
+    setEditing(true)
+  }
+
+  async function save() {
+    const text = sampleDraft.trim() ? `${guideDraft.trim()} ${label}\n\n${sampleDraft.trim()}` : guideDraft.trim()
+    if (!text) return
+    if (await onSave(text)) setEditing(false)
+  }
+
+  return <div className={`ai-answer${sample || editing ? ' with-sample' : ''}${editing ? ' editing' : ''}`}>
+    <div className="ai-answer-side">
+      <div className="ai-answer-guide">
+        <span className="ai-answer-label">🧭 Como a Isa deve responder</span>
+        {editing ? <textarea value={guideDraft} onChange={event => setGuideDraft(event.target.value)} rows={7} maxLength={4000}
+          aria-label="Como a Isa deve responder" /> : <p>{guide}</p>}
+      </div>
+      {/* Editar e Remover no espaço branco embaixo da orientação; Editar abre a edição aqui mesmo, sem janela. */}
+      <div className="ai-answer-buttons admin-only">
+        {editing ? <>
+          <button type="button" className="button primary" disabled={busy || !guideDraft.trim()} onClick={() => void save()}>
+            <Check size={16} /> {busy ? 'Salvando...' : 'Salvar'}</button>
+          <button type="button" className="button secondary" disabled={busy} onClick={() => setEditing(false)}>Cancelar</button>
+        </> : <>
+          <button type="button" className="button secondary" disabled={busy} onClick={start}><Pencil size={16} /> Editar</button>
+          <button type="button" className="ai-remove" disabled={busy} onClick={onRemove}><Trash2 size={15} /> Remover</button>
+        </>}
+      </div>
     </div>
-    {sample && <div className="ai-answer-sample">
-      <span className="ai-answer-label">💬 Exemplo de mensagem da Isa</span>
-      <div className="ai-answer-bubble"><span className="ai-answer-author">Isa (assistente)</span><WhatsAppText text={sample} /></div>
+    {(sample || editing) && <div className="ai-answer-sample">
+      <span className="ai-answer-label">💬 Exemplo de mensagem da Isa{editing ? ' (edite direto no balão)' : ''}</span>
+      <div className="ai-answer-bubble"><span className="ai-answer-author">Isa (assistente)</span>
+        {editing ? <textarea value={sampleDraft} onChange={event => setSampleDraft(event.target.value)} rows={12} maxLength={4000}
+          aria-label="Exemplo de mensagem da Isa" placeholder="Escreva como a Isa responde ao cliente. Use *negrito* como no WhatsApp." />
+          : <WhatsAppText text={sample} />}</div>
     </div>}
   </div>
 }
