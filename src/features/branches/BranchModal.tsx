@@ -110,6 +110,10 @@ export function BranchModal({
           {/* Na página da filial, cidades e frete abre e fecha (começa fechado). */}
           <details className="municipality-picker" open={!inline}>
             <summary><strong>Cidades atendidas e frete ({areas.length})</strong></summary>
+            {/* No computador: dois passos lado a lado (adicionar cidades | frete de cada uma). No celular fica como antes. */}
+            <div className="mp-body">
+            <div className="mp-add">
+            <div className="mp-step"><b>1</b><div><strong>Adicione as cidades</strong><small>Escolha o estado, busque e clique no + para incluir.</small></div></div>
             <div className="municipality-picker-row">
               <label>
                 UF
@@ -166,6 +170,10 @@ export function BranchModal({
                 <p>Nenhum município encontrado nesta UF.</p>
               )}
             </div>
+            </div>
+            <div className="mp-fees">
+            <div className="mp-step"><b>2</b><div><strong>Frete de cada cidade ({areas.length})</strong><small>Digite o valor da entrega ou marque Frete grátis.</small></div></div>
+            {areas.length === 0 && <p className="mp-empty">Nenhuma cidade ainda. Adicione no passo 1.</p>}
             {areas.length > 0 && (
               <div className="municipality-selected">
                 <strong>Frete de entrega por município</strong>
@@ -216,6 +224,8 @@ export function BranchModal({
                 })}
               </div>
             )}
+            </div>
+            </div>
             <small className="field-help">
               A cobertura inclui todos os CEPs dos municípios escolhidos, inclusive zona rural.
               Use 0,00 para zerar apenas este município; o botão na lista de filiais zera todos temporariamente.

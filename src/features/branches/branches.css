@@ -71,3 +71,45 @@ button.branch-chair:hover { filter: brightness(0.98); }
 /* Frete grátis por cidade. */
 .municipality-free { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: #127a84; white-space: nowrap; }
 .municipality-fee input:disabled { opacity: 0.45; }
+
+/* ---------- Cidades e frete ---------- */
+/* Celular: os blocos novos não mudam nada (os campos ficam como antes). */
+.mp-body, .mp-add, .mp-fees { display: contents; }
+.mp-step, .mp-empty { display: none; }
+@media (max-width: 900px) {
+  .branch-inline-form .mp-add > *, .branch-inline-form .mp-fees > * { margin-left: 16px; margin-right: 16px; }
+}
+
+/* Computador: dois passos lado a lado, tudo visível, sem rolagem para o lado. */
+@media (min-width: 901px) {
+  .mp-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 18px; align-items: start; }
+  .branch-inline-form .municipality-picker > .mp-body { margin-top: 6px; }
+  .mp-add, .mp-fees { display: grid; align-content: start; gap: 12px; min-width: 0; padding: 18px; border: 1px solid #e1ebe9; border-radius: 16px; background: #fff; }
+  .mp-fees { background: #f6fbfa; }
+  .mp-step { display: flex; align-items: flex-start; gap: 12px; }
+  .mp-step > b { display: grid; place-items: center; flex: none; width: 30px; height: 30px; border-radius: 50%; background: var(--teal-dark); color: #fff; font-size: 14px; }
+  .mp-fees .mp-step > b { background: #e87461; }
+  .mp-step strong { display: block; color: #1f3340; font-size: 15.5px; }
+  .mp-step small { display: block; margin-top: 2px; color: #6b7f86; font-size: 12.5px; }
+  .mp-empty { display: block; margin: 0; padding: 26px 12px; border: 1.5px dashed #cfe0dd; border-radius: 12px; color: #8fa2a5; font-size: 13px; text-align: center; }
+
+  .mp-add .municipality-picker-row { grid-template-columns: 96px minmax(0, 1fr); }
+  .mp-add .municipality-picker-row select, .mp-add .municipality-picker-row input { height: 44px; }
+  .mp-add .municipality-results { max-height: 340px; border-radius: 12px; }
+  .mp-add .municipality-results button { padding: 11px 12px; font-size: 13.5px; }
+  .mp-add .municipality-results button svg { padding: 4px; border-radius: 8px; background: #e3f4f2; color: var(--teal-dark); box-sizing: content-box; }
+
+  .mp-fees .municipality-selected { max-height: 430px; gap: 8px; padding: 2px 4px 2px 2px; overflow-y: auto; overflow-x: hidden; }
+  .mp-fees .municipality-selected > strong { display: none; }
+  .mp-fees .municipality-fee {
+    grid-template-columns: minmax(0, 1fr) 140px auto 34px; gap: 12px; padding: 10px 12px;
+    border: 1px solid #e1ebe9; border-radius: 12px; background: #fff; box-shadow: 0 1px 2px rgba(15, 63, 68, 0.04);
+  }
+  .mp-fees .municipality-selected .municipality-fee > span { overflow: hidden; color: #1f3340; font-size: 14px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+  .mp-fees .municipality-fee label { gap: 6px; color: #6b7f86; font-size: 13px; font-weight: 700; }
+  .mp-fees .municipality-fee input[type='text'] { height: 40px; font-size: 14px; font-weight: 700; text-align: right; }
+  .mp-fees .municipality-free { padding: 7px 11px; border-radius: 99px; background: #eef5f4; color: #12727d; font-size: 12.5px; cursor: pointer; }
+  .mp-fees .municipality-free:has(input:checked) { background: #e5f4ea; color: #2f8a52; box-shadow: inset 0 0 0 1.5px #9fd8b3; }
+  .mp-fees .municipality-fee > button { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; color: #8fa2a5; }
+  .mp-fees .municipality-fee > button:hover { background: #fdebe6; color: #e87461; }
+}
