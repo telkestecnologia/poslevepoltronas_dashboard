@@ -341,3 +341,9 @@
   .dashboard-shell .pay-summary .pay-statement em { color: rgba(255, 255, 255, 0.72); font-size: 14px; font-weight: 400; }
   .dashboard-shell .pay-summary .pay-statement small { color: #8fd3cc; font-size: 13px; }
 }
+@media (min-width: 901px) {
+  /* Imagem inteira (sem cortar as pernas) e sem cantos arredondados, ocupando a coluna toda. */
+  .content:has(> .pay-summary) { grid-template-columns: minmax(0, 1fr) 380px; }
+  .content:has(> .pay-summary) > .pay-banner { width: 380px; height: auto; align-self: start; object-fit: contain; border-radius: 0; }
+  .content:has(> .pay-summary) > .pay-summary { align-self: stretch; }
+}
