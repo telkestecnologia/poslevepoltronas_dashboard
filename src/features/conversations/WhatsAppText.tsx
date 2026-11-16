@@ -15,10 +15,26 @@ function formatted(text: string, key: string): ReactNode[] {
   })
 }
 
-/** Texto da mensagem como no WhatsApp: quebras de linha, formatação e links clicáveis. */
+/** Telefone do Brasil escrito na mensagem: (85) 93577-4756, 85 935774756, +55 85 9..., etc. */
+const PHONE = /((?:\+?55[\s.-]?)?\(?[1-9]\d\)?[\s.-]?9?[\s.-]?\d{4}[\s.-]?\d{4})/g
+
+/** Número escrito pelo cliente vira link: clicar abre a conversa com ele no WhatsApp. */
+function withPhones(text: string, key: string): ReactNode[] {
+  return text.split(PHONE).map((part, index) => {
+    const k = `${key}-p${index}`
+    if (index % 2 === 0) return <Fragment key={k}>{formatted(part, k)}</Fragment>
+    let digits = part.replace(/\D/g, '')
+    if (digits.length >= 12 && digits.startsWith('55')) digits = digits.slice(2)
+    if (digits.length < 10 || digits.length > 11) return <Fragment key={k}>{formatted(part, k)}</Fragment>
+    return <a key={k} className="wa-phone" href={`https://wa.me/55${digits}`} target="_blank" rel="noopener noreferrer"
+      title="Abrir conversa no WhatsApp" onClick={event => event.stopPropagation()}>{part}</a>
+  })
+}
+
+/** Texto da mensagem como no WhatsApp: quebras de linha, formatação, links e telefones clicáveis. */
 export function WhatsAppText({ text }: { text: string }) {
   return <p className="wa-text">{text.split(LINK).map((part, index) => {
-    if (index % 2 === 0) return <Fragment key={index}>{formatted(part, String(index))}</Fragment>
+    if (index % 2 === 0) return <Fragment key={index}>{withPhones(part, String(index))}</Fragment>
     const clean = part.replace(/[),.;!?]+$/, '')
     const rest = part.slice(clean.length)
     return <Fragment key={index}><a href={clean.startsWith('http') ? clean : `https://${clean}`} target="_blank" rel="noopener noreferrer">{clean}</a>{rest}</Fragment>

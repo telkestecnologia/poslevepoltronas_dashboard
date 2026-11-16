@@ -340,3 +340,11 @@
 /* "Pediu ajuda" em destaque: primeiro filtro, em coral. */
 .wa-filters .wa-filter-help { background: #fdebe6; color: #c4532c; font-weight: 800; }
 .wa-filters .wa-filter-help.selected { background: linear-gradient(135deg, #f0907e, #d65f4b); color: #fff; box-shadow: 0 6px 14px rgba(214, 95, 75, 0.3); }
+
+/* Telefone na mensagem: clicar abre o WhatsApp da pessoa. */
+.wa-text .wa-phone { display: inline-flex; align-items: center; gap: 4px; padding: 0 8px 1px; border-radius: 99px; background: #d9fdd3;
+  color: #0b7a3e; font-weight: 700; text-decoration: none; box-shadow: inset 0 0 0 1px #9fe0b0; white-space: nowrap; }
+.wa-text .wa-phone::before { content: ''; width: 13px; height: 13px; background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.9 9.9 0 0 0 4.74 1.21c5.46 0 9.91-4.45 9.91-9.91C21.95 6.45 17.5 2 12.04 2z'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.9 9.9 0 0 0 4.74 1.21c5.46 0 9.91-4.45 9.91-9.91C21.95 6.45 17.5 2 12.04 2z'/%3E%3C/svg%3E") center / contain no-repeat; }
+.wa-text .wa-phone:hover { background: #c4f5bb; }
