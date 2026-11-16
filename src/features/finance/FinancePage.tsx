@@ -283,7 +283,8 @@ export function FinancePage({ credentials }: { credentials: string }) {
           <div className="finance-branch-tiles">{onlyOfficialBranches(branches, branch => branch.name).map(branch => {
             const net = (monthEntries ?? []).filter(entry => entry.branchId === branch.id)
               .reduce((sum, entry) => sum + (entry.kind === 'INFLOW' ? entry.amountCents : -entry.amountCents), 0)
-            return <div key={branch.id} className={`finance-branch-tile region-${regionOf(branch.name)}`}>
+            return <div key={branch.id} className={`finance-branch-tile region-${regionOf(branch.name)}`}
+              style={{ ['--tile-photo' as string]: `url(${branchPhoto(branch.name)})` }}>
               <strong>{shortBranch(branch.name)}</strong>
               <small>{shownMonthStart ? monthAbbr(shownMonthStart) : '—'}</small>
               <b className={net < 0 ? 'finance-negative' : ''}>{monthEntries === null ? '…' : currency(net)}</b>
@@ -377,6 +378,14 @@ function regionOf(name: string) {
 
 const monthNames = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ']
 const monthAbbr = (iso: string) => `${monthNames[Number(iso.slice(5, 7)) - 1] ?? ''}/${iso.slice(0, 4)}`
+
+/** Foto da região de cada filial (a mesma da página Filiais). */
+function branchPhoto(name: string) {
+  const text = normalize(name)
+  if (/serra|ibiapaba/.test(text)) return '/filiais/filial-serra.webp'
+  if (/sobral/.test(text)) return '/filiais/filial-sobral.webp'
+  return '/filiais/filial-fortaleza.webp'
+}
 
 function shortBranch(name: string) {
   const text = normalize(name)

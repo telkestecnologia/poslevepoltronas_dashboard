@@ -129,3 +129,17 @@
   .dashboard-shell .outflow-modal .modal-form { gap: 20px; padding: 26px 34px 30px; }
   .dashboard-shell .outflow-modal .modal-head { padding: 26px 34px 20px; }
 }
+
+/* Resultado por filial com a foto de cada região (computador). */
+@media (min-width: 901px) {
+  .dashboard-shell .finance-branch-tile { position: relative; display: grid; align-content: end; justify-items: start; gap: 2px; min-height: 190px;
+    padding: 18px 18px 16px; overflow: hidden; border: 0; border-radius: 18px; text-align: left; color: #fff;
+    background: linear-gradient(180deg, rgba(10, 30, 36, 0) 25%, rgba(10, 30, 36, 0.82) 100%), var(--tile-photo) center / cover no-repeat;
+    box-shadow: 0 10px 24px rgba(15, 63, 68, 0.16); transition: transform 0.25s, box-shadow 0.25s; }
+  .dashboard-shell .finance-branch-tile:hover { transform: translateY(-3px); box-shadow: 0 16px 32px rgba(15, 63, 68, 0.24); }
+  .dashboard-shell .finance-branch-tile strong { color: #fff; font-family: 'Outfit', sans-serif; font-size: 20px; letter-spacing: -0.01em; }
+  .dashboard-shell .finance-branch-tile small { padding: 2px 8px; border-radius: 99px; background: rgba(255, 255, 255, 0.2); color: #fff;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; backdrop-filter: blur(4px); }
+  .dashboard-shell .finance-branch-tile b { margin-top: 6px; color: #fff; font-family: 'Outfit', sans-serif; font-size: 24px; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); }
+  .dashboard-shell .finance-branch-tile b.finance-negative { color: #ffb4a6; }
+}
