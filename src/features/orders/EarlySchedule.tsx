@@ -6,7 +6,7 @@ import { RentalDatePicker } from '../overview/RentalDatePicker'
 
 const dayLabel = (iso: string) => new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' })
   .format(new Date(`${iso}T12:00:00Z`))
-const shortDay = (iso: string) => dayLabel(iso).slice(0, 5)
+const shortDay = (iso: string) => dayLabel(iso)
 const todayIso = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Fortaleza' })
 /** Horário sempre em 24 h (o campo nativo de hora mostra AM/PM em navegadores em inglês). */
 const maskTime = (value: string) => {

@@ -29,7 +29,7 @@ function addDays(iso: string, days: number) {
 }
 
 function shortDate(iso: string) {
-  return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', timeZone: 'UTC' }).format(new Date(`${iso}T12:00:00Z`))
+  return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${iso}T12:00:00Z`))
 }
 
 function time(iso: string) {

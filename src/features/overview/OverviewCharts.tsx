@@ -5,7 +5,9 @@ import { onlyOfficialBranches } from '../../utils/branches'
 import './overview-charts.css'
 
 const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
-const monthName = new Intl.DateTimeFormat('pt-BR', { month: 'short', timeZone: 'UTC' })
+const monthShort = new Intl.DateTimeFormat('pt-BR', { month: 'short', timeZone: 'UTC' })
+/** Mês com o ano (ex.: nov/2026), para nenhuma data aparecer sem ano. */
+const monthName = { format: (date: Date) => `${monthShort.format(date).replace('.', '')}/${date.getUTCFullYear()}` }
 const today = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Fortaleza' })
 function monthsAgo(count: number) {
   const [year, month] = today().split('-').map(Number)

@@ -9,7 +9,7 @@ import { OUTFLOW_CATEGORIES, OutflowModal } from './OutflowModal'
 import './financeReport.css'
 
 const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
-const shortDay = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', timeZone: 'UTC' })
+const shortDay = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' })
 const dateLabel = (iso: string) => shortDay.format(new Date(`${iso}T12:00:00Z`))
 const monthName = new Intl.DateTimeFormat('pt-BR', { month: 'short', year: '2-digit', timeZone: 'UTC' })
 const dateTime = new Intl.DateTimeFormat('pt-BR', {
@@ -376,7 +376,7 @@ function regionOf(name: string) {
 }
 
 const monthNames = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ']
-const monthAbbr = (iso: string) => monthNames[Number(iso.slice(5, 7)) - 1] ?? ''
+const monthAbbr = (iso: string) => `${monthNames[Number(iso.slice(5, 7)) - 1] ?? ''}/${iso.slice(0, 4)}`
 
 function shortBranch(name: string) {
   const text = normalize(name)

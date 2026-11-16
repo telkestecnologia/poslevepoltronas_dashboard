@@ -17,7 +17,7 @@ function hour(iso: string) {
 function timeLabel(iso: string) {
   const date = new Date(iso)
   const today = new Date().toDateString() === date.toDateString()
-  return new Intl.DateTimeFormat('pt-BR', today ? { hour: '2-digit', minute: '2-digit' } : { day: '2-digit', month: '2-digit' }).format(date)
+  return new Intl.DateTimeFormat('pt-BR', today ? { hour: '2-digit', minute: '2-digit' } : { day: '2-digit', month: '2-digit', year: 'numeric' }).format(date)
 }
 
 /** Conversas do site e do WhatsApp (Isa no backend), as mesmas do app: a lista atualiza a cada 10 segundos. */
@@ -211,7 +211,7 @@ export function ConversationsPage({ credentials, selectedId, onSelect }: Props) 
             <div className="wa-chat-title"><strong>{customerLabel(selected)}{customerNumber(selected) && <small className="wa-number"> {customerNumber(selected)}</small>}</strong>
               <small className="wa-chat-meta"><button type="button" className={`wa-state wa-state-link ${state.tone}`} onClick={() => openSummary()}
                 title="Ver o resumo do atendimento">{state.label} ⓘ</button>
-                {` • ${selected.channel === 'WHATSAPP' ? 'WhatsApp' : 'Site'} • desde ${new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(selected.startedAt))}`}</small>
+                {` • ${selected.channel === 'WHATSAPP' ? 'WhatsApp' : 'Site'} • desde ${new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(selected.startedAt))}`}</small>
               <span className={`wa-stage ${stageTone(selected.stage ?? 'Primeiro contato').tone}`}>{stageTone(selected.stage ?? 'Primeiro contato').icon} Etapa: {selected.stage ?? 'Primeiro contato'}</span></div>
             <button type="button" className={`wa-assign${selected.state === 'HUMAN' ? ' outline' : ''}`} disabled={busy} onClick={() => void toggleAssignment(selected)}>
               {selected.state === 'HUMAN' ? 'Devolver para a Isa' : 'Assumir conversa'}</button>

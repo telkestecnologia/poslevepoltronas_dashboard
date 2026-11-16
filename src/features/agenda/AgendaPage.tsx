@@ -342,7 +342,7 @@ export function AgendaPage({ credentials, onOpenOrder }: Props) {
               aria-label={`${dayFormatter.format(dateFromIso(date))}: ${count?.deliveries ?? 0} entregas e ${count?.pickups ?? 0} retiradas`}
               aria-pressed={date === selectedDate} aria-current={date === today ? 'date' : undefined}
               onClick={() => { setSelectedDate(date); setCalendarOpen(false) }}>
-              <span className="agenda-calendar-number">{view === 'week' ? `${date.slice(8)}/${date.slice(5, 7)}` : Number(date.slice(-2))}</span>
+              <span className="agenda-calendar-number">{view === 'week' ? `${date.slice(8)}/${date.slice(5, 7)}/${date.slice(2, 4)}` : Number(date.slice(-2))}</span>
               <span className="agenda-calendar-counts" aria-hidden="true">
                 {!!count?.deliveries && <span className="agenda-count delivery">{count.deliveries}</span>}
                 {!!count?.pickups && <span className="agenda-count pickup">{count.pickups}</span>}

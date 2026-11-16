@@ -22,7 +22,7 @@ const TICK_COUNT = 4
 
 function bucketLabel(start: string, period: RevenuePeriod) {
   return period === 'WEEK'
-    ? `${start.slice(8, 10)}/${start.slice(5, 7)}`
+    ? `${start.slice(8, 10)}/${start.slice(5, 7)}/${start.slice(2, 4)}`
     : `${months[Number(start.slice(5, 7)) - 1]}/${start.slice(2, 4)}`
 }
 

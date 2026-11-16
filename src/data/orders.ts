@@ -141,7 +141,7 @@ export const dateTimeLabel = (value: string) =>
   new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short', timeZone: 'America/Fortaleza' }).format(new Date(value))
 
 export const weekdayDateLabel = (value: string) =>
-  new Intl.DateTimeFormat('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit', timeZone: 'UTC' })
+  new Intl.DateTimeFormat('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' })
     .format(new Date(`${value}T12:00:00Z`))
 
 export const currency = (cents: number) =>
