@@ -3,8 +3,11 @@ import { RefreshCw } from 'lucide-react'
 import type { RentalOverview, RevenueOverview } from '../../api'
 import { onlyOfficialBranches } from '../../utils/branches'
 import './attention.css'
+import { OverviewCharts } from './OverviewCharts'
 
 type Props = {
+  /** Para os gráficos do computador (buscam o financeiro dos últimos meses). */
+  credentials?: string
   rentals: RentalOverview
   revenue: RevenueOverview
   onRefresh: () => void
@@ -15,7 +18,7 @@ type Props = {
 const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 
 /** Visão geral enxuta, igual à do app: dois números do dia e o que precisa de atenção. O detalhe fica em Financeiro e Poltronas. */
-export function OverviewPage({ rentals, revenue, onRefresh, children }: Props) {
+export function OverviewPage({ credentials, rentals, revenue, onRefresh, children }: Props) {
   const branches = onlyOfficialBranches(rentals.rentedChairsByBranch, branch => branch.branchName)
   const rented = branches.reduce((sum, branch) => sum + branch.rentedChairs, 0)
   const total = branches.reduce((sum, branch) => sum + branch.totalChairs, 0)
@@ -40,6 +43,8 @@ export function OverviewPage({ rentals, revenue, onRefresh, children }: Props) {
           <span>Recebido este mês</span><strong>{money.format((current?.totalPaidCents ?? 0) / 100)}</strong><small>até agora</small>
         </div>
       </div>
+
+      {credentials && <OverviewCharts credentials={credentials} rentals={rentals} />}
 
       {children}
     </>

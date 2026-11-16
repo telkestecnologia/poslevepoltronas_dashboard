@@ -98,6 +98,7 @@ function App() {
           onOpenFinance={page === 'finance' ? undefined : () => navigate('finance')} />
         {page === 'overview' && !showLoading && !pageError && overviewPage.rentals && overviewPage.revenue && (
           <OverviewPage
+            credentials={session.credentials}
             rentals={overviewPage.rentals}
             revenue={overviewPage.revenue}
             onRefresh={overviewPage.onRefresh}
