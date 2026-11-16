@@ -118,3 +118,7 @@
 .outflow-chips button { padding: 7px 12px; border: 1px solid #e6e0d3; border-radius: 16px; background: #f4f1ea; color: inherit;
   font: inherit; font-size: 13.5px; cursor: pointer; }
 .outflow-chips button.selected { border-color: #f3b5ab; background: #fdecea; color: #b8321f; font-weight: 600; }
+
+/* Excluir uma saída lançada pela equipe. */
+.finance-delete { display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; padding: 2px 9px; border: 0; border-radius: 99px;
+  background: #fdecea; color: #b8321f; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }

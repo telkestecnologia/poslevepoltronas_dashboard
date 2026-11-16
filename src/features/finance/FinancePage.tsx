@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Banknote, CalendarCog, Check, Copy, CreditCard, FileText, ChevronDown, ChevronLeft, ChevronRight, RefreshCw, Search, Wallet, X } from 'lucide-react'
+import { Banknote, CalendarCog, Check, Copy, CreditCard, FileText, ChevronDown, ChevronLeft, ChevronRight, RefreshCw, Search, Trash2, Wallet, X } from 'lucide-react'
 import { api, type Branch, type FinanceQuery, type FinancialEntry, type FinancialReport } from '../../api'
 import { branchLabel, onlyOfficialBranches } from '../../utils/branches'
 import { getMessage } from '../../utils/errors'
@@ -162,6 +162,13 @@ export function FinancePage({ credentials }: { credentials: string }) {
   const shownIndex = months.length === 0 ? -1 : Math.min(monthIndex ?? months.length - 1, months.length - 1)
   const shownMonth = shownIndex >= 0 ? months[shownIndex] : undefined
 
+  function removeOutflow(entry: FinancialEntry) {
+    const split = /\(dividido entre \d+ filiais\)$/.test(entry.description)
+    const note = split ? '\n\nA saída foi dividida entre as filiais: todas as partes serão excluídas.' : ''
+    if (!window.confirm(`Excluir esta saída?\n\n${entry.description}\n${currency(entry.amountCents)}${note}`)) return
+    api.deleteOutflow(credentials, entry.id).then(() => setReloadKey(key => key + 1)).catch(failure => setError(getMessage(failure)))
+  }
+
   function openFilter() {
     setDraft({ from, to, branchId })
     setFilterOpen(true)
@@ -315,7 +322,10 @@ export function FinancePage({ credentials }: { credentials: string }) {
               <td>{dateTime.format(new Date(entry.occurredAt))}</td>
               <td><span className={`finance-entry-icon ${entry.kind.toLowerCase()}`}><MethodIcon method={entry.paymentMethod} /></span>
                 <span className="finance-entry-description"><strong>{entryTitle(entry.description)}</strong>
-                  {entry.reference && <small className="finance-ref">Ref. {entry.reference} <CopyButton text={entry.reference} /></small>}</span></td>
+                  {entry.id.startsWith('out:')
+                    ? <small className="finance-ref">Registrado por {entry.reference}
+                      <button type="button" className="finance-delete" onClick={() => removeOutflow(entry)}><Trash2 size={13} /> Excluir</button></small>
+                    : entry.reference && <small className="finance-ref">Ref. {entry.reference} <CopyButton text={entry.reference} /></small>}</span></td>
               <td>{branchLabel(entry.branchName)}</td><td>{methodLabel(entry.paymentMethod)}
                 {entry.payerName && <small className="finance-payer">Pago por {entry.payerName}</small>}</td>
               <td className={entry.kind === 'INFLOW' ? 'finance-positive' : 'finance-negative'}>
@@ -337,7 +347,10 @@ export function FinancePage({ credentials }: { credentials: string }) {
                 <div><dt>Meio</dt><dd>{methodLabel(entry.paymentMethod)}</dd></div>
                 {entry.payerName && <div><dt>Pago por</dt><dd>{entry.payerName}</dd></div>}
                 <div><dt>Categoria</dt><dd>{categoryLabel(entry.category)}</dd></div>
-                {entry.reference && <div><dt>Referência</dt><dd>{entry.reference} <CopyButton text={entry.reference} /></dd></div>}
+                {entry.id.startsWith('out:')
+                  ? <div><dt>Registrado por</dt><dd>{entry.reference} <button type="button" className="finance-delete"
+                    onClick={() => removeOutflow(entry)}><Trash2 size={13} /> Excluir saída</button></dd></div>
+                  : entry.reference && <div><dt>Referência</dt><dd>{entry.reference} <CopyButton text={entry.reference} /></dd></div>}
               </dl>
             </details>
           </li>)}</ul></>}

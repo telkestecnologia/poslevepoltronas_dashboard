@@ -11,6 +11,7 @@ export const OUTFLOW_CATEGORIES = [
   ['MARKETING', 'Marketing'], ['OUTRAS_DESPESAS', 'Outras despesas'],
 ] as const
 const METHODS = [['PIX', 'Pix'], ['DINHEIRO', 'Dinheiro'], ['CARTAO', 'Cartão'], ['TRANSFERENCIA', 'Transferência'], ['BOLETO', 'Boleto']] as const
+const ALL = '__todas__'
 const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 const todayIso = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Fortaleza' })
 
@@ -43,7 +44,8 @@ export function OutflowModal({ credentials, branches, onClose, onSaved }: {
     setSaving(true)
     setError('')
     try {
-      await api.registerOutflow(credentials, { branchId, amountCents: cents, category, paymentMethod: method, description: description.trim(), date })
+      const target = branchId === ALL ? { branchIds: branches.map(branch => branch.id) } : { branchId }
+      await api.registerOutflow(credentials, { ...target, amountCents: cents, category, paymentMethod: method, description: description.trim(), date })
       onSaved()
       onClose()
     } catch (failure) {
@@ -71,8 +73,11 @@ export function OutflowModal({ credentials, branches, onClose, onSaved }: {
           placeholder="Ex.: troca do motor da poltrona 12" /></label>
         <label>Filial<select value={branchId} required onChange={event => setBranchId(event.target.value)}>
           <option value="">Selecione</option>
+          {branches.length > 1 && <option value={ALL}>Todas as filiais</option>}
           {branches.map(branch => <option key={branch.id} value={branch.id}>{branchLabel(branch.name)}</option>)}
         </select></label>
+        {branchId === ALL && cents > 0 && <small className="field-help">
+          Dividido igualmente: {money.format(Math.floor(cents / branches.length) / 100)} para cada uma das {branches.length} filiais.</small>}
         <fieldset className="outflow-chips"><legend>Como foi pago</legend>
           {METHODS.map(([value, label]) => <button type="button" key={value} aria-pressed={method === value}
             className={method === value ? 'selected' : ''} onClick={() => setMethod(value)}>{label}</button>)}
