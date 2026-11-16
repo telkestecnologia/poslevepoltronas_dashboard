@@ -308,3 +308,13 @@
   .dashboard-shell .pay-star span[aria-hidden] { font-size: 26px; transition: transform 0.2s; }
   .dashboard-shell .pay-star:hover span[aria-hidden] { transform: scale(1.2); }
 }
+@media (min-width: 901px) {
+  /* Configurações e régua lado a lado; planos na largura toda embaixo (sem apertar as colunas). */
+  .dashboard-shell .pay-layout > form:last-child { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .dashboard-shell .pay-layout > form:last-child > .pay-grid { grid-column: 1; grid-row: 2; }
+  .dashboard-shell .pay-layout > form:last-child > .pay-ruler { grid-column: 2; grid-row: 2; margin: 0; }
+  .dashboard-shell .pay-layout > form:last-child > .pay-plan-table { grid-column: 1 / -1; grid-row: 3; }
+  .dashboard-shell .pay-plan-row { grid-template-columns: minmax(180px, 1.6fr) 80px 140px 120px minmax(240px, 1.8fr) 70px; }
+  .dashboard-shell .pay-plan-checks { flex-wrap: nowrap; }
+  .dashboard-shell .pay-check { white-space: nowrap; }
+}
