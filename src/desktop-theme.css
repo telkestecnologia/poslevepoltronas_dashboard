@@ -376,3 +376,8 @@
   .breadcrumbs { font-size: 14px; }
   .breadcrumbs strong { font-size: 14px; }
 }
+@media (min-width: 901px) {
+  /* Menu um pouco mais largo para os nomes caberem numa linha com a letra maior. */
+  .sidebar:not(.collapsed) { width: 272px; flex-basis: 272px; }
+  .nav-item span { white-space: nowrap; }
+}
