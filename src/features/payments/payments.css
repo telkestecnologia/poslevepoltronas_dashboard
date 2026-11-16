@@ -196,3 +196,51 @@
 .pay-star span[aria-hidden] { color: #d4af37; }
 .pay-star.on span[aria-hidden] { color: #f3d16b; text-shadow: 0 0 1px #a8801f; }
 .pay-plan-row.popular { border-color: #f3d16b !important; box-shadow: 0 0 0 1px #f3d16b inset, 0 8px 22px rgba(168, 128, 31, 0.18) !important; }
+
+/* ---------- Computador: visual profissional e minimalista (o celular não muda) ---------- */
+@media (min-width: 901px) {
+  .dashboard-shell .pay-summary { gap: 24px; margin-bottom: 16px; padding: 24px 28px; border-color: #e4ecea; box-shadow: 0 1px 2px rgba(15, 63, 68, 0.04); }
+  .dashboard-shell .pay-summary h1 { color: #1f3340; font-size: 28px; }
+  .dashboard-shell .pay-summary p { color: #6b7f86; font-size: 14px; }
+  .dashboard-shell .pay-tiles { grid-template-columns: repeat(3, minmax(130px, 1fr)); gap: 12px; }
+  .dashboard-shell .pay-tiles > div { justify-items: start; padding: 14px 16px; border: 1px solid #e4ecea; background: #fff; text-align: left; }
+  .dashboard-shell .pay-tiles span { width: 32px; height: 32px; border-radius: 10px; background: #f1f5f4; }
+  .dashboard-shell .pay-tiles .on span { background: #e3f4f2; color: #12727d; }
+  .dashboard-shell .pay-tiles strong { font-size: 17px; color: #1f3340; }
+
+  /* Imagem bem menor: só uma faixa. */
+  .dashboard-shell .pay-banner { height: 170px; margin: 0 0 22px; object-fit: cover; object-position: center 40%; border-radius: 18px; }
+
+  .dashboard-shell .pay-layout { grid-template-columns: minmax(0, 1fr) minmax(0, 1.55fr); gap: 22px; max-width: none; }
+  .dashboard-shell .pay-section { gap: 18px; padding: 28px 30px; border-radius: 18px; }
+  .dashboard-shell .pay-section h2 { font-size: 19px; color: #1f3340; }
+  .dashboard-shell .pay-section .notification-channel-icon { background: #e3f4f2; color: #12727d; }
+
+  /* Formas de pagamento: linhas limpas. */
+  .dashboard-shell .pay-toggle { padding: 16px 18px; border-color: #e4ecea; border-radius: 14px; }
+  .dashboard-shell .pay-toggle:has(input:checked) { border-color: #9fd3cd; background: #f6fbfa; }
+  .dashboard-shell .pay-toggle strong { font-size: 15px; }
+  .dashboard-shell .pay-toggle small { font-size: 13px; }
+
+  .dashboard-shell .pay-field > span { color: #40535e; font-size: 13px; }
+  .dashboard-shell .pay-field input, .dashboard-shell .pay-field select { height: 44px; border-color: #dbe7e5; border-radius: 12px; font-size: 14px; }
+
+  /* "Como o preço funciona": nota simples, sem post-it. */
+  .dashboard-shell .pay-postit { max-width: none; margin: 0; padding: 16px 18px; transform: none; border: 1px solid #e4ecea; border-radius: 14px;
+    background: #f7faf9; box-shadow: none; color: #55696f; }
+  .dashboard-shell .pay-postit::before { display: none; }
+  .dashboard-shell .pay-postit strong { color: #12727d; font-size: 14px; }
+  .dashboard-shell .pay-postit p { font-size: 13.5px; line-height: 1.6; }
+
+  .dashboard-shell .pay-ruler { padding: 18px 20px; border: 1px solid #e4ecea; border-radius: 14px; background: #fff; }
+
+  /* Planos: tabela limpa, sem vidro colorido. */
+  .dashboard-shell .pay-glass { padding: 0; border-radius: 0; background: none; overflow: visible; }
+  .dashboard-shell .pay-glass .pay-plan-row:not(.head) { border: 1px solid #e4ecea; background: #fff; backdrop-filter: none; -webkit-backdrop-filter: none;
+    box-shadow: 0 1px 2px rgba(15, 63, 68, 0.04); }
+  .dashboard-shell .pay-glass .pay-plan-row input:not([type=radio]) { background: #fff; }
+  .dashboard-shell .pay-plan-row.head { color: #8fa2a5; font-size: 11px; }
+  .dashboard-shell .pay-plan-calc { background: #f1f7f6; }
+
+  .dashboard-shell .pay-footer { padding-top: 16px; border-top: 1px solid #edf2f1; }
+}
