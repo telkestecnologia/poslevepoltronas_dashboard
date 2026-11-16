@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import { BookOpen, MessageCircle, Pencil, Plus, RefreshCw, Search, Trash2 } from 'lucide-react'
+import { BookOpen, MessageCircle, Pencil, Plus, RefreshCw, Search, Sparkles, Trash2 } from 'lucide-react'
 import type { AiKnowledge, AiKnowledgeInput, AiUnansweredQuestion } from '../../api'
 import { EmptyState } from '../../components/common'
 import { getMessage } from '../../utils/errors'
@@ -119,6 +119,39 @@ export function AiContextPage({ credentials, knowledge, unanswered, onCreateKnow
         </div>
       </div>
 
+      {/* Só no computador: a Isa sentada, com balões de conversa animados e os números do que ela sabe. */}
+      <section className="isa-hero" aria-label="A Isa, assistente de atendimento">
+        <div className="isa-hero-glow" aria-hidden="true" />
+        <div className="isa-hero-copy">
+          <span className="isa-hero-eyebrow"><Sparkles size={14} /> ATENDIMENTO • PÓS LEVE</span>
+          <div className="ai-title-row"><h1>O que a Isa sabe</h1>
+            <span className="admin-only"><IsaReportButton credentials={credentials} /></span></div>
+          <p>Tudo o que a Isa responde no WhatsApp e no site vem daqui. Quanto mais você ensina, melhor ela atende.</p>
+          <div className="isa-hero-stats">
+            <button type="button" className={`isa-stat known${tab === 'knowledge' ? ' active' : ''}`} onClick={() => switchTab('knowledge')}>
+              <BookOpen size={20} /><span><strong>{knowledge.length}</strong> respostas que ela já sabe</span>
+            </button>
+            <button type="button" className={`isa-stat pending${tab === 'unanswered' ? ' active' : ''}`} onClick={() => switchTab('unanswered')}>
+              <MessageCircle size={20} /><span><strong>{unanswered.length}</strong> {unanswered.length === 1 ? 'dúvida esperando' : 'dúvidas esperando'} você</span>
+            </button>
+          </div>
+          <div className="isa-hero-actions">
+            {tab !== 'alerts' && <button className="button primary admin-only" type="button" onClick={() => openEditor(tab === 'knowledge' ? { kind: 'knowledge' } : { kind: 'unanswered' })}>
+              <Plus size={18} /> {tab === 'knowledge' ? 'Ensinar uma resposta' : 'Registrar dúvida'}
+            </button>}
+            <button className="button secondary" type="button" onClick={onRefresh}><RefreshCw size={17} /> Atualizar</button>
+          </div>
+        </div>
+        <div className="isa-hero-stage" aria-hidden="true">
+          <div className="isa-bubble b1">Oi! Eu sou a Isa 👋</div>
+          <div className="isa-bubble b2">Já sei responder <b>{knowledge.length}</b> perguntas</div>
+          <div className={`isa-bubble b3${unanswered.length ? ' alert' : ''}`}>
+            {unanswered.length ? <>Me ensina <b>{unanswered.length}</b> {unanswered.length === 1 ? 'dúvida' : 'dúvidas'}? 🙏</> : <>Tudo respondido! ✨</>}</div>
+          <div className="isa-bubble b4 typing"><i /><i /><i /></div>
+          <span className="isa-spark s1">✦</span><span className="isa-spark s2">✦</span><span className="isa-spark s3">✦</span>
+          <img src="/isa-sentada.webp" alt="" className="isa-hero-img" />
+        </div>
+      </section>
 
       <section className="panel ai-workspace">
         <div className="ai-navigation">
