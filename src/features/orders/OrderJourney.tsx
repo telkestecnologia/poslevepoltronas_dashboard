@@ -1,4 +1,5 @@
-import { Armchair, CheckCircle2, ClipboardCheck, CreditCard, PackageCheck, Truck, Undo2, type LucideIcon } from 'lucide-react'
+import { useState } from 'react'
+import { Armchair, CalendarClock, CheckCircle2, ClipboardCheck, CreditCard, Images, PackageCheck, Truck, Undo2, X, type LucideIcon } from 'lucide-react'
 import type { Courier, Order } from '../../api'
 import { actorLabel, dateTimeLabel, eventKind, eventKinds, eventLabel, weekdayDateLabel } from '../../data/orders'
 import './order-journey.css'
@@ -38,7 +39,12 @@ function currentIndex(order: Order) {
  * Jornada do pedido (só no computador): todas as etapas numa linha, ligadas por um traço que vai se preenchendo.
  * Cada etapa diz o que é, quando aconteceu (ou quando está prevista) e quem fez.
  */
-export function OrderJourney({ order, couriers }: { order: Order; couriers: Pick<Courier, 'id' | 'name'>[] }) {
+export function OrderJourney({ order, couriers, onOpenMedia }: {
+  order: Order; couriers: Pick<Courier, 'id' | 'name'>[]
+  /** Abre as fotos e vídeos da entrega ou da retirada. */
+  onOpenMedia?: (phase: 'DELIVERY' | 'PICKUP') => void
+}) {
+  const [opened, setOpened] = useState<number | null>(null)
   const steps = stepsOf(order)
   const now = currentIndex(order)
   const doneCount = Math.min(now, steps.length)
@@ -62,7 +68,8 @@ export function OrderJourney({ order, couriers }: { order: Order; couriers: Pick
         const event = done ? eventOf(step) : undefined
         const Icon = step.icon
         return <li key={step.key} className={done ? 'done' : current ? 'current' : 'next'} aria-current={current ? 'step' : undefined}>
-          <span className="oj-node"><Icon size={20} strokeWidth={2.2} />{current && <i className="oj-ring" aria-hidden="true" />}</span>
+          <button type="button" className="oj-node" onClick={() => setOpened(index)} aria-label={`Ver o que foi feito em ${step.label}`}
+            title="Clique para ver o que foi feito"><Icon size={20} strokeWidth={2.2} />{current && <i className="oj-ring" aria-hidden="true" />}</button>
           <span className="oj-tag">{done ? 'Feito' : current ? 'Agora' : 'Próxima'}</span>
           <strong>{step.label}</strong>
           {event ? <small>{dateTimeLabel(event.at)}<br />por {actorLabel(event.actor, couriers)}</small>
@@ -71,7 +78,68 @@ export function OrderJourney({ order, couriers }: { order: Order; couriers: Pick
         </li>
       })}
     </ol>
+    {opened !== null && <StepWindow order={order} couriers={couriers} steps={steps} index={opened} now={now}
+      onOpenMedia={onOpenMedia} onClose={() => setOpened(null)} />}
   </section>
+}
+
+/** Janela de uma etapa: o que ela significa, quando aconteceu e tudo o que foi feito nela (pelo histórico). */
+function StepWindow({ order, couriers, steps, index, now, onOpenMedia, onClose }: {
+  order: Order; couriers: Pick<Courier, 'id' | 'name'>[]; steps: Step[]; index: number; now: number
+  onOpenMedia?: (phase: 'DELIVERY' | 'PICKUP') => void; onClose: () => void
+}) {
+  const step = steps[index]
+  const done = index < now
+  const current = index === now
+  const timeOf = (position: number) => {
+    const event = order.history.find(item => steps[position].actions.includes(item.action))
+    return event ? Date.parse(event.at) : null
+  }
+  // A etapa vai do fim da etapa anterior até o momento em que foi concluída (ou até agora, se é a atual).
+  let start = -Infinity
+  for (let position = index - 1; position >= 0; position--) {
+    const time = timeOf(position)
+    if (time !== null) { start = time; break }
+  }
+  const end = done ? timeOf(index) ?? Infinity : current ? Infinity : -Infinity
+  const events = order.history.filter(event => {
+    const time = Date.parse(event.at)
+    return time > start && time <= end
+  })
+  const doneEvent = done ? order.history.find(event => step.actions.includes(event.action)) : undefined
+  const media = step.key === 'DELIVERY_PENDING' ? 'DELIVERY' : step.key === 'PICKUP_PENDING' ? 'PICKUP' : null
+  const Icon = step.icon
+  return <div className="modal-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) onClose() }}>
+    <section className={`modal oj-window ${done ? 'done' : current ? 'current' : 'next'}`} role="dialog" aria-modal="true" aria-labelledby="oj-window-title">
+      <header className="oj-window-head">
+        <span className="oj-window-icon"><Icon size={24} /></span>
+        <div><span className="oj-tag">{done ? 'Feito' : current ? 'Agora' : 'Próxima'} • etapa {index + 1} de {steps.length}</span>
+          <h2 id="oj-window-title">{step.label}</h2><p>{step.hint}.</p></div>
+        <button className="icon-button" aria-label="Fechar" onClick={onClose}><X size={20} /></button>
+      </header>
+      <div className="oj-window-facts">
+        {doneEvent && <div><CheckCircle2 size={16} /><span>Concluída em <b>{dateTimeLabel(doneEvent.at)}</b> por <b>{actorLabel(doneEvent.actor, couriers)}</b></span></div>}
+        {!done && step.planned && <div><CalendarClock size={16} /><span>Prevista para <b>{weekdayDateLabel(step.planned)}</b></span></div>}
+        {current && <div><span className="oj-live" />Esta é a etapa em andamento agora.</div>}
+      </div>
+      <h3>O que foi feito</h3>
+      {events.length === 0 ? <p className="oj-window-empty">{done || current ? 'Nada registrado nesta etapa.' : 'Esta etapa ainda não começou.'}</p>
+        : <ol className="oj-window-list">{events.map((event, position) => {
+          const kind = eventKind(event.action)
+          return <li key={`${event.at}-${position}`} className={`kind-${kind}`}>
+            <span className="oj-window-dot">{eventKinds[kind].emoji}</span>
+            <div><strong>{eventLabel(event.action)}</strong>
+              <small>{dateTimeLabel(event.at)} • por {actorLabel(event.actor, couriers)}</small>
+              {event.note && <p>{event.note}</p>}</div>
+          </li>
+        })}</ol>}
+      <div className="modal-actions">
+        {media && (done || current) && onOpenMedia && <button type="button" className="button secondary" onClick={() => { onClose(); onOpenMedia(media) }}>
+          <Images size={16} /> Ver fotos e vídeos</button>}
+        <button type="button" className="button primary" onClick={onClose}>Fechar</button>
+      </div>
+    </section>
+  </div>
 }
 
 /** Histórico completo (só no computador): tudo o que aconteceu, agrupado por dia, numa linha vertical contínua. */

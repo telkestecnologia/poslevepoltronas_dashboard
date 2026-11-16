@@ -220,7 +220,7 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
       })}
     </ol>}
     {/* No computador: a jornada inteira numa linha ligada (substitui as etapas acima). */}
-    {step >= 0 && <OrderJourney order={order} couriers={couriers} />}
+    {step >= 0 && <OrderJourney order={order} couriers={couriers} onOpenMedia={setMediaPhase} />}
     {/* Sem pagamento confirmado não há pedido: só as etapas do atendimento, com o que aconteceu de fato. */}
     {step < 0 && <AttendanceSteps order={order} />}
 
