@@ -414,3 +414,7 @@
   .login-art .login-art-top, .login-art .login-art-copy, .login-art .login-art-bottom { position: relative; z-index: 2; }
   .login-art .login-art-copy { max-width: 56%; }
 }
+@media (min-width: 901px) {
+  /* Mostra o abajur (parte de cima da foto) no login. */
+  .login-art .login-chair { object-position: 70% 8%; }
+}
