@@ -272,7 +272,7 @@
 
 /* Computador: a conversa cabe na tela (rola só dentro) e o campo de digitar fica sempre visível embaixo. */
 @media (min-width: 901px) {
-  .wa { height: calc(100vh - 215px); min-height: 480px; }
+  .wa { height: calc(100vh - 260px); min-height: 480px; }
   .wa-list, .wa-chat { min-height: 0; }
   .wa-thread { min-height: 0; }
   .wa-chat-head, .wa-composer { flex: none; }
