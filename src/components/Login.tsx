@@ -41,7 +41,7 @@ export function Login({
           </h1>
           <p>As poltronas da Pós Leve em um só lugar.</p>
         </div>
-        <img className="login-chair" src="/cadeira-metade.webp" alt="Poltrona elétrica Pós Leve" />
+        <img className="login-chair" src="/poltrona-capa.webp" alt="Poltrona elétrica Pós Leve" />
         <div className="login-art-bottom">Pós Leve • Conforto em cada etapa</div>
       </section>
       <section className="login-panel">

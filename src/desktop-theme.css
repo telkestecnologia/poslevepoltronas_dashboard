@@ -392,3 +392,11 @@
   /* Ícones do menu todos da mesma cor (sem uma cor por área). */
   .main-nav .nav-item { --nav-tone: rgba(255, 255, 255, 0.92) !important; --nav-tone-solid: #12727d !important; }
 }
+
+/* Login no computador: a foto da poltrona (a mesma da janela da poltrona) em destaque ao lado do texto. */
+@media (min-width: 901px) {
+  .login-art .login-art-copy { position: relative; z-index: 1; max-width: 52%; }
+  .login-art .login-chair { right: 6%; bottom: 9%; width: 38%; height: 70%; object-fit: cover; object-position: center 40%;
+    mix-blend-mode: normal; opacity: 1; filter: none; border-radius: 26px; box-shadow: 0 30px 60px rgba(4, 40, 46, 0.35);
+    border: 6px solid rgba(255, 255, 255, 0.18); }
+}
