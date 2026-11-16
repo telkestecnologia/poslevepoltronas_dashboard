@@ -143,3 +143,9 @@
   .dashboard-shell .finance-branch-tile b { margin-top: 6px; color: #fff; font-family: 'Outfit', sans-serif; font-size: 24px; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); }
   .dashboard-shell .finance-branch-tile b.finance-negative { color: #ffb4a6; }
 }
+@media (min-width: 901px) {
+  /* Coluna estreita: nome e valor menores para caber sem cortar. */
+  .dashboard-shell .finance-branch-tile { min-height: 170px; padding: 14px 12px 12px; }
+  .dashboard-shell .finance-branch-tile strong { font-size: 16px; }
+  .dashboard-shell .finance-branch-tile b { font-size: 17px; }
+}
