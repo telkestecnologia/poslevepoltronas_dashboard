@@ -255,3 +255,7 @@
   /* Tabela dos planos cabe na coluna, sem rolar para o lado. */
   .dashboard-shell .pay-plan-row { grid-template-columns: minmax(110px, 1.4fr) 64px 104px 96px minmax(0, 1.6fr) 56px; gap: 8px; }
 }
+@media (min-width: 901px) {
+  /* Resumo ao lado da imagem: título em cima e os três números embaixo, sem apertar o texto. */
+  .content:has(> .pay-summary) > .pay-summary { grid-template-columns: minmax(0, 1fr); align-content: center; gap: 18px; }
+}
