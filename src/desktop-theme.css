@@ -381,3 +381,10 @@
   .sidebar:not(.collapsed) { width: 272px; flex-basis: 272px; }
   .nav-item span { white-space: nowrap; }
 }
+@media (min-width: 901px) {
+  /* Janelas abertas fora da área principal (poltrona, filial, entregador...) também maiores. */
+  .modal-backdrop > .modal { width: min(760px, calc(100vw - 64px)); max-height: calc(100vh - 48px); }
+  .modal-backdrop > .modal .modal-head { padding: 28px 34px 22px; }
+  .modal-backdrop > .modal .modal-form { gap: 20px; padding: 26px 34px 32px; }
+  .modal-backdrop > .modal.chair-modal { width: min(1000px, calc(100vw - 64px)); }
+}

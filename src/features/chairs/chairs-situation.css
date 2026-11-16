@@ -19,7 +19,7 @@
 /* Janela da poltrona: foto à esquerda e formulário à direita (computador). */
 .chair-modal-photo { display: none; }
 @media (min-width: 901px) {
-  .dashboard-shell .modal.chair-modal { display: grid; grid-template-columns: 330px minmax(0, 1fr); width: min(1000px, calc(100vw - 64px)); padding: 0; overflow: hidden; }
+  .modal-backdrop .modal.chair-modal { display: grid; grid-template-columns: 330px minmax(0, 1fr); width: min(1000px, calc(100vw - 64px)); padding: 0; overflow: hidden; }
   .chair-modal-photo { position: relative; display: block; min-height: 100%; background: #0f4f57; }
   .chair-modal-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   .chair-modal-photo::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10, 30, 36, 0) 50%, rgba(10, 30, 36, 0.85) 100%); }
