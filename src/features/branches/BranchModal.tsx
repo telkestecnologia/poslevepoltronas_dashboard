@@ -178,7 +178,9 @@ export function BranchModal({
               <div className="municipality-selected">
                 <strong>Frete de entrega por município</strong>
                 {areas.map((area) => {
+                  // Nome pelo catálogo; se ele ainda não carregou, pelo que já vem na própria filial.
                   const city = municipalities.find((item) => item.code === area.code)
+                    ?? branch?.municipalities.find((item) => item.code === area.code)
                   return (
                     <div className="municipality-fee" key={area.code}>
                       <span>{city ? `${city.name} – ${city.uf}` : area.code}</span>

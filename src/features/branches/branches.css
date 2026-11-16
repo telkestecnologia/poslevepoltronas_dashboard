@@ -125,3 +125,16 @@ button.branch-chair:hover { filter: brightness(0.98); }
 .branch-switch.on .branch-switch-track { background: #3fbf7f; }
 .branch-switch.on .branch-switch-thumb { transform: translateX(20px); }
 .branch-switch-text { color: #e6f4f5; font-weight: 700; }
+
+/* Lista de filiais: quantidade e, embaixo, o nome das cidades. */
+.branch-city-count { display: block; }
+.branch-city-names { display: block; max-width: 320px; margin-top: 2px; overflow: hidden; color: var(--muted); font-size: 12.5px; white-space: nowrap; text-overflow: ellipsis; }
+
+/* Dentro da filial: cada cidade com o frete dela. */
+.branch-cities { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.branch-cities li { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 12px; background: #eaf6f6; color: var(--teal-dark); }
+.branch-cities li span { flex: 1; min-width: 0; color: var(--ink); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.branch-cities li small { color: var(--muted); }
+.branch-cities li strong { color: var(--ink); font-size: 14px; white-space: nowrap; }
+.branch-cities li strong.free { color: var(--teal); }
+@media (max-width: 640px) { .branch-cities { grid-template-columns: 1fr; } .branch-city-names { max-width: 180px; } }

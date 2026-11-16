@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ArrowLeft, Armchair, CheckCircle2, ChevronRight, MapPin, PauseCircle, Plus, Search, Wrench } from 'lucide-react'
-import { api, type Branch, type BranchInput, type Chair, type Municipality } from '../../api'
+import { api, type Branch, type BranchInput, type BranchMunicipality, type Chair, type Municipality } from '../../api'
 import { BranchModal } from './BranchModal'
 import { EmptyState } from '../../components/common'
 import { branchLabel, chairName } from '../../utils/branches'
@@ -56,6 +56,11 @@ export function BranchesPage({ branches, activeCounts, onNewBranch, credentials,
             <span className="partner-only branch-switch-text">{entered.active ? 'Atendendo' : 'Pausada'}</span>
           </div>
         </div>
+      </section>
+      {/* Cidades atendidas e o frete de cada uma, sempre à vista (também para o parceiro). Editar fica logo abaixo. */}
+      <section className="panel branch-section">
+        <h2>Cidades atendidas ({entered.municipalities.length})</h2>
+        <BranchCities branch={entered} />
       </section>
       {/* Tudo da filial numa página só (igual ao app): os dados (administrador) e as poltronas dela. */}
       <section className="panel branch-section admin-only">
@@ -116,8 +121,10 @@ export function BranchesPage({ branches, activeCounts, onNewBranch, credentials,
                       </div>
                     </td>
                     <td>
-                      {branch.municipalities.length}{' '}
-                      {branch.municipalities.length === 1 ? 'município' : 'municípios'}
+                      <span className="branch-city-count">{branch.municipalities.length}{' '}
+                        {branch.municipalities.length === 1 ? 'município' : 'municípios'}</span>
+                      {branch.municipalities.length > 0 && <small className="branch-city-names" title={sortedCities(branch.municipalities).map(city => city.name).join(', ')}>
+                        {citySummary(branch.municipalities)}</small>}
                     </td>
                     <td>{activeCounts[branch.id] ?? 0}</td>
                     <td>{branch.active ? 'Ativa' : 'Inativa'}</td>
@@ -135,6 +142,31 @@ export function BranchesPage({ branches, activeCounts, onNewBranch, credentials,
       </section>
     </>
   )
+}
+
+const byName = (a: BranchMunicipality, b: BranchMunicipality) => a.name.localeCompare(b.name, 'pt-BR')
+const sortedCities = (cities: BranchMunicipality[]) => [...cities].sort(byName)
+/** Até 4 cidades em ordem alfabética e "+N" com o resto (o nome completo de todas fica no title). */
+function citySummary(cities: BranchMunicipality[]) {
+  const names = sortedCities(cities).map(city => city.name)
+  return names.length <= 4 ? names.join(', ') : `${names.slice(0, 4).join(', ')} +${names.length - 4}`
+}
+const freightLabel = (cents: number) => cents === 0 ? 'Grátis'
+  : (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+
+/** Cidades da filial com o frete de cada uma (só leitura). Filial com frete grátis geral mostra Grátis em todas. */
+function BranchCities({ branch }: { branch: Branch }) {
+  if (branch.municipalities.length === 0) return <p className="branch-muted">Nenhuma cidade cadastrada nesta filial.</p>
+  return <ul className="branch-cities">
+    {sortedCities(branch.municipalities).map(city => {
+      const free = branch.freeShipping || city.freightCents === 0
+      return <li key={city.code}>
+        <MapPin size={15} aria-hidden="true" />
+        <span>{city.name} <small>– {city.uf}</small></span>
+        <strong className={free ? 'free' : ''}>{free ? 'Grátis' : freightLabel(city.freightCents)}</strong>
+      </li>
+    })}
+  </ul>
 }
 
 function branchPhoto(name: string) {
