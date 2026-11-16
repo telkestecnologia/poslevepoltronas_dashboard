@@ -311,7 +311,7 @@
   .od-logistics-statement p { position: relative; z-index: 1; margin: 0; max-width: 880px; color: #fff; font-family: 'Outfit', sans-serif;
     font-size: 27px; font-weight: 500; line-height: 1.4; letter-spacing: -0.01em; }
   .od-logistics-statement mark { padding: 0 2px; background: linear-gradient(transparent 68%, rgba(243, 209, 107, 0.55) 68%, rgba(243, 209, 107, 0.55) 92%, transparent 92%);
-    color: #fff; font-weight: 700; text-transform: capitalize; }
+    color: #fff; font-weight: 700; text-transform: none; }
   .od-logistics-statement mark.back { background: linear-gradient(transparent 68%, rgba(232, 116, 97, 0.6) 68%, rgba(232, 116, 97, 0.6) 92%, transparent 92%); }
   .od-logistics-stock { color: rgba(255, 255, 255, 0.75); font-size: 13px; font-style: normal; display: inline-flex; align-items: center; gap: 6px; }
   .od-logistics-where { position: relative; z-index: 1; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;
