@@ -36,3 +36,8 @@
   .od-ficha-fields p { grid-template-columns: 1fr; gap: 2px; }
   .od-ficha-title span { font-size: 30px; } .od-ficha-title em { font-size: 36px; }
 }
+/* Mais forte que o estilo geral das tabelas do painel. */
+.dashboard-shell .od-ficha-table th { padding: 13px 16px; background: #12727d; color: #fff; font-family: 'Outfit', sans-serif; font-size: 16px;
+  font-weight: 600; letter-spacing: 0; text-transform: none; }
+.dashboard-shell .od-ficha-table td { padding: 13px 16px; color: #1f3340; font-size: 14px; }
+.dashboard-shell .od-ficha-table tfoot td { color: #c4532c; font-size: 17px; }
