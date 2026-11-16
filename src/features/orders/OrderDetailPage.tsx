@@ -163,7 +163,9 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
         <span className="od-notice-icon"><Megaphone size={16} /></span>
         <div><strong>Comunicado ao cliente</strong>
           <p>{departure ? `✓ Avisado pelo WhatsApp que a poltrona saiu para entrega em ${dateTimeLabel(departure.at)}.`
-            : 'O aviso de que a poltrona está a caminho é enviado pelo app, no botão "Saindo para entrega".'}</p></div>
+            : 'Avise pelo WhatsApp que a poltrona está a caminho. O cliente recebe o vídeo de como a poltrona funciona.'}</p>
+          {!departure && <button type="button" className="button primary" disabled={busy} onClick={notifyDeparture}>
+            <Megaphone size={16} /> Saindo para entrega</button>}</div>
       </div>)
       const evidenceStatus = phase === 'DELIVERY' ? 'DELIVERY_PENDING' : 'PICKUP_PENDING'
       if (phase !== 'DEPARTURE' && order.status === evidenceStatus) parts.push(<div key="evidence" className="oj-action">
@@ -172,7 +174,27 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
           status={order.status} couriers={couriers} phase={phase}
           onCount={count => setEvidenceCount(current => current[phase] === count ? current : { ...current, [phase]: count })} /></div>)
     }
+    // "Saindo para retirada": com a poltrona com o cliente (Em uso) ou aguardando a retirada.
+    if ((key === 'IN_USE' || key === 'PICKUP_PENDING') && order.status === key && !contractOnly) parts.push(pickupNotice(`pickup-${key}`))
     return parts.length ? parts : null
+  }
+  function pickupNotice(id: string) {
+    return <div key={id} className="od-notice" role="note">
+      <span className="od-notice-icon"><Megaphone size={16} /></span>
+      <div><strong>Comunicado ao cliente</strong>
+        <p>{pickupDeparture ? `✓ Avisado pelo WhatsApp que o motorista estava indo buscar a poltrona em ${dateTimeLabel(pickupDeparture.at)}.`
+          : 'Avise pelo WhatsApp que o motorista está indo buscar a poltrona.'}</p>
+        {!pickupDeparture && <button type="button" className="button primary" disabled={busy} onClick={notifyPickup}>
+          <Megaphone size={16} /> Saindo para retirada</button>}</div>
+    </div>
+  }
+  function notifyDeparture() {
+    if (!order || !window.confirm(`Avisar ${order.customerName} pelo WhatsApp que a poltrona saiu para entrega, com o vídeo de entrega?`)) return
+    void perform(() => api.notifyDeliveryDeparture(credentials, order.id), 'Cliente avisado: a poltrona saiu para entrega.')
+  }
+  function notifyPickup() {
+    if (!order || !window.confirm(`Avisar ${order.customerName} pelo WhatsApp que o motorista está indo buscar a poltrona?`)) return
+    void perform(() => api.notifyPickupDeparture(credentials, order.id), 'Cliente avisado: o motorista está indo buscar a poltrona.')
   }
   /** Devolve a mensagem de erro (mostrada dentro da janela, que fica por cima da página) ou null se salvou. */
   // Card de problemas: na página e, no computador, dentro da janela da saída, da entrega e da retirada.
@@ -240,6 +262,7 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
   }
   const stockDiffers = order.stockStart && order.stockEnd && (order.stockStart !== order.start || order.stockEnd !== order.end)
   const departure = [...order.history].reverse().find(event => event.action === 'DELIVERY_DEPARTURE_NOTIFIED')
+  const pickupDeparture = [...order.history].reverse().find(event => event.action === 'PICKUP_DEPARTURE_NOTIFIED')
   const openIssues = order.issues.filter(issue => issue.status === 'OPEN')
   const issues = [...openIssues, ...order.issues.filter(issue => issue.status !== 'OPEN')]
   const courier = couriers.find(item => item.id === order.courierId)
@@ -415,8 +438,11 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
                 <span className="od-notice-icon"><Megaphone size={16} /></span>
                 <div><strong>Comunicado ao cliente</strong>
                   <p>{departure ? `✓ Avisado pelo WhatsApp que a poltrona saiu para entrega em ${dateTimeLabel(departure.at)}.`
-                    : 'O aviso de que a poltrona está a caminho é enviado pelo app, no botão "Saindo para entrega".'}</p></div>
+                    : 'Avise pelo WhatsApp que a poltrona está a caminho. O cliente recebe o vídeo de como a poltrona funciona.'}</p>
+                  {!departure && <button type="button" className="button primary" disabled={busy} onClick={notifyDeparture}>
+                    <Megaphone size={16} /> Saindo para entrega</button>}</div>
               </div>}
+              {current && phase === 'PICKUP' && pickupNotice('pickup-card')}
               {current && media && <OrderEvidencePanel key={`${order.id}:${order.status}:${media}`} credentials={credentials} orderId={order.id}
                 status={order.status} couriers={couriers} phase={media} />}
             </div>}

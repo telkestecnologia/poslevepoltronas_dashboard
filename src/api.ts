@@ -504,6 +504,12 @@ export const api = {
     request<Order>(credentials, `/orders/${encodeURIComponent(id)}/logistics`, {
       method: 'PATCH', body: JSON.stringify({ stockStart, stockEnd, note }),
     }),
+  /** Botão "Saindo para entrega": avisa o cliente pelo WhatsApp, com o vídeo de entrega (uma vez por pedido). */
+  notifyDeliveryDeparture: (credentials: string, id: string) =>
+    request<Order>(credentials, `/orders/${encodeURIComponent(id)}/delivery-departure`, { method: 'POST' }),
+  /** Botão "Saindo para retirada": avisa o cliente pelo WhatsApp que o motorista está indo buscar a poltrona. */
+  notifyPickupDeparture: (credentials: string, id: string) =>
+    request<Order>(credentials, `/orders/${encodeURIComponent(id)}/pickup-departure`, { method: 'POST' }),
   /** Entrega/retirada antecipada ou posterior: dia (AAAA-MM-DD) e/ou horário (HH:mm); o que não vier fica como está. */
   changeOrderSchedule: (credentials: string, id: string, changes: { deliveryDate?: string | null; deliveryTime?: string | null
     pickupDate?: string | null; pickupTime?: string | null }, note: string) =>
