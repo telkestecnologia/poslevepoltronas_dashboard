@@ -5,6 +5,7 @@ import { branchLabel, onlyOfficialBranches } from '../../utils/branches'
 import { getMessage } from '../../utils/errors'
 import { RentalDatePicker } from '../overview/RentalDatePicker'
 import { downloadFinanceReport } from './financeReport'
+import { OUTFLOW_CATEGORIES, OutflowModal } from './OutflowModal'
 import './financeReport.css'
 
 const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -58,6 +59,7 @@ export function FinancePage({ credentials }: { credentials: string }) {
   const [monthIndex, setMonthIndex] = useState<number | null>(null)
   const [kindFilter, setKindFilter] = useState<'ALL' | 'INFLOW' | 'OUTFLOW'>('ALL')
   const [filterOpen, setFilterOpen] = useState(false)
+  const [outflowOpen, setOutflowOpen] = useState(false)
   const [draft, setDraft] = useState({ from: '', to: '', branchId: '' })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -260,7 +262,8 @@ export function FinancePage({ credentials }: { credentials: string }) {
               <button type="button" className={`inflow${kindFilter === 'INFLOW' ? ' selected' : ''}`} aria-pressed={kindFilter === 'INFLOW'}
                 onClick={() => setKindFilter(current => current === 'INFLOW' ? 'ALL' : 'INFLOW')}><span>⬆ Entradas</span><strong>{currency(shownMonth.inflowCents)}</strong></button>
               <button type="button" className={`outflow${kindFilter === 'OUTFLOW' ? ' selected' : ''}`} aria-pressed={kindFilter === 'OUTFLOW'}
-                onClick={() => setKindFilter(current => current === 'OUTFLOW' ? 'ALL' : 'OUTFLOW')}><span>⬇ Saídas</span><strong>{currency(shownMonth.outflowCents)}</strong></button>
+                onClick={() => { setKindFilter('OUTFLOW'); setOutflowOpen(true) }}><span>⬇ Saídas</span><strong>{currency(shownMonth.outflowCents)}</strong>
+                <em className="finance-register">+ Registrar</em></button>
               <div className="net"><span>Resultado</span>
                 <strong className={shownMonth.inflowCents - shownMonth.outflowCents >= 0 ? '' : 'finance-negative'}>{currency(shownMonth.inflowCents - shownMonth.outflowCents)}</strong></div>
             </div>
@@ -347,6 +350,8 @@ export function FinancePage({ credentials }: { credentials: string }) {
         </div>}
       </section>
     </div>}
+    {outflowOpen && <OutflowModal credentials={credentials} branches={onlyOfficialBranches(branches, branch => branch.name)}
+      onClose={() => setOutflowOpen(false)} onSaved={() => setReloadKey(key => key + 1)} />}
   </>
 }
 
@@ -381,6 +386,8 @@ function methodLabel(method: string) {
 }
 
 function categoryLabel(category: string) {
+  const known = OUTFLOW_CATEGORIES.find(([value]) => value === category)
+  if (known) return known[1]
   const words = category.replace(/_/g, ' ').toLowerCase()
   return words.charAt(0).toUpperCase() + words.slice(1)
 }

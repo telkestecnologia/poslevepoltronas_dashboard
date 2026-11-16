@@ -108,3 +108,13 @@
 
 /* Nome de quem pagou, embaixo do meio. */
 .finance-payer { display: block; color: #7a8287; font-size: 12px; }
+
+/* Botão Saídas abre o "Registrar saída". */
+.finance-register { display: inline-block; margin-top: 4px; padding: 1px 8px; border: 1px solid currentColor; border-radius: 99px;
+  color: #b8321f; font-size: 11px; font-style: normal; font-weight: 600; }
+.outflow-modal .outflow-amount { color: #b8321f; font-size: 22px; font-weight: 600; }
+.outflow-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; border: 0; }
+.outflow-chips legend { margin-bottom: 6px; padding: 0; font-weight: 600; }
+.outflow-chips button { padding: 7px 12px; border: 1px solid #e6e0d3; border-radius: 16px; background: #f4f1ea; color: inherit;
+  font: inherit; font-size: 13.5px; cursor: pointer; }
+.outflow-chips button.selected { border-color: #f3b5ab; background: #fdecea; color: #b8321f; font-weight: 600; }

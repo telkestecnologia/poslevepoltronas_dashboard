@@ -196,6 +196,8 @@ export type AiNotificationSettings = { emails: string[]; whatsAppNumbers: string
 export type PaymentOptions = { pix: boolean; card: boolean; maxInstallments: number }
 export type PricingPlan = { id: 'essencial' | 'plus' | 'premium'; name: string; days: number; priceCents: number; popular: boolean }
 export type PricingCatalog = { version: string; dailyRateCents: number; minDays: number; maxDays: number; plans: PricingPlan[] }
+/** Saída lançada pela equipe (despesa). date: AAAA-MM-DD. */
+export type OutflowInput = { branchId: string; amountCents: number; category: string; paymentMethod: string; description: string; date: string }
 export type PricingInput = { dailyRateCents: number; minDays: number; maxDays: number; plans: PricingPlan[] }
 
 export type RentalOverview = {
@@ -366,6 +368,8 @@ export const api = {
     request<FinancialReport>(credentials, `/finance?${new URLSearchParams({
       from: query.from, to: query.to, branchId: query.branchId, page: String(query.page), size: String(query.size),
     })}`),
+  registerOutflow: (credentials: string, data: OutflowInput) =>
+    request<FinancialEntry>(credentials, '/finance/outflows', { method: 'POST', body: JSON.stringify(data) }),
   aiKnowledge: (credentials: string) => request<AiKnowledge[]>(credentials, '/ai/knowledge'),
   aiUnanswered: (credentials: string) => request<AiUnansweredQuestion[]>(credentials, '/ai/unanswered'),
   aiNotificationSettings: (credentials: string) =>
