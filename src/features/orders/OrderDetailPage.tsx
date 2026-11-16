@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { timeLabel } from '../../utils/time'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
@@ -128,6 +129,41 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
     ...statusFlow.slice(1).map(status => ({ key: status, label: stepLabel(status) })),
   ]
   const displayStep = order.status === 'PAYMENT_CONFIRMED' ? 1 : displayRows.findIndex(row => row.key === order.status)
+  // Ações de cada etapa, mostradas na janela da bolinha da jornada (no computador).
+  function stepActions(key: string, { done, current }: { done: boolean; current: boolean }) {
+    if (!order) return null
+    const phase = key === 'DEPARTURE' ? 'DEPARTURE' : key === 'DELIVERY_PENDING' ? 'DELIVERY' : key === 'PICKUP_PENDING' ? 'PICKUP' : null
+    const scheduleKind = phase === 'DEPARTURE' ? 'delivery' : phase === 'PICKUP' ? 'pickup' : null
+    const parts: ReactNode[] = []
+    if (current && nextStatus && !contractOnly) parts.push(<div key="advance" className="oj-action oj-advance">
+      <h4>Concluiu esta etapa? Avance para “{statusLabels[nextStatus].toLowerCase()}”</h4>
+      <p>O cliente e a equipe passam a ver a nova etapa.</p>
+      <div className="od-next-form">
+        <label className="order-field"><span>Observação <span className="optional">(opcional)</span></span>
+          <input value={statusNote} onChange={event => setStatusNote(event.target.value)} maxLength={300}
+            placeholder="Ex.: entrega reagendada com o cliente" /></label>
+        <button className="button primary" disabled={busy} onClick={advance}>Avançar <ArrowRight size={16} /></button>
+      </div>
+    </div>)
+    if (phase && step >= 0 && !contractOnly) {
+      if (canChangeSchedule && scheduleKind && !done) parts.push(<div key="schedule" className="oj-action oj-schedule">
+        <h4>{scheduleKind === 'delivery' ? 'Dia e horário da entrega' : 'Dia e horário da retirada'}</h4>
+        <p>{scheduleKind === 'delivery' ? 'Dá para antecipar ou adiar a entrega.' : 'Dá para antecipar a retirada ou prorrogar o aluguel.'}</p>
+        <EarlySchedule order={order} kind={scheduleKind} busy={busy} current={current} onSave={saveSchedule} /></div>)
+      if (phase === 'DEPARTURE') parts.push(<div key="departure" className="od-notice" role="note">
+        <span className="od-notice-icon"><Megaphone size={16} /></span>
+        <div><strong>Comunicado ao cliente</strong>
+          <p>{departure ? `✓ Avisado pelo WhatsApp que a poltrona saiu para entrega em ${dateTimeLabel(departure.at)}.`
+            : 'O aviso de que a poltrona está a caminho é enviado pelo app, no botão "Saindo para entrega".'}</p></div>
+      </div>)
+      const evidenceStatus = phase === 'DELIVERY' ? 'DELIVERY_PENDING' : 'PICKUP_PENDING'
+      if (phase !== 'DEPARTURE' && order.status === evidenceStatus) parts.push(<div key="evidence" className="oj-action">
+        <h4>Fotos e vídeos {phase === 'DELIVERY' ? 'da entrega' : 'da retirada'}</h4>
+        <OrderEvidencePanel key={`${order.id}:${order.status}:${phase}`} credentials={credentials} orderId={order.id}
+          status={order.status} couriers={couriers} phase={phase} /></div>)
+    }
+    return parts.length ? parts : null
+  }
   /** Devolve a mensagem de erro (mostrada dentro da janela, que fica por cima da página) ou null se salvou. */
   async function saveSchedule(changes: Parameters<typeof api.changeOrderSchedule>[2]) {
     setBusy(true)
@@ -231,7 +267,7 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
       })}
     </ol>}
     {/* No computador: a jornada inteira numa linha ligada (substitui as etapas acima). */}
-    {step >= 0 && <OrderJourney order={order} couriers={couriers} onOpenMedia={setMediaPhase} />}
+    {step >= 0 && <OrderJourney order={order} couriers={couriers} onOpenMedia={setMediaPhase} renderActions={stepActions} />}
     {/* Sem pagamento confirmado não há pedido: só as etapas do atendimento, com o que aconteceu de fato. */}
     {step < 0 && <AttendanceSteps order={order} />}
 

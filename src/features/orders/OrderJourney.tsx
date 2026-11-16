@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Armchair, CalendarClock, CheckCircle2, ClipboardCheck, CreditCard, Images, PackageCheck, Truck, Undo2, X, type LucideIcon } from 'lucide-react'
 import type { Courier, Order } from '../../api'
 import { actorLabel, dateTimeLabel, eventKind, eventKinds, eventLabel, weekdayDateLabel } from '../../data/orders'
@@ -39,10 +39,12 @@ function currentIndex(order: Order) {
  * Jornada do pedido (só no computador): todas as etapas numa linha, ligadas por um traço que vai se preenchendo.
  * Cada etapa diz o que é, quando aconteceu (ou quando está prevista) e quem fez.
  */
-export function OrderJourney({ order, couriers, onOpenMedia }: {
+export function OrderJourney({ order, couriers, onOpenMedia, renderActions }: {
   order: Order; couriers: Pick<Courier, 'id' | 'name'>[]
   /** Abre as fotos e vídeos da entrega ou da retirada. */
   onOpenMedia?: (phase: 'DELIVERY' | 'PICKUP') => void
+  /** O que dá para fazer em cada etapa (avançar, dia e horário, fotos...), mostrado dentro da janela da bolinha. */
+  renderActions?: (key: string, state: { done: boolean; current: boolean }) => ReactNode
 }) {
   const [opened, setOpened] = useState<number | null>(null)
   const steps = stepsOf(order)
@@ -55,7 +57,8 @@ export function OrderJourney({ order, couriers, onOpenMedia }: {
     <header className="oj-head">
       <div><span className="eyebrow">JORNADA DO PEDIDO</span>
         <h2>{now >= steps.length ? 'Pedido concluído do início ao fim' : <>Agora: <em>{steps[now].label}</em></>}</h2>
-        <p>{now >= steps.length ? 'Todas as etapas foram cumpridas.' : steps[now].hint}.</p></div>
+        <p>{now >= steps.length ? 'Todas as etapas foram cumpridas.' : steps[now].hint}.</p>
+        <p className="oj-tip">👆 Clique numa bolinha para ver o que foi feito e agir na etapa.</p></div>
       <div className="oj-progress" aria-label={`${percent}% concluído`}>
         <strong>{percent}%</strong><span>{doneCount} de {steps.length} etapas</span>
         <div className="oj-progress-bar"><i style={{ width: `${percent}%` }} /></div>
@@ -79,14 +82,15 @@ export function OrderJourney({ order, couriers, onOpenMedia }: {
       })}
     </ol>
     {opened !== null && <StepWindow order={order} couriers={couriers} steps={steps} index={opened} now={now}
-      onOpenMedia={onOpenMedia} onClose={() => setOpened(null)} />}
+      onOpenMedia={onOpenMedia} onClose={() => setOpened(null)}
+      actions={renderActions?.(steps[opened].key, { done: opened < now, current: opened === now })} />}
   </section>
 }
 
 /** Janela de uma etapa: o que ela significa, quando aconteceu e tudo o que foi feito nela (pelo histórico). */
-function StepWindow({ order, couriers, steps, index, now, onOpenMedia, onClose }: {
+function StepWindow({ order, couriers, steps, index, now, onOpenMedia, onClose, actions }: {
   order: Order; couriers: Pick<Courier, 'id' | 'name'>[]; steps: Step[]; index: number; now: number
-  onOpenMedia?: (phase: 'DELIVERY' | 'PICKUP') => void; onClose: () => void
+  onOpenMedia?: (phase: 'DELIVERY' | 'PICKUP') => void; onClose: () => void; actions?: ReactNode
 }) {
   const step = steps[index]
   const done = index < now
@@ -122,6 +126,7 @@ function StepWindow({ order, couriers, steps, index, now, onOpenMedia, onClose }
         {!done && step.planned && <div><CalendarClock size={16} /><span>Prevista para <b>{weekdayDateLabel(step.planned)}</b></span></div>}
         {current && <div><span className="oj-live" />Esta é a etapa em andamento agora.</div>}
       </div>
+      {actions && <div className="oj-window-actions">{actions}</div>}
       <h3>O que foi feito</h3>
       {events.length === 0 ? <p className="oj-window-empty">{done || current ? 'Nada registrado nesta etapa.' : 'Esta etapa ainda não começou.'}</p>
         : <ol className="oj-window-list">{events.map((event, position) => {

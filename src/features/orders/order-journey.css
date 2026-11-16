@@ -4,6 +4,17 @@
 @media (min-width: 901px) {
   /* No computador a jornada substitui as etapas antigas e o histórico completo substitui a linha do tempo lateral. */
   .od .od-steps, .od .od-history-side { display: none; }
+  /* As etapas e o próximo passo agora ficam dentro das bolinhas da jornada. */
+  .od .od-next, .od .od-evidence { display: none; }
+  .oj-tip { margin-top: 10px !important; color: #12727d !important; font-size: 13px !important; font-weight: 600; }
+  .oj-window { width: min(760px, calc(100vw - 40px)); }
+  .oj-window-actions { display: grid; gap: 12px; }
+  .oj-action { display: grid; gap: 8px; padding: 16px 18px; border: 1px solid #e1ebe9; border-radius: 14px; background: #fff; }
+  .oj-action h4 { margin: 0; color: #1f3340; font-size: 15px; }
+  .oj-action > p { margin: 0; color: #6b7f86; font-size: 13px; }
+  .oj-advance { border-color: #bfe0dc; background: linear-gradient(180deg, #f1faf9, #fff 80%); }
+  .oj-schedule { border-color: #f4dcd4; background: #fffaf8; }
+  .oj-window-actions .od-notice { margin: 0; }
   .oj, .oh { display: grid; }
 
   /* ---------- Jornada ---------- */
