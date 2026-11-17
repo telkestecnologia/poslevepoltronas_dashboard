@@ -138,3 +138,40 @@ button.branch-chair:hover { filter: brightness(0.98); }
 .branch-cities li strong { color: var(--ink); font-size: 14px; white-space: nowrap; }
 .branch-cities li strong.free { color: var(--teal); }
 @media (max-width: 640px) { .branch-cities { grid-template-columns: 1fr; } .branch-city-names { max-width: 180px; } }
+
+/* ---------- Cidades e frete: responsivo pelo espaço do próprio quadro ----------
+   Antes o layout seguia a largura da janela: num notebook com o sidebar aberto (ou no modal de cadastro) as duas
+   colunas ficavam estreitas e o nome da cidade sumia. Agora quem decide é a largura do quadro "Cidades e frete". */
+.municipality-picker { container: picker / inline-size; }
+
+/* Uma coluna (adicionar em cima, frete embaixo) até o quadro ter espaço de verdade para as duas. */
+@media (min-width: 901px) {
+  .mp-body { grid-template-columns: minmax(0, 1fr); }
+  .mp-add .municipality-results { max-height: 260px; }
+}
+@container picker (min-width: 860px) {
+  .mp-body { grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); }
+  .mp-add .municipality-results { max-height: 340px; }
+}
+
+/* Linha de cada cidade em duas linhas: nome inteiro (quebra se for longo) e o X em cima; valor e Frete grátis embaixo. */
+.municipality-picker .municipality-fee {
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "name remove" "price free";
+  row-gap: 8px;
+}
+.municipality-picker .municipality-fee > span { grid-area: name; }
+.municipality-picker .municipality-selected .municipality-fee > span { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }
+.municipality-picker .municipality-fee > label:not(.municipality-free) { grid-area: price; max-width: 190px; }
+.municipality-picker .municipality-fee > .municipality-free { grid-area: free; justify-self: end; }
+.municipality-picker .municipality-fee > button { grid-area: remove; }
+
+/* Com espaço sobrando, tudo numa linha só, com o nome sempre visível. */
+@container picker (min-width: 540px) and (max-width: 859px) {
+  .municipality-picker .municipality-fee { grid-template-columns: minmax(150px, 1fr) 140px auto 34px; grid-template-areas: "name price free remove"; }
+  .municipality-picker .municipality-fee > label:not(.municipality-free) { max-width: none; }
+}
+@container picker (min-width: 1120px) {
+  .municipality-picker .municipality-fee { grid-template-columns: minmax(150px, 1fr) 140px auto 34px; grid-template-areas: "name price free remove"; }
+  .municipality-picker .municipality-fee > label:not(.municipality-free) { max-width: none; }
+}
