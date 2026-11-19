@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ArrowRight, ChevronLeft, ChevronRight, ClipboardList, ClipboardPlus, RefreshCw, Search, X, PenLine, Clock, SearchCheck, Truck, Armchair, Undo2, BadgeCheck, XCircle, TriangleAlert, type LucideIcon, Building2, MapPin } from 'lucide-react'
+import { ArrowRight, ChevronLeft, ChevronRight, ClipboardList, RefreshCw, Search, X, PenLine, Clock, SearchCheck, Truck, Armchair, Undo2, BadgeCheck, XCircle, TriangleAlert, type LucideIcon, Building2, MapPin } from 'lucide-react'
 import './orders.css'
 import { api, type Branch, type Order, type OrderPage, type OrderQuery, type OrderStatus } from '../../api'
 import { EmptyState } from '../../components/common'
@@ -8,7 +8,6 @@ import { replaceQuery } from '../../router'
 import { branchLabel, onlyOfficialBranches, chairName } from '../../utils/branches'
 import './orders-v2.css'
 import { getMessage } from '../../utils/errors'
-import { ManualOrderModal } from './ManualOrderModal'
 import { OrderFlags } from './OrderExtras'
 
 // Os mesmos cartões do app. Clicar em um filtra a lista (no servidor); clicar de novo limpa.
@@ -45,7 +44,6 @@ export function OrdersPage({ credentials, params, onOpenOrder }: Props) {
   const [data, setData] = useState<Loaded | null>(null)
   const [error, setError] = useState('')
   const [refreshing, setRefreshing] = useState(false)
-  const [creating, setCreating] = useState(false)
   const request = useRef(0)
 
   // Busca no servidor quando a pessoa para de digitar.
@@ -118,14 +116,11 @@ export function OrdersPage({ credentials, params, onOpenOrder }: Props) {
     <div className="page-heading with-action">
       <div><span className="eyebrow">OPERAÇÃO • PEDIDOS</span><h1>Gestão de pedidos</h1></div>
       <div className="order-heading-actions">
-        <button className="button primary" onClick={() => setCreating(true)}><ClipboardPlus size={16} /> Novo pedido</button>
         <button className="button secondary" disabled={refreshing} onClick={() => void refresh()}>
           <RefreshCw size={16} /> {refreshing ? 'Atualizando...' : 'Atualizar lista'}</button>
       </div>
     </div>
     {error && <div className="form-error order-page-error" role="alert">{error}</div>}
-    {creating && <ManualOrderModal credentials={credentials} branches={branches} onClose={() => setCreating(false)}
-      onCreated={order => { setCreating(false); onOpenOrder(order.id) }} />}
 
     {/* Filial e cidade acima das etapas, em pílulas com ícone (igual ao app). */}
     <div className="order-pills">
@@ -168,7 +163,7 @@ export function OrdersPage({ credentials, params, onOpenOrder }: Props) {
       {!shown ? <div className="empty-state" role="status"><p>{error ? 'Não foi possível carregar os pedidos.' : 'Carregando pedidos...'}</p></div>
         : shown.items.length === 0 ? (unfiltered
           ? <EmptyState icon={ClipboardList} title="Nenhum pedido registrado"
-            text="Os pedidos do site aparecerão aqui após a reserva e o aceite do contrato. Clientes de antes do sistema entram em “Novo pedido”." />
+            text="Os pedidos do site aparecerão aqui após a reserva e o aceite do contrato. Clientes de antes do sistema entram em “Pedido manual”." />
           : <EmptyState icon={Search} title="Nenhum pedido encontrado" text="Ajuste a busca, o resumo, a filial ou a cidade." />)
           : <div className={`table-scroll${stale ? ' is-stale' : ''}`} aria-busy={stale}><table className={`orders-table${active ? ` tinted tone-${active.tone}` : ''}`}><thead><tr>
             <th>CLIENTE</th><th>PERÍODO</th><th>POLTRONA</th><th>STATUS</th><th>PROBLEMAS</th><th><span className="sr-only">Ação</span></th>

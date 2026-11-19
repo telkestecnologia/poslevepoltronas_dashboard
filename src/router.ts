@@ -9,6 +9,7 @@ const paths: Record<Page, string> = {
   branches: '/filiais',
   couriers: '/entregadores',
   agenda: '/agenda',
+  manualOrder: '/pedido-manual',
   orders: '/pedidos',
   conversations: '/conversas',
   ai: '/contexto-ia',

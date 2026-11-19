@@ -9,6 +9,7 @@ import { CouriersPage } from './features/couriers/CouriersPage'
 import { OrdersPage } from './features/orders/OrdersPage'
 import { OrderDetailPage } from './features/orders/OrderDetailPage'
 import { AgendaPage } from './features/agenda/AgendaPage'
+import { ManualOrderPage } from './features/orders/ManualOrderPage'
 import { AiContextPage } from './features/ai/AiContextPage'
 import { NewPayments } from './features/finance/NewPayments'
 import { OverviewPage } from './features/overview/OverviewPage'
@@ -54,7 +55,7 @@ function App() {
 
   const { page, route, params, navigate } = navigation
   const { pageLoading, pageError, retryPage, notice, dismissNotice, loadedPage } = feedback
-  const selfLoading = ['finance', 'conversations', 'profile', 'orders', 'agenda', 'payments'].includes(page)
+  const selfLoading = ['finance', 'conversations', 'profile', 'orders', 'agenda', 'manualOrder', 'payments'].includes(page)
   // loadedPage evita mostrar por um instante os dados antigos ao voltar/avançar pelo navegador.
   const showLoading = !selfLoading && (pageLoading || (loadedPage !== page && !pageError)
     || (page === 'overview' && (!overviewPage.rentals || !overviewPage.revenue) && !pageError))
@@ -115,6 +116,7 @@ function App() {
         {page === 'branches' && !showLoading && !pageError && <BranchesPage {...branchesPage} />}
         {page === 'couriers' && !showLoading && !pageError && <CouriersPage {...couriersPage} />}
         {page === 'agenda' && <AgendaPage credentials={session.credentials} onOpenOrder={openOrder} />}
+        {page === 'manualOrder' && <ManualOrderPage credentials={session.credentials} onOpenOrder={openOrder} />}
         {page === 'orders' && !route.id && <OrdersPage credentials={session.credentials} params={params}
           onOpenOrder={id => navigate('orders', { id, fromList: true })} />}
         {page === 'orders' && route.id && <OrderDetailPage key={route.id} credentials={session.credentials} id={route.id}

@@ -24,8 +24,10 @@ const formatCep = (value: string) => {
  * Cadastro manual (igual ao app): clientes de antes do sistema, já pagos e com contrato assinado fora dele, e exceções.
  * O pedido ocupa a poltrona no estoque como um pedido do site e começa na entrega (ou já em uso).
  */
-export function ManualOrderModal({ credentials, branches, onClose, onCreated }: {
-  credentials: string; branches: Branch[]; onClose: () => void; onCreated: (order: Order) => void
+export function ManualOrderModal({ credentials, branches, onClose, onCreated, inline }: {
+  credentials: string; branches: Branch[]; onClose?: () => void; onCreated: (order: Order) => void
+  /** Na página "Pedido manual" do menu: o formulário direto na tela, sem janela. */
+  inline?: boolean
 }) {
   const official = onlyOfficialBranches(branches, branch => branch.name)
   const options = (official.length ? official : branches).filter(branch => branch.active || official.length === 0)
@@ -113,11 +115,7 @@ export function ManualOrderModal({ credentials, branches, onClose, onCreated }: 
     }
   }
 
-  return <div className="modal-backdrop" onMouseDown={event => { if (event.target === event.currentTarget && !saving) onClose() }}>
-    <section className="modal mo-modal" role="dialog" aria-modal="true" aria-labelledby="mo-title">
-      <div className="modal-head"><div><span className="eyebrow">PEDIDOS • CADASTRO MANUAL</span>
-        <h2 id="mo-title">Novo pedido</h2></div>
-        <button className="icon-button" aria-label="Fechar" onClick={onClose} disabled={saving}><X size={20} /></button></div>
+  const form = <>
       <form className="modal-form mo-form" onSubmit={event => void submit(event)}>
         <FormIntro icon={<ClipboardPlus size={24} />} title="Cliente de antes do sistema ou exceção">
           O contrato fica registrado como assinado fora do sistema. A poltrona fica ocupada no período, a cliente recebe os
@@ -214,6 +212,16 @@ export function ManualOrderModal({ credentials, branches, onClose, onCreated }: 
           <button type="submit" className="button primary" disabled={saving}>{saving ? 'Cadastrando...' : 'Cadastrar pedido'}
             <ArrowRight size={17} /></button></div>
       </form>
+  </>
+
+  if (inline) return <section className="panel mo-page">{form}</section>
+
+  return <div className="modal-backdrop" onMouseDown={event => { if (event.target === event.currentTarget && !saving) onClose?.() }}>
+    <section className="modal mo-modal" role="dialog" aria-modal="true" aria-labelledby="mo-title">
+      <div className="modal-head"><div><span className="eyebrow">PEDIDOS • CADASTRO MANUAL</span>
+        <h2 id="mo-title">Novo pedido</h2></div>
+        <button className="icon-button" aria-label="Fechar" onClick={onClose} disabled={saving}><X size={20} /></button></div>
+      {form}
     </section>
   </div>
 }

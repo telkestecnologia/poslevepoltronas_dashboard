@@ -50,3 +50,18 @@
 .od-pay-form .od-pay-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .od-pay-form input, .od-pay-form select { height: 40px; border: 1px solid #dce6e5; border-radius: 10px; padding: 0 10px; font: inherit; width: 100%; background: #fff; }
 .od-pay-form label { display: grid; gap: 4px; font-size: 12px; font-weight: 700; color: #40535e; }
+
+/* Página "Pedido manual" do menu. */
+.panel.mo-page { padding: 24px 26px; }
+.page-subtitle { margin: 6px 0 0; color: #60737c; }
+.mo-recent { margin-top: 20px; padding: 20px 24px; }
+.mo-recent h2 { font-size: 17px; margin: 0 0 12px; color: #314a51; }
+.mo-recent ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.mo-recent li button { width: 100%; display: flex; align-items: center; gap: 12px; text-align: left; background: #fff; border: 1px solid #e5eded; border-radius: 12px; padding: 10px 14px; cursor: pointer; font: inherit; color: inherit; }
+.mo-recent li button:hover { border-color: #1a9baa; }
+.mo-recent li button > span:first-child { flex: 1; display: grid; gap: 2px; min-width: 0; }
+.mo-recent small { color: #60737c; }
+@media (max-width: 640px) {
+  .panel.mo-page { padding: 16px; }
+  .mo-recent li button { flex-wrap: wrap; }
+}
