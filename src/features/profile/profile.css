@@ -53,3 +53,7 @@
 .profile-team-hero h2 { display: flex; align-items: center; gap: 14px; width: 100%; margin: 0; color: #127a84; font-size: 30px; letter-spacing: 0.12em; text-transform: uppercase; }
 .profile-team-hero h2 span { flex: 1; height: 2px; border-radius: 1px; background: #cdeef0; }
 .profile-team-hero p { margin: 0; color: #7a8287; }
+
+/* Nível de acesso do usuário: "todas as filiais" ou uma ou mais filiais marcadas. */
+.profile-branches { display: grid; gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.profile-branches legend { padding: 0; margin-bottom: 6px; font-size: 12px; font-weight: 700; color: #40535e; }

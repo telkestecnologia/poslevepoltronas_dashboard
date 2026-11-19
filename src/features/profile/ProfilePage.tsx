@@ -14,9 +14,6 @@ import { getMessage } from '../../utils/errors'
 import { formatPhone } from '../../utils/phone'
 import './profile.css'
 
-// Valor da opção "Todas as filiais" (acesso a todos os dados).
-const ALL_BRANCHES = '__ALL__'
-
 const roles = ['Administrador', 'Gerente', 'Atendimento', 'Financeiro', 'Logística', 'Entregador']
 const accessLabels: Record<AccessLevel, { label: string; hint: string }> = {
   ALL: { label: 'Vê todos os dados', hint: 'Acessa pedidos, financeiro, filiais e todas as telas.' },
@@ -44,9 +41,10 @@ export function ProfilePage({ credentials, onCredentialsChanged, partner = false
     : Promise.all([api.account(credentials), api.team(credentials), api.teamAreas(credentials), api.branches(credentials)])
       .then(([me, members, areaList, branchList]) => { setAccount(me); setTeam(members); setAreas(areaList); setBranches(branchList); setError('') }))
     .catch(failure => { setTeam(current => current ?? []); setError(getMessage(failure)) }), [credentials, partner])
-  const branchName = (id?: string | null) => {
-    const branch = branches.find(item => item.id === id)
-    return branch ? branchLabel(branch.name) : 'sem filial'
+  const branchNames = (ids?: string[]) => {
+    const names = (ids ?? []).map(id => branches.find(item => item.id === id)).filter(branch => branch !== undefined)
+      .map(branch => branchLabel(branch.name))
+    return names.length ? names.join(', ') : 'sem filial'
   }
 
   useEffect(() => { void load() }, [load])
@@ -72,7 +70,7 @@ export function ProfilePage({ credentials, onCredentialsChanged, partner = false
             <strong>{account?.name ?? '—'}</strong>
             <small>{account?.email}</small>
             {account?.phone && <small>WhatsApp {formatPhone(account.phone)}</small>}
-            <span className="profile-pill">{partner ? 'Parceiro • vê os dados da sua filial' : account ? `${accessLabels[account.access].label} e decide quem vê o quê` : ''}</span>
+            <span className="profile-pill">{partner ? 'Parceiro • vê os dados das suas filiais' : account ? `${accessLabels[account.access].label} e decide quem vê o quê` : ''}</span>
           </div>
         </div>
         <div className="profile-actions">
@@ -100,7 +98,7 @@ export function ProfilePage({ credentials, onCredentialsChanged, partner = false
               <td>{member.area || '—'}</td>
               <td>{member.phone ? formatPhone(member.phone) : '—'}</td>
               <td><span className={`courier-access ${member.enabled && member.access === 'ALL' ? 'active' : 'inactive'}`}>
-                {!member.enabled ? 'Desativado' : member.access === 'ALL' ? accessLabels.ALL.label : `Parceiro • ${branchName(member.branchId)}`}</span></td>
+                {!member.enabled ? 'Desativado' : member.access === 'ALL' ? accessLabels.ALL.label : `Parceiro • ${branchNames(member.branchIds)}`}</span></td>
               <td><button className="table-action" onClick={() => setDialog({ kind: 'member', member })}>Editar <ChevronRight size={16} /></button></td>
             </tr>)}</tbody></table></div>}
       </section>}
@@ -204,10 +202,7 @@ function MemberDialog({ credentials, member, areas, branches, onAreas, onClose, 
   onClose: () => void; onSaved: () => void; onBranchesChanged: () => void
 }) {
   const [newBranch, setNewBranch] = useState<{ municipalities: Municipality[]; saving: boolean; error: string } | null>(null)
-  const branchName = (id?: string | null) => {
-    const branch = branches.find(item => item.id === id)
-    return branch ? branchLabel(branch.name) : 'a filial escolhida'
-  }
+  const officialBranches = onlyOfficialBranches(branches, branch => branch.name)
   async function openNewBranch() {
     try {
       setNewBranch({ municipalities: await api.municipalities(credentials), saving: false, error: '' })
@@ -228,7 +223,7 @@ function MemberDialog({ credentials, member, areas, branches, onAreas, onClose, 
   const [form, setForm] = useState<TeamMemberInput>({
     name: member?.name ?? '', email: member?.email ?? '', phone: member?.phone ?? '', area: member?.area ?? areas[0] ?? '',
     jobTitle: member?.jobTitle ?? roles[2], access: member?.access ?? 'NONE', password: '', enabled: member?.enabled ?? true,
-    branchId: member?.branchId ?? '',
+    branchIds: member?.branchIds ?? [],
   })
   const [confirm, setConfirm] = useState('')
   const [newCity, setNewCity] = useState('')
@@ -262,7 +257,7 @@ function MemberDialog({ credentials, member, areas, branches, onAreas, onClose, 
     setBusy(true)
     try {
       const data = { ...form, name: form.name.trim(), email: form.email.trim(), phone: digits,
-        branchId: form.access === 'NONE' && form.branchId ? form.branchId : null }
+        branchIds: form.access === 'NONE' ? form.branchIds : [] }
       if (member) await api.updateTeamMember(credentials, member.id, data)
       else await api.createTeamMember(credentials, data)
       onSaved()
@@ -300,16 +295,22 @@ function MemberDialog({ credentials, member, areas, branches, onAreas, onClose, 
         <input value={newCity} onChange={event => setNewCity(event.target.value)} placeholder="Ex.: Crateús/CE" aria-label="Nova cidade" />
         <button type="button" className="button secondary" onClick={() => void saveCity()}>Adicionar</button>
       </div> : <button type="button" className="profile-link" onClick={() => setAddingCity(true)}>+ Cadastrar nova cidade</button>}
-      {/* Nível de acesso: todos os dados ou só os de uma filial (pedidos, poltronas, agenda, financeiro e conversas dela). */}
-      <label>Nível de acesso<select value={form.access === 'ALL' ? ALL_BRANCHES : form.branchId ?? ''}
-        onChange={event => { const value = event.target.value; setForm(current => value === ALL_BRANCHES
-          ? { ...current, access: 'ALL', branchId: null } : { ...current, access: 'NONE', branchId: value }) }}>
-        {form.access === 'NONE' && !form.branchId && <option value="" disabled>Escolha a filial</option>}
-        <option value={ALL_BRANCHES}>Vê todos os dados (todas as filiais)</option>
-        {onlyOfficialBranches(branches, branch => branch.name).map(branch => <option key={branch.id} value={branch.id}>{branchLabel(branch.name)}</option>)}</select></label>
+      {/* Nível de acesso: todos os dados ou só os de uma ou mais filiais (pedidos, poltronas, agenda, financeiro e conversas delas). */}
+      <fieldset className="profile-branches">
+        <legend>Nível de acesso</legend>
+        <label className="branch-option"><input type="checkbox" checked={form.access === 'ALL'}
+          onChange={event => setForm(current => ({ ...current, access: event.target.checked ? 'ALL' : 'NONE', branchIds: [] }))} />
+          <span>Vê todos os dados (todas as filiais)</span></label>
+        {officialBranches.map(branch => <label key={branch.id} className="branch-option">
+          <input type="checkbox" checked={form.access === 'NONE' && form.branchIds.includes(branch.id)}
+            onChange={event => setForm(current => ({ ...current, access: 'NONE', branchIds: event.target.checked
+              ? [...current.branchIds.filter(id => id !== branch.id), branch.id]
+              : current.branchIds.filter(id => id !== branch.id) }))} />
+          <span>{branchLabel(branch.name)}</span></label>)}
+      </fieldset>
       <small className="field-help">{form.access === 'ALL' ? 'Vê pedidos, poltronas, agenda, financeiro e conversas de todas as filiais.'
-        : form.branchId ? `Vê só o que é de ${branchName(form.branchId)}: pedidos, poltronas, agenda, financeiro e conversas do WhatsApp. Não vê as outras filiais.`
-          : 'Escolha a filial em que a pessoa trabalha.'}</small>
+        : form.branchIds.length ? `Vê só o que é de ${officialBranches.filter(branch => form.branchIds.includes(branch.id)).map(branch => branchLabel(branch.name)).join(', ')}: pedidos, poltronas, agenda, financeiro e conversas do WhatsApp. Não vê as outras filiais.`
+          : 'Marque as filiais em que a pessoa trabalha. Sem nenhuma, ela entra sem ver dados.'}</small>
       {/* Só o administrador chega aqui (a equipe é dele); a filial nova entra na lista ao salvar. */}
       <button type="button" className="profile-link" onClick={() => void openNewBranch()}>+ Cadastrar nova filial</button>
       {member && !member.self && <label className="branch-option"><input type="checkbox" checked={form.enabled ?? true}
