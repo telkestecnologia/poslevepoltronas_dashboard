@@ -239,6 +239,14 @@ export type RentalOverview = {
   }[]
 }
 export type RevenuePeriod = 'WEEK' | 'MONTH'
+/** De onde veio um contato: link do site (utm/anúncio/site de origem), anúncio de clique para o WhatsApp ou resposta à Isa. */
+export type LeadOrigin = {
+  source: string | null; medium?: string | null; campaign?: string | null; content?: string | null
+  adHeadline?: string | null; referrer?: string | null; landingPage?: string | null
+  via?: 'SITE_LINK' | 'WHATSAPP_AD' | 'ISA_QUESTION' | null; declared?: string | null; firstSeenAt?: string | null
+}
+export type LeadSourceRow = { source: string; contacts: number; orders: number; revenueCents: number }
+export type LeadSourceSummary = { from: string; to: string; rows: LeadSourceRow[] }
 export type RevenueOverview = {
   period: RevenuePeriod
   hasData: boolean
@@ -405,6 +413,12 @@ function orderParams(query: OrderQuery, page: number, size: number) {
 
 export const api = {
   me:(credentials: string) => request<Staff>(credentials, '/me'),
+  /** null quando ainda não se sabe de onde o contato veio. */
+  leadOrigin: (credentials: string, query: { phone?: string | null; conversationId?: string | null }) =>
+    request<LeadOrigin | undefined>(credentials, `/lead-origins/lookup?${new URLSearchParams(Object.entries(query)
+      .filter((entry): entry is [string, string] => Boolean(entry[1])))}`).then(origin => origin ?? null),
+  leadSources: (credentials: string, from: string, to: string) =>
+    request<LeadSourceSummary>(credentials, `/lead-origins/summary?from=${from}&to=${to}`),
   overviewRentals: (credentials: string, date: string) =>
     request<RentalOverview>(credentials, `/overview/rentals?date=${encodeURIComponent(date)}`),
   overviewRevenue: (credentials: string, period: RevenuePeriod) =>

@@ -7,6 +7,7 @@ import { VoiceRecorder } from './VoiceRecorder'
 import { conversationRecap } from './conversationRecap'
 import { getMessage } from '../../utils/errors'
 import './conversations.css'
+import { LeadOriginChip } from '../leads/LeadOriginChip'
 
 type Filter = 'ALL' | 'HELP' | 'WHATSAPP' | 'SITE'
 
@@ -215,7 +216,8 @@ export function ConversationsPage({ credentials, selectedId, onSelect }: Props) 
               <small className="wa-chat-meta"><button type="button" className={`wa-state wa-state-link ${state.tone}`} onClick={() => openSummary()}
                 title="Ver o resumo do atendimento">{state.label} ⓘ</button>
                 {` • ${selected.channel === 'WHATSAPP' ? 'WhatsApp' : 'Site'} • desde ${new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(selected.startedAt))}`}</small>
-              <span className={`wa-stage ${stageTone(selected.stage ?? 'Primeiro contato').tone}`}>{stageTone(selected.stage ?? 'Primeiro contato').icon} Etapa: {selected.stage ?? 'Primeiro contato'}</span></div>
+              <span className={`wa-stage ${stageTone(selected.stage ?? 'Primeiro contato').tone}`}>{stageTone(selected.stage ?? 'Primeiro contato').icon} Etapa: {selected.stage ?? 'Primeiro contato'}</span>
+              <LeadOriginChip credentials={credentials} conversationId={selected.id} phone={selected.customerPhone} /></div>
             <button type="button" className={`wa-assign${selected.state === 'HUMAN' ? ' outline' : ''}`} disabled={busy} onClick={() => void toggleAssignment(selected)}>
               {selected.state === 'HUMAN' ? 'Devolver para a Isa' : 'Assumir conversa'}</button>
           </header>

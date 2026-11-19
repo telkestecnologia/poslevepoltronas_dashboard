@@ -1,0 +1,26 @@
+/* Origem dos leads: selo na conversa e no pedido, e o quadro da Visão geral. */
+.lead-origin-chip { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; padding: 3px 10px; border-radius: 99px;
+  background: #eef6f5; color: #0f4f57; font-size: 12px; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lead-origin-chip b { font-weight: 700; }
+.lead-origin-chip.unknown { background: #f3f4f6; color: #6b7280; }
+
+.lead-sources { display: grid; gap: 14px; padding: 20px 22px; }
+.lead-sources-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.lead-sources-head h2 { display: inline-flex; align-items: center; gap: 8px; margin: 0; font-size: 18px; }
+.lead-sources-month { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; color: #14262f; }
+.lead-sources-month span { min-width: 150px; text-align: center; }
+.lead-sources-empty { margin: 0; color: #6b7280; }
+.lead-sources-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.lead-sources-table th { padding: 8px 6px; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-size: 12px; font-weight: 600; text-align: right; }
+.lead-sources-table td { padding: 10px 6px; border-bottom: 1px solid #f1f2f4; text-align: right; font-variant-numeric: tabular-nums; }
+.lead-sources-table th:first-child, .lead-sources-table td:first-child { text-align: left; }
+.lead-sources-table tfoot td { border-bottom: 0; font-weight: 700; }
+.lead-sources-name { display: block; font-weight: 600; color: #14262f; }
+.lead-sources-bar { display: block; height: 6px; margin-top: 5px; border-radius: 99px; background: #eef1f2; }
+.lead-sources-bar i { display: block; height: 100%; border-radius: inherit; background: #1f8a8a; }
+.lead-sources-note { margin: 0; color: #6b7280; font-size: 12px; }
+@media (max-width: 600px) {
+  .lead-sources { padding: 16px; }
+  .lead-sources-table { font-size: 13px; }
+  .lead-sources-month span { min-width: 120px; }
+}

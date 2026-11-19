@@ -22,6 +22,7 @@ import { OrderHistoryFull, OrderJourney } from './OrderJourney'
 import logoSymbol from '../../assets/logo-simbolo.png'
 import leaves from '../../assets/folhas-logo.png'
 import './ficha.css'
+import { LeadOriginChip } from '../leads/LeadOriginChip'
 
 type Props = { credentials: string; id: string; onBack: () => void }
 
@@ -510,6 +511,7 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
             <a className="od-contact-link whatsapp" href={`https://wa.me/55${phoneDigits}`} target="_blank" rel="noopener noreferrer">
               <MessageCircle size={15} /> WhatsApp</a>
           </div>
+          <LeadOriginChip credentials={credentials} phone={order.customerPhone} />
         </section>
 
         <section className="panel od-card" aria-labelledby="od-rental-title">

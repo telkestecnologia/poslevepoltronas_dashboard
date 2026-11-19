@@ -4,6 +4,7 @@ import type { RentalOverview, RevenueOverview } from '../../api'
 import { onlyOfficialBranches } from '../../utils/branches'
 import './attention.css'
 import { OverviewCharts } from './OverviewCharts'
+import { LeadSourcesPanel } from '../leads/LeadSourcesPanel'
 
 type Props = {
   /** Para os gráficos do computador (buscam o financeiro dos últimos meses). */
@@ -45,6 +46,8 @@ export function OverviewPage({ credentials, rentals, revenue, onRefresh, childre
       </div>
 
       {credentials && <OverviewCharts credentials={credentials} rentals={rentals} />}
+
+      {credentials && <LeadSourcesPanel credentials={credentials} />}
 
       {children}
     </>
