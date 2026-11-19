@@ -183,6 +183,15 @@ export type ConversationMessage = {
 /** Contrato assinado anexado a um pedido manual; url é um link temporário para abrir. */
 export type ContractFile = { fileName: string; contentType: string; sizeBytes: number; uploadedBy: string; uploadedAt: string; url: string | null }
 
+/** Detalhes da venda (a ficha da equipe). Tudo opcional. */
+export type SaleDetails = {
+  paymentMethod: 'PIX' | 'CARTAO' | null; pixMode: 'A_VISTA' | 'ENTRADA_E_ENTREGA' | null
+  cardMode: 'A_VISTA' | 'PARCELADO' | null; cardInstallments: number | null
+  discount: boolean | null; discountCents: number | null; discountNote: string | null; plan: string | null
+  referral: boolean | null; referralName: string | null; invoice: boolean | null
+  updatedBy?: string | null; updatedAt?: string | null
+}
+
 /** Envia o contrato assinado (PDF, JPG ou PNG, até 10 MB) de um pedido manual. */
 export async function uploadOrderContractFile(credentials: string, orderId: string, file: File) {
   const form = new FormData()
@@ -607,6 +616,10 @@ export const api = {
   /** null quando o pedido ainda não tem contrato anexado. */
   orderContractFile: async (credentials: string, id: string) =>
     (await request<ContractFile | undefined>(credentials, `/orders/${encodeURIComponent(id)}/contract-file`)) ?? null,
+  saleDetails: async (credentials: string, id: string) =>
+    (await request<SaleDetails | undefined>(credentials, `/orders/${encodeURIComponent(id)}/sale-details`)) ?? null,
+  saveSaleDetails: (credentials: string, id: string, data: SaleDetails) =>
+    request<SaleDetails>(credentials, `/orders/${encodeURIComponent(id)}/sale-details`, { method: 'PUT', body: JSON.stringify(data) }),
   updateOrderNote: (credentials: string, id: string, note: string) =>
     request<Order>(credentials, `/orders/${encodeURIComponent(id)}/note`, { method: 'PATCH', body: JSON.stringify({ note }) }),
   addOrderPayment: (credentials: string, id: string, data: ManualPaymentInput) =>

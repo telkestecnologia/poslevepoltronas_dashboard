@@ -85,3 +85,20 @@
 /* Contrato assinado no pedido manual. */
 .od-contract-missing { margin: 0 0 10px; font-weight: 800; color: #7a5c00; background: #fff3b0; border-radius: 10px; padding: 8px 12px; }
 .od-contract-upload { cursor: pointer; justify-self: start; }
+
+/* Detalhes da venda (ficha da equipe), sempre editável. */
+.sd-card { display: grid; gap: 14px; }
+.sd-field { display: grid; gap: 7px; }
+.sd-field > span { font-size: 12px; font-weight: 800; color: #40535e; text-transform: uppercase; letter-spacing: 0.04em; }
+.sd-pick { display: flex; flex-wrap: wrap; gap: 6px; }
+.sd-pick button { border: 1px solid #dce6e5; background: #fff; color: #40535e; border-radius: 999px; padding: 7px 13px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.sd-pick button:hover { border-color: #1a9baa; }
+.sd-pick button.selected { background: #1a9baa; border-color: #1a9baa; color: #fff; }
+.sd-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.sd-inline { display: grid; gap: 4px; font-size: 12px; font-weight: 700; color: #40535e; }
+.sd-inline input, .sd-inline select { height: 38px; border: 1px solid #dce6e5; border-radius: 10px; padding: 0 10px; font: inherit; background: #fff; }
+.sd-inline small { font-weight: 500; color: #60737c; }
+.sd-grow { flex: 1; min-width: 160px; }
+.sd-tip { margin: 0; font-size: 13px; color: #1f6f78; background: #e9f6f7; border-radius: 8px; padding: 8px 10px; }
+.sd-ok { margin: 0; color: #1f7a4d; font-weight: 700; }
+.sd-actions { border-top: 1px solid #edf2f2; padding-top: 12px; }

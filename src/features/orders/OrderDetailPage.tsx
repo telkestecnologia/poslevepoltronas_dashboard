@@ -24,6 +24,7 @@ import leaves from '../../assets/folhas-logo.png'
 import './ficha.css'
 import { LeadOriginChip } from '../leads/LeadOriginChip'
 import { ChairSwap, ContractFileCard, ManualPaymentsCard, OrderNoteCard } from './OrderExtras'
+import { SaleDetailsCard } from './SaleDetailsCard'
 
 type Props = { credentials: string; id: string; onBack: () => void }
 
@@ -513,7 +514,7 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
         </section>
 
 
-        {!contractOnly && <OrderNoteCard credentials={credentials} order={order} busy={busy} perform={perform} />}
+        {!contractOnly && order.source !== 'MANUAL' && <OrderNoteCard credentials={credentials} order={order} busy={busy} perform={perform} />}
         {!contractOnly && issuesCard(' od-issues-main')}
         {/* No computador o histórico completo fica aqui, largo e agrupado por dia (substitui a linha do tempo lateral). */}
         <OrderHistoryFull order={order} couriers={couriers} />
@@ -557,7 +558,10 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
             <Ban size={15} /> Cancelar pedido</button>}
         </section>
         {order.source === 'MANUAL' && <ManualPaymentsCard credentials={credentials} order={order} busy={busy} perform={perform} />}
+        {order.source === 'MANUAL' && <SaleDetailsCard key={order.id} credentials={credentials} order={order} />}
         {order.source === 'MANUAL' && <ContractFileCard credentials={credentials} order={order} />}
+        {/* No pedido manual a observação fica logo abaixo do contrato assinado. */}
+        {order.source === 'MANUAL' && <OrderNoteCard credentials={credentials} order={order} busy={busy} perform={perform} />}
 
         {!contractOnly && issuesCard(' od-issues-side')}
         {!contractOnly && <section className="panel od-card od-courier-card" aria-labelledby="od-courier-title">
