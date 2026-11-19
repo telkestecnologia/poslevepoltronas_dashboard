@@ -1,9 +1,10 @@
 import { timeShort } from '../../utils/time'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowRight, Building2, CalendarCheck, ChevronLeft, ChevronRight, MapPin, RefreshCw, Truck, Undo2, CalendarDays } from 'lucide-react'
+import { ArrowRight, Building2, ClipboardPlus, CalendarCheck, ChevronLeft, ChevronRight, MapPin, RefreshCw, Truck, Undo2, CalendarDays } from 'lucide-react'
 import { api, REAL_SOURCES, type Branch, type Courier, type Order, type OrderQuery, type OrderStatus } from '../../api'
 import { fetchAllOrders, isRealOrder, usePolling } from '../../data/orders'
 import { OrderFlags } from '../orders/OrderExtras'
+import { ManualOrderModal } from '../orders/ManualOrderModal'
 import { branchLabel, onlyOfficialBranches, chairName } from '../../utils/branches'
 import { getMessage } from '../../utils/errors'
 import '../orders/orders-v2.css'
@@ -99,6 +100,7 @@ export function AgendaPage({ credentials, onOpenOrder }: Props) {
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState('')
   const [allBranches, setBranches] = useState<Branch[]>([])
+  const [creating, setCreating] = useState(false)
   const [couriers, setCouriers] = useState<Courier[]>([])
   const [result, setResult] = useState<{ key: string; orders: Order[] } | null>(null)
   const request = useRef(0)
@@ -228,9 +230,15 @@ export function AgendaPage({ credentials, onOpenOrder }: Props) {
     <div className="page-heading with-action">
       <div><span className="eyebrow">OPERAÇÃO • AGENDA</span><h1>Agenda de entregas e retiradas</h1>
 </div>
-      <button className="button secondary" disabled={refreshing} onClick={() => void refresh()}>
-        <RefreshCw size={16} /> {refreshing ? 'Atualizando...' : 'Atualizar agenda'}</button>
+      <div className="order-heading-actions">
+        {/* Cadastro manual (clientes de antes do sistema e exceções) também daqui, onde a equipe organiza as entregas. */}
+        <button className="button primary" onClick={() => setCreating(true)}><ClipboardPlus size={16} /> Novo pedido</button>
+        <button className="button secondary" disabled={refreshing} onClick={() => void refresh()}>
+          <RefreshCw size={16} /> {refreshing ? 'Atualizando...' : 'Atualizar agenda'}</button>
+      </div>
     </div>
+    {creating && <ManualOrderModal credentials={credentials} branches={allBranches} onClose={() => setCreating(false)}
+      onCreated={order => { setCreating(false); onOpenOrder(order.id) }} />}
     {error && <div className="form-error" role="alert">{error}</div>}
     {/* Filial e cidade no topo, discretas como em Pedidos (sem filtro de entregador). */}
     <div className="order-pills agenda-pills" role="group" aria-label="Filtros da agenda">
