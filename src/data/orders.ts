@@ -61,7 +61,7 @@ const eventLabels: Record<string, string> = {
   PIX_REVIEW: 'Pagamento em análise', MOCK_PAYMENT_REQUESTED: 'Pagamento gerado',
   MOCK_PAYMENT_CONFIRMED: 'Pagamento confirmado',
   CREATED_MANUAL: 'Pedido cadastrado à mão', NOTE_UPDATED: 'Observação interna', MANUAL_PAYMENT: 'Pagamento lançado',
-  MANUAL_PAYMENT_REMOVED: 'Pagamento desfeito',
+  MANUAL_PAYMENT_REMOVED: 'Pagamento desfeito', CHAIR_CHANGED: 'Poltrona trocada',
 }
 
 /** Texto da linha do tempo para cada código de evento gravado pelo backend no histórico do pedido. */

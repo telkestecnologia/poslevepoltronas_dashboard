@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { StickyNote, Trash2, Wallet } from 'lucide-react'
-import { api, type Order, type PaymentMethod } from '../../api'
+import { Armchair, StickyNote, Trash2, Wallet } from 'lucide-react'
+import { api, type Chair, type Order, type PaymentMethod } from '../../api'
+import { getMessage } from '../../utils/errors'
 import { balanceCents, currency, dateLabel, paymentMethodLabels } from '../../data/orders'
 import { toCents, todayIso } from '../../utils/money'
 import './manual-order.css'
@@ -119,4 +120,51 @@ export function OrderFlags({ order }: { order: Order }) {
     {note && <span className="order-flag note" title={note}><StickyNote size={12} />
       {note.length > 40 ? `${note.slice(0, 40).trimEnd()}…` : note}</span>}
   </span>
+}
+
+/**
+ * Trocar a poltrona antes da entrega (ex.: a cliente só quer a bege). Mostra só as poltronas da filial livres em todo o
+ * período reservado; os dias passam para a nova poltrona.
+ */
+export function ChairSwap({ credentials, order, busy, perform }: {
+  credentials: string; order: Order; busy: boolean; perform: Perform
+}) {
+  const [open, setOpen] = useState(false)
+  const [chairs, setChairs] = useState<Chair[] | null>(null)
+  const [chairId, setChairId] = useState('')
+  const [note, setNote] = useState('')
+  const [error, setError] = useState('')
+
+  async function start() {
+    setOpen(true)
+    setChairs(null)
+    setError('')
+    try {
+      const list = await api.manualOrderChairs(credentials, order.branchId, order.stockStart ?? order.start, order.stockEnd ?? order.end)
+      setChairs(list)
+      setChairId(list[0]?.id ?? '')
+    } catch (cause) {
+      setError(getMessage(cause))
+      setChairs([])
+    }
+  }
+
+  if (!open) return <button type="button" className="button secondary od-chair-swap" disabled={busy} onClick={() => void start()}>
+    <Armchair size={15} /> Trocar poltrona</button>
+  return <div className="od-pay-form od-chair-swap-form">
+    <label>Nova poltrona<select value={chairId} disabled={!chairs || chairs.length === 0} onChange={event => setChairId(event.target.value)}>
+      {!chairs && <option value="">Procurando poltronas livres...</option>}
+      {chairs && chairs.length === 0 && <option value="">Nenhuma outra poltrona livre no período</option>}
+      {chairs?.map(chair => <option key={chair.id} value={chair.id}>Poltrona {chair.code}{chair.model ? ` • ${chair.model}` : ''}</option>)}
+    </select></label>
+    <label>Motivo <span className="optional">(opcional)</span><input maxLength={200} value={note} onChange={event => setNote(event.target.value)}
+      placeholder="Ex.: cliente só quer a bege" /></label>
+    {error && <p className="mo-warn">{error}</p>}
+    <div className="od-actions">
+      <button type="button" className="button secondary" disabled={busy} onClick={() => setOpen(false)}>Cancelar</button>
+      <button type="button" className="button primary" disabled={busy || !chairId}
+        onClick={() => void perform(() => api.changeOrderChair(credentials, order.id, chairId, note.trim()), 'Poltrona trocada.',
+          () => { setOpen(false); setNote('') })}>Trocar</button>
+    </div>
+  </div>
 }

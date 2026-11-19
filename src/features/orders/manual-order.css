@@ -65,3 +65,8 @@
   .panel.mo-page { padding: 16px; }
   .mo-recent li button { flex-wrap: wrap; }
 }
+
+/* Trocar poltrona no pedido. */
+.od-chair-swap-row { display: block !important; }
+.od-chair-swap { margin-top: 4px; }
+.od-chair-swap-form { margin-top: 6px; }

@@ -23,7 +23,7 @@ import logoSymbol from '../../assets/logo-simbolo.png'
 import leaves from '../../assets/folhas-logo.png'
 import './ficha.css'
 import { LeadOriginChip } from '../leads/LeadOriginChip'
-import { ManualPaymentsCard, OrderNoteCard } from './OrderExtras'
+import { ChairSwap, ManualPaymentsCard, OrderNoteCard } from './OrderExtras'
 
 type Props = { credentials: string; id: string; onBack: () => void }
 
@@ -535,6 +535,8 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
           <dl className="od-facts">
             <div><dt>Período cobrado</dt><dd>{dateLabel(order.start)} a {dateLabel(order.end)}</dd></div>
             <div><dt>Poltrona</dt><dd>{chairName(order.chairCode, order.branchName)}</dd></div>
+            {isRealOrder(order) && !contractOnly && ['PAYMENT_CONFIRMED', 'DELIVERY_PENDING'].includes(order.status) && <div className="od-chair-swap-row">
+              <ChairSwap key={order.chairId} credentials={credentials} order={order} busy={busy} perform={perform} /></div>}
             <div><dt>Filial</dt><dd>{branchLabel(order.branchName)}</dd></div>
           </dl>
           <dl className="od-facts od-money">

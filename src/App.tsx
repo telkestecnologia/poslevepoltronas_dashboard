@@ -116,7 +116,8 @@ function App() {
         {page === 'branches' && !showLoading && !pageError && <BranchesPage {...branchesPage} />}
         {page === 'couriers' && !showLoading && !pageError && <CouriersPage {...couriersPage} />}
         {page === 'agenda' && <AgendaPage credentials={session.credentials} onOpenOrder={openOrder} />}
-        {page === 'manualOrder' && <ManualOrderPage credentials={session.credentials} onOpenOrder={openOrder} />}
+        {page === 'manualOrder' && <ManualOrderPage credentials={session.credentials} onOpenOrder={openOrder}
+          conversationId={params.get('conversa')} />}
         {page === 'orders' && !route.id && <OrdersPage credentials={session.credentials} params={params}
           onOpenOrder={id => navigate('orders', { id, fromList: true })} />}
         {page === 'orders' && route.id && <OrderDetailPage key={route.id} credentials={session.credentials} id={route.id}

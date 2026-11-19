@@ -8,6 +8,7 @@ import { conversationRecap } from './conversationRecap'
 import { getMessage } from '../../utils/errors'
 import './conversations.css'
 import { LeadOriginChip } from '../leads/LeadOriginChip'
+import { go } from '../../router'
 
 type Filter = 'ALL' | 'HELP' | 'WHATSAPP' | 'SITE'
 
@@ -218,6 +219,9 @@ export function ConversationsPage({ credentials, selectedId, onSelect }: Props) 
                 {` • ${selected.channel === 'WHATSAPP' ? 'WhatsApp' : 'Site'} • desde ${new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(selected.startedAt))}`}</small>
               <span className={`wa-stage ${stageTone(selected.stage ?? 'Primeiro contato').tone}`}>{stageTone(selected.stage ?? 'Primeiro contato').icon} Etapa: {selected.stage ?? 'Primeiro contato'}</span>
               <LeadOriginChip credentials={credentials} conversationId={selected.id} phone={selected.customerPhone} /></div>
+            {/* Venda fechada pela equipe (desconto, sinal, maquininha): pedido manual com o que a cliente já passou para a Isa. */}
+            <button type="button" className="wa-assign outline" title="Cadastrar pedido manual com os dados desta conversa"
+              onClick={() => go(`/pedido-manual?conversa=${encodeURIComponent(selected.id)}`)}>Pedido manual</button>
             <button type="button" className={`wa-assign${selected.state === 'HUMAN' ? ' outline' : ''}`} disabled={busy} onClick={() => void toggleAssignment(selected)}>
               {selected.state === 'HUMAN' ? 'Devolver para a Isa' : 'Assumir conversa'}</button>
           </header>

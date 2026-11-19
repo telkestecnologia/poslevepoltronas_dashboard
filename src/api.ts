@@ -73,6 +73,13 @@ export const REAL_SOURCES: OrderSource[] = ['CHECKOUT', 'MANUAL']
 export type PaymentMethod = 'PIX' | 'CARTAO' | 'DINHEIRO'
 /** Pagamento lançado pela equipe num pedido cadastrado à mão. paidOn = dia em que o cliente pagou (AAAA-MM-DD). */
 export type ManualPayment = { id: string; amountCents: number; method: PaymentMethod; paidOn: string; note: string | null; actor: string; at: string }
+/** O que a cliente já passou para a Isa na conversa, para o pedido manual (tudo opcional). */
+export type ManualOrderPrefill = {
+  customerName: string | null; customerPhone: string | null; cep: string | null; street: string | null; number: string | null
+  complement: string | null; district: string | null; municipalityCode: string | null; branchId: string | null
+  start: string | null; end: string | null; deliveryTime: string | null; pickupTime: string | null
+  rentalCents: number | null; freightCents: number | null
+}
 export type ManualPaymentInput = { amountCents: number; method: PaymentMethod; paidOn?: string; note?: string }
 /** Cadastro manual: clientes de antes do sistema e exceções. status inicial: DELIVERY_PENDING ou IN_USE. */
 export type ManualOrderInput = {
@@ -563,6 +570,11 @@ export const api = {
   /** Poltronas da filial livres em todo o período (cadastro manual). */
   manualOrderChairs: (credentials: string, branchId: string, start: string, end: string) =>
     request<Chair[]>(credentials, `/orders/manual/chairs?${new URLSearchParams({ branchId, start, end })}`),
+  manualOrderPrefill: (credentials: string, conversationId: string) =>
+    request<ManualOrderPrefill>(credentials, `/orders/manual/prefill?${new URLSearchParams({ conversationId })}`),
+  /** Troca a poltrona antes da entrega (os dias reservados vão para a nova poltrona). */
+  changeOrderChair: (credentials: string, id: string, chairId: string, note: string) =>
+    request<Order>(credentials, `/orders/${encodeURIComponent(id)}/chair`, { method: 'PATCH', body: JSON.stringify({ chairId, note }) }),
   createManualOrder: (credentials: string, data: ManualOrderInput) =>
     request<Order>(credentials, '/orders/manual', { method: 'POST', body: JSON.stringify(data) }),
   cancelManualOrder: (credentials: string, id: string, reason: string) =>

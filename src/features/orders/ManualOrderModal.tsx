@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { ArrowRight, ClipboardPlus, X } from 'lucide-react'
-import { api, type Branch, type Chair, type ManualOrderInput, type Order, type PaymentMethod } from '../../api'
+import { api, type Branch, type Chair, type ManualOrderInput, type ManualOrderPrefill, type Order, type PaymentMethod } from '../../api'
 import { FormIntro } from '../../components/FormIntro'
 import { currency, paymentMethodLabels } from '../../data/orders'
 import { branchLabel, onlyOfficialBranches } from '../../utils/branches'
@@ -24,31 +24,33 @@ const formatCep = (value: string) => {
  * Cadastro manual (igual ao app): clientes de antes do sistema, já pagos e com contrato assinado fora dele, e exceções.
  * O pedido ocupa a poltrona no estoque como um pedido do site e começa na entrega (ou já em uso).
  */
-export function ManualOrderModal({ credentials, branches, onClose, onCreated, inline }: {
+export function ManualOrderModal({ credentials, branches, onClose, onCreated, inline, initial }: {
   credentials: string; branches: Branch[]; onClose?: () => void; onCreated: (order: Order) => void
+  /** Vindo da conversa: o que a cliente já passou para a Isa. */
+  initial?: ManualOrderPrefill | null
   /** Na página "Pedido manual" do menu: o formulário direto na tela, sem janela. */
   inline?: boolean
 }) {
   const official = onlyOfficialBranches(branches, branch => branch.name)
   const options = (official.length ? official : branches).filter(branch => branch.active || official.length === 0)
-  const [branchId, setBranchId] = useState(options.length === 1 ? options[0].id : '')
-  const [cityCode, setCityCode] = useState('')
-  const [name, setName] = useState('')
-  const [phone, setPhone] = useState('')
-  const [cep, setCep] = useState('')
-  const [street, setStreet] = useState('')
-  const [number, setNumber] = useState('')
-  const [complement, setComplement] = useState('')
-  const [district, setDistrict] = useState('')
-  const [start, setStart] = useState('')
-  const [end, setEnd] = useState('')
-  const [deliveryTime, setDeliveryTime] = useState('')
-  const [pickupTime, setPickupTime] = useState('')
+  const [branchId, setBranchId] = useState(initial?.branchId ?? (options.length === 1 ? options[0].id : ''))
+  const [cityCode, setCityCode] = useState(initial?.municipalityCode ?? '')
+  const [name, setName] = useState(initial?.customerName ?? '')
+  const [phone, setPhone] = useState(formatPhone((initial?.customerPhone ?? '').replace(/^55(?=\d{10,11}$)/, '')))
+  const [cep, setCep] = useState(formatCep(initial?.cep ?? ''))
+  const [street, setStreet] = useState(initial?.street ?? '')
+  const [number, setNumber] = useState(initial?.number ?? '')
+  const [complement, setComplement] = useState(initial?.complement ?? '')
+  const [district, setDistrict] = useState(initial?.district ?? '')
+  const [start, setStart] = useState(initial?.start ?? '')
+  const [end, setEnd] = useState(initial?.end ?? '')
+  const [deliveryTime, setDeliveryTime] = useState(SHIFTS.some(shift => shift.value === initial?.deliveryTime) ? initial!.deliveryTime! : '')
+  const [pickupTime, setPickupTime] = useState(SHIFTS.some(shift => shift.value === initial?.pickupTime) ? initial!.pickupTime! : '')
   const [status, setStatus] = useState<ManualOrderInput['status']>('DELIVERY_PENDING')
   const [chairs, setChairs] = useState<{ key: string; list: Chair[]; error?: string } | null>(null)
   const [chairId, setChairId] = useState('')
-  const [rental, setRental] = useState('')
-  const [freight, setFreight] = useState('')
+  const [rental, setRental] = useState(initial?.rentalCents != null ? (initial.rentalCents / 100).toFixed(2).replace('.', ',') : '')
+  const [freight, setFreight] = useState(initial?.freightCents != null ? (initial.freightCents / 100).toFixed(2).replace('.', ',') : '')
   const [paid, setPaid] = useState('')
   const [method, setMethod] = useState<PaymentMethod>('PIX')
   const [paidOn, setPaidOn] = useState(todayIso())
