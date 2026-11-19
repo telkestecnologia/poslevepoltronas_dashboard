@@ -45,9 +45,11 @@ export function OverviewPage({ credentials, rentals, revenue, onRefresh, childre
         </div>
       </div>
 
-      {credentials && <OverviewCharts credentials={credentials} rentals={rentals} />}
+      {/* No computador, "De onde vêm os clientes" fica ao lado de "Como os clientes pagam"; no celular, embaixo. */}
+      {credentials && <OverviewCharts credentials={credentials} rentals={rentals}
+        aside={<LeadSourcesPanel credentials={credentials} className="oc-paired lead-sources-desktop" />} />}
 
-      {credentials && <LeadSourcesPanel credentials={credentials} />}
+      {credentials && <LeadSourcesPanel credentials={credentials} className="lead-sources-mobile" />}
 
       {children}
     </>

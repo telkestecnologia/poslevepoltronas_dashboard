@@ -30,7 +30,8 @@ type Methods = { pix: number; card: number; other: number }
  * Gráficos da Visão geral (só no computador): entradas e saídas dos últimos 6 meses, ocupação das poltronas hoje,
  * quanto cada filial recebeu e como os clientes pagam. Cada gráfico diz em uma frase o que mostra.
  */
-export function OverviewCharts({ credentials, rentals }: { credentials: string; rentals: RentalOverview }) {
+/** aside: quadro ao lado de "Como os clientes pagam" (no computador, "De onde vêm os clientes"). */
+export function OverviewCharts({ credentials, rentals, aside }: { credentials: string; rentals: RentalOverview; aside?: ReactNode }) {
   const [report, setReport] = useState<FinancialReport | null>(null)
   const [methods, setMethods] = useState<Methods | null>(null)
 
@@ -66,7 +67,8 @@ export function OverviewCharts({ credentials, rentals }: { credentials: string; 
     <MonthlyChart report={report} />
     <OccupancyChart rentals={rentals} />
     <BranchRevenue report={report} rentals={rentals} />
-    <PaymentMix methods={methods} />
+    <PaymentMix methods={methods} paired={Boolean(aside)} />
+    {aside}
   </section>
 }
 
@@ -178,14 +180,14 @@ function BranchRevenue({ report, rentals }: { report: FinancialReport | null; re
 }
 
 /** Pix x cartão no mês: uma barra dividida, com o valor e a fatia de cada meio. */
-function PaymentMix({ methods }: { methods: Methods | null }) {
+function PaymentMix({ methods, paired }: { methods: Methods | null; paired?: boolean }) {
   const total = methods ? methods.pix + methods.card + methods.other : 0
   const parts = methods ? [
     { key: 'pix', label: 'Pix', value: methods.pix, color: '#1a9baa' },
     { key: 'card', label: 'Cartão', value: methods.card, color: '#e0a93b' },
     { key: 'other', label: 'Outros', value: methods.other, color: '#8a6cc9' },
   ].filter(part => part.value > 0) : []
-  return <article className="panel oc-card oc-methods">
+  return <article className={`panel oc-card oc-methods${paired ? ' oc-paired' : ''}`}>
     <ChartHead icon={<CreditCard size={18} />} title="Como os clientes pagam"
       hint="Recebimentos deste mês divididos por meio de pagamento." />
     {methods === null ? <div className="oc-skeleton small" /> : total === 0 ? <p className="oc-empty">Nenhum recebimento este mês ainda.</p> : <>

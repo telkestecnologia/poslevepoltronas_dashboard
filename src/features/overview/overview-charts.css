@@ -96,3 +96,9 @@
     .oc-plot i, .oc-track i, .oc-stack i, .oc-donut .value, .oc-skeleton { animation: none; }
   }
 }
+
+/* "Como os clientes pagam" e "De onde vêm os clientes" lado a lado no computador. */
+@media (min-width: 901px) {
+  .overview-charts .oc-methods.oc-paired, .overview-charts .lead-sources.oc-paired { grid-column: span 6; align-self: stretch; }
+  .lead-sources-mobile { display: none; }
+}

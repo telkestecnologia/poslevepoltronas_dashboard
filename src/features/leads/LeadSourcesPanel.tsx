@@ -8,13 +8,42 @@ const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL
 const monthName = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric', timeZone: 'UTC' })
 const iso = (date: Date) => date.toISOString().slice(0, 10)
 
-/** "De onde vêm os clientes": contatos que chegaram e aluguéis pagos no mês, por fonte. */
-export function LeadSourcesPanel({ credentials }: { credentials: string }) {
+/** Cor fixa por fonte, para a mesma fonte ter sempre a mesma fatia. */
+const COLORS: Record<string, string> = {
+  INSTAGRAM: '#d6457a', FACEBOOK: '#3b6fd8', META_ADS: '#8a5bd6', GOOGLE: '#2f9e5b', GOOGLE_ADS: '#e0a93b',
+  INDICACAO: '#1a9baa', MEDICO: '#c2563b', WHATSAPP: '#25a35a', SITE_DIRETO: '#5f7d86', OUTRO: '#9aa6ab', NAO_INFORMADO: '#cfd6d8',
+}
+
+type Metric = 'contacts' | 'orders'
+
+/** Fatias da pizza (rosca) em SVG: cada uma do tamanho da sua parte no total. */
+function Donut({ parts, total, label }: { parts: { key: string; value: number; color: string; name: string }[]; total: number; label: string }) {
+  const radius = 54
+  const circumference = 2 * Math.PI * radius
+  let offset = 0
+  return <svg className="lead-pie" viewBox="0 0 140 140" role="img" aria-label={label}>
+    <circle cx="70" cy="70" r={radius} fill="none" stroke="#eef1f2" strokeWidth="22" />
+    {parts.map(part => {
+      const length = (part.value / total) * circumference
+      const slice = <circle key={part.key} cx="70" cy="70" r={radius} fill="none" stroke={part.color} strokeWidth="22"
+        strokeDasharray={`${length} ${circumference - length}`} strokeDashoffset={-offset} transform="rotate(-90 70 70)">
+        <title>{`${part.name}: ${part.value}`}</title></circle>
+      offset += length
+      return slice
+    })}
+    <text x="70" y="66" textAnchor="middle" className="lead-pie-total">{total}</text>
+    <text x="70" y="84" textAnchor="middle" className="lead-pie-caption">{label}</text>
+  </svg>
+}
+
+/** "De onde vêm os clientes": contatos que chegaram e aluguéis pagos no mês, por fonte, em pizza. */
+export function LeadSourcesPanel({ credentials, className }: { credentials: string; className?: string }) {
   const today = new Date()
   const [offset, setOffset] = useState(0)
   const [data, setData] = useState<LeadSourceSummary | null>(null)
   const [error, setError] = useState('')
   const [hidden, setHidden] = useState(false)
+  const [metric, setMetric] = useState<Metric>('contacts')
 
   const range = useMemo(() => {
     const first = new Date(Date.UTC(today.getFullYear(), today.getMonth() + offset, 1))
@@ -36,12 +65,13 @@ export function LeadSourcesPanel({ credentials }: { credentials: string }) {
 
   if (hidden) return null
   const rows = data?.rows ?? []
-  const maxContacts = Math.max(1, ...rows.map(row => row.contacts))
   const totals = rows.reduce((sum, row) => ({ contacts: sum.contacts + row.contacts, orders: sum.orders + row.orders,
     revenue: sum.revenue + row.revenueCents }), { contacts: 0, orders: 0, revenue: 0 })
-  const sorted = [...rows].sort((a, b) => b.orders - a.orders || b.contacts - a.contacts)
+  const total = metric === 'contacts' ? totals.contacts : totals.orders
+  const parts = [...rows].map(row => ({ key: row.source, name: leadSourceLabel(row.source), value: metric === 'contacts' ? row.contacts : row.orders,
+    color: COLORS[row.source] ?? '#9aa6ab', row })).filter(part => part.value > 0).sort((a, b) => b.value - a.value)
 
-  return <section className="panel lead-sources" aria-labelledby="lead-sources-title">
+  return <section className={`panel lead-sources${className ? ` ${className}` : ''}`} aria-labelledby="lead-sources-title">
     <header className="lead-sources-head">
       <h2 id="lead-sources-title"><Megaphone size={18} /> De onde vêm os clientes</h2>
       <div className="lead-sources-month">
@@ -50,18 +80,23 @@ export function LeadSourcesPanel({ credentials }: { credentials: string }) {
         <button type="button" className="icon-button" aria-label="Próximo mês" disabled={offset >= 0} onClick={() => setOffset(value => value + 1)}><ChevronRight size={18} /></button>
       </div>
     </header>
+    <div className="lead-metric" role="tablist" aria-label="Ver por">
+      <button type="button" role="tab" aria-selected={metric === 'contacts'} className={metric === 'contacts' ? 'selected' : ''}
+        onClick={() => setMetric('contacts')}>Contatos ({totals.contacts})</button>
+      <button type="button" role="tab" aria-selected={metric === 'orders'} className={metric === 'orders' ? 'selected' : ''}
+        onClick={() => setMetric('orders')}>Aluguéis pagos ({totals.orders})</button>
+    </div>
     {error ? <p className="lead-sources-empty">{error}</p>
       : !data ? <p className="lead-sources-empty">Carregando...</p>
-      : sorted.length === 0 ? <p className="lead-sources-empty">Ainda não há contatos com origem registrada neste mês.</p>
-      : <table className="lead-sources-table">
-        <thead><tr><th>Fonte</th><th>Contatos</th><th>Aluguéis pagos</th><th>Valor</th></tr></thead>
-        <tbody>{sorted.map(row => <tr key={row.source}>
-          <td><span className="lead-sources-name">{leadSourceLabel(row.source)}</span>
-            <span className="lead-sources-bar" aria-hidden="true"><i style={{ width: `${(row.contacts / maxContacts) * 100}%` }} /></span></td>
-          <td>{row.contacts}</td><td>{row.orders}</td><td>{money.format(row.revenueCents / 100)}</td>
-        </tr>)}</tbody>
-        <tfoot><tr><td>Total</td><td>{totals.contacts}</td><td>{totals.orders}</td><td>{money.format(totals.revenue / 100)}</td></tr></tfoot>
-      </table>}
-    <p className="lead-sources-note">Contatos: pessoas que chegaram pelo site ou pelo WhatsApp no mês. Aluguéis pagos: pagos no mês, pela origem de quem alugou.</p>
+      : total === 0 ? <p className="lead-sources-empty">{metric === 'contacts' ? 'Nenhum contato com origem registrada neste mês.' : 'Nenhum aluguel pago neste mês.'}</p>
+      : <div className="lead-pie-wrap">
+        <Donut parts={parts} total={total} label={metric === 'contacts' ? 'contatos' : 'aluguéis'} />
+        <ul className="lead-pie-legend">{parts.map(part => <li key={part.key}>
+          <i style={{ background: part.color }} /><b>{part.name}</b>
+          <span>{part.value}{metric === 'orders' && part.row.revenueCents ? ` • ${money.format(part.row.revenueCents / 100)}` : ''}</span>
+          <em>{Math.round((part.value / total) * 100)}%</em>
+        </li>)}</ul>
+      </div>}
+    <p className="lead-sources-note">Contatos: pessoas que chegaram pelo site ou pelo WhatsApp no mês. Aluguéis pagos: pagos no mês, pela origem de quem alugou{totals.revenue ? ` (${money.format(totals.revenue / 100)} no total)` : ''}.</p>
   </section>
 }
