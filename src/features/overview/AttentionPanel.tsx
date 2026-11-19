@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { chairName } from '../../utils/branches'
 import { AlertTriangle, Armchair, Check, ChevronRight, MessagesSquare, Sparkles } from 'lucide-react'
-import { api, type Conversation, type Order, type OrderStatus } from '../../api'
-import { fetchAllOrders, orderStatusLabel, paymentName, usePolling } from '../../data/orders'
+import { api, REAL_SOURCES, type Conversation, type Order, type OrderStatus } from '../../api'
+import { fetchAllOrders, isRealOrder, orderStatusLabel, paymentName, usePolling } from '../../data/orders'
 
 const capitalized = (text: string) => text.charAt(0).toUpperCase() + text.slice(1)
 import type { Page } from '../../types'
@@ -42,8 +42,8 @@ const attentionStatuses: OrderStatus[] = ['PENDING_PAYMENT', 'PAYMENT_REVIEW', '
 /** Só os pedidos em andamento ou com problema em aberto, já filtrados no servidor. */
 async function fetchAttentionOrders(credentials: string) {
   const [active, withIssues] = await Promise.all([
-    fetchAllOrders(credentials, { source: 'CHECKOUT', statuses: attentionStatuses }),
-    fetchAllOrders(credentials, { source: 'CHECKOUT', openIssues: true }),
+    fetchAllOrders(credentials, { source: REAL_SOURCES, statuses: attentionStatuses }),
+    fetchAllOrders(credentials, { source: REAL_SOURCES, openIssues: true }),
   ])
   const byId = new Map(active.map(order => [order.id, order]))
   for (const order of withIssues) byId.set(order.id, order)
@@ -59,7 +59,7 @@ function buildAlerts({ orders, conversations, unanswered, maintenance }: {
   const items: Alert[] = []
   const who = (order: Order) => `${order.customerName} (${order.municipalityName}/${order.municipalityUf}, ${order.address})`
   const toOrder = (order: Order): AttentionTarget => ({ page: 'orders', id: order.id })
-  for (const order of orders.filter(item => item.source === 'CHECKOUT')) {
+  for (const order of orders.filter(item => isRealOrder(item))) {
     // Cliente mudou o horário pela Isa nas últimas 24 h.
     for (const event of order.history.filter(item => item.action === 'SCHEDULE_CHANGED' && item.actor === 'ai'
       && Date.now() - new Date(item.at).getTime() < 86_400_000)) {

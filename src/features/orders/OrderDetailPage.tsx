@@ -2,12 +2,12 @@ import type { ReactNode } from 'react'
 import { timeLabel } from '../../utils/time'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  FileText, AlertCircle, ArrowLeft, ArrowRight, CalendarClock, Check, ChevronDown, ChevronUp, CheckCircle2, Info, MapPin, Megaphone, MessageCircle, Phone, RefreshCw, Truck, X, Images,
+  Ban, FileText, AlertCircle, ArrowLeft, ArrowRight, CalendarClock, Check, ChevronDown, ChevronUp, CheckCircle2, Info, MapPin, Megaphone, MessageCircle, Phone, RefreshCw, Truck, X, Images,
 } from 'lucide-react'
 import './order-detail.css'
 import { api, ApiError, type Courier, type Order } from '../../api'
 import {
-  actorLabel, currency, dateLabel, dateTimeLabel, eventKind, eventKinds, eventLabel, orderStatusLabel, paymentName,
+  actorLabel, balanceCents, currency, dateLabel, dateTimeLabel, eventKind, eventKinds, eventLabel, isRealOrder, orderStatusLabel, paymentName,
   statusFlow, statusLabels, usePolling, weekdayDateLabel,
 } from '../../data/orders'
 import { branchLabel, chairName } from '../../utils/branches'
@@ -23,6 +23,7 @@ import logoSymbol from '../../assets/logo-simbolo.png'
 import leaves from '../../assets/folhas-logo.png'
 import './ficha.css'
 import { LeadOriginChip } from '../leads/LeadOriginChip'
+import { ManualPaymentsCard, OrderNoteCard } from './OrderExtras'
 
 type Props = { credentials: string; id: string; onBack: () => void }
 
@@ -36,6 +37,11 @@ function noticesOf(order: Order): Notice[] {
   if (order.id.startsWith('wa-contrato-')) list.push({ tone: 'info', text: 'Contrato enviado pelo WhatsApp e aguardando a assinatura da cliente. Entregador, fotos e problemas ficam disponíveis depois que ela assinar.' })
   else if (order.status === 'PENDING_CONTRACT') list.push({ tone: 'info', text: `Pedido ainda sem pagamento confirmado. Válido até ${until ?? 'o prazo da reserva'}; ao expirar, os dias bloqueados são liberados automaticamente.` })
   if (order.status === 'PENDING_PAYMENT' && !order.paymentMock) list.push({ tone: 'info', text: `Aguardando a confirmação do ${paymentName(order)} pelo Asaas. Reserva válida até ${until ?? 'o prazo informado'}.` })
+  if (order.source === 'MANUAL') {
+    list.push({ tone: 'info', text: 'Pedido cadastrado à mão pela equipe: o contrato foi assinado fora do sistema.' })
+    const due = balanceCents(order)
+    if (due > 0) list.push({ tone: 'warning', text: `Falta receber ${currency(due)} deste cliente. Lance o pagamento em “Pagamentos” quando ele pagar.` })
+  }
   if (order.status === 'EXPIRED' || order.status === 'CANCELLED') list.push({ tone: 'info', text: `Pedido ${order.status === 'EXPIRED' ? 'expirado' : 'cancelado'}. A poltrona já está livre para outros aluguéis.` })
   return list
 }
@@ -140,7 +146,7 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
     ? `Tire ou insira pelo menos uma foto ou vídeo da ${evidencePhase === 'DELIVERY' ? 'entrega' : 'retirada'} para avançar.` : ''
   const nextStatus = step >= 0 ? statusFlow[step + 1] : undefined
   const contractOnly = order.id.startsWith('wa-contrato-')
-  const canChangeSchedule = order.source === 'CHECKOUT' && !contractOnly
+  const canChangeSchedule = isRealOrder(order) && !contractOnly
     && ['PAYMENT_CONFIRMED', 'DELIVERY_PENDING', 'IN_USE', 'PICKUP_PENDING'].includes(order.status)
   const stepLabel = (status: typeof statusFlow[number]) =>
     statusLabels[status]
@@ -272,6 +278,13 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
     ? `https://www.google.com/maps?q=${order.latitude},${order.longitude}`
     : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${order.address}, ${order.municipalityName} - ${order.municipalityUf}`)}`
 
+  function cancelManual() {
+    if (!order) return
+    const reason = window.prompt(`Cancelar o pedido de ${order.customerName}? A poltrona fica livre nesses dias. Motivo (opcional):`, '')
+    if (reason === null) return
+    void perform(() => api.cancelManualOrder(credentials, order.id, reason), 'Pedido cancelado. A poltrona está livre.')
+  }
+
   function advance() {
     if (!order || !nextStatus) return
     if (missingEvidence) { setError(missingEvidence); return }
@@ -346,6 +359,7 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
             <a className="od-ficha-wa" href={`https://wa.me/55${phoneDigits}`} target="_blank" rel="noopener noreferrer"><MessageCircle size={14} /> WhatsApp</a></span></p>
           <p><b>Endereço:</b><span>{order.address} • {order.municipalityName}/{order.municipalityUf}{order.postalCode ? ` • CEP ${order.postalCode}` : ''}
             <a className="od-ficha-map" target="_blank" rel="noopener noreferrer" href={mapUrl}><MapPin size={14} /> mapa</a></span></p>
+          {order.internalNote && <p><b>Observação:</b><span>{order.internalNote}</span></p>}
           <p><b>Poltrona:</b><span>{chairName(order.chairCode, order.branchName)} • {branchLabel(order.branchName)}</span></p>
           <p><b>Situação:</b><span><i className={`order-status status-${order.status.toLowerCase()}`}>{orderStatusLabel(order)}</i>
             <small>pedido feito em {dateTimeLabel(order.createdAt)}</small></span></p>
@@ -354,14 +368,15 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
           <thead><tr><th>Data</th><th>Procedimento</th><th>Valor</th></tr></thead>
           <tbody>
             <tr><td>{dateLabel(order.start)} a {dateLabel(order.end)}</td><td>Aluguel da poltrona</td>
-              <td>{order.source === 'CHECKOUT' ? currency(order.rentalCents) : '—'}</td></tr>
+              <td>{isRealOrder(order) ? currency(order.rentalCents) : '—'}</td></tr>
             <tr><td>{weekdayDateLabel(order.deliveryDate ?? order.start)}{order.deliveryTime ? ` ${timeLabel(order.deliveryTime)}` : ''}</td>
               <td>Entrega e instalação</td><td>{order.freightCents ? currency(order.freightCents) : 'Frete grátis'}</td></tr>
             <tr><td>{weekdayDateLabel(order.pickupDate ?? order.end)}{order.pickupTime ? ` ${timeLabel(order.pickupTime)}` : ''}</td>
               <td>Retirada da poltrona</td><td>—</td></tr>
             <tr><td /><td>Entregador: {courier?.name ?? 'ainda não atribuído'}</td><td /></tr>
           </tbody>
-          {order.source === 'CHECKOUT' && <tfoot><tr><td /><td>Total</td><td>{currency(order.totalCents)}</td></tr></tfoot>}
+          {isRealOrder(order) && <tfoot><tr><td /><td>Total{balanceCents(order) > 0 ? ` (falta ${currency(balanceCents(order))})` : ''}</td>
+            <td>{currency(order.totalCents)}</td></tr></tfoot>}
         </table>
         <footer className="od-ficha-foot">@poslevepoltronas</footer>
       </section>
@@ -497,6 +512,7 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
         </section>
 
 
+        {!contractOnly && <OrderNoteCard credentials={credentials} order={order} busy={busy} perform={perform} />}
         {!contractOnly && issuesCard(' od-issues-main')}
         {/* No computador o histórico completo fica aqui, largo e agrupado por dia (substitui a linha do tempo lateral). */}
         <OrderHistoryFull order={order} couriers={couriers} />
@@ -522,9 +538,9 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
             <div><dt>Filial</dt><dd>{branchLabel(order.branchName)}</dd></div>
           </dl>
           <dl className="od-facts od-money">
-            {order.source === 'CHECKOUT' && <div><dt>Aluguel</dt><dd>{currency(order.rentalCents)}</dd></div>}
+            {isRealOrder(order) && <div><dt>Aluguel</dt><dd>{currency(order.rentalCents)}</dd></div>}
             <div><dt>Frete</dt><dd>{order.freightCents ? currency(order.freightCents) : 'Grátis'}</dd></div>
-            {order.source === 'CHECKOUT' && <div className="od-total"><dt>Total</dt><dd>{currency(order.totalCents)}
+            {isRealOrder(order) && <div className="od-total"><dt>Total</dt><dd>{currency(order.totalCents)}
               {/* Ao lado do preço, a situação atual do cliente. */}
               <span className={`order-status od-price-status status-${order.status.toLowerCase()}`}>{orderStatusLabel(order)}</span></dd></div>}
           </dl>
@@ -533,7 +549,11 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
             <button className="button secondary" disabled={busy} onClick={() => void checkPix()}>Consultar recebimento no Asaas</button>
             {pixNote && <p className="order-muted" role="status">{pixNote}</p>}
           </div>}
+          {order.source === 'MANUAL' && !['CANCELLED', 'COMPLETED'].includes(order.status) && <button type="button"
+            className="button secondary od-cancel-manual admin-only" disabled={busy} onClick={cancelManual}>
+            <Ban size={15} /> Cancelar pedido</button>}
         </section>
+        {order.source === 'MANUAL' && <ManualPaymentsCard credentials={credentials} order={order} busy={busy} perform={perform} />}
 
         {!contractOnly && issuesCard(' od-issues-side')}
         {!contractOnly && <section className="panel od-card od-courier-card" aria-labelledby="od-courier-title">

@@ -67,7 +67,20 @@ export type OrderStatus =
   | 'IN_USE'
   | 'PICKUP_PENDING'
   | 'COMPLETED'
-export type OrderSource = 'CHECKOUT' | 'MANUAL_PREVIEW'
+export type OrderSource = 'CHECKOUT' | 'MANUAL_PREVIEW' | 'MANUAL'
+/** Pedidos de verdade: do site ou da Isa (CHECKOUT) e cadastrados à mão pela equipe (MANUAL). */
+export const REAL_SOURCES: OrderSource[] = ['CHECKOUT', 'MANUAL']
+export type PaymentMethod = 'PIX' | 'CARTAO' | 'DINHEIRO'
+/** Pagamento lançado pela equipe num pedido cadastrado à mão. paidOn = dia em que o cliente pagou (AAAA-MM-DD). */
+export type ManualPayment = { id: string; amountCents: number; method: PaymentMethod; paidOn: string; note: string | null; actor: string; at: string }
+export type ManualPaymentInput = { amountCents: number; method: PaymentMethod; paidOn?: string; note?: string }
+/** Cadastro manual: clientes de antes do sistema e exceções. status inicial: DELIVERY_PENDING ou IN_USE. */
+export type ManualOrderInput = {
+  customerName: string; customerPhone: string; cep?: string; street: string; number?: string; complement?: string
+  district: string; municipalityCode: string; branchId: string; chairId: string; start: string; end: string
+  deliveryTime?: string; pickupTime?: string; rentalCents: number; freightCents: number
+  status: 'DELIVERY_PENDING' | 'IN_USE'; internalNote?: string; initialPayment?: ManualPaymentInput
+}
 export type OrderIssue = {
   id: string; title: string; description: string; status: 'OPEN' | 'RESOLVED'
   resolution: string; openedBy: string; openedAt: string; resolvedBy: string | null; resolvedAt: string | null
@@ -88,10 +101,14 @@ export type Order = {
   paymentSandbox?: boolean | null
   source: OrderSource; status: OrderStatus; courierId: string | null
   issues: OrderIssue[]; history: OrderEvent[]; createdAt: string; updatedAt: string
+  totalPaidCents?: number | null; paidAt?: string | null
+  /** Observação só da equipe (o cliente e a Isa não veem). */
+  internalNote?: string | null
+  manualPayments?: ManualPayment[] | null
 }
 /** Filtros da lista de pedidos feitos no servidor. courierId 'NONE' = sem entregador; from/to = aluguel que encosta no período. */
 export type OrderQuery = {
-  statuses?: OrderStatus[]; source?: OrderSource; branchId?: string; municipalityCode?: string; courierId?: string
+  statuses?: OrderStatus[]; source?: OrderSource | OrderSource[]; branchId?: string; municipalityCode?: string; courierId?: string
   from?: string; to?: string; openIssues?: boolean; search?: string
 }
 /** counts e openIssues ignoram os filtros de status e de problemas (servem para os cartões de resumo). */
@@ -401,7 +418,7 @@ export async function confirmPasswordReset(phone: string, code: string, newPassw
 function orderParams(query: OrderQuery, page: number, size: number) {
   const params = new URLSearchParams({ page: String(page), size: String(size) })
   if (query.statuses?.length) params.set('status', query.statuses.join(','))
-  if (query.source) params.set('source', query.source)
+  if (query.source) params.set('source', ([] as OrderSource[]).concat(query.source).join(','))
   if (query.branchId) params.set('branchId', query.branchId)
   if (query.municipalityCode) params.set('municipalityCode', query.municipalityCode)
   if (query.courierId) params.set('courierId', query.courierId)
@@ -543,6 +560,21 @@ export const api = {
     request<Order>(credentials, `/orders/${encodeURIComponent(id)}/issues/${encodeURIComponent(issueId)}/resolve`, {
       method: 'PATCH', body: JSON.stringify({ resolution }),
     }),
+  /** Poltronas da filial livres em todo o período (cadastro manual). */
+  manualOrderChairs: (credentials: string, branchId: string, start: string, end: string) =>
+    request<Chair[]>(credentials, `/orders/manual/chairs?${new URLSearchParams({ branchId, start, end })}`),
+  createManualOrder: (credentials: string, data: ManualOrderInput) =>
+    request<Order>(credentials, '/orders/manual', { method: 'POST', body: JSON.stringify(data) }),
+  cancelManualOrder: (credentials: string, id: string, reason: string) =>
+    request<Order>(credentials, `/orders/${encodeURIComponent(id)}/manual/cancel`, {
+      method: 'POST', body: JSON.stringify({ reason }),
+    }),
+  updateOrderNote: (credentials: string, id: string, note: string) =>
+    request<Order>(credentials, `/orders/${encodeURIComponent(id)}/note`, { method: 'PATCH', body: JSON.stringify({ note }) }),
+  addOrderPayment: (credentials: string, id: string, data: ManualPaymentInput) =>
+    request<Order>(credentials, `/orders/${encodeURIComponent(id)}/payments`, { method: 'POST', body: JSON.stringify(data) }),
+  removeOrderPayment: (credentials: string, id: string, paymentId: string) =>
+    request<Order>(credentials, `/orders/${encodeURIComponent(id)}/payments/${encodeURIComponent(paymentId)}`, { method: 'DELETE' }),
   couriers: (credentials: string) => request<Courier[]>(credentials, '/couriers'),
   createCourier: (credentials: string, data: CourierInput) =>
     request<Courier>(credentials, '/couriers', { method: 'POST', body: JSON.stringify(data) }),

@@ -1,0 +1,121 @@
+import { useState } from 'react'
+import { StickyNote, Trash2, Wallet } from 'lucide-react'
+import { api, type Order, type PaymentMethod } from '../../api'
+import { balanceCents, currency, dateLabel, paymentMethodLabels } from '../../data/orders'
+import { toCents, todayIso } from '../../utils/money'
+import './manual-order.css'
+
+type Perform = (operation: () => Promise<Order>, message: string, after?: () => void) => Promise<void>
+
+/** Observação interna do pedido: só a equipe vê (nem o cliente nem a Isa). Vale para qualquer pedido. */
+export function OrderNoteCard({ credentials, order, busy, perform }: {
+  credentials: string; order: Order; busy: boolean; perform: Perform
+}) {
+  const [editing, setEditing] = useState(false)
+  const [text, setText] = useState('')
+  const current = order.internalNote ?? ''
+
+  function save() {
+    void perform(() => api.updateOrderNote(credentials, order.id, text), text.trim() ? 'Observação salva.' : 'Observação apagada.',
+      () => setEditing(false))
+  }
+
+  return <section className="panel od-card od-note" aria-labelledby="od-note-title">
+    <div className="od-card-head">
+      <h2 id="od-note-title"><StickyNote size={18} /> Observação interna</h2>
+      {!editing && <button type="button" className="button secondary" onClick={() => { setText(current); setEditing(true) }}>
+        {current ? 'Editar' : 'Adicionar'}</button>}
+    </div>
+    {editing ? <>
+      <p className="od-note-help">Só a equipe vê. O cliente e a Isa não têm acesso a este texto.</p>
+      <textarea aria-label="Observação interna" maxLength={1000} value={text} autoFocus onChange={event => setText(event.target.value)}
+        placeholder="Ex.: só quer poltrona bege; falta pagar R$ 500 na entrega; precisa de nota fiscal" />
+      <div className="od-actions">
+        <button type="button" className="button secondary" disabled={busy} onClick={() => setEditing(false)}>Cancelar</button>
+        <button type="button" className="button primary" disabled={busy || text.trim() === current.trim()} onClick={save}>Salvar</button>
+      </div>
+    </> : current ? <p className="od-note-text">{current}</p>
+      : <p className="order-muted">Nenhuma observação. Use para pedidos especiais (cor, massagem, nota fiscal, data a confirmar).</p>}
+  </section>
+}
+
+/**
+ * Pagamentos de um pedido cadastrado à mão: total, pago e o que falta, com o registro de cada pagamento (sinal, parcelas,
+ * saldo na entrega). Os pedidos do site são confirmados só pelo banco e não usam este card.
+ */
+export function ManualPaymentsCard({ credentials, order, busy, perform }: {
+  credentials: string; order: Order; busy: boolean; perform: Perform
+}) {
+  const [open, setOpen] = useState(false)
+  const [amount, setAmount] = useState('')
+  const [method, setMethod] = useState<PaymentMethod>('PIX')
+  const [paidOn, setPaidOn] = useState(todayIso())
+  const [note, setNote] = useState('')
+  const paid = order.totalPaidCents ?? 0
+  const due = balanceCents(order)
+  const payments = order.manualPayments ?? []
+  const cancelled = order.status === 'CANCELLED'
+
+  function register() {
+    const cents = toCents(amount)
+    void perform(() => api.addOrderPayment(credentials, order.id, { amountCents: cents, method, paidOn, note: note.trim() || undefined }),
+      cents >= due ? 'Pagamento lançado. Pedido quitado.' : `Pagamento lançado. Falta ${currency(due - cents)}.`,
+      () => { setOpen(false); setAmount(''); setNote('') })
+  }
+
+  function remove(id: string, value: number) {
+    if (!window.confirm(`Desfazer o pagamento de ${currency(value)}? Ele também sai do financeiro.`)) return
+    void perform(() => api.removeOrderPayment(credentials, order.id, id), 'Pagamento desfeito.')
+  }
+
+  return <section className="panel od-card od-pay" aria-labelledby="od-pay-title">
+    <div className="od-card-head">
+      <h2 id="od-pay-title" className="od-side-title"><Wallet size={16} /> Pagamentos</h2>
+      {!open && due > 0 && !cancelled && <button type="button" className="button secondary" onClick={() => { setAmount((due / 100).toFixed(2).replace('.', ',')); setOpen(true) }}>
+        Registrar pagamento</button>}
+    </div>
+    <div className="od-pay-summary">
+      <div><small>Total</small><strong>{currency(order.totalCents)}</strong></div>
+      <div className="paid"><small>Pago</small><strong>{currency(paid)}</strong></div>
+      <div className={due > 0 ? 'due' : 'paid'}><small>{due > 0 ? 'Falta' : 'Situação'}</small><strong>{due > 0 ? currency(due) : 'Quitado'}</strong></div>
+    </div>
+    {payments.length > 0 && <ul className="od-pay-list">
+      {payments.map(payment => <li key={payment.id}>
+        <div><strong>{currency(payment.amountCents)} • {paymentMethodLabels[payment.method] ?? payment.method}</strong>
+          <small>Pago em {dateLabel(payment.paidOn)}{payment.note ? ` • ${payment.note}` : ''}</small></div>
+        <button type="button" className="icon-button admin-only" aria-label={`Desfazer pagamento de ${currency(payment.amountCents)}`}
+          title="Desfazer pagamento" disabled={busy} onClick={() => remove(payment.id, payment.amountCents)}><Trash2 size={15} /></button>
+      </li>)}
+    </ul>}
+    {payments.length === 0 && !open && <p className="order-muted">Nenhum pagamento lançado.</p>}
+    {open && <form className="od-pay-form" onSubmit={event => { event.preventDefault(); register() }}>
+      <div className="od-pay-row">
+        <label>Valor (R$)<input inputMode="decimal" required value={amount} autoFocus onChange={event => setAmount(event.target.value)} /></label>
+        <label>Forma<select value={method} onChange={event => setMethod(event.target.value as PaymentMethod)}>
+          {Object.entries(paymentMethodLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+      </div>
+      <div className="od-pay-row">
+        <label>Pago em<input type="date" required value={paidOn} max={todayIso()} onChange={event => setPaidOn(event.target.value)} /></label>
+        <label>Observação <span className="optional">(opcional)</span><input maxLength={200} value={note}
+          onChange={event => setNote(event.target.value)} placeholder="Ex.: pago na entrega" /></label>
+      </div>
+      <div className="od-actions">
+        <button type="button" className="button secondary" disabled={busy} onClick={() => setOpen(false)}>Cancelar</button>
+        <button className="button primary" disabled={busy || toCents(amount) <= 0}>Lançar</button>
+      </div>
+    </form>}
+  </section>
+}
+
+/** Selos do pedido na lista e na agenda: cadastrado à mão, quanto falta pagar e a observação interna. */
+export function OrderFlags({ order }: { order: Order }) {
+  const due = balanceCents(order)
+  const note = order.internalNote?.trim()
+  if (order.source !== 'MANUAL' && !note) return null
+  return <span className="order-flags">
+    {order.source === 'MANUAL' && <span className="order-flag manual">Cadastro manual</span>}
+    {due > 0 && <span className="order-flag due">Falta {currency(due)}</span>}
+    {note && <span className="order-flag note" title={note}><StickyNote size={12} />
+      {note.length > 40 ? `${note.slice(0, 40).trimEnd()}…` : note}</span>}
+  </span>
+}

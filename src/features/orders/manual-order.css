@@ -1,0 +1,52 @@
+/* Cadastro manual de pedido, observação interna e pagamentos lançados pela equipe. */
+.modal.mo-modal { width: min(100%, 760px); }
+.mo-form fieldset { border: 0; margin: 0; padding: 0; display: grid; gap: 12px; }
+.mo-form legend { font-size: 13px; font-weight: 800; color: #1f6f78; letter-spacing: 0.02em; margin-bottom: 10px; padding: 0; }
+.mo-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 14px; }
+.mo-grid .mo-wide { grid-column: 1 / -1; }
+.mo-form textarea { height: auto; min-height: 84px; padding: 12px 14px; resize: vertical; font: inherit; }
+.mo-warn { color: #b3261e; }
+.mo-choice { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.mo-choice label { display: flex; gap: 10px; align-items: flex-start; border: 1px solid #dce6e5; border-radius: 12px; padding: 12px 14px; cursor: pointer; font-weight: 600; }
+.mo-choice label.selected { border-color: #1a9baa; background: #f1faf9; box-shadow: 0 0 0 3px #d7eeeb; }
+.mo-choice input { width: auto; height: auto; margin-top: 3px; accent-color: #1a9baa; }
+.mo-choice span { display: grid; gap: 2px; }
+.mo-choice small { font-weight: 500; color: #60737c; }
+.mo-total { margin: 0; font-size: 14px; color: #40535e; }
+.mo-total strong { font-size: 17px; color: #314a51; }
+.mo-total em { font-style: normal; font-weight: 700; }
+.mo-total .paid, .od-pay .paid { color: #1f7a4d; }
+.mo-total .due, .od-pay .due { color: #b45309; }
+@media (max-width: 640px) {
+  .mo-grid, .mo-choice { grid-template-columns: 1fr; }
+}
+
+/* Selo de saldo e de observação na lista de pedidos. */
+.order-flags { display: inline-flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.order-flag { display: inline-flex; align-items: center; gap: 4px; border-radius: 999px; padding: 2px 9px; font-size: 11px; font-weight: 700; line-height: 18px; white-space: nowrap; }
+.order-flag.due { background: #fff4e5; color: #9a4b00; }
+.order-flag.note { background: #eef4ff; color: #2c4f9e; }
+.order-flag.manual { background: #eef3f2; color: #40535e; }
+
+/* Observação interna no pedido. */
+.od-note textarea { width: 100%; min-height: 96px; border: 1px solid #dce6e5; border-radius: 10px; padding: 12px 14px; font: inherit; resize: vertical; }
+.od-note textarea:focus { border-color: #1a9baa; box-shadow: 0 0 0 3px #d7eeeb; outline: none; }
+.od-note-text { white-space: pre-wrap; margin: 0; background: #fffbea; border: 1px solid #f5e3a3; border-radius: 10px; padding: 12px 14px; color: #4a3d0a; }
+.od-note .od-actions { margin-top: 10px; }
+.od-note-help { margin: 0 0 10px; color: #60737c; font-size: 13px; }
+
+/* Pagamentos lançados à mão. */
+.od-pay-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 12px; }
+.od-pay-summary div { background: #f6f9f9; border-radius: 10px; padding: 10px; display: grid; gap: 2px; }
+.od-pay-summary small { color: #60737c; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+.od-pay-summary strong { font-size: 15px; color: #314a51; }
+.od-pay-summary .due strong { color: #b45309; }
+.od-pay-summary .paid strong { color: #1f7a4d; }
+.od-pay-list { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 8px; }
+.od-pay-list li { display: flex; justify-content: space-between; align-items: center; gap: 8px; border: 1px solid #e5eded; border-radius: 10px; padding: 8px 10px; }
+.od-pay-list li div { display: grid; gap: 2px; min-width: 0; }
+.od-pay-list small { color: #60737c; }
+.od-pay-form { display: grid; gap: 8px; }
+.od-pay-form .od-pay-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.od-pay-form input, .od-pay-form select { height: 40px; border: 1px solid #dce6e5; border-radius: 10px; padding: 0 10px; font: inherit; width: 100%; background: #fff; }
+.od-pay-form label { display: grid; gap: 4px; font-size: 12px; font-weight: 700; color: #40535e; }

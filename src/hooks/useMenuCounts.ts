@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { api } from '../api'
+import { api, REAL_SOURCES } from '../api'
 import type { Page } from '../types'
 
 const POLL_MS = 30_000
@@ -18,7 +18,7 @@ export function useMenuCounts(credentials: string | null): Partial<Record<Page, 
     async function check() {
       const [conversations, deliveries, unanswered] = await Promise.allSettled([
         api.conversations(auth),
-        api.orderPage(auth, { source: 'CHECKOUT', statuses: ['PAYMENT_CONFIRMED', 'DELIVERY_PENDING'] }, 0, 1),
+        api.orderPage(auth, { source: REAL_SOURCES, statuses: ['PAYMENT_CONFIRMED', 'DELIVERY_PENDING'] }, 0, 1),
         api.aiUnanswered(auth),
       ])
       if (!active) return

@@ -60,6 +60,8 @@ const eventLabels: Record<string, string> = {
     CARD_REQUESTED: 'Pagamento com cartão solicitado', CARD_CONFIRMED: 'Pagamento com cartão aprovado',
   PIX_REVIEW: 'Pagamento em análise', MOCK_PAYMENT_REQUESTED: 'Pagamento gerado',
   MOCK_PAYMENT_CONFIRMED: 'Pagamento confirmado',
+  CREATED_MANUAL: 'Pedido cadastrado à mão', NOTE_UPDATED: 'Observação interna', MANUAL_PAYMENT: 'Pagamento lançado',
+  MANUAL_PAYMENT_REMOVED: 'Pagamento desfeito',
 }
 
 /** Texto da linha do tempo para cada código de evento gravado pelo backend no histórico do pedido. */
@@ -71,7 +73,7 @@ export function eventLabel(action: string) {
 export type EventTone = 'start' | 'done' | 'problem' | 'closed' | 'step'
 
 export function eventTone(action: string): EventTone {
-  if (action === 'CREATED') return 'start'
+  if (action.startsWith('CREATED')) return 'start'
   if (['STATUS_COMPLETED', 'ISSUE_RESOLVED', 'PIX_CONFIRMED', 'CARD_CONFIRMED', 'MOCK_PAYMENT_CONFIRMED'].includes(action)) return 'done'
   if (action === 'ISSUE_OPENED' || action === 'PIX_REVIEW' || action === 'STATUS_PAYMENT_REVIEW') return 'problem'
   if (['EXPIRED', 'CANCELLED', 'STATUS_CANCELLED', 'STATUS_EXPIRED'].includes(action)) return 'closed'
@@ -89,7 +91,7 @@ export function eventKind(action: string): keyof typeof eventKinds {
   if (action === 'ISSUE_OPENED' || /REVIEW/.test(action)) return 'problem'
   if (/CANCEL|EXPIRE/.test(action)) return 'closed'
   if (action === 'STATUS_COMPLETED' || action === 'ISSUE_RESOLVED') return 'done'
-  if (action === 'CREATED' || /CONTRACT/.test(action)) return 'order'
+  if (action.startsWith('CREATED') || /CONTRACT/.test(action)) return 'order'
   if (/PIX|CARD|PAYMENT/.test(action)) return 'payment'
   if (/COURIER|DEPARTURE|STOCK|DELIVERY|PICKUP|IN_USE/.test(action)) return 'delivery'
   return 'step'
@@ -146,3 +148,14 @@ export const weekdayDateLabel = (value: string) =>
 
 export const currency = (cents: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(cents / 100)
+
+/** Pedido de verdade (site/Isa ou cadastrado à mão): ocupa poltrona, tem valor e segue a operação. */
+export const isRealOrder = (order: Pick<Order, 'source'>) => order.source === 'CHECKOUT' || order.source === 'MANUAL'
+
+/** Quanto falta o cliente pagar num pedido cadastrado à mão (0 nos pedidos do site, que o banco confirma inteiros). */
+export function balanceCents(order: Pick<Order, 'source' | 'status' | 'totalCents' | 'totalPaidCents'>) {
+  if (order.source !== 'MANUAL' || order.status === 'CANCELLED') return 0
+  return Math.max(0, order.totalCents - (order.totalPaidCents ?? 0))
+}
+
+export const paymentMethodLabels = { PIX: 'Pix', CARTAO: 'Cartão', DINHEIRO: 'Dinheiro' } as const

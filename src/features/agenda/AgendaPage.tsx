@@ -1,8 +1,9 @@
 import { timeShort } from '../../utils/time'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowRight, Building2, CalendarCheck, ChevronLeft, ChevronRight, MapPin, RefreshCw, Truck, Undo2, CalendarDays } from 'lucide-react'
-import { api, type Branch, type Courier, type Order, type OrderQuery, type OrderStatus } from '../../api'
-import { fetchAllOrders, usePolling } from '../../data/orders'
+import { api, REAL_SOURCES, type Branch, type Courier, type Order, type OrderQuery, type OrderStatus } from '../../api'
+import { fetchAllOrders, isRealOrder, usePolling } from '../../data/orders'
+import { OrderFlags } from '../orders/OrderExtras'
 import { branchLabel, onlyOfficialBranches, chairName } from '../../utils/branches'
 import { getMessage } from '../../utils/errors'
 import '../orders/orders-v2.css'
@@ -86,8 +87,8 @@ export function AgendaPage({ credentials, onOpenOrder }: Props) {
     let active = true
     const branchId = branch === 'ALL' ? undefined : branch
     void Promise.all([
-      fetchAllOrders(credentials, { source: 'CHECKOUT', statuses: ['PAYMENT_CONFIRMED', 'DELIVERY_PENDING'], branchId }),
-      fetchAllOrders(credentials, { source: 'CHECKOUT', statuses: ['IN_USE', 'PICKUP_PENDING'], branchId }),
+      fetchAllOrders(credentials, { source: REAL_SOURCES, statuses: ['PAYMENT_CONFIRMED', 'DELIVERY_PENDING'], branchId }),
+      fetchAllOrders(credentials, { source: REAL_SOURCES, statuses: ['IN_USE', 'PICKUP_PENDING'], branchId }),
     ]).then(([delivery, pickup]) => { if (active) setOpenOrders({ delivery, pickup }) }, () => {})
     return () => { active = false }
   }, [credentials, branch])
@@ -115,7 +116,7 @@ export function AgendaPage({ credentials, onOpenOrder }: Props) {
   const range = view === 'week' ? weekBounds(selectedDate) : monthBounds(selectedDate)
   const todayOutside = today < range.from || today > range.to
   const key = JSON.stringify({
-    source: 'CHECKOUT', statuses: [...operationalStatuses],
+    source: REAL_SOURCES, statuses: [...operationalStatuses],
     branchId: branch === 'ALL' ? undefined : branch,
     municipalityCode: city === 'ALL' ? undefined : city,
     courierId: courier === 'ALL' ? undefined : courier === 'UNASSIGNED' ? 'NONE' : courier,
@@ -145,7 +146,7 @@ export function AgendaPage({ credentials, onOpenOrder }: Props) {
 
   const orders = useMemo(() => result?.orders ?? [], [result])
   const loading = result?.key !== key
-  const realOrders = useMemo(() => orders.filter(order => order.source === 'CHECKOUT'
+  const realOrders = useMemo(() => orders.filter(order => isRealOrder(order)
     && operationalStatuses.has(order.status)), [orders])
   const sortedBranches = branches
   const selectedBranch = branches.find(item => item.id === branch)
@@ -289,6 +290,7 @@ export function AgendaPage({ credentials, onOpenOrder }: Props) {
                   {itemStatus(item, today)}</span>
               </div>
               <h4>{item.order.customerName}</h4>
+              <OrderFlags order={item.order} />
               {/* No computador: iniciais, nome e telefone na mesma linha. */}
               <div className="agenda-item-person">
                 <span className="agenda-item-initials" aria-hidden="true">{item.order.customerName.split(/\s+/).filter(Boolean).slice(0, 2).map(word => word[0]).join('').toUpperCase()}</span>
