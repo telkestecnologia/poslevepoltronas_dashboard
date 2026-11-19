@@ -25,8 +25,7 @@ export function LeadSourcesPanel({ credentials }: { credentials: string }) {
 
   useEffect(() => {
     let active = true
-    setError('')
-    api.leadSources(credentials, range.from, range.to).then(summary => { if (active) setData(summary) }, failure => {
+    api.leadSources(credentials, range.from, range.to).then(summary => { if (active) { setData(summary); setError('') } }, failure => {
       if (!active) return
       // Parceiro não vê a receita de todas as filiais: o quadro some.
       if (failure instanceof ApiError && failure.status === 403) setHidden(true)

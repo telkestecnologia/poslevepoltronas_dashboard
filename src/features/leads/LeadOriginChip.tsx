@@ -8,17 +8,18 @@ import './leads.css'
 export function LeadOriginChip({ credentials, phone, conversationId }: {
   credentials: string; phone?: string | null; conversationId?: string | null
 }) {
-  const [origin, setOrigin] = useState<LeadOrigin | null | undefined>(undefined)
+  const key = `${phone ?? ''}|${conversationId ?? ''}`
+  const [loaded, setLoaded] = useState<{ key: string; origin: LeadOrigin | null } | null>(null)
 
   useEffect(() => {
+    if (!phone && !conversationId) return
     let active = true
-    setOrigin(undefined)
-    if (!phone && !conversationId) { setOrigin(null); return }
     api.leadOrigin(credentials, { phone, conversationId })
-      .then(found => { if (active) setOrigin(found) }, () => { if (active) setOrigin(null) })
+      .then(found => { if (active) setLoaded({ key, origin: found }) }, () => { if (active) setLoaded({ key, origin: null }) })
     return () => { active = false }
-  }, [credentials, phone, conversationId])
+  }, [credentials, key, phone, conversationId])
 
+  const origin = !phone && !conversationId ? null : loaded?.key === key ? loaded.origin : undefined
   if (origin === undefined) return null
   const detail = origin ? leadOriginDetail(origin) : ''
   return <span className={`lead-origin-chip${origin?.source ? '' : ' unknown'}`} title={origin?.referrer ? `Chegou por ${origin.referrer}` : undefined}>
