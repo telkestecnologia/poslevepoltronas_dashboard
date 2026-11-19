@@ -77,7 +77,8 @@ export function ManualPaymentsCard({ credentials, order, busy, perform }: {
     <div className="od-pay-summary">
       <div><small>Total</small><strong>{currency(order.totalCents)}</strong></div>
       <div className="paid"><small>Pago</small><strong>{currency(paid)}</strong></div>
-      <div className={due > 0 ? 'due' : 'paid'}><small>{due > 0 ? 'Falta' : 'Situação'}</small><strong>{due > 0 ? currency(due) : 'Quitado'}</strong></div>
+      <div className={due > 0 ? 'due' : cancelled ? '' : 'paid'}><small>{due > 0 ? 'Falta' : 'Situação'}</small>
+        <strong>{due > 0 ? currency(due) : cancelled ? 'Cancelado' : 'Quitado'}</strong></div>
     </div>
     {payments.length > 0 && <ul className="od-pay-list">
       {payments.map(payment => <li key={payment.id}>
