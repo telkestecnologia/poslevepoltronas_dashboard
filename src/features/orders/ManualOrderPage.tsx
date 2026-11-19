@@ -36,7 +36,7 @@ export function ManualOrderPage({ credentials, onOpenOrder, conversationId }: {
 
   const waitingPrefill = Boolean(conversationId) && prefill?.id !== conversationId
 
-  return <>
+  return <div className="mo-area">
     <div className="page-heading">
       <div><span className="eyebrow">OPERAÇÃO • PEDIDO MANUAL</span><h1>Pedido manual</h1>
         <p className="page-subtitle">Clientes de antes do sistema e exceções. O pedido ocupa a poltrona e segue para entrega e retirada.</p></div>
@@ -60,5 +60,5 @@ export function ManualOrderPage({ credentials, onOpenOrder, conversationId }: {
               <ArrowRight size={15} aria-hidden="true" />
             </button></li>)}</ul>}
     </section>
-  </>
+  </div>
 }

@@ -26,7 +26,7 @@
 .order-flag { display: inline-flex; align-items: center; gap: 4px; border-radius: 999px; padding: 2px 9px; font-size: 11px; font-weight: 700; line-height: 18px; white-space: nowrap; }
 .order-flag.due { background: #fff4e5; color: #9a4b00; }
 .order-flag.note { background: #eef4ff; color: #2c4f9e; }
-.order-flag.manual { background: #eef3f2; color: #40535e; }
+.order-flag.manual { background: #ffd60a; color: #3d2f00; border: 1px solid #e0b800; font-weight: 800; }
 
 /* Observação interna no pedido. */
 .od-note textarea { width: 100%; min-height: 96px; border: 1px solid #dce6e5; border-radius: 10px; padding: 12px 14px; font: inherit; resize: vertical; }
@@ -70,3 +70,14 @@
 .od-chair-swap-row { display: block !important; }
 .od-chair-swap { margin-top: 4px; }
 .od-chair-swap-form { margin-top: 6px; }
+
+/* Área manual: fundo amarelado, para nunca confundir com o pedido automático. */
+.mo-area { background: #fff8d6; border: 1px solid #f3dd7a; border-radius: 20px; padding: 20px; }
+.mo-area .page-heading { margin-top: 0; }
+.od.od-manual { background: #fff8d6; border: 1px solid #f3dd7a; border-radius: 20px; padding: 16px 20px; }
+.od-manual-tag { display: inline-flex; align-items: center; gap: 6px; background: #ffd60a; color: #3d2f00; border: 2px solid #e0b800;
+  border-radius: 999px; padding: 6px 16px; font-size: 13px; font-weight: 800; letter-spacing: 0.04em; margin: 8px 0 4px; }
+.mo-reasons { display: flex; flex-wrap: wrap; gap: 8px; }
+.mo-reasons button { border: 1px solid #e0cf86; background: #fffdf2; color: #4a3d0a; border-radius: 999px; padding: 8px 14px; font: inherit; font-weight: 600; cursor: pointer; }
+.mo-reasons button.selected { background: #ffd60a; border-color: #c9a400; color: #3d2f00; font-weight: 800; }
+@media (max-width: 640px) { .mo-area, .od.od-manual { padding: 12px; border-radius: 14px; } }

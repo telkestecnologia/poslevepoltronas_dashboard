@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Armchair, StickyNote, Trash2, Wallet } from 'lucide-react'
 import { api, type Chair, type Order, type PaymentMethod } from '../../api'
 import { getMessage } from '../../utils/errors'
-import { balanceCents, currency, dateLabel, paymentMethodLabels } from '../../data/orders'
+import { balanceCents, currency, dateLabel, manualTagText, paymentMethodLabels } from '../../data/orders'
 import { toCents, todayIso } from '../../utils/money'
 import './manual-order.css'
 
@@ -115,7 +115,7 @@ export function OrderFlags({ order }: { order: Order }) {
   const note = order.internalNote?.trim()
   if (order.source !== 'MANUAL' && !note) return null
   return <span className="order-flags">
-    {order.source === 'MANUAL' && <span className="order-flag manual">Cadastro manual</span>}
+    {order.source === 'MANUAL' && <span className="order-flag manual">⚠ {manualTagText(order.manualReason)}</span>}
     {due > 0 && <span className="order-flag due">Falta {currency(due)}</span>}
     {note && <span className="order-flag note" title={note}><StickyNote size={12} />
       {note.length > 40 ? `${note.slice(0, 40).trimEnd()}…` : note}</span>}

@@ -71,6 +71,7 @@ export type OrderSource = 'CHECKOUT' | 'MANUAL_PREVIEW' | 'MANUAL'
 /** Pedidos de verdade: do site ou da Isa (CHECKOUT) e cadastrados à mão pela equipe (MANUAL). */
 export const REAL_SOURCES: OrderSource[] = ['CHECKOUT', 'MANUAL']
 export type PaymentMethod = 'PIX' | 'CARTAO' | 'DINHEIRO'
+export type ManualReason = 'ANTES_DO_SISTEMA' | 'DESCONTO' | 'SINAL' | 'FORA_DO_WHATSAPP' | 'OUTRO'
 /** Pagamento lançado pela equipe num pedido cadastrado à mão. paidOn = dia em que o cliente pagou (AAAA-MM-DD). */
 export type ManualPayment = { id: string; amountCents: number; method: PaymentMethod; paidOn: string; note: string | null; actor: string; at: string }
 /** O que a cliente já passou para a Isa na conversa, para o pedido manual (tudo opcional). */
@@ -87,6 +88,7 @@ export type ManualOrderInput = {
   district: string; municipalityCode: string; branchId: string; chairId: string; start: string; end: string
   deliveryTime?: string; pickupTime?: string; rentalCents: number; freightCents: number
   status: 'DELIVERY_PENDING' | 'IN_USE'; internalNote?: string; initialPayment?: ManualPaymentInput
+  reason: ManualReason
 }
 export type OrderIssue = {
   id: string; title: string; description: string; status: 'OPEN' | 'RESOLVED'
@@ -112,6 +114,8 @@ export type Order = {
   /** Observação só da equipe (o cliente e a Isa não veem). */
   internalNote?: string | null
   manualPayments?: ManualPayment[] | null
+  /** Por que foi cadastrado à mão. */
+  manualReason?: ManualReason | null
 }
 /** Filtros da lista de pedidos feitos no servidor. courierId 'NONE' = sem entregador; from/to = aluguel que encosta no período. */
 export type OrderQuery = {

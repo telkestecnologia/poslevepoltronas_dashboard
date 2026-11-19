@@ -7,7 +7,7 @@ import {
 import './order-detail.css'
 import { api, ApiError, type Courier, type Order } from '../../api'
 import {
-  actorLabel, balanceCents, currency, dateLabel, dateTimeLabel, eventKind, eventKinds, eventLabel, isRealOrder, orderStatusLabel, paymentName,
+  actorLabel, balanceCents, manualTagText, currency, dateLabel, dateTimeLabel, eventKind, eventKinds, eventLabel, isRealOrder, orderStatusLabel, paymentName,
   statusFlow, statusLabels, usePolling, weekdayDateLabel,
 } from '../../data/orders'
 import { branchLabel, chairName } from '../../utils/branches'
@@ -38,7 +38,7 @@ function noticesOf(order: Order): Notice[] {
   else if (order.status === 'PENDING_CONTRACT') list.push({ tone: 'info', text: `Pedido ainda sem pagamento confirmado. Válido até ${until ?? 'o prazo da reserva'}; ao expirar, os dias bloqueados são liberados automaticamente.` })
   if (order.status === 'PENDING_PAYMENT' && !order.paymentMock) list.push({ tone: 'info', text: `Aguardando a confirmação do ${paymentName(order)} pelo Asaas. Reserva válida até ${until ?? 'o prazo informado'}.` })
   if (order.source === 'MANUAL') {
-    list.push({ tone: 'info', text: 'Pedido cadastrado à mão pela equipe: o contrato foi assinado fora do sistema.' })
+    list.push({ tone: 'info', text: 'Cadastrado à mão pela equipe: o contrato foi assinado fora do sistema.' })
     const due = balanceCents(order)
     if (due > 0) list.push({ tone: 'warning', text: `Falta receber ${currency(due)} deste cliente. Lance o pagamento em “Pagamentos” quando ele pagar.` })
   }
@@ -326,8 +326,9 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
     }
   }
 
-  return <div className="od">
+  return <div className={`od${order.source === 'MANUAL' ? ' od-manual' : ''}`}>
     <BackLink onBack={onBack} />
+    {order.source === 'MANUAL' && <div className="od-manual-tag" role="note">⚠ {manualTagText(order.manualReason).toUpperCase()}</div>}
 
     <header className="od-header">
       <div className="od-header-main">

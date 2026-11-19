@@ -158,4 +158,14 @@ export function balanceCents(order: Pick<Order, 'source' | 'status' | 'totalCent
   return Math.max(0, order.totalCents - (order.totalPaidCents ?? 0))
 }
 
+/** Motivo do pedido manual, como aparece na tag amarela. */
+export const manualReasonLabels = {
+  ANTES_DO_SISTEMA: 'Antes do sistema', DESCONTO: 'Desconto', SINAL: 'Sinal ou pagamento em partes',
+  FORA_DO_WHATSAPP: 'Venda fora do WhatsApp', OUTRO: 'Outro motivo',
+} as const
+
+/** Texto da tag amarela do pedido manual. */
+export const manualTagText = (reason: string | null | undefined) => reason === 'ANTES_DO_SISTEMA'
+  ? 'Pedido de antes do sistema' : `Pedido manual${reason && reason in manualReasonLabels ? ` • ${manualReasonLabels[reason as keyof typeof manualReasonLabels]}` : ''}`
+
 export const paymentMethodLabels = { PIX: 'Pix', CARTAO: 'Cartão', DINHEIRO: 'Dinheiro' } as const

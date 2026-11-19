@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { ArrowRight, ClipboardPlus, X } from 'lucide-react'
-import { api, type Branch, type Chair, type ManualOrderInput, type ManualOrderPrefill, type Order, type PaymentMethod } from '../../api'
+import { api, type Branch, type Chair, type ManualOrderInput, type ManualOrderPrefill, type ManualReason, type Order, type PaymentMethod } from '../../api'
 import { FormIntro } from '../../components/FormIntro'
-import { currency, paymentMethodLabels } from '../../data/orders'
+import { currency, manualReasonLabels, paymentMethodLabels } from '../../data/orders'
 import { branchLabel, onlyOfficialBranches } from '../../utils/branches'
 import { getMessage } from '../../utils/errors'
 import { toCents, todayIso } from '../../utils/money'
@@ -55,6 +55,7 @@ export function ManualOrderModal({ credentials, branches, onClose, onCreated, in
   const [method, setMethod] = useState<PaymentMethod>('PIX')
   const [paidOn, setPaidOn] = useState(todayIso())
   const [note, setNote] = useState('')
+  const [reason, setReason] = useState<ManualReason | ''>('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
@@ -93,6 +94,7 @@ export function ManualOrderModal({ credentials, branches, onClose, onCreated, in
     event.preventDefault()
     const digits = phone.replace(/\D/g, '')
     if (digits.length !== 10 && digits.length !== 11) return setError('Informe o WhatsApp do cliente com DDD.')
+    if (!reason) return setError('Escolha o motivo do pedido manual.')
     if (!branchId || !cityCode) return setError('Escolha a filial e a cidade.')
     if (!periodOk) return setError('A retirada precisa ser no mesmo dia ou depois da entrega.')
     if (!chairId) return setError('Nenhuma poltrona livre nesse período. Mude as datas ou libere uma poltrona.')
@@ -108,7 +110,7 @@ export function ManualOrderModal({ credentials, branches, onClose, onCreated, in
         deliveryTime: deliveryTime || undefined, pickupTime: pickupTime || undefined,
         rentalCents: toCents(rental), freightCents: toCents(freight), status,
         internalNote: note.trim() || undefined,
-        initialPayment: paidCents > 0 ? { amountCents: paidCents, method, paidOn } : undefined,
+        initialPayment: paidCents > 0 ? { amountCents: paidCents, method, paidOn } : undefined, reason,
       })
       onCreated(order)
     } catch (cause) {
@@ -122,6 +124,15 @@ export function ManualOrderModal({ credentials, branches, onClose, onCreated, in
         <FormIntro icon={<ClipboardPlus size={24} />} title="Cliente de antes do sistema ou exceção">
           O contrato fica registrado como assinado fora do sistema. A poltrona fica ocupada no período, a cliente recebe os
           avisos de saída para entrega e de retirada, e não recebe recibo nem “pedido recebido”.</FormIntro>
+
+        <fieldset><legend>Por que este pedido é manual?</legend>
+          <div className="mo-reasons" role="radiogroup" aria-label="Motivo do pedido manual">
+            {(Object.keys(manualReasonLabels) as ManualReason[]).map(value => <button type="button" key={value} role="radio"
+              aria-checked={reason === value} className={reason === value ? 'selected' : ''} onClick={() => setReason(value)}>
+              {manualReasonLabels[value]}</button>)}
+          </div>
+          <small className="field-help">O normal é a venda passar pela Isa. Use o manual só nesses casos.</small>
+        </fieldset>
 
         <fieldset><legend>Cliente</legend>
           <div className="mo-grid">
