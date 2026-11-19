@@ -1,6 +1,6 @@
-import { useState } from 'react'
-import { Armchair, StickyNote, Trash2, Wallet } from 'lucide-react'
-import { api, type Chair, type Order, type PaymentMethod } from '../../api'
+import { useEffect, useState } from 'react'
+import { Armchair, FileSignature, StickyNote, Trash2, Wallet } from 'lucide-react'
+import { api, uploadOrderContractFile, type Chair, type ContractFile, type Order, type PaymentMethod } from '../../api'
 import { getMessage } from '../../utils/errors'
 import { balanceCents, currency, dateLabel, manualTagText, paymentMethodLabels } from '../../data/orders'
 import { toCents, todayIso } from '../../utils/money'
@@ -167,4 +167,46 @@ export function ChairSwap({ credentials, order, busy, perform }: {
           () => { setOpen(false); setNote('') })}>Trocar</button>
     </div>
   </div>
+}
+
+/** Contrato assinado do pedido manual: abrir o arquivo anexado, ou anexar/trocar (PDF, JPG ou PNG, até 10 MB). */
+export function ContractFileCard({ credentials, order }: { credentials: string; order: Order }) {
+  const [file, setFile] = useState<ContractFile | null | undefined>(undefined)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    let active = true
+    api.orderContractFile(credentials, order.id).then(found => { if (active) setFile(found) }).catch(() => { if (active) setFile(null) })
+    return () => { active = false }
+  }, [credentials, order.id])
+
+  async function send(chosen: File | undefined) {
+    if (!chosen) return
+    setBusy(true)
+    setError('')
+    try {
+      setFile(await uploadOrderContractFile(credentials, order.id, chosen))
+    } catch (cause) {
+      setError(getMessage(cause))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return <section className="panel od-card od-pay" aria-labelledby="od-contract-title">
+    <div className="od-card-head"><h2 id="od-contract-title" className="od-side-title"><FileSignature size={16} /> Contrato assinado</h2></div>
+    {file === undefined ? <p className="order-muted">Carregando...</p>
+      : file ? <ul className="od-pay-list"><li>
+        <div><strong>{file.fileName}</strong><small>Anexado em {new Date(file.uploadedAt).toLocaleDateString('pt-BR')}</small></div>
+        {file.url && <a className="button secondary" href={file.url} target="_blank" rel="noopener noreferrer">Abrir</a>}
+      </li></ul>
+        : <p className="od-contract-missing">⚠ Contrato ainda não anexado.</p>}
+    <label className="button secondary od-contract-upload">
+      {busy ? 'Enviando...' : file ? 'Trocar arquivo' : 'Anexar contrato'}
+      <input type="file" accept="application/pdf,image/jpeg,image/png" hidden disabled={busy}
+        onChange={event => { void send(event.target.files?.[0]); event.target.value = '' }} />
+    </label>
+    {error && <p className="mo-warn">{error}</p>}
+  </section>
 }

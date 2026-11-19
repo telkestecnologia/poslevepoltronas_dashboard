@@ -11,7 +11,7 @@ type Props = { credentials: string; orderId: string; status: OrderStatus; courie
   onCount?: (count: number) => void }
 
 /** Foto em qualquer formato (PNG, HEIC aberto pelo navegador...) vira JPEG, o único aceito pelo armazenamento. */
-async function toJpeg(file: File): Promise<Blob> {
+export async function toJpeg(file: File): Promise<Blob> {
   if (file.type === 'image/jpeg') return file
   const bitmap = await createImageBitmap(file)
   const canvas = document.createElement('canvas')

@@ -4,7 +4,7 @@ import { api, type Branch, type ManualOrderPrefill, type Order } from '../../api
 import { dateLabel, orderStatusLabel } from '../../data/orders'
 import { branchLabel, chairName } from '../../utils/branches'
 import { getMessage } from '../../utils/errors'
-import { ManualOrderModal } from './ManualOrderModal'
+import { ManualOrderWizard } from './ManualOrderWizard'
 import { OrderFlags } from './OrderExtras'
 
 /**
@@ -44,7 +44,7 @@ export function ManualOrderPage({ credentials, onOpenOrder, conversationId }: {
     {error && <div className="form-error" role="alert">{error}</div>}
     {conversationId && prefill?.data && <div className="od-notice info"><p>Dados trazidos da conversa com a Isa. Confira e complete antes de cadastrar.</p></div>}
     {branches === null || waitingPrefill ? <div className="empty-state" role="status"><p>Carregando...</p></div>
-      : <ManualOrderModal key={conversationId ?? 'novo'} inline credentials={credentials} branches={branches}
+      : <ManualOrderWizard key={conversationId ?? 'novo'} credentials={credentials} branches={branches}
         initial={prefill?.data} onCreated={order => onOpenOrder(order.id)} />}
 
     <section className="panel mo-recent" aria-labelledby="mo-recent-title">

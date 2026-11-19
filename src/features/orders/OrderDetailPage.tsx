@@ -23,7 +23,7 @@ import logoSymbol from '../../assets/logo-simbolo.png'
 import leaves from '../../assets/folhas-logo.png'
 import './ficha.css'
 import { LeadOriginChip } from '../leads/LeadOriginChip'
-import { ChairSwap, ManualPaymentsCard, OrderNoteCard } from './OrderExtras'
+import { ChairSwap, ContractFileCard, ManualPaymentsCard, OrderNoteCard } from './OrderExtras'
 
 type Props = { credentials: string; id: string; onBack: () => void }
 
@@ -557,6 +557,7 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
             <Ban size={15} /> Cancelar pedido</button>}
         </section>
         {order.source === 'MANUAL' && <ManualPaymentsCard credentials={credentials} order={order} busy={busy} perform={perform} />}
+        {order.source === 'MANUAL' && <ContractFileCard credentials={credentials} order={order} />}
 
         {!contractOnly && issuesCard(' od-issues-side')}
         {!contractOnly && <section className="panel od-card od-courier-card" aria-labelledby="od-courier-title">

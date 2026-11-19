@@ -180,6 +180,25 @@ export type ConversationMessage = {
   attachments?: { url: string; kind: 'IMAGE' | 'VIDEO' | 'AUDIO' | 'DOCUMENT'; contentType: string; filename: string }[] | null
 }
 
+/** Contrato assinado anexado a um pedido manual; url é um link temporário para abrir. */
+export type ContractFile = { fileName: string; contentType: string; sizeBytes: number; uploadedBy: string; uploadedAt: string; url: string | null }
+
+/** Envia o contrato assinado (PDF, JPG ou PNG, até 10 MB) de um pedido manual. */
+export async function uploadOrderContractFile(credentials: string, orderId: string, file: File) {
+  const form = new FormData()
+  form.append('file', file, file.name)
+  let response: Response
+  try {
+    response = await fetch(`${baseUrl}/api/admin/${encodeURIComponent(tenantSlug)}/orders/${encodeURIComponent(orderId)}/contract-file`, {
+      method: 'POST', body: form, headers: { Authorization: `Basic ${credentials}` },
+    })
+  } catch {
+    throw new ApiError(0, 'Não foi possível conectar à API. Confira sua internet.')
+  }
+  if (!response.ok) throw new ApiError(response.status, (await serverMessage(response)) ?? 'Não foi possível enviar o contrato.')
+  return response.json() as Promise<ContractFile>
+}
+
 /** Envia foto (JPEG) ou vídeo (MP4/MOV) da entrega ou da retirada pelo painel. */
 export async function uploadOrderEvidenceFile(credentials: string, orderId: string, phase: 'DELIVERY' | 'PICKUP', file: Blob, name: string) {
   const form = new FormData()
@@ -585,6 +604,9 @@ export const api = {
     request<Order>(credentials, `/orders/${encodeURIComponent(id)}/manual/cancel`, {
       method: 'POST', body: JSON.stringify({ reason }),
     }),
+  /** null quando o pedido ainda não tem contrato anexado. */
+  orderContractFile: async (credentials: string, id: string) =>
+    (await request<ContractFile | undefined>(credentials, `/orders/${encodeURIComponent(id)}/contract-file`)) ?? null,
   updateOrderNote: (credentials: string, id: string, note: string) =>
     request<Order>(credentials, `/orders/${encodeURIComponent(id)}/note`, { method: 'PATCH', body: JSON.stringify({ note }) }),
   addOrderPayment: (credentials: string, id: string, data: ManualPaymentInput) =>
