@@ -52,3 +52,8 @@
   .od-header-side .icon-button { width: 42px; height: 42px; border: 1.5px solid #dbe7e5; border-radius: 12px; background: #fff; color: #12727d; }
   .od-header-side .icon-button:hover { background: #e3f4f2; }
 }
+
+/* Observação com várias linhas: o rótulo fica no alto (como os outros) e o texto mantém as quebras de linha. */
+.od-ficha-fields p.od-ficha-note { align-items: start; }
+.od-ficha-fields p.od-ficha-note b { padding-top: 2px; }
+.od-ficha-fields p.od-ficha-note span { display: block; white-space: pre-line; line-height: 1.5; }

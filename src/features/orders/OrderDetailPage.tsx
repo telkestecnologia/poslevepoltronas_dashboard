@@ -362,7 +362,7 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
             <a className="od-ficha-wa" href={`https://wa.me/55${phoneDigits}`} target="_blank" rel="noopener noreferrer"><MessageCircle size={14} /> WhatsApp</a></span></p>
           <p><b>Endereço:</b><span>{order.address} • {order.municipalityName}/{order.municipalityUf}{order.postalCode ? ` • CEP ${order.postalCode}` : ''}
             <a className="od-ficha-map" target="_blank" rel="noopener noreferrer" href={mapUrl}><MapPin size={14} /> mapa</a></span></p>
-          {order.internalNote && <p><b>Observação:</b><span>{order.internalNote}</span></p>}
+          {order.internalNote && <p className="od-ficha-note"><b>Observação:</b><span>{order.internalNote}</span></p>}
           <p><b>Poltrona:</b><span>{chairName(order.chairCode, order.branchName)} • {branchLabel(order.branchName)}</span></p>
           <p><b>Situação:</b><span><i className={`order-status status-${order.status.toLowerCase()}`}>{orderStatusLabel(order)}</i>
             <small>pedido feito em {dateTimeLabel(order.createdAt)}</small></span></p>
