@@ -330,6 +330,7 @@ export function FinancePage({ credentials }: { credentials: string }) {
               <td>{dateTime.format(new Date(entry.occurredAt))}</td>
               <td><span className={`finance-entry-icon ${entry.kind.toLowerCase()}`}><MethodIcon method={entry.paymentMethod} /></span>
                 <span className="finance-entry-description"><strong>{entryTitle(entry.description)}</strong>
+                  {entry.id.startsWith('manual:') && <span className="finance-tag-manual">Pagamento registrado manualmente</span>}
                   {entry.id.startsWith('out:')
                     ? <small className="finance-ref">Registrado por {entry.reference}
                       <button type="button" className="finance-delete" onClick={() => removeOutflow(entry)}><Trash2 size={13} /> Excluir</button></small>
@@ -345,6 +346,7 @@ export function FinancePage({ credentials }: { credentials: string }) {
               <summary>
                 <span className={`finance-entry-icon ${entry.kind.toLowerCase()}`}><MethodIcon method={entry.paymentMethod} /></span>
                 <span className="finance-entry-description"><strong>{entryTitle(entry.description)}</strong>
+                  {entry.id.startsWith('manual:') && <span className="finance-tag-manual">Pagamento registrado manualmente</span>}
                   <small>{dateTime.format(new Date(entry.occurredAt))}</small></span>
                 <b className={entry.kind === 'INFLOW' ? 'finance-positive' : 'finance-negative'}>
                   {entry.kind === 'INFLOW' ? '+' : '−'} {currency(entry.amountCents)}</b>
@@ -403,7 +405,7 @@ function shortBranch(name: string) {
 
 /** "Recebimento PIX do pedido abc123" → "Recebimento PIX": o código fica na referência (igual ao app). */
 function entryTitle(description: string) {
-  return description.replace(/\s+(do|de|ao) pedido\s+\S+$/i, '').trim() || description
+  return description.replace(/\s+(do|de|ao) pedido\s+\S+(\s+\(lançado pela equipe\))?$/i, '').trim() || description
 }
 
 function methodLabel(method: string) {
@@ -414,6 +416,7 @@ function methodLabel(method: string) {
 }
 
 function categoryLabel(category: string) {
+  if (category === 'RECEBIMENTO_MANUAL') return 'Pagamento registrado manualmente'
   const known = OUTFLOW_CATEGORIES.find(([value]) => value === category)
   if (known) return known[1]
   const words = category.replace(/_/g, ' ').toLowerCase()
