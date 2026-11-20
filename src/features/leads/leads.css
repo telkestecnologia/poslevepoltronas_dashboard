@@ -40,3 +40,13 @@
 .lead-pie-legend span { color: #4b5d64; font-variant-numeric: tabular-nums; }
 .lead-pie-legend em { font-style: normal; font-weight: 700; font-size: 12px; background: #f1f5f5; border-radius: 999px; padding: 2px 8px; }
 @media (max-width: 900px) { .lead-sources-desktop { display: none; } }
+
+/* Balão ao passar o mouse na pizza. */
+.lead-pie-box { position: relative; flex: 0 0 150px; }
+.lead-pie-tip { position: absolute; z-index: 5; pointer-events: none; display: grid; grid-template-columns: 10px auto; column-gap: 6px; row-gap: 2px;
+  align-items: center; background: #14262f; color: #fff; border-radius: 10px; padding: 8px 10px; font-size: 13px; white-space: nowrap;
+  box-shadow: 0 8px 24px rgba(20, 38, 47, 0.25); }
+.lead-pie-tip i { width: 10px; height: 10px; border-radius: 3px; }
+.lead-pie-tip span { grid-column: 2; color: #d6e3e6; }
+.lead-pie-legend li { border-radius: 8px; padding: 2px 4px; cursor: default; }
+.lead-pie-legend li.active { background: #f1f5f5; }

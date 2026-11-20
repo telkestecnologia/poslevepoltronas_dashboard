@@ -16,24 +16,40 @@ const COLORS: Record<string, string> = {
 
 type Metric = 'contacts' | 'orders'
 
-/** Fatias da pizza (rosca) em SVG: cada uma do tamanho da sua parte no total. */
-function Donut({ parts, total, label }: { parts: { key: string; value: number; color: string; name: string }[]; total: number; label: string }) {
+type Part = { key: string; value: number; color: string; name: string }
+
+/**
+ * Fatias da pizza (rosca) em SVG. Passar o mouse numa fatia mostra um balão com a fonte e a quantidade real, e o
+ * centro troca o total pelo número daquela fonte.
+ */
+function Donut({ parts, total, label, unit, active, onActive }: {
+  parts: Part[]; total: number; label: string; unit: (count: number) => string
+  active: string | null; onActive: (key: string | null) => void
+}) {
+  const [tip, setTip] = useState<{ x: number; y: number } | null>(null)
   const radius = 54
   const circumference = 2 * Math.PI * radius
-  let offset = 0
-  return <svg className="lead-pie" viewBox="0 0 140 140" role="img" aria-label={label}>
-    <circle cx="70" cy="70" r={radius} fill="none" stroke="#eef1f2" strokeWidth="22" />
-    {parts.map(part => {
-      const length = (part.value / total) * circumference
-      const slice = <circle key={part.key} cx="70" cy="70" r={radius} fill="none" stroke={part.color} strokeWidth="22"
-        strokeDasharray={`${length} ${circumference - length}`} strokeDashoffset={-offset} transform="rotate(-90 70 70)">
-        <title>{`${part.name}: ${part.value}`}</title></circle>
-      offset += length
-      return slice
-    })}
-    <text x="70" y="66" textAnchor="middle" className="lead-pie-total">{total}</text>
-    <text x="70" y="84" textAnchor="middle" className="lead-pie-caption">{label}</text>
-  </svg>
+  const starts = parts.map((_, index) => parts.slice(0, index).reduce((sum, part) => sum + (part.value / total) * circumference, 0))
+  const shown = parts.find(part => part.key === active)
+  return <div className="lead-pie-box" onMouseLeave={() => { onActive(null); setTip(null) }}>
+    <svg className="lead-pie" viewBox="0 0 140 140" role="img" aria-label={`${total} ${label}`}
+      onMouseMove={event => { const box = event.currentTarget.getBoundingClientRect(); setTip({ x: event.clientX - box.left, y: event.clientY - box.top }) }}>
+      <circle cx="70" cy="70" r={radius} fill="none" stroke="#eef1f2" strokeWidth="22" />
+      {parts.map((part, index) => {
+        const length = (part.value / total) * circumference
+        return <circle key={part.key} cx="70" cy="70" r={radius} fill="none" stroke={part.color}
+          strokeWidth={active === part.key ? 28 : 22} opacity={active && active !== part.key ? 0.35 : 1}
+          strokeDasharray={`${length} ${circumference - length}`} strokeDashoffset={-starts[index]} transform="rotate(-90 70 70)"
+          onMouseEnter={() => onActive(part.key)} style={{ cursor: 'pointer', transition: 'stroke-width .12s, opacity .12s' }} />
+      })}
+      <text x="70" y="66" textAnchor="middle" className="lead-pie-total">{shown ? shown.value : total}</text>
+      <text x="70" y="84" textAnchor="middle" className="lead-pie-caption">{shown ? shown.name : label}</text>
+    </svg>
+    {shown && tip && <div className="lead-pie-tip" style={{ left: tip.x + 12, top: tip.y + 12 }} role="tooltip">
+      <i style={{ background: shown.color }} /><b>{shown.name}</b>
+      <span>{unit(shown.value)} • {Math.round((shown.value / total) * 100)}%</span>
+    </div>}
+  </div>
 }
 
 /** "De onde vêm os clientes": contatos que chegaram e aluguéis pagos no mês, por fonte, em pizza. */
@@ -44,6 +60,7 @@ export function LeadSourcesPanel({ credentials, className }: { credentials: stri
   const [error, setError] = useState('')
   const [hidden, setHidden] = useState(false)
   const [metric, setMetric] = useState<Metric>('contacts')
+  const [active, setActive] = useState<string | null>(null)
 
   const range = useMemo(() => {
     const first = new Date(Date.UTC(today.getFullYear(), today.getMonth() + offset, 1))
@@ -82,16 +99,18 @@ export function LeadSourcesPanel({ credentials, className }: { credentials: stri
     </header>
     <div className="lead-metric" role="tablist" aria-label="Ver por">
       <button type="button" role="tab" aria-selected={metric === 'contacts'} className={metric === 'contacts' ? 'selected' : ''}
-        onClick={() => setMetric('contacts')}>Contatos ({totals.contacts})</button>
+        onClick={() => { setMetric('contacts'); setActive(null) }}>Contatos ({totals.contacts})</button>
       <button type="button" role="tab" aria-selected={metric === 'orders'} className={metric === 'orders' ? 'selected' : ''}
-        onClick={() => setMetric('orders')}>Aluguéis pagos ({totals.orders})</button>
+        onClick={() => { setMetric('orders'); setActive(null) }}>Aluguéis pagos ({totals.orders})</button>
     </div>
     {error ? <p className="lead-sources-empty">{error}</p>
       : !data ? <p className="lead-sources-empty">Carregando...</p>
       : total === 0 ? <p className="lead-sources-empty">{metric === 'contacts' ? 'Nenhum contato com origem registrada neste mês.' : 'Nenhum aluguel pago neste mês.'}</p>
       : <div className="lead-pie-wrap">
-        <Donut parts={parts} total={total} label={metric === 'contacts' ? 'contatos' : 'aluguéis'} />
-        <ul className="lead-pie-legend">{parts.map(part => <li key={part.key}>
+        <Donut parts={parts} total={total} label={metric === 'contacts' ? 'contatos' : 'aluguéis'} active={active} onActive={setActive}
+          unit={count => metric === 'contacts' ? `${count} ${count === 1 ? 'pessoa' : 'pessoas'}` : `${count} ${count === 1 ? 'aluguel' : 'aluguéis'}`} />
+        <ul className="lead-pie-legend">{parts.map(part => <li key={part.key} className={active === part.key ? 'active' : ''}
+          onMouseEnter={() => setActive(part.key)} onMouseLeave={() => setActive(null)}>
           <i style={{ background: part.color }} /><b>{part.name}</b>
           <span>{part.value}{metric === 'orders' && part.row.revenueCents ? ` • ${money.format(part.row.revenueCents / 100)}` : ''}</span>
           <em>{Math.round((part.value / total) * 100)}%</em>
