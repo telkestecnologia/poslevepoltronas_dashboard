@@ -70,3 +70,9 @@
 
 /* Entregas agendadas: quantas hoje e quantas depois. */
 .order-summary-split { margin-top: -4px; color: var(--c); font-size: 12px; font-style: normal; font-weight: 700; opacity: 0.85; }
+
+/* Linha colorida com letra branca: as células nunca ganham fundo claro (nem ao passar o mouse), para o texto continuar legível. */
+.orders-table.tinted tbody tr.order-row td,
+.orders-table.tinted tbody tr.order-row:hover td,
+.orders-table.tinted tbody tr.order-row:focus-within td { background: transparent !important; }
+.dashboard-shell .orders-table.tinted tbody tr.order-row:hover { background: color-mix(in srgb, var(--c) 85%, #000) !important; }
