@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { ArrowRight, ChevronDown, ChevronUp } from 'lucide-react'
+import { ArrowRight, X } from 'lucide-react'
 import { api, type Branch, type Order } from '../../api'
 import { dateLabel, orderStatusLabel } from '../../data/orders'
 import { replaceQuery } from '../../router'
@@ -36,10 +36,9 @@ export function ManualOrderPage({ credentials, onOpenOrder, conversationId, edit
     api.order(credentials, editOrderId).then(order => { if (active) setEditing(order) }).catch(cause => { if (active) setError(getMessage(cause)) })
     return () => { active = false }
   }, [credentials, editOrderId])
-  // Abrir e fechar o formulário (lembrado neste navegador). Vindo da conversa, abre sempre.
-  const [open, setOpen] = useState(() => { try { return localStorage.getItem('posleve.manualFormOpen') !== 'no' } catch { return true } })
-  const toggle = () => setOpen(value => { const next = !value; try { localStorage.setItem('posleve.manualFormOpen', next ? 'yes' : 'no') } catch { /* sem armazenamento */ } return next })
-  useEffect(() => { if (conversationId) setOpen(true) }, [conversationId])
+  // "Cadastrar manualmente" abre o cadastro numa janela no meio da tela; vindo da conversa, ela já abre.
+  // Fechar a janela não apaga nada: o rascunho continua para terminar depois.
+  const [open, setOpen] = useState(Boolean(conversationId))
 
   const loadRecent = useCallback(() => api.orderPage(credentials, { source: 'MANUAL' }, 0, 10)
     .then(page => setRecent(page.items)).catch(cause => setError(getMessage(cause))), [credentials])
@@ -84,9 +83,10 @@ export function ManualOrderPage({ credentials, onOpenOrder, conversationId, edit
         <p>Trazendo o que a Isa coletou na conversa para você concluir o cadastro manual.</p>
       </div>
     </div>}
-    <div className="page-heading">
-      <div><span className="eyebrow">OPERAÇÃO • PEDIDO MANUAL</span><h1>Pedido manual</h1>
+    <div className="page-heading with-action">
+      <div><span className="eyebrow">OPERAÇÃO • PEDIDO MANUAL</span><h1>Lista de pedidos manuais</h1>
         <p className="page-subtitle">Clientes de antes do sistema e exceções. O pedido ocupa a poltrona e segue para entrega e retirada.</p></div>
+      <button type="button" className="button mo-open" onClick={() => setOpen(true)}>Cadastrar manualmente</button>
     </div>
     {error && <div className="form-error" role="alert">{error}</div>}
     {editOrderId && <section className="panel mo-edit" aria-labelledby="mo-edit-title">
@@ -94,14 +94,19 @@ export function ManualOrderPage({ credentials, onOpenOrder, conversationId, edit
       <p className="page-subtitle">Forma de pagamento, desconto, plano, indicação e nota fiscal deste pedido. Ao salvar, você volta para o pedido.</p>
       {editing ? <SaleDetailsEditor credentials={credentials} order={editing} onDone={() => onOpenOrder(editing.id)} /> : <p className="order-muted">Carregando...</p>}
     </section>}
-    <button type="button" className="mo-toggle" aria-expanded={open} onClick={toggle}>
-      <span>{open ? 'Fechar cadastro' : 'Abrir cadastro de pedido manual'}</span>
-      {open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-    </button>
-    {!open ? null : branches === null || loadingFrom ? <div className="empty-state" role="status"><p>Carregando...</p></div>
-      : <ManualOrderWizard key={version} credentials={credentials} branches={branches}
-        onClear={() => { clearDraft(); setVersion(value => value + 1) }}
-        onCreated={order => { void loadRecent(); onOpenOrder(order.id) }} />}
+    {open && !loadingFrom && <div className="modal-backdrop mo-dialog-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) setOpen(false) }}>
+      <section className="mo-dialog" role="dialog" aria-modal="true" aria-labelledby="mo-dialog-title">
+        <header className="mo-dialog-head">
+          <div><span className="eyebrow">PEDIDO MANUAL</span><h2 id="mo-dialog-title">Cadastrar manualmente</h2></div>
+          <button type="button" className="icon-button" aria-label="Fechar (o rascunho continua salvo)" title="Fechar (o rascunho continua salvo)"
+            onClick={() => setOpen(false)}><X size={20} /></button>
+        </header>
+        {branches === null ? <div className="empty-state" role="status"><p>Carregando...</p></div>
+          : <ManualOrderWizard key={version} credentials={credentials} branches={branches}
+            onClear={() => { clearDraft(); setVersion(value => value + 1) }}
+            onCreated={order => { setOpen(false); void loadRecent(); onOpenOrder(order.id) }} />}
+      </section>
+    </div>}
 
     <section className="panel mo-recent" aria-labelledby="mo-recent-title">
       <h2 id="mo-recent-title">Últimos pedidos manuais</h2>
