@@ -262,7 +262,7 @@ export function AgendaPage({ credentials, onOpenOrder }: Props) {
               aria-label={`${item.kind === 'delivery' ? 'Entrega' : 'Retirada'} de ${item.order.customerName}: abrir pedido`}
               onClick={() => onOpenOrder(item.order.id)}
               onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onOpenOrder(item.order.id) } }}>
-              <div className="agenda-item-time"><strong>{agendaTime(item.time)}</strong>
+              <div className="agenda-item-time"><strong className={/^\d/.test(agendaTime(item.time)) ? undefined : 'is-word'}>{agendaTime(item.time)}</strong>
                 <span className={`agenda-kind-icon ${item.kind}`}>{item.kind === 'delivery' ? <Truck size={16} /> : <Undo2 size={16} />}</span></div>
               <div className="agenda-item-body">
               <div className="agenda-item-top">

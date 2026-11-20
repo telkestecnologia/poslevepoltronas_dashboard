@@ -154,3 +154,7 @@
   .dashboard-shell .agenda-item:hover .agenda-open { transform: translateX(3px); }
   .dashboard-shell .agenda-open svg { width: 16px; height: 16px; }
 }
+
+/* Turno ou "A combinar" (palavras) menores que o horário, para caber na coluna sem quebrar. */
+.agenda-item-time strong.is-word { font-size: 12.5px; line-height: 1.2; text-align: center; }
+.dashboard-shell .agenda-item-time strong.is-word { font-size: 17px; line-height: 1.15; text-align: center; overflow-wrap: anywhere; }
