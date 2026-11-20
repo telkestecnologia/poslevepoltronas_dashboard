@@ -59,7 +59,8 @@ export function LeadSourcesPanel({ credentials, className }: { credentials: stri
   const [data, setData] = useState<LeadSourceSummary | null>(null)
   const [error, setError] = useState('')
   const [hidden, setHidden] = useState(false)
-  const [metric, setMetric] = useState<Metric>('contacts')
+  // Só contatos: valores e aluguéis ficam no Financeiro.
+  const metric = 'contacts' as Metric
   const [active, setActive] = useState<string | null>(null)
 
   const range = useMemo(() => {
@@ -97,12 +98,6 @@ export function LeadSourcesPanel({ credentials, className }: { credentials: stri
         <button type="button" className="icon-button" aria-label="Próximo mês" disabled={offset >= 0} onClick={() => setOffset(value => value + 1)}><ChevronRight size={18} /></button>
       </div>
     </header>
-    <div className="lead-metric" role="tablist" aria-label="Ver por">
-      <button type="button" role="tab" aria-selected={metric === 'contacts'} className={metric === 'contacts' ? 'selected' : ''}
-        onClick={() => { setMetric('contacts'); setActive(null) }}>Contatos ({totals.contacts})</button>
-      <button type="button" role="tab" aria-selected={metric === 'orders'} className={metric === 'orders' ? 'selected' : ''}
-        onClick={() => { setMetric('orders'); setActive(null) }}>Aluguéis pagos ({totals.orders})</button>
-    </div>
     {error ? <p className="lead-sources-empty">{error}</p>
       : !data ? <p className="lead-sources-empty">Carregando...</p>
       : total === 0 ? <p className="lead-sources-empty">{metric === 'contacts' ? 'Nenhum contato com origem registrada neste mês.' : 'Nenhum aluguel pago neste mês.'}</p>
@@ -116,6 +111,6 @@ export function LeadSourcesPanel({ credentials, className }: { credentials: stri
           <em>{Math.round((part.value / total) * 100)}%</em>
         </li>)}</ul>
       </div>}
-    <p className="lead-sources-note">Contatos: pessoas que chegaram pelo site ou pelo WhatsApp no mês. Aluguéis pagos: pagos no mês, pela origem de quem alugou{totals.revenue ? ` (${money.format(totals.revenue / 100)} no total)` : ''}.</p>
+    <p className="lead-sources-note">Pessoas que chegaram pelo site ou pelo WhatsApp no mês, pela fonte de onde vieram.</p>
   </section>
 }
