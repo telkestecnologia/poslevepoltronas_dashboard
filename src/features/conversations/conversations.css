@@ -348,3 +348,7 @@
   -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.9 9.9 0 0 0 4.74 1.21c5.46 0 9.91-4.45 9.91-9.91C21.95 6.45 17.5 2 12.04 2z'/%3E%3C/svg%3E") center / contain no-repeat;
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.9 9.9 0 0 0 4.74 1.21c5.46 0 9.91-4.45 9.91-9.91C21.95 6.45 17.5 2 12.04 2z'/%3E%3C/svg%3E") center / contain no-repeat; }
 .wa-text .wa-phone:hover { background: #c4f5bb; }
+
+/* "Veio de" no cabeçalho verde da conversa: sem fundo branco, só a letra branca. */
+.wa-chat-head .lead-origin-chip, .wa-chat-head .lead-origin-chip.unknown { background: transparent; color: #fff; border-color: transparent; padding-left: 0; }
+.wa-chat-head .lead-origin-chip * { color: #fff; }
