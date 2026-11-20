@@ -87,7 +87,9 @@ export function LeadSourcesPanel({ credentials, className }: { credentials: stri
     revenue: sum.revenue + row.revenueCents }), { contacts: 0, orders: 0, revenue: 0 })
   const total = metric === 'contacts' ? totals.contacts : totals.orders
   const parts = [...rows].map(row => ({ key: row.source, name: leadSourceLabel(row.source), value: metric === 'contacts' ? row.contacts : row.orders,
-    color: COLORS[row.source] ?? '#9aa6ab', row })).sort((a, b) => b.value - a.value)
+    color: COLORS[row.source] ?? '#9aa6ab', row }))
+    // Anúncio Google saiu da lista (a Pós Leve não anuncia no Google); só volta se algum contato chegar por ele.
+    .filter(part => part.key !== 'GOOGLE_ADS' || part.value > 0).sort((a, b) => b.value - a.value)
   // Na pizza só quem tem contato; na lista, todas as fontes (Instagram, Facebook, anúncios, Google, indicação, médico, WhatsApp, site...).
   const slices = parts.filter(part => part.value > 0)
 
