@@ -87,7 +87,9 @@ export function LeadSourcesPanel({ credentials, className }: { credentials: stri
     revenue: sum.revenue + row.revenueCents }), { contacts: 0, orders: 0, revenue: 0 })
   const total = metric === 'contacts' ? totals.contacts : totals.orders
   const parts = [...rows].map(row => ({ key: row.source, name: leadSourceLabel(row.source), value: metric === 'contacts' ? row.contacts : row.orders,
-    color: COLORS[row.source] ?? '#9aa6ab', row })).filter(part => part.value > 0).sort((a, b) => b.value - a.value)
+    color: COLORS[row.source] ?? '#9aa6ab', row })).sort((a, b) => b.value - a.value)
+  // Na pizza só quem tem contato; na lista, todas as fontes (Instagram, Facebook, anúncios, Google, indicação, médico, WhatsApp, site...).
+  const slices = parts.filter(part => part.value > 0)
 
   return <section className={`panel lead-sources${className ? ` ${className}` : ''}`} aria-labelledby="lead-sources-title">
     <header className="lead-sources-head">
@@ -100,17 +102,17 @@ export function LeadSourcesPanel({ credentials, className }: { credentials: stri
     </header>
     {error ? <p className="lead-sources-empty">{error}</p>
       : !data ? <p className="lead-sources-empty">Carregando...</p>
-      : total === 0 ? <p className="lead-sources-empty">{metric === 'contacts' ? 'Nenhum contato com origem registrada neste mês.' : 'Nenhum aluguel pago neste mês.'}</p>
       : <div className="lead-pie-wrap">
-        <Donut parts={parts} total={total} label={metric === 'contacts' ? 'contatos' : 'aluguéis'} active={active} onActive={setActive}
-          unit={count => metric === 'contacts' ? `${count} ${count === 1 ? 'pessoa' : 'pessoas'}` : `${count} ${count === 1 ? 'aluguel' : 'aluguéis'}`} />
+        {total === 0 ? <p className="lead-sources-empty">Nenhum contato com origem registrada neste mês.</p>
+          : <Donut parts={slices} total={total} label={metric === 'contacts' ? 'contatos' : 'aluguéis'} active={active} onActive={setActive}
+          unit={count => metric === 'contacts' ? `${count} ${count === 1 ? 'pessoa' : 'pessoas'}` : `${count} ${count === 1 ? 'aluguel' : 'aluguéis'}`} />}
         <ul className="lead-pie-legend">{parts.map(part => <li key={part.key} className={active === part.key ? 'active' : ''}
           onMouseEnter={() => setActive(part.key)} onMouseLeave={() => setActive(null)}>
           <i style={{ background: part.color }} /><b>{part.name}</b>
           <span>{part.value}{metric === 'orders' && part.row.revenueCents ? ` • ${money.format(part.row.revenueCents / 100)}` : ''}</span>
-          <em>{Math.round((part.value / total) * 100)}%</em>
+          <em>{total ? Math.round((part.value / total) * 100) : 0}%</em>
         </li>)}</ul>
       </div>}
-    <p className="lead-sources-note">Pessoas que chegaram pelo site ou pelo WhatsApp no mês, pela fonte de onde vieram.</p>
+    <p className="lead-sources-note">Pessoas que chegaram no mês (site, WhatsApp, Instagram, Facebook, anúncios, Google, indicação e médico), pela fonte de onde vieram.</p>
   </section>
 }

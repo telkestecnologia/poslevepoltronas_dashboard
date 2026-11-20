@@ -158,3 +158,16 @@
 /* Turno ou "A combinar" (palavras) menores que o horário, para caber na coluna sem quebrar. */
 .agenda-item-time strong.is-word { font-size: 12.5px; line-height: 1.2; text-align: center; }
 .dashboard-shell .agenda-item-time strong.is-word { font-size: 17px; line-height: 1.15; text-align: center; overflow-wrap: anywhere; }
+
+/* Calendário em destaque, sempre à vista ao lado do dia (computador). No celular continua no ícone. */
+.agenda-calendar-inline { display: none; }
+@media (min-width: 1101px) {
+  .agenda-layout.agenda-with-calendar { grid-template-columns: minmax(0, 1fr) minmax(380px, 440px) !important; align-items: start; gap: 22px; }
+  .agenda-calendar-inline { display: block; position: sticky; top: 16px; }
+  .agenda-calendar-inline .agenda-calendar { margin: 0; padding: 22px; border: 2px solid #cfe9e6; box-shadow: 0 14px 34px rgba(18, 114, 125, 0.12);
+    background: linear-gradient(180deg, #ffffff 0%, #f4fbfa 100%); }
+  .agenda-calendar-inline .agenda-calendar-heading h2 { font-size: 22px; }
+  .agenda-calendar-inline .agenda-calendar-day { min-height: 58px; font-size: 15px; font-weight: 700; }
+  .agenda-calendar-inline .agenda-count { min-width: 22px; height: 22px; font-size: 12px; }
+  .agenda-day-title .finance-date-icon { display: none; }
+}

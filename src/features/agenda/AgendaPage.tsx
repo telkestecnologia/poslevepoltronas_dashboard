@@ -201,6 +201,48 @@ export function AgendaPage({ credentials, onOpenOrder }: Props) {
   }
 
   const todayCount = counts.get(today)
+  // Calendário: no computador fica sempre à vista ao lado do dia; no celular abre pelo ícone.
+  const calendarPanel = <>
+      <section className="agenda-calendar panel" aria-label="Calendário de serviços">
+        <div className="agenda-calendar-heading">
+          <div><span className="eyebrow">SERVIÇOS PREVISTOS</span>
+            <h2>{view === 'week'
+              ? `Semana de ${shortFormatter.format(weekStart)} a ${shortFormatter.format(weekEnd)}`
+              : monthFormatter.format(monthStart)}</h2></div>
+          <div className="agenda-calendar-nav">
+            <button type="button" onClick={() => setSelectedDate(today)}>Hoje</button>
+            <button type="button" aria-label={view === 'week' ? 'Semana anterior' : 'Mês anterior'}
+              onClick={() => setSelectedDate(date => view === 'week' ? changeWeek(date, -1) : changeMonth(date, -1))}><ChevronLeft size={18} /></button>
+            <button type="button" aria-label={view === 'week' ? 'Próxima semana' : 'Próximo mês'}
+              onClick={() => setSelectedDate(date => view === 'week' ? changeWeek(date, 1) : changeMonth(date, 1))}><ChevronRight size={18} /></button>
+          </div>
+        </div>
+        <div className="agenda-view-switch" role="group" aria-label="Visualização da agenda">
+          <button type="button" aria-pressed={view === 'week'} className={view === 'week' ? 'selected' : ''}
+            onClick={() => setView('week')}>Semana</button>
+          <button type="button" aria-pressed={view === 'month'} className={view === 'month' ? 'selected' : ''}
+            onClick={() => setView('month')}>Mês</button>
+        </div>
+        <div className="agenda-weekdays">{weekdays.map(day => <span key={day}>{day}</span>)}</div>
+        <div className="agenda-calendar-grid">
+          {cells.map((date, index) => {
+            if (!date) return <span className="agenda-calendar-blank" key={`blank-${index}`} />
+            const count = counts.get(date)
+            return <button key={date} type="button" className={`agenda-calendar-day${date === selectedDate ? ' selected' : ''}${date === today ? ' today' : ''}`}
+              aria-label={`${dayFormatter.format(dateFromIso(date))}: ${count?.deliveries ?? 0} entregas e ${count?.pickups ?? 0} retiradas`}
+              aria-pressed={date === selectedDate} aria-current={date === today ? 'date' : undefined}
+              onClick={() => { setSelectedDate(date); setCalendarOpen(false) }}>
+              <span className="agenda-calendar-number">{view === 'week' ? `${date.slice(8)}/${date.slice(5, 7)}/${date.slice(2, 4)}` : Number(date.slice(-2))}</span>
+              <span className="agenda-calendar-counts" aria-hidden="true">
+                {!!count?.deliveries && <span className="agenda-count delivery">{count.deliveries}</span>}
+                {!!count?.pickups && <span className="agenda-count pickup">{count.pickups}</span>}
+              </span>
+            </button>
+          })}
+        </div>
+        <div className="agenda-legend"><span><i className="delivery" /> Entregas</span><span><i className="pickup" /> Retiradas</span><small>o número é a quantidade do dia</small></div>
+      </section>
+  </>
   const todayLoading = !result
 
   return <>
@@ -239,7 +281,7 @@ export function AgendaPage({ credentials, onOpenOrder }: Props) {
     </div>
 
 
-    <div className="agenda-layout">
+    <div className="agenda-layout agenda-with-calendar">
 
       <section className={`agenda-day-panel panel${loading ? ' is-loading' : ''}`} aria-label="Serviços do dia selecionado" aria-busy={loading}>
         <div className="agenda-day-heading">
@@ -293,48 +335,11 @@ export function AgendaPage({ credentials, onOpenOrder }: Props) {
             </article>)}
           </div>)}
       </section>
+      <aside className="agenda-calendar-inline" aria-label="Calendário da agenda">{calendarPanel}</aside>
     </div>
     {calendarOpen && <div className="modal-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) setCalendarOpen(false) }}>
       <div className="agenda-calendar-modal" role="dialog" aria-modal="true" aria-label="Calendário">
-      <section className="agenda-calendar panel" aria-label="Calendário de serviços">
-        <div className="agenda-calendar-heading">
-          <div><span className="eyebrow">SERVIÇOS PREVISTOS</span>
-            <h2>{view === 'week'
-              ? `Semana de ${shortFormatter.format(weekStart)} a ${shortFormatter.format(weekEnd)}`
-              : monthFormatter.format(monthStart)}</h2></div>
-          <div className="agenda-calendar-nav">
-            <button type="button" onClick={() => setSelectedDate(today)}>Hoje</button>
-            <button type="button" aria-label={view === 'week' ? 'Semana anterior' : 'Mês anterior'}
-              onClick={() => setSelectedDate(date => view === 'week' ? changeWeek(date, -1) : changeMonth(date, -1))}><ChevronLeft size={18} /></button>
-            <button type="button" aria-label={view === 'week' ? 'Próxima semana' : 'Próximo mês'}
-              onClick={() => setSelectedDate(date => view === 'week' ? changeWeek(date, 1) : changeMonth(date, 1))}><ChevronRight size={18} /></button>
-          </div>
-        </div>
-        <div className="agenda-view-switch" role="group" aria-label="Visualização da agenda">
-          <button type="button" aria-pressed={view === 'week'} className={view === 'week' ? 'selected' : ''}
-            onClick={() => setView('week')}>Semana</button>
-          <button type="button" aria-pressed={view === 'month'} className={view === 'month' ? 'selected' : ''}
-            onClick={() => setView('month')}>Mês</button>
-        </div>
-        <div className="agenda-weekdays">{weekdays.map(day => <span key={day}>{day}</span>)}</div>
-        <div className="agenda-calendar-grid">
-          {cells.map((date, index) => {
-            if (!date) return <span className="agenda-calendar-blank" key={`blank-${index}`} />
-            const count = counts.get(date)
-            return <button key={date} type="button" className={`agenda-calendar-day${date === selectedDate ? ' selected' : ''}${date === today ? ' today' : ''}`}
-              aria-label={`${dayFormatter.format(dateFromIso(date))}: ${count?.deliveries ?? 0} entregas e ${count?.pickups ?? 0} retiradas`}
-              aria-pressed={date === selectedDate} aria-current={date === today ? 'date' : undefined}
-              onClick={() => { setSelectedDate(date); setCalendarOpen(false) }}>
-              <span className="agenda-calendar-number">{view === 'week' ? `${date.slice(8)}/${date.slice(5, 7)}/${date.slice(2, 4)}` : Number(date.slice(-2))}</span>
-              <span className="agenda-calendar-counts" aria-hidden="true">
-                {!!count?.deliveries && <span className="agenda-count delivery">{count.deliveries}</span>}
-                {!!count?.pickups && <span className="agenda-count pickup">{count.pickups}</span>}
-              </span>
-            </button>
-          })}
-        </div>
-        <div className="agenda-legend"><span><i className="delivery" /> Entregas</span><span><i className="pickup" /> Retiradas</span><small>o número é a quantidade do dia</small></div>
-      </section>
+      {calendarPanel}
         <button type="button" className="button secondary" onClick={() => setCalendarOpen(false)}>Fechar</button>
       </div>
     </div>}
