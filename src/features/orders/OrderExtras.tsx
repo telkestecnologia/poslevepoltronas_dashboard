@@ -194,6 +194,9 @@ export function ContractFileCard({ credentials, order }: { credentials: string; 
     }
   }
 
+  // Contrato assinado pela cliente no link: aparece no quadro "Contrato e pagamento pelo link"; aqui só se houver arquivo.
+  // Aguardando o contrato: a etapa com o link (quadro "Contrato da cliente") já oferece anexar o arquivo.
+  if ((order.holdId?.startsWith('manual-') || order.status === 'PENDING_CONTRACT') && !file) return null
   return <section className="panel od-card od-pay" aria-labelledby="od-contract-title">
     <div className="od-card-head"><h2 id="od-contract-title" className="od-side-title"><FileSignature size={16} /> Contrato assinado</h2></div>
     {file === undefined ? <p className="order-muted">Carregando...</p>

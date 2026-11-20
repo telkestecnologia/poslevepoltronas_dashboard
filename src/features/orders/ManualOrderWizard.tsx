@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import {
-  ArrowLeft, ArrowRight, Armchair, Camera, Check, CircleHelp, ClipboardCheck, FileSignature, History, MapPin, MessageCircleOff,
+  ArrowLeft, ArrowRight, Armchair, Camera, Check, CircleHelp, ClipboardCheck, CreditCard, FileSignature, History, MapPin, MessageCircleOff,
   Eraser, Percent, PiggyBank, Upload, User, Wallet, X,
 } from 'lucide-react'
 import {
-  api, uploadOrderContractFile, uploadOrderEvidenceFile, type Branch, type Chair, type CustomerDetails, type ManualReason, type Order, type SaleDetails,
+  api, uploadOrderEvidenceFile, type Branch, type Chair, type CustomerDetails, type ManualReason, type Order, type SaleDetails,
   type PaymentMethod,
 } from '../../api'
+import { ContractLinkPanel, PaymentLinkPanel } from './ManualLinks'
 import { currency, dateLabel, manualReasonLabels, paymentMethodLabels } from '../../data/orders'
 import { branchLabel, onlyOfficialBranches } from '../../utils/branches'
 import { getMessage } from '../../utils/errors'
@@ -32,17 +33,20 @@ const REASONS: { value: ManualReason; icon: typeof History; text: string }[] = [
   { value: 'OUTRO', icon: CircleHelp, text: 'Outro caso combinado com a equipe. Explique na observação.' },
 ]
 
-type Step = 'reason' | 'customer' | 'address' | 'period' | 'payment' | 'contract' | 'photos' | 'review'
+type Step = 'reason' | 'customer' | 'address' | 'period' | 'values' | 'contract' | 'payment' | 'photos' | 'review'
 const STEPS: { key: Step; label: string; icon: typeof History }[] = [
   { key: 'reason', label: 'Motivo', icon: CircleHelp },
   { key: 'customer', label: 'Cliente', icon: User },
   { key: 'address', label: 'Endereço', icon: MapPin },
   { key: 'period', label: 'Período e poltrona', icon: Armchair },
-  { key: 'payment', label: 'Pagamento', icon: Wallet },
-  { key: 'contract', label: 'Contrato assinado', icon: FileSignature },
+  { key: 'values', label: 'Valores', icon: Wallet },
+  { key: 'contract', label: 'Contrato', icon: FileSignature },
+  { key: 'payment', label: 'Pagamento', icon: CreditCard },
   { key: 'photos', label: 'Fotos', icon: Camera },
   { key: 'review', label: 'Revisão', icon: ClipboardCheck },
 ]
+/** A partir do Contrato o pedido já existe (salvo ao sair de Valores): as etapas de antes ficam travadas. */
+const SAVED_FROM = STEPS.findIndex(item => item.key === 'contract')
 
 type PaidState = 'ALL' | 'PART' | 'NONE'
 
@@ -66,7 +70,15 @@ export function ManualOrderWizard({ credentials, branches, onCreated, onClear }:
   const options = (official.length ? official : branches).filter(branch => branch.active || official.length === 0)
   // Continua de onde parou: o rascunho (guardado neste navegador) vem da conversa com a Isa ou do que já foi digitado.
   const [draft] = useState<ManualDraft>(() => readDraft() ?? {})
-  const [step, setStep] = useState<Step>(STEPS.some(item => item.key === draft.step) ? draft.step as Step : 'reason')
+  // Pedido já salvo (o cadastro chegou ao Contrato): o rascunho guarda o id para continuar de onde parou.
+  const [createdId] = useState(draft.createdId ?? '')
+  const [order, setOrder] = useState<Order | null>(null)
+  const [orderId, setOrderId] = useState(createdId)
+  const [step, setStep] = useState<Step>(() => {
+    const saved = STEPS.findIndex(item => item.key === draft.step)
+    if (saved < 0) return 'reason'
+    return saved >= SAVED_FROM && !draft.createdId ? 'values' : STEPS[saved].key
+  })
   const [reason, setReason] = useState<ManualReason | ''>((draft.reason as ManualReason) ?? '')
   const [name, setName] = useState(draft.name ?? '')
   const [phone, setPhone] = useState(draft.phone ?? '')
@@ -90,7 +102,6 @@ export function ManualOrderWizard({ credentials, branches, onCreated, onClear }:
   const [partial, setPartial] = useState(draft.partial ?? '')
   const [method, setMethod] = useState<PaymentMethod>((draft.method as PaymentMethod) ?? 'PIX')
   const [paidOn, setPaidOn] = useState(draft.paidOn ?? todayIso())
-  const [contract, setContract] = useState<File | null>(null)
   const [deliveryPhotos, setDeliveryPhotos] = useState<File[]>([])
   const [pickupPhotos, setPickupPhotos] = useState<File[]>([])
   const [note, setNote] = useState(draft.note ?? '')
@@ -105,9 +116,18 @@ export function ManualOrderWizard({ credentials, branches, onCreated, onClear }:
   // Tudo o que é digitado fica no rascunho: dá para sair da tela e continuar depois.
   useEffect(() => {
     writeDraft({ step, reason, name, phone, branchId, cityCode, street, number, complement, district, cep, delivered, start, end,
-      deliveryTime, pickupTime, chairChoice, rental, freight, paidState, partial, method, paidOn, note, conversationId: draft.conversationId, sale, saleDiscount, customer })
+      deliveryTime, pickupTime, chairChoice, rental, freight, paidState, partial, method, paidOn, note, conversationId: draft.conversationId, sale, saleDiscount, customer,
+      createdId: orderId || undefined })
   }, [customer, sale, saleDiscount, step, reason, name, phone, branchId, cityCode, street, number, complement, district, cep, delivered, start, end,
-    deliveryTime, pickupTime, chairChoice, rental, freight, paidState, partial, method, paidOn, note, draft.conversationId])
+    deliveryTime, pickupTime, chairChoice, rental, freight, paidState, partial, method, paidOn, note, draft.conversationId, orderId])
+
+  // Voltou a um cadastro que já tinha salvado o pedido: busca a situação atual (contrato e pagamento).
+  useEffect(() => {
+    if (!createdId) return
+    let active = true
+    api.order(credentials, createdId).then(found => { if (active) setOrder(found) }, () => { if (active) setOrderId('') })
+    return () => { active = false }
+  }, [credentials, createdId])
 
   const branch = options.find(item => item.id === branchId)
   const cities = useMemo(() => [...(branch?.municipalities ?? [])].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')), [branch])
@@ -146,8 +166,10 @@ export function ManualOrderWizard({ credentials, branches, onCreated, onClear }:
       case 'period': return delivered === null ? 'Diga se a poltrona já foi entregue.'
         : !start || !end ? 'Informe o dia da entrega e o da retirada.' : end < start ? 'A retirada precisa ser depois da entrega.'
           : !chairId ? 'Nenhuma poltrona livre nesse período. Mude as datas.' : ''
-      case 'payment': return totalCents <= 0 ? 'Informe o valor do aluguel ou do frete.' : !paidState ? 'Diga se a cliente já pagou.'
+      case 'values': return totalCents <= 0 ? 'Informe o valor do aluguel ou do frete.' : !paidState ? 'Diga se a cliente já pagou.'
         : paidState === 'PART' && (paidCents <= 0 || paidCents >= totalCents) ? 'Informe quanto a cliente já pagou (menos que o total).' : ''
+      case 'contract': return order?.status === 'PENDING_CONTRACT'
+        ? 'Envie o contrato para a cliente assinar ou anexe o contrato assinado. Se precisar sair, o pedido continua de onde parou na tela dele.' : ''
       default: return ''
     }
   }
@@ -161,7 +183,14 @@ export function ManualOrderWizard({ credentials, branches, onCreated, onClear }:
   function next() {
     const issue = problem(step)
     if (issue) return setError(issue)
+    if (step === 'values' && !orderId) { void createOrder(); return }
     go(STEPS[index + 1].key)
+  }
+
+  /** Assinado ou pago (pelo link ou registrado): salva a etapa e segue sozinho para a próxima. */
+  function advanceFrom(from: Step, fresh: Order) {
+    setOrder(fresh)
+    window.setTimeout(() => setStep(current => current === from ? STEPS[STEPS.findIndex(item => item.key === from) + 1].key : current), 2500)
   }
 
   function chooseCity(code: string) {
@@ -170,13 +199,17 @@ export function ManualOrderWizard({ credentials, branches, onCreated, onClear }:
     if (chosen && !freight) setFreight(centsText(chosen.freightCents))
   }
 
-  async function submit() {
-    const first = STEPS.find(item => problem(item.key))
+  /**
+   * Saindo de Valores: salva o pedido (a poltrona fica reservada). Se a poltrona ainda vai ser entregue, ele nasce
+   * "Aguardando contrato" e segue para o contrato e o pagamento por link.
+   */
+  async function createOrder() {
+    const first = STEPS.slice(0, SAVED_FROM).find(item => problem(item.key))
     if (first) { go(first.key); setError(problem(first.key)); return }
     setError('')
     let created: Order | null = null
     try {
-      setSaving('Cadastrando o pedido...')
+      setSaving('Salvando o pedido...')
       created = await api.createManualOrder(credentials, {
         customerName: name.trim(), customerPhone: digits, cep: cep.replace(/\D/g, '') || undefined,
         street: street.trim(), number: number.trim() || undefined, complement: complement.trim() || undefined,
@@ -185,7 +218,10 @@ export function ManualOrderWizard({ credentials, branches, onCreated, onClear }:
         rentalCents: toCents(rental), freightCents: toCents(freight), status: delivered ? 'IN_USE' : 'DELIVERY_PENDING',
         internalNote: note.trim() || undefined, reason: reason as ManualReason,
         initialPayment: paidCents > 0 ? { amountCents: paidCents, method, paidOn } : undefined,
+        awaitContract: !delivered,
       })
+      setOrderId(created.id)
+      setOrder(created)
       if (customerRows(customer).length > 0) {
         setSaving('Salvando a ficha da cliente...')
         await api.saveCustomerDetails(credentials, created.id, customer)
@@ -194,20 +230,33 @@ export function ManualOrderWizard({ credentials, branches, onCreated, onClear }:
         setSaving('Salvando os detalhes da venda...')
         await api.saveSaleDetails(credentials, created.id, { ...sale, discountCents: sale.discount ? toCents(saleDiscount) : null })
       }
-      if (contract) {
-        setSaving('Enviando o contrato assinado...')
-        await uploadOrderContractFile(credentials, created.id, contract)
-      }
+      go('contract')
+    } catch (cause) {
+      if (created) go('contract')
+      setError(getMessage(cause))
+    } finally {
+      setSaving('')
+    }
+  }
+
+  /** Revisão: envia as fotos e a observação e abre o pedido (já salvo desde o Contrato). */
+  async function submit() {
+    if (!orderId) { go('values'); return }
+    setError('')
+    try {
       const photos = [...deliveryPhotos.map(file => ['DELIVERY', file] as const), ...pickupPhotos.map(file => ['PICKUP', file] as const)]
       for (const [position, [phase, file]] of photos.entries()) {
         setSaving(`Enviando foto ${position + 1} de ${photos.length}...`)
-        await uploadOrderEvidenceFile(credentials, created.id, phase, await toJpeg(file), file.name.replace(/\.[^.]+$/, '') + '.jpg')
+        await uploadOrderEvidenceFile(credentials, orderId, phase, await toJpeg(file), file.name.replace(/\.[^.]+$/, '') + '.jpg')
+      }
+      let current = order ?? await api.order(credentials, orderId)
+      if ((current.internalNote ?? '') !== note.trim()) {
+        setSaving('Salvando a observação...')
+        current = await api.updateOrderNote(credentials, orderId, note.trim())
       }
       clearDraft()
-      onCreated(created)
+      onCreated(current)
     } catch (cause) {
-      // O pedido já existe: abre ele mesmo assim; o que faltou dá para enviar de lá.
-      if (created) { clearDraft(); window.alert(`Pedido cadastrado, mas: ${getMessage(cause)} Envie de novo pela tela do pedido.`); onCreated(created); return }
       setError(getMessage(cause))
     } finally {
       setSaving('')
@@ -225,7 +274,7 @@ export function ManualOrderWizard({ credentials, branches, onCreated, onClear }:
       {STEPS.map((item, position) => {
         const done = position < index
         return <li key={item.key} className={done ? 'done' : position === index ? 'current' : ''}>
-          <button type="button" disabled={position > index || !!saving} onClick={() => go(item.key)}>
+          <button type="button" disabled={position > index || !!saving || (!!orderId && position < SAVED_FROM)} onClick={() => go(item.key)}>
             <span className="mw-dot">{done ? <Check size={14} strokeWidth={3} /> : position + 1}</span>
             <span className="mw-step-label">{item.label}</span>
           </button>
@@ -306,18 +355,19 @@ export function ManualOrderWizard({ credentials, branches, onCreated, onClear }:
         </div>
       </Panel>}
 
-      {step === 'payment' && <Panel icon={Wallet} title="Valores e pagamento"
-        why="O que a cliente já pagou entra no Financeiro. Se faltar algo, o pedido mostra “Falta R$…” até a equipe lançar o resto.">
+      {step === 'values' && <Panel icon={Wallet} title="Valores"
+        why="Estes valores vão no contrato. Ao continuar, o pedido é salvo e a poltrona fica reservada; depois vêm o contrato e o pagamento.">
         <div className="mw-grid">
           <label>Aluguel (R$)<input inputMode="decimal" value={rental} onChange={event => setRental(event.target.value)} placeholder="0,00" /></label>
           <label>Frete (R$)<input inputMode="decimal" value={freight} onChange={event => setFreight(event.target.value)} placeholder="0,00" /></label>
         </div>
         <p className="mw-total">Total do pedido <strong>{currency(totalCents)}</strong></p>
-        <p className="mw-question">A cliente já pagou?</p>
+        <p className="mw-question">A cliente já pagou alguma parte?</p>
         <div className="mw-options three">
           <Choice selected={paidState === 'ALL'} onClick={() => setPaidState('ALL')} title="Pagou tudo" text="O pedido fica quitado." />
           <Choice selected={paidState === 'PART'} onClick={() => setPaidState('PART')} title="Pagou uma parte" text="Sinal, ou o resto fica para a entrega." />
-          <Choice selected={paidState === 'NONE'} onClick={() => setPaidState('NONE')} title="Ainda não pagou" text="A equipe lança quando ela pagar." />
+          <Choice selected={paidState === 'NONE'} onClick={() => setPaidState('NONE')} title="Ainda não pagou"
+            text={delivered ? 'A equipe lança quando ela pagar.' : 'Na etapa Pagamento você envia o link (Pix ou cartão).'} />
         </div>
         {(paidState === 'ALL' || paidState === 'PART') && <div className="mw-grid">
           {paidState === 'PART' && <label>Quanto já pagou (R$)<input inputMode="decimal" value={partial} onChange={event => setPartial(event.target.value)} placeholder="0,00" /></label>}
@@ -332,12 +382,21 @@ export function ManualOrderWizard({ credentials, branches, onCreated, onClear }:
           onDiscount={setSaleDiscount} />
       </Panel>}
 
-      {step === 'contract' && <Panel icon={FileSignature} title="Contrato assinado"
-        why="Nos pedidos manuais o contrato foi assinado fora do sistema. Anexe o arquivo para ficar guardado junto do pedido.">
-        <FileDrop accept="application/pdf,image/jpeg,image/png" hint="PDF, JPG ou PNG, até 10 MB"
-          onFiles={files => { const file = files[0]; if (file && file.size > 10 * 1024 * 1024) setError('O contrato pode ter até 10 MB.'); else { setError(''); setContract(file ?? null) } }} />
-        {contract ? <FileRow name={contract.name} size={contract.size} onRemove={() => setContract(null)} />
-          : <p className="mw-soft">Não tem o arquivo agora? Pode seguir e anexar depois, pela tela do pedido.</p>}
+      {step === 'contract' && <Panel icon={FileSignature} title="Contrato"
+        why={delivered ? 'A poltrona já está com a cliente: anexe o contrato assinado fora do sistema, se tiver. Pode seguir e anexar depois.'
+          : 'O mesmo contrato do site, com os dados deste pedido. Envie o link para o celular da cliente; quando ela assinar, a etapa é salva sozinha.'}>
+        {!order ? <p className="mw-soft">Carregando o pedido...</p>
+          : <ContractLinkPanel key={order.id} credentials={credentials} order={order} allowLink={!delivered}
+            onSigned={fresh => order.status === 'PENDING_CONTRACT' ? advanceFrom('contract', fresh) : setOrder(fresh)} />}
+      </Panel>}
+
+      {step === 'payment' && <Panel icon={CreditCard} title="Pagamento"
+        why={delivered ? 'Registre o que a cliente já pagou por fora. O que faltar aparece no pedido como “Falta R$…”.'
+          : 'Como no site: a cliente paga por Pix ou cartão pelo link. Quando o banco confirmar, a etapa é salva e o comprovante aparece aqui e vai para o WhatsApp dela.'}>
+        {!order ? <p className="mw-soft">Carregando o pedido...</p>
+          : <PaymentLinkPanel key={order.id} credentials={credentials} order={order} allowLink={order.status === 'PENDING_PAYMENT'}
+            onPaid={fresh => fresh.status !== 'PENDING_PAYMENT' || fresh.totalCents - (fresh.totalPaidCents ?? 0) <= 0
+              ? advanceFrom('payment', fresh) : setOrder(fresh)} />}
       </Panel>}
 
       {step === 'photos' && <Panel icon={Camera} title="Fotos da entrega e da retirada"
@@ -367,7 +426,9 @@ export function ManualOrderWizard({ credentials, branches, onCreated, onClear }:
           <Row label="Período" value={start && end ? `${dateLabel(start)} a ${dateLabel(end)} • ${delivered ? 'já está com a cliente' : 'ainda vai receber'}` : '—'} />
           <Row label="Poltrona" value={chair ? `${chair.code}${chair.model ? ` • ${chair.model}` : ''}` : '—'} />
           <Row label="Valores" value={`${currency(totalCents)} • ${paidState === 'ALL' ? 'quitado' : paidState === 'PART' ? `pago ${currency(paidCents)}, falta ${currency(totalCents - paidCents)}` : 'ainda não pagou'}`} />
-          <Row label="Contrato" value={contract ? contract.name : 'anexar depois'} />
+          <Row label="Contrato" value={!order ? '—' : order.status === 'PENDING_CONTRACT' ? 'aguardando a cliente assinar' : delivered ? 'assinado fora do sistema' : 'assinado'} />
+          <Row label="Pagamento" value={!order ? '—' : order.status === 'PENDING_PAYMENT' ? 'aguardando a cliente pagar pelo link'
+            : order.totalCents - (order.totalPaidCents ?? 0) <= 0 ? 'quitado' : `falta ${currency(order.totalCents - (order.totalPaidCents ?? 0))}`} />
           <Row label="Fotos" value={delivered ? `${deliveryPhotos.length} da entrega • ${pickupPhotos.length} da retirada` : 'no dia da entrega'} />
         </dl>
         <label className="mw-note">Observação interna <em>(só a equipe vê; opcional)</em>
@@ -377,12 +438,13 @@ export function ManualOrderWizard({ credentials, branches, onCreated, onClear }:
 
       {error && <div className="form-error" role="alert">{error}</div>}
       <div className="mw-actions">
-        {index > 0 ? <button type="button" className="button secondary" disabled={!!saving} onClick={() => go(STEPS[index - 1].key)}>
+        {index > 0 && !(orderId && index <= SAVED_FROM) ? <button type="button" className="button secondary" disabled={!!saving} onClick={() => go(STEPS[index - 1].key)}>
           <ArrowLeft size={16} /> Voltar</button> : <span />}
         {step === 'review'
           ? <button type="button" className="button primary mw-submit" disabled={!!saving} onClick={() => void submit()}>
-            {saving || 'Cadastrar pedido manual'} {!saving && <Check size={17} />}</button>
-          : <button type="button" className="button primary" onClick={next}>Continuar <ArrowRight size={16} /></button>}
+            {saving || 'Concluir e abrir o pedido'} {!saving && <Check size={17} />}</button>
+          : <button type="button" className="button primary" disabled={!!saving} onClick={next}>
+            {saving || (step === 'values' && !orderId ? 'Salvar o pedido e ir para o contrato' : 'Continuar')} {!saving && <ArrowRight size={16} />}</button>}
       </div>
     </div>
   </section>

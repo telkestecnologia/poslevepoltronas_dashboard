@@ -24,6 +24,7 @@ import leaves from '../../assets/folhas-logo.png'
 import './ficha.css'
 import { LeadOriginChip } from '../leads/LeadOriginChip'
 import { ChairSwap, ContractFileCard, ManualPaymentsCard, OrderNoteCard } from './OrderExtras'
+import { ManualLinksCard } from './ManualLinks'
 import { SaleDetailsSummary } from './SaleDetailsCard'
 import { customerRows, saleRows, useFicha } from './CustomerDetails'
 import { go } from '../../router'
@@ -564,6 +565,7 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
               <Ban size={15} /> Cancelar pedido</button>}
           </section>
         })()}
+        {order.source === 'MANUAL' && <ManualLinksCard credentials={credentials} order={order} onChange={setOrder} />}
         {order.source === 'MANUAL' && <ManualPaymentsCard credentials={credentials} order={order} busy={busy} perform={perform} />}
         {order.source === 'MANUAL' && <SaleDetailsSummary key={order.id} credentials={credentials} order={order}
           onEdit={() => go(`/pedido-manual?pedido=${encodeURIComponent(order.id)}`)} />}

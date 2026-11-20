@@ -14,6 +14,8 @@ export type ManualDraft = {
   sale?: SaleDetails; saleDiscount?: string
   /** Ficha da cliente: CPF, e-mail, quem recebe e o local. */
   customer?: CustomerDetails
+  /** Pedido já salvo (o cadastro passou de Valores): continua no contrato e no pagamento dele. */
+  createdId?: string
 }
 
 const KEY = 'posleve.manualOrderDraft'

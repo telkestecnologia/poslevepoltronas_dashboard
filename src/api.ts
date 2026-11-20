@@ -89,6 +89,20 @@ export type ManualOrderInput = {
   deliveryTime?: string; pickupTime?: string; rentalCents: number; freightCents: number
   status: 'DELIVERY_PENDING' | 'IN_USE'; internalNote?: string; initialPayment?: ManualPaymentInput
   reason: ManualReason
+  /** Contrato e pagamento por link: o pedido nasce "Aguardando contrato" (só para a poltrona que ainda vai ser entregue). */
+  awaitContract?: boolean
+}
+
+/** Contrato por link do pedido manual (mesmo texto do site). status: NONE, READY (enviado), DECLINED ou ACCEPTED. */
+export type ContractLinkState = {
+  status: 'NONE' | 'READY' | 'DECLINED' | 'ACCEPTED'; url: string | null; phone: string
+  title: string | null; sections: { title: string | null; paragraphs: string[] }[] | null; documentDate: string | null
+  preparedAt: string | null; acceptedAt: string | null; declinedAt: string | null
+}
+/** Pagamento por link: NONE (sem link), READY (enviado), WAITING (cliente gerou Pix/cartão), PAID ou REVIEW. */
+export type PaymentLinkState = {
+  status: 'NONE' | 'READY' | 'WAITING' | 'PAID' | 'REVIEW'; url: string | null; phone: string; amountCents: number
+  method: string | null; paidAt: string | null; receiptImageUrl: string | null; receiptPdfUrl: string | null
 }
 export type OrderIssue = {
   id: string; title: string; description: string; status: 'OPEN' | 'RESOLVED'
@@ -623,6 +637,17 @@ export const api = {
     request<Order>(credentials, `/orders/${encodeURIComponent(id)}/manual/cancel`, {
       method: 'POST', body: JSON.stringify({ reason }),
     }),
+  contractLink: (credentials: string, id: string) =>
+    request<ContractLinkState>(credentials, `/orders/${encodeURIComponent(id)}/manual/contract-link`),
+  prepareContractLink: (credentials: string, id: string) =>
+    request<ContractLinkState>(credentials, `/orders/${encodeURIComponent(id)}/manual/contract-link`, { method: 'POST' }),
+  paymentLink: (credentials: string, id: string) =>
+    request<PaymentLinkState>(credentials, `/orders/${encodeURIComponent(id)}/manual/payment-link`),
+  preparePaymentLink: (credentials: string, id: string) =>
+    request<PaymentLinkState>(credentials, `/orders/${encodeURIComponent(id)}/manual/payment-link`, { method: 'POST' }),
+  /** Aguardando pagamento, mas combinado para depois: o pedido segue confirmado com saldo. */
+  confirmManualOrder: (credentials: string, id: string) =>
+    request<Order>(credentials, `/orders/${encodeURIComponent(id)}/manual/confirm`, { method: 'POST' }),
   /** null quando o pedido ainda não tem contrato anexado. */
   orderContractFile: async (credentials: string, id: string) =>
     (await request<ContractFile | undefined>(credentials, `/orders/${encodeURIComponent(id)}/contract-file`)) ?? null,
