@@ -39,3 +39,5 @@
 @media (max-width: 640px) {
   .ml-share-actions .button, .ml-tabs button { flex: 1 1 100%; justify-content: center; }
 }
+.ml-field input, .ml-field select { padding: 10px 12px; border: 1px solid #cfe0e2; border-radius: 10px; font: inherit; font-weight: 500; color: #1f2d30; background: #fff; }
+.ml-field input:focus, .ml-field select:focus { outline: 2px solid #12727d33; border-color: #12727d; }
