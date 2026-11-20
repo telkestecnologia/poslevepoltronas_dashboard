@@ -7,7 +7,7 @@ import { branchLabel, chairName } from '../../utils/branches'
 import { getMessage } from '../../utils/errors'
 import { clearDraft, draftFromPrefill, draftIsOpen, readDraft, writeDraft } from '../../utils/manualDraft'
 import { ManualOrderWizard } from './ManualOrderWizard'
-import { SaleDetailsEditor } from './SaleDetailsCard'
+import { OrderFichaEditor } from './CustomerDetails'
 import { OrderFlags } from './OrderExtras'
 
 /** Tempo mínimo da tela de carregamento, para a equipe ver que os dados da Isa estão sendo trazidos. */
@@ -90,9 +90,9 @@ export function ManualOrderPage({ credentials, onOpenOrder, conversationId, edit
     </div>
     {error && <div className="form-error" role="alert">{error}</div>}
     {editOrderId && <section className="panel mo-edit" aria-labelledby="mo-edit-title">
-      <h2 id="mo-edit-title">Alterar detalhes da venda{editing ? ` • ${editing.customerName}` : ''}</h2>
-      <p className="page-subtitle">Forma de pagamento, desconto, plano, indicação e nota fiscal deste pedido. Ao salvar, você volta para o pedido.</p>
-      {editing ? <SaleDetailsEditor credentials={credentials} order={editing} onDone={() => onOpenOrder(editing.id)} /> : <p className="order-muted">Carregando...</p>}
+      <h2 id="mo-edit-title">Alterar ficha e venda{editing ? ` • ${editing.customerName}` : ''}</h2>
+      <p className="page-subtitle">CPF, e-mail, quem recebe, local, forma de pagamento, desconto, plano, indicação e nota fiscal. Ao salvar, você volta para o pedido.</p>
+      {editing ? <OrderFichaEditor credentials={credentials} order={editing} onDone={() => onOpenOrder(editing.id)} /> : <p className="order-muted">Carregando...</p>}
     </section>}
     {open && !loadingFrom && <div className="modal-backdrop mo-dialog-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) setOpen(false) }}>
       <section className="mo-dialog" role="dialog" aria-modal="true" aria-labelledby="mo-dialog-title">

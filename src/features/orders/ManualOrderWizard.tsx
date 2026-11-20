@@ -4,7 +4,7 @@ import {
   Eraser, Percent, PiggyBank, Upload, User, Wallet, X,
 } from 'lucide-react'
 import {
-  api, uploadOrderContractFile, uploadOrderEvidenceFile, type Branch, type Chair, type ManualReason, type Order, type SaleDetails,
+  api, uploadOrderContractFile, uploadOrderEvidenceFile, type Branch, type Chair, type CustomerDetails, type ManualReason, type Order, type SaleDetails,
   type PaymentMethod,
 } from '../../api'
 import { currency, dateLabel, manualReasonLabels, paymentMethodLabels } from '../../data/orders'
@@ -14,6 +14,7 @@ import { toCents, todayIso } from '../../utils/money'
 import { formatPhone } from '../../utils/phone'
 import { toJpeg } from './OrderEvidencePanel'
 import { EMPTY_SALE, SaleDetailsFields, usePlanNames } from './SaleDetailsCard'
+import { CustomerIdFields, DeliveryPlaceFields, EMPTY_CUSTOMER, customerRows } from './CustomerDetails'
 import { clearDraft, readDraft, writeDraft, type ManualDraft } from '../../utils/manualDraft'
 import './manual-wizard.css'
 
@@ -95,6 +96,8 @@ export function ManualOrderWizard({ credentials, branches, onCreated, onClear }:
   const [note, setNote] = useState(draft.note ?? '')
   const [sale, setSale] = useState<SaleDetails>(draft.sale ?? EMPTY_SALE)
   const [saleDiscount, setSaleDiscount] = useState(draft.saleDiscount ?? '')
+  const [customer, setCustomer] = useState<CustomerDetails>(draft.customer ?? EMPTY_CUSTOMER)
+  const changeCustomer = (changes: Partial<CustomerDetails>) => setCustomer(current => ({ ...current, ...changes }))
   const plans = usePlanNames(credentials)
   const [error, setError] = useState('')
   const [saving, setSaving] = useState('')
@@ -102,8 +105,8 @@ export function ManualOrderWizard({ credentials, branches, onCreated, onClear }:
   // Tudo o que é digitado fica no rascunho: dá para sair da tela e continuar depois.
   useEffect(() => {
     writeDraft({ step, reason, name, phone, branchId, cityCode, street, number, complement, district, cep, delivered, start, end,
-      deliveryTime, pickupTime, chairChoice, rental, freight, paidState, partial, method, paidOn, note, conversationId: draft.conversationId, sale, saleDiscount })
-  }, [sale, saleDiscount, step, reason, name, phone, branchId, cityCode, street, number, complement, district, cep, delivered, start, end,
+      deliveryTime, pickupTime, chairChoice, rental, freight, paidState, partial, method, paidOn, note, conversationId: draft.conversationId, sale, saleDiscount, customer })
+  }, [customer, sale, saleDiscount, step, reason, name, phone, branchId, cityCode, street, number, complement, district, cep, delivered, start, end,
     deliveryTime, pickupTime, chairChoice, rental, freight, paidState, partial, method, paidOn, note, draft.conversationId])
 
   const branch = options.find(item => item.id === branchId)
@@ -134,9 +137,12 @@ export function ManualOrderWizard({ credentials, branches, onCreated, onClear }:
     switch (key) {
       case 'reason': return reason ? '' : 'Escolha o motivo do pedido manual.'
       case 'customer': return name.trim().length < 3 ? 'Informe o nome completo da cliente.'
-        : digits.length !== 10 && digits.length !== 11 ? 'Informe o WhatsApp com DDD.' : ''
+        : digits.length !== 10 && digits.length !== 11 ? 'Informe o WhatsApp com DDD.'
+          : customer.cpf && customer.cpf.length !== 11 ? 'O CPF precisa ter 11 números.'
+            : customer.email?.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email.trim()) ? 'Confira o e-mail.' : ''
       case 'address': return !branchId ? 'Escolha a filial.' : !cityCode ? 'Escolha a cidade.'
-        : !street.trim() || !district.trim() ? 'Informe a rua e o bairro.' : ''
+        : !street.trim() || !district.trim() ? 'Informe a rua e o bairro.'
+          : customer.recipientPhone && (customer.recipientPhone.length < 10) ? 'Confira o celular de quem vai receber (com DDD).' : ''
       case 'period': return delivered === null ? 'Diga se a poltrona já foi entregue.'
         : !start || !end ? 'Informe o dia da entrega e o da retirada.' : end < start ? 'A retirada precisa ser depois da entrega.'
           : !chairId ? 'Nenhuma poltrona livre nesse período. Mude as datas.' : ''
@@ -180,6 +186,10 @@ export function ManualOrderWizard({ credentials, branches, onCreated, onClear }:
         internalNote: note.trim() || undefined, reason: reason as ManualReason,
         initialPayment: paidCents > 0 ? { amountCents: paidCents, method, paidOn } : undefined,
       })
+      if (customerRows(customer).length > 0) {
+        setSaving('Salvando a ficha da cliente...')
+        await api.saveCustomerDetails(credentials, created.id, customer)
+      }
       if (JSON.stringify(sale) !== JSON.stringify(EMPTY_SALE)) {
         setSaving('Salvando os detalhes da venda...')
         await api.saveSaleDetails(credentials, created.id, { ...sale, discountCents: sale.discount ? toCents(saleDiscount) : null })
@@ -244,6 +254,7 @@ export function ManualOrderWizard({ credentials, branches, onCreated, onClear }:
             placeholder="Ex.: Juliana Silva de Oliveira Brito" /></label>
           <label>WhatsApp com DDD<input type="tel" inputMode="numeric" value={phone} maxLength={15}
             onChange={event => setPhone(formatPhone(event.target.value))} placeholder="(85) 99999-9999" /></label>
+          <CustomerIdFields value={customer} onChange={changeCustomer} />
         </div>
       </Panel>}
 
@@ -263,6 +274,8 @@ export function ManualOrderWizard({ credentials, branches, onCreated, onClear }:
             placeholder="Apto, bloco, referência" /></label>
           <label>CEP <em>(opcional)</em><input inputMode="numeric" value={cep} onChange={event => setCep(formatCep(event.target.value))} placeholder="00000-000" /></label>
         </div>
+        <p className="mw-question">Quem recebe e como é o local</p>
+        <div className="mw-grid"><DeliveryPlaceFields value={customer} onChange={changeCustomer} /></div>
       </Panel>}
 
       {step === 'period' && <Panel icon={Armchair} title="Período e poltrona"
@@ -349,6 +362,7 @@ export function ManualOrderWizard({ credentials, branches, onCreated, onClear }:
           <Row label="Motivo" value={reason ? manualReasonLabels[reason] : '—'} />
           <Row label="Cliente" value={`${name.trim() || '—'} • ${phone || 'sem WhatsApp'}`} />
           <Row label="Endereço" value={`${[street, number || 's/n', complement, district].filter(Boolean).join(', ')} • ${city?.name ?? ''}${branch ? ` (${branchLabel(branch.name)})` : ''}`} />
+          {customerRows(customer).map(([label, value]) => <Row key={label} label={label} value={value} />)}
           <Row label="Período" value={start && end ? `${dateLabel(start)} a ${dateLabel(end)} • ${delivered ? 'já está com a cliente' : 'ainda vai receber'}` : '—'} />
           <Row label="Poltrona" value={chair ? `${chair.code}${chair.model ? ` • ${chair.model}` : ''}` : '—'} />
           <Row label="Valores" value={`${currency(totalCents)} • ${paidState === 'ALL' ? 'quitado' : paidState === 'PART' ? `pago ${currency(paidCents)}, falta ${currency(totalCents - paidCents)}` : 'ainda não pagou'}`} />

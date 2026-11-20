@@ -25,6 +25,7 @@ import './ficha.css'
 import { LeadOriginChip } from '../leads/LeadOriginChip'
 import { ChairSwap, ContractFileCard, ManualPaymentsCard, OrderNoteCard } from './OrderExtras'
 import { SaleDetailsSummary } from './SaleDetailsCard'
+import { customerRows, saleRows, useFicha } from './CustomerDetails'
 import { go } from '../../router'
 
 type Props = { credentials: string; id: string; onBack: () => void }
@@ -57,6 +58,8 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
   const [mediaPhase, setMediaPhase] = useState<'DELIVERY' | 'PICKUP' | null>(null)
   const [timelineAll, setTimelineAll] = useState(false)
   const [fichaOpen, setFichaOpen] = useState(false)
+  const fichaData = useFicha(credentials, id, fichaOpen)
+  const fichaRows = fichaData ? [...customerRows(fichaData.customer), ...saleRows(fichaData.sale)] : []
   const [openPhase, setOpenPhase] = useState<'DEPARTURE' | 'DELIVERY' | 'PICKUP' | null>(null)
   const [error, setError] = useState('')
   const [saved, setSaved] = useState('')
@@ -362,6 +365,7 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
             <a className="od-ficha-wa" href={`https://wa.me/55${phoneDigits}`} target="_blank" rel="noopener noreferrer"><MessageCircle size={14} /> WhatsApp</a></span></p>
           <p><b>Endereço:</b><span>{order.address} • {order.municipalityName}/{order.municipalityUf}{order.postalCode ? ` • CEP ${order.postalCode}` : ''}
             <a className="od-ficha-map" target="_blank" rel="noopener noreferrer" href={mapUrl}><MapPin size={14} /> mapa</a></span></p>
+          {fichaRows.map(([label, value]) => <p key={label}><b>{label}:</b><span>{value}</span></p>)}
           {order.internalNote && <p className="od-ficha-note"><b>Observação:</b><span>{order.internalNote}</span></p>}
           <p><b>Poltrona:</b><span>{chairName(order.chairCode, order.branchName)} • {branchLabel(order.branchName)}</span></p>
           <p><b>Situação:</b><span><i className={`order-status status-${order.status.toLowerCase()}`}>{orderStatusLabel(order)}</i>

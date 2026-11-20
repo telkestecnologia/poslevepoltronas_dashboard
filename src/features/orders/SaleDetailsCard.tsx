@@ -4,6 +4,7 @@ import { api, type Order, type SaleDetails } from '../../api'
 import { currency } from '../../data/orders'
 import { getMessage } from '../../utils/errors'
 import { toCents } from '../../utils/money'
+import { customerRows, saleRows, useFicha } from './CustomerDetails'
 import './manual-order.css'
 
 export const EMPTY_SALE: SaleDetails = {
@@ -71,7 +72,7 @@ export function SaleDetailsFields({ value, discount, plans, onChange, onDiscount
 }
 
 /** Texto de cada resposta, para o resumo no pedido. */
-function summaryRows(sale: SaleDetails) {
+export function summaryRows(sale: SaleDetails) {
   const method = sale.paymentMethod === 'PIX' ? `Pix${sale.pixMode === 'ENTRADA_E_ENTREGA' ? ' (entrada + resto na entrega)' : sale.pixMode === 'A_VISTA' ? ' à vista' : ''}`
     : sale.paymentMethod === 'CARTAO' ? `Cartão${sale.cardMode === 'PARCELADO' ? ` em ${sale.cardInstallments ?? 3}x (com acréscimo da maquininha)` : sale.cardMode === 'A_VISTA' ? ' à vista' : ''}` : null
   return [
@@ -88,16 +89,11 @@ function summaryRows(sale: SaleDetails) {
  * com este pedido aberto para editar.
  */
 export function SaleDetailsSummary({ credentials, order, onEdit }: { credentials: string; order: Order; onEdit: () => void }) {
-  const [sale, setSale] = useState<SaleDetails | null | undefined>(undefined)
-  useEffect(() => {
-    let active = true
-    api.saleDetails(credentials, order.id).then(found => { if (active) setSale(found) }).catch(() => { if (active) setSale(null) })
-    return () => { active = false }
-  }, [credentials, order.id])
-  const rows = sale ? summaryRows(sale).filter(([, value]) => value) : []
+  const ficha = useFicha(credentials, order.id, true)
+  const rows = ficha ? [...customerRows(ficha.customer), ...saleRows(ficha.sale)] : []
   return <section className="panel od-card sd-card" aria-labelledby="sd-title">
-    <div className="od-card-head"><h2 id="sd-title" className="od-side-title"><Wallet size={16} /> Detalhes da venda</h2></div>
-    {sale === undefined ? <p className="order-muted">Carregando...</p>
+    <div className="od-card-head"><h2 id="sd-title" className="od-side-title"><Wallet size={16} /> Ficha e detalhes da venda</h2></div>
+    {ficha === null ? <p className="order-muted">Carregando...</p>
       : rows.length === 0 ? <p className="order-muted">Ainda não preenchido.</p>
         : <dl className="od-facts sd-summary">{rows.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>}
     <button type="button" className="button secondary sd-edit" onClick={onEdit}><PenLine size={15} /> Alterar no Pedido manual</button>

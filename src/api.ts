@@ -192,6 +192,13 @@ export type SaleDetails = {
   updatedBy?: string | null; updatedAt?: string | null
 }
 
+/** Ficha do cliente no pedido: CPF, e-mail, quem recebe e o local. Tudo opcional. */
+export type CustomerDetails = {
+  cpf: string | null; email: string | null; recipientName: string | null; recipientPhone: string | null
+  placeType: 'CASA' | 'CONDOMINIO' | 'APARTAMENTO' | null; parking: string | null; floor: string | null
+  updatedBy?: string | null; updatedAt?: string | null
+}
+
 /** Envia o contrato assinado (PDF, JPG ou PNG, até 10 MB) de um pedido manual. */
 export async function uploadOrderContractFile(credentials: string, orderId: string, file: File) {
   const form = new FormData()
@@ -616,6 +623,10 @@ export const api = {
   /** null quando o pedido ainda não tem contrato anexado. */
   orderContractFile: async (credentials: string, id: string) =>
     (await request<ContractFile | undefined>(credentials, `/orders/${encodeURIComponent(id)}/contract-file`)) ?? null,
+  customerDetails: async (credentials: string, id: string) =>
+    (await request<CustomerDetails | undefined>(credentials, `/orders/${encodeURIComponent(id)}/customer-details`)) ?? null,
+  saveCustomerDetails: (credentials: string, id: string, data: CustomerDetails) =>
+    request<CustomerDetails>(credentials, `/orders/${encodeURIComponent(id)}/customer-details`, { method: 'PUT', body: JSON.stringify(data) }),
   saleDetails: async (credentials: string, id: string) =>
     (await request<SaleDetails | undefined>(credentials, `/orders/${encodeURIComponent(id)}/sale-details`)) ?? null,
   saveSaleDetails: (credentials: string, id: string, data: SaleDetails) =>

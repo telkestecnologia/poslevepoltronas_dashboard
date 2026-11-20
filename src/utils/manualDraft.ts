@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { ManualOrderPrefill, SaleDetails } from '../api'
+import type { CustomerDetails, ManualOrderPrefill, SaleDetails } from '../api'
 
 /**
  * Rascunho do pedido manual em aberto: fica guardado neste navegador até o cadastro ser concluído ou limpo, para a
@@ -12,6 +12,8 @@ export type ManualDraft = {
   partial?: string; method?: string; paidOn?: string; note?: string; conversationId?: string; savedAt?: number
   /** Detalhes da venda (forma de pagamento, desconto, plano, indicação, nota fiscal) e o valor do desconto digitado. */
   sale?: SaleDetails; saleDiscount?: string
+  /** Ficha da cliente: CPF, e-mail, quem recebe e o local. */
+  customer?: CustomerDetails
 }
 
 const KEY = 'posleve.manualOrderDraft'
