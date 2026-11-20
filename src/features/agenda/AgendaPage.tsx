@@ -254,7 +254,7 @@ export function AgendaPage({ credentials, onOpenOrder }: Props) {
         className={`${kind}${kindFilter === kind ? ' selected' : ''}`} onClick={() => setKindFilter(kindFilter === kind ? null : kind)}>
         <span className="agenda-today-icon">{kind === 'delivery' ? <Truck size={18} /> : <Undo2 size={18} />}</span>
         <strong>{(kind === 'delivery' ? kindTotals.delivery : kindTotals.pickup) ?? '—'}</strong>
-        <small>{kind === 'delivery' ? 'Entregas' : 'Retiradas'} • {(kind === 'delivery' ? todayCount?.deliveries : todayCount?.pickups) ?? 0} hoje</small>
+        <small>{kind === 'delivery' ? 'Entregas a fazer' : 'Retiradas a fazer'} • {(kind === 'delivery' ? todayCount?.deliveries : todayCount?.pickups) ?? 0} hoje</small>
         <em>{kindFilter === kind ? 'Clique para voltar ao dia' : 'Clique para ver todas'}</em>
       </button>)}
     </div>

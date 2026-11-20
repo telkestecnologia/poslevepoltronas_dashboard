@@ -59,3 +59,11 @@
 .order-pill { gap: 6px !important; padding: 0 12px !important; min-height: 38px; border: 1px solid #e3ebea; background: #fff !important; }
 .order-pill-icon { width: auto !important; height: auto !important; background: transparent !important; color: var(--teal-dark) !important; }
 .order-pill select { color: var(--ink) !important; font-weight: 500 !important; }
+
+/* Etapa selecionada: todas as linhas no tom forte com texto branco (nenhuma linha clara com letra branca). */
+.orders-table.tinted tbody tr.order-row, .orders-table.tinted tbody tr.order-row:nth-child(n) { background: var(--c) !important; opacity: 1 !important; }
+.orders-table.tinted tbody tr.order-row:hover, .orders-table.tinted tbody tr.order-row:focus-within { background: color-mix(in srgb, var(--c) 85%, #000) !important; }
+.table-scroll.is-stale .orders-table.tinted tbody tr.order-row { opacity: 0.85 !important; }
+/* Selos dentro da linha colorida: a tag amarela mantém a letra escura; a observação fica translúcida. */
+.orders-table.tinted .order-flag.manual, .orders-table.tinted .order-flag.manual * { color: #3d2f00 !important; }
+.orders-table.tinted .order-flag.note, .orders-table.tinted .order-flag.due { background: rgba(255, 255, 255, 0.22) !important; }

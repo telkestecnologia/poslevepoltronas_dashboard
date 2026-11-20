@@ -60,7 +60,7 @@ const eventLabels: Record<string, string> = {
     CARD_REQUESTED: 'Pagamento com cartão solicitado', CARD_CONFIRMED: 'Pagamento com cartão aprovado',
   PIX_REVIEW: 'Pagamento em análise', MOCK_PAYMENT_REQUESTED: 'Pagamento gerado',
   MOCK_PAYMENT_CONFIRMED: 'Pagamento confirmado',
-  CREATED_MANUAL: 'Pedido cadastrado à mão', NOTE_UPDATED: 'Observação interna', MANUAL_PAYMENT: 'Pagamento lançado',
+  CREATED_MANUAL: 'Pedido manual cadastrado', NOTE_UPDATED: 'Observação interna', MANUAL_PAYMENT: 'Pagamento lançado',
   MANUAL_PAYMENT_REMOVED: 'Pagamento desfeito', CHAIR_CHANGED: 'Poltrona trocada',
 }
 

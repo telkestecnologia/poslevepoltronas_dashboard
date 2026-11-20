@@ -4,7 +4,7 @@ import {
   Eraser, Percent, PiggyBank, Upload, User, Wallet, X,
 } from 'lucide-react'
 import {
-  api, uploadOrderContractFile, uploadOrderEvidenceFile, type Branch, type Chair, type ManualReason, type Order,
+  api, uploadOrderContractFile, uploadOrderEvidenceFile, type Branch, type Chair, type ManualReason, type Order, type SaleDetails,
   type PaymentMethod,
 } from '../../api'
 import { currency, dateLabel, manualReasonLabels, paymentMethodLabels } from '../../data/orders'
@@ -13,6 +13,7 @@ import { getMessage } from '../../utils/errors'
 import { toCents, todayIso } from '../../utils/money'
 import { formatPhone } from '../../utils/phone'
 import { toJpeg } from './OrderEvidencePanel'
+import { EMPTY_SALE, SaleDetailsFields, usePlanNames } from './SaleDetailsCard'
 import { clearDraft, readDraft, writeDraft, type ManualDraft } from '../../utils/manualDraft'
 import './manual-wizard.css'
 
@@ -92,14 +93,17 @@ export function ManualOrderWizard({ credentials, branches, onCreated, onClear }:
   const [deliveryPhotos, setDeliveryPhotos] = useState<File[]>([])
   const [pickupPhotos, setPickupPhotos] = useState<File[]>([])
   const [note, setNote] = useState(draft.note ?? '')
+  const [sale, setSale] = useState<SaleDetails>(draft.sale ?? EMPTY_SALE)
+  const [saleDiscount, setSaleDiscount] = useState(draft.saleDiscount ?? '')
+  const plans = usePlanNames(credentials)
   const [error, setError] = useState('')
   const [saving, setSaving] = useState('')
 
   // Tudo o que é digitado fica no rascunho: dá para sair da tela e continuar depois.
   useEffect(() => {
     writeDraft({ step, reason, name, phone, branchId, cityCode, street, number, complement, district, cep, delivered, start, end,
-      deliveryTime, pickupTime, chairChoice, rental, freight, paidState, partial, method, paidOn, note, conversationId: draft.conversationId })
-  }, [step, reason, name, phone, branchId, cityCode, street, number, complement, district, cep, delivered, start, end,
+      deliveryTime, pickupTime, chairChoice, rental, freight, paidState, partial, method, paidOn, note, conversationId: draft.conversationId, sale, saleDiscount })
+  }, [sale, saleDiscount, step, reason, name, phone, branchId, cityCode, street, number, complement, district, cep, delivered, start, end,
     deliveryTime, pickupTime, chairChoice, rental, freight, paidState, partial, method, paidOn, note, draft.conversationId])
 
   const branch = options.find(item => item.id === branchId)
@@ -176,6 +180,10 @@ export function ManualOrderWizard({ credentials, branches, onCreated, onClear }:
         internalNote: note.trim() || undefined, reason: reason as ManualReason,
         initialPayment: paidCents > 0 ? { amountCents: paidCents, method, paidOn } : undefined,
       })
+      if (JSON.stringify(sale) !== JSON.stringify(EMPTY_SALE)) {
+        setSaving('Salvando os detalhes da venda...')
+        await api.saveSaleDetails(credentials, created.id, { ...sale, discountCents: sale.discount ? toCents(saleDiscount) : null })
+      }
       if (contract) {
         setSaving('Enviando o contrato assinado...')
         await uploadOrderContractFile(credentials, created.id, contract)
@@ -306,6 +314,9 @@ export function ManualOrderWizard({ credentials, branches, onCreated, onClear }:
         </div>}
         {totalCents > 0 && paidState && <p className={`mw-balance ${paidCents >= totalCents ? 'paid' : 'due'}`}>
           {paidCents >= totalCents ? 'Quitado' : `Pago ${currency(paidCents)} • falta ${currency(totalCents - paidCents)}`}</p>}
+        <p className="mw-question">Detalhes da venda</p>
+        <SaleDetailsFields value={sale} discount={saleDiscount} plans={plans} onChange={changes => setSale(current => ({ ...current, ...changes }))}
+          onDiscount={setSaleDiscount} />
       </Panel>}
 
       {step === 'contract' && <Panel icon={FileSignature} title="Contrato assinado"

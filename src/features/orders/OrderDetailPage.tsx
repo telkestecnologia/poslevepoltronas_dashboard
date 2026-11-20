@@ -24,7 +24,8 @@ import leaves from '../../assets/folhas-logo.png'
 import './ficha.css'
 import { LeadOriginChip } from '../leads/LeadOriginChip'
 import { ChairSwap, ContractFileCard, ManualPaymentsCard, OrderNoteCard } from './OrderExtras'
-import { SaleDetailsCard } from './SaleDetailsCard'
+import { SaleDetailsSummary } from './SaleDetailsCard'
+import { go } from '../../router'
 
 type Props = { credentials: string; id: string; onBack: () => void }
 
@@ -39,7 +40,7 @@ function noticesOf(order: Order): Notice[] {
   else if (order.status === 'PENDING_CONTRACT') list.push({ tone: 'info', text: `Pedido ainda sem pagamento confirmado. Válido até ${until ?? 'o prazo da reserva'}; ao expirar, os dias bloqueados são liberados automaticamente.` })
   if (order.status === 'PENDING_PAYMENT' && !order.paymentMock) list.push({ tone: 'info', text: `Aguardando a confirmação do ${paymentName(order)} pelo Asaas. Reserva válida até ${until ?? 'o prazo informado'}.` })
   if (order.source === 'MANUAL') {
-    list.push({ tone: 'info', text: 'Cadastrado à mão pela equipe: o contrato foi assinado fora do sistema.' })
+    list.push({ tone: 'info', text: 'Pedido manual cadastrado pela equipe: o contrato foi assinado fora do sistema.' })
     const due = balanceCents(order)
     if (due > 0) list.push({ tone: 'warning', text: `Falta receber ${currency(due)} deste cliente. Lance o pagamento em “Pagamentos” quando ele pagar.` })
   }
@@ -552,7 +553,8 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
           </section>
         })()}
         {order.source === 'MANUAL' && <ManualPaymentsCard credentials={credentials} order={order} busy={busy} perform={perform} />}
-        {order.source === 'MANUAL' && <SaleDetailsCard key={order.id} credentials={credentials} order={order} />}
+        {order.source === 'MANUAL' && <SaleDetailsSummary key={order.id} credentials={credentials} order={order}
+          onEdit={() => go(`/pedido-manual?pedido=${encodeURIComponent(order.id)}`)} />}
         {order.source === 'MANUAL' && <ContractFileCard credentials={credentials} order={order} />}
         {/* No pedido manual a observação fica logo abaixo do contrato assinado. */}
         {order.source === 'MANUAL' && <OrderNoteCard credentials={credentials} order={order} busy={busy} perform={perform} />}

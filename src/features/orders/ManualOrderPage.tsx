@@ -7,6 +7,7 @@ import { branchLabel, chairName } from '../../utils/branches'
 import { getMessage } from '../../utils/errors'
 import { clearDraft, draftFromPrefill, draftIsOpen, readDraft, writeDraft } from '../../utils/manualDraft'
 import { ManualOrderWizard } from './ManualOrderWizard'
+import { SaleDetailsEditor } from './SaleDetailsCard'
 import { OrderFlags } from './OrderExtras'
 
 /** Tempo mínimo da tela de carregamento, para a equipe ver que os dados da Isa estão sendo trazidos. */
@@ -16,8 +17,10 @@ const MIN_LOADING_MS = 900
  * Menu "Pedido manual": cadastro dos clientes de antes do sistema e das exceções, e os últimos pedidos cadastrados à mão.
  * Vindo do botão da conversa, carrega o que a Isa coletou e guarda como rascunho até o cadastro ser concluído.
  */
-export function ManualOrderPage({ credentials, onOpenOrder, conversationId }: {
+export function ManualOrderPage({ credentials, onOpenOrder, conversationId, editOrderId }: {
   credentials: string; onOpenOrder: (id: string) => void
+  /** Aberto pelo botão "Alterar no Pedido manual" do pedido: os detalhes da venda dele, para editar. */
+  editOrderId?: string | null
   /** Aberto pelo botão da conversa: o formulário já vem com o que a cliente passou para a Isa. */
   conversationId?: string | null
 }) {
@@ -26,6 +29,13 @@ export function ManualOrderPage({ credentials, onOpenOrder, conversationId }: {
   const [error, setError] = useState('')
   const [loadingFrom, setLoadingFrom] = useState<string | null>(conversationId ?? null)
   const [version, setVersion] = useState(0)
+  const [editing, setEditing] = useState<Order | null>(null)
+  useEffect(() => {
+    if (!editOrderId) { setEditing(null); return }
+    let active = true
+    api.order(credentials, editOrderId).then(order => { if (active) setEditing(order) }).catch(cause => { if (active) setError(getMessage(cause)) })
+    return () => { active = false }
+  }, [credentials, editOrderId])
   // Abrir e fechar o formulário (lembrado neste navegador). Vindo da conversa, abre sempre.
   const [open, setOpen] = useState(() => { try { return localStorage.getItem('posleve.manualFormOpen') !== 'no' } catch { return true } })
   const toggle = () => setOpen(value => { const next = !value; try { localStorage.setItem('posleve.manualFormOpen', next ? 'yes' : 'no') } catch { /* sem armazenamento */ } return next })
@@ -79,6 +89,11 @@ export function ManualOrderPage({ credentials, onOpenOrder, conversationId }: {
         <p className="page-subtitle">Clientes de antes do sistema e exceções. O pedido ocupa a poltrona e segue para entrega e retirada.</p></div>
     </div>
     {error && <div className="form-error" role="alert">{error}</div>}
+    {editOrderId && <section className="panel mo-edit" aria-labelledby="mo-edit-title">
+      <h2 id="mo-edit-title">Alterar detalhes da venda{editing ? ` • ${editing.customerName}` : ''}</h2>
+      <p className="page-subtitle">Forma de pagamento, desconto, plano, indicação e nota fiscal deste pedido. Ao salvar, você volta para o pedido.</p>
+      {editing ? <SaleDetailsEditor credentials={credentials} order={editing} onDone={() => onOpenOrder(editing.id)} /> : <p className="order-muted">Carregando...</p>}
+    </section>}
     <button type="button" className="mo-toggle" aria-expanded={open} onClick={toggle}>
       <span>{open ? 'Fechar cadastro' : 'Abrir cadastro de pedido manual'}</span>
       {open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}

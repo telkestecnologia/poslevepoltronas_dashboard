@@ -245,7 +245,7 @@ function BranchChairs({ credentials, branchId, branchName, reload, onEdit, onNew
       <button type="button" className="button primary admin-only" onClick={onNew}><Plus size={16} /> Nova</button>
     </div>
     {shown.length === 0 ? <p className="branch-muted">{chairs.length === 0 ? 'Nenhuma poltrona nesta filial.' : 'Nenhuma poltrona nesta situação.'}</p>
-      : <div className="branch-chairs">{shown.map(chair => <button type="button" key={chair.id} onClick={() => onEdit(chair)} className={`branch-chair ${chairStatus[chair.status]?.tone ?? ''}`}>
+      : <div className="branch-chairs">{shown.map(chair => <button type="button" key={chair.id} onClick={() => onEdit(chair)} className={`branch-chair ${situationOf(chair) ? situations[situationOf(chair)!].tone : chairStatus[chair.status]?.tone ?? ''}`}>
         <span className="branch-chair-icon"><Armchair size={18} /></span>
         <span className="branch-chair-text"><strong>{chairName(chair.code, branchNameOf(chair.branchId))}</strong><small>{chair.model}{chair.notes ? ` • ${chair.notes}` : ''}</small></span>
         <span className="branch-chair-status">{situationOf(chair) ? situations[situationOf(chair)!].label : chairStatus[chair.status]?.label ?? chair.status}</span>

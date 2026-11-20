@@ -128,3 +128,10 @@
 
 /* Tag amarela do pedido manual: só do tamanho do texto. */
 .od .od-manual-tag { justify-self: start; align-self: flex-start; width: fit-content; max-width: 100%; }
+
+/* Alterar os detalhes da venda dentro do Pedido manual; resumo no pedido. */
+.panel.mo-edit { padding: 20px 24px; margin-bottom: 16px; border: 2px solid #e0b800; display: grid; gap: 10px; }
+.panel.mo-edit h2 { margin: 0; font-size: 19px; color: #314a51; }
+.sd-fields { display: grid; gap: 14px; }
+.sd-summary dd { text-align: right; }
+.sd-edit { justify-self: start; display: inline-flex; align-items: center; gap: 6px; }
