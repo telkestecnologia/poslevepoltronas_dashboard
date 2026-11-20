@@ -65,6 +65,8 @@ export function DashboardLayout({
   const hasNews = !!badges && badges.size > 0
   const [mobileOpen, setMobileOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
+  // Páginas sem item no menu acendem o item a que pertencem: pedido e lista de pedidos → Pedidos Hoje; poltronas → Frete e Poltronas.
+  const menuPage: Page = page === 'orders' ? 'agenda' : page === 'chairs' ? 'branches' : page
   const currentPage = navigation.find((item) => item.page === page)
 
   function navigate(nextPage: Page) {
@@ -110,9 +112,9 @@ export function DashboardLayout({
           {navigation.map((item) => (
             <button
               key={item.page}
-              className={`nav-item${page === item.page ? ' selected' : ''}`}
+              className={`nav-item${menuPage === item.page ? ' selected' : ''}`}
               aria-label={counts?.[item.page] ? `${item.label} (${counts[item.page]})` : badges?.has(item.page) ? `${item.label} (novidades)` : item.label}
-              aria-current={page === item.page ? 'page' : undefined}
+              aria-current={menuPage === item.page ? 'page' : undefined}
               title={collapsed ? item.label : undefined}
               onClick={() => navigate(item.page)}
             >
