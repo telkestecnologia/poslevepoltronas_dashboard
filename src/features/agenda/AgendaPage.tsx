@@ -76,7 +76,7 @@ function weekBounds(iso: string) {
 
 export function AgendaPage({ credentials, onOpenOrder }: Props) {
   const [selectedDate, setSelectedDate] = useState(todayInFortaleza)
-  const [view, setView] = useState<View>('week')
+  const [view, setView] = useState<View>('month')
   const [city, setCity] = useState('ALL')
   const [branch, setBranch] = useState('ALL')
   // Sem filtro de entregador na tela: a agenda mostra todos.
