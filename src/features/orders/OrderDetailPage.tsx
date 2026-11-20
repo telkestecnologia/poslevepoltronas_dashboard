@@ -25,6 +25,7 @@ import './ficha.css'
 import { LeadOriginChip } from '../leads/LeadOriginChip'
 import { ChairSwap, ContractFileCard, ManualPaymentsCard, OrderNoteCard } from './OrderExtras'
 import { ManualLinksCard } from './ManualLinks'
+import { StepDocument } from './StepDocuments'
 import { SaleDetailsSummary } from './SaleDetailsCard'
 import { customerRows, saleRows, useFicha } from './CustomerDetails'
 import { go } from '../../router'
@@ -415,6 +416,8 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
     </ol>}
     {/* No computador: a jornada inteira numa linha ligada (substitui as etapas acima). */}
     {step >= 0 && <OrderJourney order={order} couriers={couriers} onOpenMedia={setMediaPhase} renderActions={stepActions} renderSchedule={stepSchedule}
+      renderDocs={key => key === 'CREATED' ? <StepDocument key="contract" credentials={credentials} order={order} kind="contract" />
+        : key === 'PAYMENT_CONFIRMED' ? <StepDocument key="payment" credentials={credentials} order={order} kind="payment" /> : null}
       advance={nextStatus && !contractOnly ? { label: 'Concluir etapa', blocked: missingEvidence, busy, run: advance } : null}
       renderSide={key => ['DEPARTURE', 'DELIVERY_PENDING', 'PICKUP_PENDING'].includes(key)
         ? <img className="oj-window-art" src="/entregador.webp" alt="Entregador da Pós Leve colocando a poltrona embalada na caminhonete" /> : null} />}

@@ -1,0 +1,14 @@
+/* Contrato e comprovantes dentro da janela da etapa. */
+.oj-window-docs { margin-top: 14px; }
+.sd-open { display: inline-flex; align-items: center; gap: 6px; }
+.sd { display: grid; gap: 10px; padding: 14px; border: 1px solid #dbe7e8; border-radius: 14px; background: #f8fbfb; }
+.sd-head { display: flex; align-items: center; gap: 8px; color: #0d4f57; }
+.sd-close { margin-left: auto; border: 0; background: none; color: #12727d; font-weight: 700; cursor: pointer; }
+.sd-frame { width: 100%; height: min(62vh, 560px); border: 1px solid #dbe7e8; border-radius: 10px; background: #fff; }
+.sd-image { max-width: 100%; max-height: 62vh; border-radius: 10px; border: 1px solid #dbe7e8; justify-self: start; }
+.sd-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.sd-actions .button { display: inline-flex; align-items: center; gap: 6px; }
+.sd-empty { margin: 0; color: #4f6b71; }
+.sd-manual { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 14px; }
+.sd-manual .finance-tag-manual { display: inline-block; margin-left: 6px; padding: 2px 9px; border-radius: 99px; background: #ffd60a; color: #3d2f00;
+  border: 1px solid #e0b800; font-size: 11.5px; font-weight: 800; }

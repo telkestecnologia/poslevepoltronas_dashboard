@@ -389,6 +389,14 @@ export async function serverMessage(response: Response): Promise<string | null> 
   }
 }
 
+/** PDF da equipe (contrato aceito ou comprovante do banco); null quando o pedido não tem. */
+export async function orderPdf(credentials: string, orderId: string, file: 'contract.pdf' | 'pix/receipt.pdf'): Promise<Blob | null> {
+  const response = await fetch(`${baseUrl}/api/admin/${encodeURIComponent(tenantSlug)}/orders/${encodeURIComponent(orderId)}/${file}`, {
+    headers: { Authorization: `Basic ${credentials}` }, cache: 'no-store',
+  }).catch(() => null)
+  return response?.ok ? response.blob() : null
+}
+
 async function request<T>(credentials: string, path: string, init: RequestInit = {}): Promise<T> {
   let response: Response
   try {
