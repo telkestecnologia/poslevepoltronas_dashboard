@@ -532,31 +532,24 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
           <LeadOriginChip credentials={credentials} phone={order.customerPhone} />
         </section>
 
-        <section className="panel od-card" aria-labelledby="od-rental-title">
-          <h2 id="od-rental-title" className="od-side-title">Aluguel</h2>
-          <dl className="od-facts">
-            <div><dt>Período cobrado</dt><dd>{dateLabel(order.start)} a {dateLabel(order.end)}</dd></div>
-            <div><dt>Poltrona</dt><dd>{chairName(order.chairCode, order.branchName)}</dd></div>
-            {isRealOrder(order) && !contractOnly && ['PAYMENT_CONFIRMED', 'DELIVERY_PENDING'].includes(order.status) && <div className="od-chair-swap-row">
+        {/* O card "Aluguel" saiu: período, poltrona, filial, valores e situação ficam na Ficha do cliente. Aqui só as ações. */}
+        {(() => {
+          const canSwap = isRealOrder(order) && !contractOnly && ['PAYMENT_CONFIRMED', 'DELIVERY_PENDING'].includes(order.status)
+          const sandbox = order.status === 'PENDING_PAYMENT' && order.paymentSandbox && !order.paymentMock
+          const cancel = order.source === 'MANUAL' && !['CANCELLED', 'COMPLETED'].includes(order.status)
+          if (!canSwap && !sandbox && !cancel) return null
+          return <section className="panel od-card od-actions-card" aria-label="Ações do pedido">
+            {canSwap && <div className="od-chair-swap-row"><p className="od-actions-chair">{chairName(order.chairCode, order.branchName)}</p>
               <ChairSwap key={order.chairId} credentials={credentials} order={order} busy={busy} perform={perform} /></div>}
-            <div><dt>Filial</dt><dd>{branchLabel(order.branchName)}</dd></div>
-          </dl>
-          <dl className="od-facts od-money">
-            {isRealOrder(order) && <div><dt>Aluguel</dt><dd>{currency(order.rentalCents)}</dd></div>}
-            <div><dt>Frete</dt><dd>{order.freightCents ? currency(order.freightCents) : 'Grátis'}</dd></div>
-            {isRealOrder(order) && <div className="od-total"><dt>Total</dt><dd>{currency(order.totalCents)}
-              {/* Ao lado do preço, a situação atual do cliente. */}
-              <span className={`order-status od-price-status status-${order.status.toLowerCase()}`}>{orderStatusLabel(order)}</span></dd></div>}
-          </dl>
-          {order.status === 'PENDING_PAYMENT' && order.paymentSandbox && !order.paymentMock && <div className="od-sandbox admin-only">
-            <button className="button primary" disabled={busy} onClick={() => void payTestPix()}>Pagar no Asaas</button>
-            <button className="button secondary" disabled={busy} onClick={() => void checkPix()}>Consultar recebimento no Asaas</button>
-            {pixNote && <p className="order-muted" role="status">{pixNote}</p>}
-          </div>}
-          {order.source === 'MANUAL' && !['CANCELLED', 'COMPLETED'].includes(order.status) && <button type="button"
-            className="button secondary od-cancel-manual admin-only" disabled={busy} onClick={cancelManual}>
-            <Ban size={15} /> Cancelar pedido</button>}
-        </section>
+            {sandbox && <div className="od-sandbox admin-only">
+              <button className="button primary" disabled={busy} onClick={() => void payTestPix()}>Pagar no Asaas</button>
+              <button className="button secondary" disabled={busy} onClick={() => void checkPix()}>Consultar recebimento no Asaas</button>
+              {pixNote && <p className="order-muted" role="status">{pixNote}</p>}
+            </div>}
+            {cancel && <button type="button" className="button secondary od-cancel-manual admin-only" disabled={busy} onClick={cancelManual}>
+              <Ban size={15} /> Cancelar pedido</button>}
+          </section>
+        })()}
         {order.source === 'MANUAL' && <ManualPaymentsCard credentials={credentials} order={order} busy={busy} perform={perform} />}
         {order.source === 'MANUAL' && <SaleDetailsCard key={order.id} credentials={credentials} order={order} />}
         {order.source === 'MANUAL' && <ContractFileCard credentials={credentials} order={order} />}

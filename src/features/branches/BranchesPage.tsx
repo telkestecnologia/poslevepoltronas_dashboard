@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ArrowLeft, Armchair, CheckCircle2, ChevronRight, MapPin, PauseCircle, Plus, Search, Wrench } from 'lucide-react'
+import { ArrowLeft, Armchair, CheckCircle2, ChevronRight, MapPin, Plus, Search, Wrench } from 'lucide-react'
 import { api, type Branch, type BranchInput, type BranchMunicipality, type Chair, type Municipality } from '../../api'
 import { BranchModal } from './BranchModal'
 import { EmptyState } from '../../components/common'
@@ -193,6 +193,14 @@ const chairStatus: Record<string, { label: string; plural: string; tone: string 
   INACTIVE: { label: 'Inativa', plural: 'Inativas', tone: 'inactive' },
 }
 
+/** Situação da poltrona hoje: disponível para alugar, em manutenção ou alugada (com cliente). */
+type Situation = 'AVAILABLE' | 'MAINTENANCE' | 'RENTED'
+const situations: Record<Situation, { label: string; plural: string; tone: string }> = {
+  AVAILABLE: { label: 'Disponível', plural: 'Disponível', tone: 'active' },
+  MAINTENANCE: { label: 'Em manutenção', plural: 'Manutenção', tone: 'maintenance' },
+  RENTED: { label: 'Alugada', plural: 'Alugadas', tone: 'inactive' },
+}
+
 /** Poltronas da filial, na própria página da filial. */
 function BranchChairs({ credentials, branchId, branchName, reload, onEdit, onNew }: {
   credentials: string; branchId: string; branchName: string; reload: boolean; onEdit: (chair: Chair) => void; onNew: () => void
@@ -201,26 +209,33 @@ function BranchChairs({ credentials, branchId, branchName, reload, onEdit, onNew
   const [search, setSearch] = useState('')
   const [chairs, setChairs] = useState<Chair[] | null>(null)
   const [error, setError] = useState('')
-  const [filter, setFilter] = useState<string | null>(null)
+  const [filter, setFilter] = useState<Situation | null>(null)
+  const [rented, setRented] = useState<Set<string>>(new Set())
   useEffect(() => {
     let active = true
     void api.chairs(credentials, { page: 0, size: 100, search: '', status: 'ALL', branchId })
       .then(page => { if (active) setChairs(page.items) })
       .catch(cause => { if (active) setError(getMessage(cause)) })
+    // Alugadas: com cliente hoje (em uso, aguardando retirada ou paga aguardando entrega).
+    void api.chairs(credentials, { page: 0, size: 100, search: '', status: 'IN_USE', branchId })
+      .then(page => { if (active) setRented(new Set(page.items.map(chair => chair.id))) })
+      .catch(() => {})
     return () => { active = false }
   }, [credentials, branchId, reload])
   if (error) return <div className="form-error" role="alert">{error}</div>
   if (!chairs) return <p className="branch-muted">Carregando poltronas...</p>
   const term = search.trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
-  const shown = chairs.filter(chair => (!filter || chair.status === filter)
+  const situationOf = (chair: Chair): Situation | null => chair.status === 'MAINTENANCE' ? 'MAINTENANCE'
+    : chair.status !== 'ACTIVE' ? null : rented.has(chair.id) ? 'RENTED' : 'AVAILABLE'
+  const shown = chairs.filter(chair => (!filter || situationOf(chair) === filter)
     && (!term || `${chair.code} ${chair.model} ${chair.notes ?? ''}`.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().includes(term)))
   return <>
     {/* Botões com contador (igual ao app): clicar mostra só aquelas poltronas; clicar de novo mostra todas. */}
-    <div className="branch-chair-buttons">{(['ACTIVE', 'MAINTENANCE', 'INACTIVE'] as const).map(status => {
-      const Icon = status === 'ACTIVE' ? CheckCircle2 : status === 'MAINTENANCE' ? Wrench : PauseCircle
-      return <button type="button" key={status} className={`${chairStatus[status].tone}${filter === status ? ' selected' : ''}`}
-        aria-pressed={filter === status} onClick={() => setFilter(filter === status ? null : status)}>
-        <Icon size={20} /><strong>{chairs.filter(chair => chair.status === status).length}</strong><span>{chairStatus[status].plural}</span>
+    <div className="branch-chair-buttons">{(['AVAILABLE', 'MAINTENANCE', 'RENTED'] as const).map(situation => {
+      const Icon = situation === 'AVAILABLE' ? CheckCircle2 : situation === 'MAINTENANCE' ? Wrench : Armchair
+      return <button type="button" key={situation} className={`${situations[situation].tone}${filter === situation ? ' selected' : ''}`}
+        aria-pressed={filter === situation} onClick={() => setFilter(filter === situation ? null : situation)}>
+        <Icon size={20} /><strong>{chairs.filter(chair => situationOf(chair) === situation).length}</strong><span>{situations[situation].plural}</span>
       </button>
     })}</div>
     {/* Busca com lupa e, ao lado, o botão pequeno de nova poltrona (igual ao app). */}
@@ -233,7 +248,7 @@ function BranchChairs({ credentials, branchId, branchName, reload, onEdit, onNew
       : <div className="branch-chairs">{shown.map(chair => <button type="button" key={chair.id} onClick={() => onEdit(chair)} className={`branch-chair ${chairStatus[chair.status]?.tone ?? ''}`}>
         <span className="branch-chair-icon"><Armchair size={18} /></span>
         <span className="branch-chair-text"><strong>{chairName(chair.code, branchNameOf(chair.branchId))}</strong><small>{chair.model}{chair.notes ? ` • ${chair.notes}` : ''}</small></span>
-        <span className="branch-chair-status">{chairStatus[chair.status]?.label ?? chair.status}</span>
+        <span className="branch-chair-status">{situationOf(chair) ? situations[situationOf(chair)!].label : chairStatus[chair.status]?.label ?? chair.status}</span>
       </button>)}</div>}
   </>
 }

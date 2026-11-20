@@ -124,7 +124,7 @@ export function InlineSchedule({ order, kind, busy, onSave }: {
       <label className="order-field"><span>Novo horário</span>
         <input type="text" inputMode="numeric" placeholder={time ? time.slice(0, 5) : '14:00'} maxLength={5} value={hour}
           onChange={event => { setHour(maskTime(event.target.value)); setDone('') }} aria-invalid={hour !== '' && !hourOk} /></label>
-      <button type="button" className="button primary" disabled={busy || (hour !== '' && !hourOk) || (!changedDate && !hourOk)}
+      <button type="button" className="button primary od-reschedule" disabled={busy || (hour !== '' && !hourOk) || (!changedDate && !hourOk)}
         onClick={() => void save()}><CalendarClock size={16} /> Reagendar</button>
     </div>
     {hour !== '' && !hourOk && <p className="field-help od-time-error">Use o formato 24 h, por exemplo 14:30.</p>}

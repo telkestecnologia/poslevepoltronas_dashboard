@@ -102,3 +102,9 @@
 .sd-tip { margin: 0; font-size: 13px; color: #1f6f78; background: #e9f6f7; border-radius: 8px; padding: 8px 10px; }
 .sd-ok { margin: 0; color: #1f7a4d; font-weight: 700; }
 .sd-actions { border-top: 1px solid #edf2f2; padding-top: 12px; }
+
+/* Reagendar: texto sempre branco (também enquanto não dá para salvar). */
+.button.primary.od-reschedule, .button.primary.od-reschedule:disabled { color: #fff; }
+.button.primary.od-reschedule svg { color: #fff; }
+.od-actions-card { display: grid; gap: 10px; }
+.od-actions-chair { margin: 0; font-weight: 700; color: #314a51; }
