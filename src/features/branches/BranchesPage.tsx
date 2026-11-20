@@ -43,9 +43,9 @@ export function BranchesPage({ branches, activeCounts, onNewBranch, credentials,
           <h1>{branchLabel(entered.name)}</h1>
           <div className="branch-enter-status">
             <p>{activeCounts[entered.id] ?? 0} poltronas ativas • {entered.municipalities.length} cidades</p>
-            {/* Liga e desliga a filial: desligada, o site e a Isa param de oferecer aluguel nela. */}
+            {/* Liga e desliga a filial (administrador e quem é da filial). Fica ligada até alguém pausar: pausada, o site e a Isa param de oferecer aluguel nela. */}
             <button type="button" role="switch" aria-checked={entered.active} disabled={saving}
-              className={`branch-switch admin-only${entered.active ? ' on' : ''}`}
+              className={`branch-switch${entered.active ? ' on' : ''}`}
               onClick={() => {
                 const next = !entered.active
                 if (!next && !window.confirm(`Pausar ${branchLabel(entered.name)}?\n\nO site e a Isa deixam de oferecer aluguel nesta filial até ela ser ligada de novo.`)) return
@@ -55,7 +55,6 @@ export function BranchesPage({ branches, activeCounts, onNewBranch, credentials,
               <span className="branch-switch-track"><span className="branch-switch-thumb" /></span>
               <span>{entered.active ? 'Atendendo' : 'Pausada'}</span>
             </button>
-            <span className="partner-only branch-switch-text">{entered.active ? 'Atendendo' : 'Pausada'}</span>
           </div>
         </div>
       </section>
