@@ -171,3 +171,8 @@
   .agenda-calendar-inline .agenda-count { min-width: 22px; height: 22px; font-size: 12px; }
   .agenda-day-title .finance-date-icon { display: none; }
 }
+
+/* Dia escolhido no calendário: número em branco e os contadores com fundo branco (leitura sempre clara). */
+.agenda-calendar-day.selected .agenda-calendar-number { color: #fff !important; }
+.agenda-calendar-day.selected .agenda-count.delivery { background: #fff !important; color: var(--teal-dark) !important; }
+.agenda-calendar-day.selected .agenda-count.pickup { background: #fff !important; color: #c4532c !important; }
