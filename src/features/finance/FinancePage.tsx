@@ -389,15 +389,14 @@ const monthAbbr = (iso: string) => `${monthNames[Number(iso.slice(5, 7)) - 1] ??
 /** Foto da região de cada filial (a mesma da página Filiais). */
 function branchPhoto(name: string) {
   const text = normalize(name)
-  if (/serra|ibiapaba/.test(text)) return '/filiais/filial-serra.webp'
+  if (/serra|ibiapaba|sobral/.test(text)) return '/filiais/filial-ibiapaba-sobral.webp'
   if (/sobral/.test(text)) return '/filiais/filial-sobral.webp'
   return '/filiais/filial-fortaleza.webp'
 }
 
 function shortBranch(name: string) {
   const text = normalize(name)
-  if (/serra|ibiapaba/.test(text)) return 'Ibiapaba'
-  if (/sobral/.test(text)) return 'Sobral'
+  if (/serra|ibiapaba|sobral/.test(text)) return 'Ibiapaba e Sobral'
   if (/fortaleza/.test(text)) return 'Fortaleza'
   return branchLabel(name)
 }

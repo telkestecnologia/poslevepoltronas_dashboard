@@ -18,8 +18,7 @@ const normalize = (text: string) => text.normalize('NFD').replace(/[̀-ͯ]/g, ''
 /** Cores fixas por filial (as mesmas do Financeiro), para reconhecer cada uma em todos os gráficos. */
 function branchTone(name: string) {
   const text = normalize(name)
-  if (/serra|ibiapaba/.test(text)) return { name: 'Ibiapaba', color: '#3f9a62', soft: '#e5f4ea' }
-  if (/sobral/.test(text)) return { name: 'Sobral', color: '#e87461', soft: '#fdebe6' }
+  if (/serra|ibiapaba|sobral/.test(text)) return { name: 'Ibiapaba e Sobral', color: '#3f9a62', soft: '#e5f4ea' }
   if (/fortaleza/.test(text)) return { name: 'Fortaleza', color: '#1a9baa', soft: '#e3f4f2' }
   return { name, color: '#8a6cc9', soft: '#efe9fa' }
 }

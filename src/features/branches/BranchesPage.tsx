@@ -172,8 +172,8 @@ function BranchCities({ branch }: { branch: Branch }) {
 
 function branchPhoto(name: string) {
   const text = name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
-  if (/\bserra\b|\bibiapaba\b/.test(text)) return '/filiais/filial-serra.webp'
-  if (/\bsobral\b/.test(text)) return '/filiais/filial-sobral.webp'
+  // Ibiapaba e Sobral são uma filial só: metade serra, metade Sobral.
+  if (/\bserra\b|\bibiapaba\b|\bsobral\b/.test(text)) return '/filiais/filial-ibiapaba-sobral.webp'
   return '/filiais/filial-fortaleza.webp'
 }
 

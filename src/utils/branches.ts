@@ -2,8 +2,8 @@
 // aqui e apresentado com o nome da região.
 const officialBranches = [
   { label: 'Fortaleza e região metropolitana', pattern: /\bfortaleza\b/ },
-  { label: 'Serra da Ibiapaba e cidades vizinhas', pattern: /\bserra\b|\bibiapaba\b/ },
-  { label: 'Região de Sobral-CE', pattern: /\bsobral\b/ },
+  // Ibiapaba e Sobral viraram uma filial só (a antiga Região de Sobral também cai aqui).
+  { label: 'Ibiapaba, Sobral e regiões vizinhas', pattern: /\bserra\b|\bibiapaba\b|\bsobral\b/ },
 ]
 
 export const OFFICIAL_BRANCH_COUNT = officialBranches.length
@@ -26,9 +26,24 @@ export function branchLabel(name: string) {
 }
 
 /** As três oficiais, sempre na mesma ordem, e depois as novas; as de teste ficam fora. */
+
+/** Uma filial por região oficial: se sobrou a antiga (ex.: Região de Sobral, juntada à Ibiapaba), fica só a ativa. */
+function onePerRegion<T>(items: T[], nameOf: (item: T) => string) {
+  const kept = new Map<number, T>()
+  const rest: T[] = []
+  for (const item of items) {
+    const index = officialIndex(nameOf(item))
+    if (index < 0) { rest.push(item); continue }
+    const current = kept.get(index)
+    const active = (value: T) => (value as { active?: boolean }).active !== false
+    if (!current || (!active(current) && active(item))) kept.set(index, item)
+  }
+  return items.filter(item => officialIndex(nameOf(item)) < 0 ? rest.includes(item) : kept.get(officialIndex(nameOf(item))) === item)
+}
+
 export function onlyOfficialBranches<T>(items: T[], nameOf: (item: T) => string) {
   const order = (item: T) => { const index = officialIndex(nameOf(item)); return index < 0 ? officialBranches.length : index }
-  return items
+  return onePerRegion(items, nameOf)
     .filter(item => isOfficialBranch(nameOf(item)))
     .sort((a, b) => order(a) - order(b) || nameOf(a).localeCompare(nameOf(b), 'pt-BR'))
 }
