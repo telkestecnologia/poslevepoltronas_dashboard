@@ -191,8 +191,8 @@ export function PaymentLinkPanel({ credentials, order, onPaid, allowLink = true 
   const [paidOn, setPaidOn] = useState(todayIso())
   const missing = order.totalCents - (order.totalPaidCents ?? 0)
 
+  // Sempre consulta: pago pelo link, o comprovante continua aparecendo depois que o pedido sai de "Aguardando pagamento".
   useEffect(() => {
-    if (!allowLink) return
     let active = true
     let timer: number | undefined
     const load = () => api.paymentLink(credentials, order.id).then(found => {
