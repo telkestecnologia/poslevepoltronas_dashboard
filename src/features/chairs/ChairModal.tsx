@@ -1,11 +1,12 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { ArrowRight, PlusCircle, X } from 'lucide-react'
 import { FormIntro } from '../../components/FormIntro'
-import type { Branch, Chair, ChairStatus } from '../../api'
+import { api, type Branch, type Chair, type ChairStatus } from '../../api'
 import { branchLabel, onlyOfficialBranches } from '../../utils/branches'
 
 export function ChairModal({
   modal,
+  credentials,
   branches,
   saving,
   error,
@@ -27,12 +28,24 @@ export function ChairModal({
   }) => Promise<void>
   /** Excluir poltrona: fica Inativa com o motivo registrado na observação. */
   onDelete?: (chair: Chair, reason: string) => Promise<void>
+  /** Para saber se a poltrona está alugada hoje (com cliente, pelos pedidos). */
+  credentials?: string
 }) {
   const chair = modal.kind === 'editChair' ? modal.chair : null
   const [code, setCode] = useState(chair?.code ?? '')
   const [model, setModel] = useState(chair?.model ?? '')
   const [notes, setNotes] = useState(chair?.notes ?? '')
   const [status, setStatus] = useState<ChairStatus>(chair?.status ?? 'ACTIVE')
+  // Alugada hoje: a poltrona está com cliente (em uso, aguardando retirada ou entregue hoje), pelos pedidos.
+  const [rented, setRented] = useState(false)
+  useEffect(() => {
+    if (!chair || !credentials) return
+    let active = true
+    api.chairs(credentials, { page: 0, size: 100, search: chair.code, status: 'IN_USE', branchId: '' })
+      .then(page => { if (active) setRented(page.items.some(item => item.id === chair.id)) }).catch(() => {})
+    return () => { active = false }
+  }, [credentials, chair])
+  const shownStatus = status === 'ACTIVE' && rented ? 'RENTED' : status
   // Nova poltrona aberta de dentro da filial: a filial já vem escolhida e não aparece o seletor.
   const fixedBranch = modal.kind === 'newChair' && modal.branchId ? branches.find(branch => branch.id === modal.branchId) : undefined
   // Poltrona ligada a uma filial antiga (ex.: Região de Sobral, juntada à Ibiapaba) abre na filial ativa da mesma região.
@@ -68,7 +81,7 @@ export function ChairModal({
         <div className="chair-modal-photo" aria-hidden="true">
           <img src="/poltrona.webp" alt="" />
           <div><strong>{chair ? `Poltrona ${code}` : code.trim() ? `Poltrona ${code.trim()}` : 'Nova poltrona'}</strong>
-            <span className={`chair-modal-pill ${status.toLowerCase()}`}>{status === 'MAINTENANCE' ? 'Em manutenção' : 'Disponível'}</span></div>
+            <span className={`chair-modal-pill ${shownStatus === 'RENTED' ? 'inactive' : status.toLowerCase()}`}>{shownStatus === 'MAINTENANCE' ? 'Em manutenção' : shownStatus === 'RENTED' ? 'Alugada' : 'Disponível'}</span></div>
         </div>
         <div className="chair-modal-main">
         <div className="modal-head">
@@ -129,7 +142,7 @@ export function ChairModal({
               <label>
                 Estado operacional
                 <select value={status} onChange={(e) => setStatus(e.target.value as ChairStatus)}>
-                  <option value="ACTIVE">Disponível</option>
+                  <option value="ACTIVE">{rented ? 'Alugada' : 'Disponível'}</option>
                   <option value="MAINTENANCE">Em manutenção</option>
                 </select>
               </label>

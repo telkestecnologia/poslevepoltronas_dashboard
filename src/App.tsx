@@ -157,6 +157,7 @@ function App() {
           />
         ) : (
           <ChairModal
+            credentials={session.credentials ?? undefined}
             modal={dialog.modal}
             branches={dialog.branches}
             saving={dialog.saving}
