@@ -66,3 +66,8 @@
   .mw-grid, .mw-options.two, .mw-options.three { grid-template-columns: 1fr; }
   .mw-review div { grid-template-columns: 1fr; gap: 2px; }
 }
+
+/* Topo do cadastro: rascunho salvo e Limpar campos. */
+.mw-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.mw-saved { color: #7a6a2a; font-size: 13px; font-weight: 600; }
+.mw-clear { display: inline-flex; align-items: center; gap: 6px; }

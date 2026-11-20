@@ -22,6 +22,7 @@ import { PaymentsPricingPage } from './features/payments/PaymentsPricingPage'
 import { useDashboard } from './hooks/useDashboard'
 import { useMenuBadges } from './hooks/useMenuBadges'
 import { useMenuCounts } from './hooks/useMenuCounts'
+import { useManualDraftCount } from './utils/manualDraft'
 
 function App() {
   const {
@@ -37,7 +38,10 @@ function App() {
     dialog,
   } = useDashboard()
   const badges = useMenuBadges(session.staff ? session.credentials : null, session.staff?.email ?? '', navigation.page)
-  const counts = useMenuCounts(session.staff ? session.credentials : null)
+  const menuCounts = useMenuCounts(session.staff ? session.credentials : null)
+  // Bolinha vermelha em "Pedido manual" enquanto houver um cadastro manual em aberto (rascunho não concluído).
+  const manualDrafts = useManualDraftCount()
+  const counts = manualDrafts ? { ...menuCounts, manualOrder: manualDrafts } : menuCounts
 
   if (session.restoring) {
     return <div className="empty-state" role="status"><p>Entrando no painel...</p></div>

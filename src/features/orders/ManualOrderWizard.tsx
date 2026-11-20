@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import {
   ArrowLeft, ArrowRight, Armchair, Camera, Check, CircleHelp, ClipboardCheck, FileSignature, History, MapPin, MessageCircleOff,
-  Percent, PiggyBank, Upload, User, Wallet, X,
+  Eraser, Percent, PiggyBank, Upload, User, Wallet, X,
 } from 'lucide-react'
 import {
-  api, uploadOrderContractFile, uploadOrderEvidenceFile, type Branch, type Chair, type ManualOrderPrefill, type ManualReason, type Order,
+  api, uploadOrderContractFile, uploadOrderEvidenceFile, type Branch, type Chair, type ManualReason, type Order,
   type PaymentMethod,
 } from '../../api'
 import { currency, dateLabel, manualReasonLabels, paymentMethodLabels } from '../../data/orders'
@@ -13,6 +13,7 @@ import { getMessage } from '../../utils/errors'
 import { toCents, todayIso } from '../../utils/money'
 import { formatPhone } from '../../utils/phone'
 import { toJpeg } from './OrderEvidencePanel'
+import { clearDraft, readDraft, writeDraft, type ManualDraft } from '../../utils/manualDraft'
 import './manual-wizard.css'
 
 const SHIFTS = [
@@ -54,43 +55,52 @@ const sizeLabel = (bytes: number) => bytes < 1024 * 1024 ? `${Math.round(bytes /
  * Cadastro manual em etapas (igual ao app): motivo, cliente, endereço, período e poltrona, pagamento, contrato
  * assinado, fotos e revisão. Cada etapa explica o porquê; o pedido só é criado na revisão.
  */
-export function ManualOrderWizard({ credentials, branches, onCreated, initial }: {
+export function ManualOrderWizard({ credentials, branches, onCreated, onClear }: {
   credentials: string; branches: Branch[]; onCreated: (order: Order) => void
-  /** Vindo da conversa: o que a cliente já passou para a Isa. */
-  initial?: ManualOrderPrefill | null
+  /** "Limpar campos": apaga o rascunho e recomeça. */
+  onClear: () => void
 }) {
   const official = onlyOfficialBranches(branches, branch => branch.name)
   const options = (official.length ? official : branches).filter(branch => branch.active || official.length === 0)
-  const [step, setStep] = useState<Step>('reason')
-  const [reason, setReason] = useState<ManualReason | ''>('')
-  const [name, setName] = useState(initial?.customerName ?? '')
-  const [phone, setPhone] = useState(formatPhone((initial?.customerPhone ?? '').replace(/^55(?=\d{10,11}$)/, '')))
-  const [branchId, setBranchId] = useState(initial?.branchId ?? (options.length === 1 ? options[0].id : ''))
-  const [cityCode, setCityCode] = useState(initial?.municipalityCode ?? '')
-  const [street, setStreet] = useState(initial?.street ?? '')
-  const [number, setNumber] = useState(initial?.number ?? '')
-  const [complement, setComplement] = useState(initial?.complement ?? '')
-  const [district, setDistrict] = useState(initial?.district ?? '')
-  const [cep, setCep] = useState(formatCep(initial?.cep ?? ''))
-  const [delivered, setDelivered] = useState<boolean | null>(null)
-  const [start, setStart] = useState(initial?.start ?? '')
-  const [end, setEnd] = useState(initial?.end ?? '')
-  const [deliveryTime, setDeliveryTime] = useState(SHIFTS.some(shift => shift.value === initial?.deliveryTime) ? initial!.deliveryTime! : '')
-  const [pickupTime, setPickupTime] = useState(SHIFTS.some(shift => shift.value === initial?.pickupTime) ? initial!.pickupTime! : '')
+  // Continua de onde parou: o rascunho (guardado neste navegador) vem da conversa com a Isa ou do que já foi digitado.
+  const [draft] = useState<ManualDraft>(() => readDraft() ?? {})
+  const [step, setStep] = useState<Step>(STEPS.some(item => item.key === draft.step) ? draft.step as Step : 'reason')
+  const [reason, setReason] = useState<ManualReason | ''>((draft.reason as ManualReason) ?? '')
+  const [name, setName] = useState(draft.name ?? '')
+  const [phone, setPhone] = useState(draft.phone ?? '')
+  const [branchId, setBranchId] = useState(draft.branchId || (options.length === 1 ? options[0].id : ''))
+  const [cityCode, setCityCode] = useState(draft.cityCode ?? '')
+  const [street, setStreet] = useState(draft.street ?? '')
+  const [number, setNumber] = useState(draft.number ?? '')
+  const [complement, setComplement] = useState(draft.complement ?? '')
+  const [district, setDistrict] = useState(draft.district ?? '')
+  const [cep, setCep] = useState(draft.cep ?? '')
+  const [delivered, setDelivered] = useState<boolean | null>(draft.delivered ?? null)
+  const [start, setStart] = useState(draft.start ?? '')
+  const [end, setEnd] = useState(draft.end ?? '')
+  const [deliveryTime, setDeliveryTime] = useState(draft.deliveryTime ?? '')
+  const [pickupTime, setPickupTime] = useState(draft.pickupTime ?? '')
   const [chairs, setChairs] = useState<{ key: string; list: Chair[]; error?: string } | null>(null)
-  const [chairChoice, setChairChoice] = useState('')
-  const [rental, setRental] = useState(centsText(initial?.rentalCents))
-  const [freight, setFreight] = useState(centsText(initial?.freightCents))
-  const [paidState, setPaidState] = useState<PaidState | ''>('')
-  const [partial, setPartial] = useState('')
-  const [method, setMethod] = useState<PaymentMethod>('PIX')
-  const [paidOn, setPaidOn] = useState(todayIso())
+  const [chairChoice, setChairChoice] = useState(draft.chairChoice ?? '')
+  const [rental, setRental] = useState(draft.rental ?? '')
+  const [freight, setFreight] = useState(draft.freight ?? '')
+  const [paidState, setPaidState] = useState<PaidState | ''>((draft.paidState as PaidState) ?? '')
+  const [partial, setPartial] = useState(draft.partial ?? '')
+  const [method, setMethod] = useState<PaymentMethod>((draft.method as PaymentMethod) ?? 'PIX')
+  const [paidOn, setPaidOn] = useState(draft.paidOn ?? todayIso())
   const [contract, setContract] = useState<File | null>(null)
   const [deliveryPhotos, setDeliveryPhotos] = useState<File[]>([])
   const [pickupPhotos, setPickupPhotos] = useState<File[]>([])
-  const [note, setNote] = useState('')
+  const [note, setNote] = useState(draft.note ?? '')
   const [error, setError] = useState('')
   const [saving, setSaving] = useState('')
+
+  // Tudo o que é digitado fica no rascunho: dá para sair da tela e continuar depois.
+  useEffect(() => {
+    writeDraft({ step, reason, name, phone, branchId, cityCode, street, number, complement, district, cep, delivered, start, end,
+      deliveryTime, pickupTime, chairChoice, rental, freight, paidState, partial, method, paidOn, note, conversationId: draft.conversationId })
+  }, [step, reason, name, phone, branchId, cityCode, street, number, complement, district, cep, delivered, start, end,
+    deliveryTime, pickupTime, chairChoice, rental, freight, paidState, partial, method, paidOn, note, draft.conversationId])
 
   const branch = options.find(item => item.id === branchId)
   const cities = useMemo(() => [...(branch?.municipalities ?? [])].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')), [branch])
@@ -175,10 +185,11 @@ export function ManualOrderWizard({ credentials, branches, onCreated, initial }:
         setSaving(`Enviando foto ${position + 1} de ${photos.length}...`)
         await uploadOrderEvidenceFile(credentials, created.id, phase, await toJpeg(file), file.name.replace(/\.[^.]+$/, '') + '.jpg')
       }
+      clearDraft()
       onCreated(created)
     } catch (cause) {
       // O pedido já existe: abre ele mesmo assim; o que faltou dá para enviar de lá.
-      if (created) { window.alert(`Pedido cadastrado, mas: ${getMessage(cause)} Envie de novo pela tela do pedido.`); onCreated(created); return }
+      if (created) { clearDraft(); window.alert(`Pedido cadastrado, mas: ${getMessage(cause)} Envie de novo pela tela do pedido.`); onCreated(created); return }
       setError(getMessage(cause))
     } finally {
       setSaving('')
@@ -186,6 +197,12 @@ export function ManualOrderWizard({ credentials, branches, onCreated, initial }:
   }
 
   return <section className="mw" aria-label="Cadastro de pedido manual">
+    <div className="mw-top">
+      <span className="mw-saved">{draft.conversationId ? 'Dados trazidos da conversa com a Isa • ' : ''}Rascunho salvo automaticamente</span>
+      <button type="button" className="button secondary mw-clear" disabled={!!saving}
+        onClick={() => { if (window.confirm('Limpar todos os campos do pedido manual? O rascunho em aberto será apagado.')) { clearDraft(); onClear() } }}>
+        <Eraser size={15} /> Limpar campos</button>
+    </div>
     <ol className="mw-steps" aria-label={`Etapa ${index + 1} de ${STEPS.length}: ${STEPS[index].label}`}>
       {STEPS.map((item, position) => {
         const done = position < index

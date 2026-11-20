@@ -514,7 +514,8 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
         </section>
 
 
-        {!contractOnly && order.source !== 'MANUAL' && <OrderNoteCard credentials={credentials} order={order} busy={busy} perform={perform} />}
+        {/* Observação interna logo acima de "Encontrou algum problema?" (no celular aqui; no computador, na coluna da direita). */}
+        {!contractOnly && order.source !== 'MANUAL' && <div className="od-issues-main"><OrderNoteCard credentials={credentials} order={order} busy={busy} perform={perform} /></div>}
         {!contractOnly && issuesCard(' od-issues-main')}
         {/* No computador o histórico completo fica aqui, largo e agrupado por dia (substitui a linha do tempo lateral). */}
         <OrderHistoryFull order={order} couriers={couriers} />
@@ -556,6 +557,7 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
         {/* No pedido manual a observação fica logo abaixo do contrato assinado. */}
         {order.source === 'MANUAL' && <OrderNoteCard credentials={credentials} order={order} busy={busy} perform={perform} />}
 
+        {!contractOnly && order.source !== 'MANUAL' && <div className="od-issues-side od-note-side"><OrderNoteCard credentials={credentials} order={order} busy={busy} perform={perform} /></div>}
         {!contractOnly && issuesCard(' od-issues-side')}
         {!contractOnly && <section className="panel od-card od-courier-card" aria-labelledby="od-courier-title">
           <h2 id="od-courier-title" className="od-side-title">Entregador</h2>

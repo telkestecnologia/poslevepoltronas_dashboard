@@ -108,3 +108,15 @@
 .button.primary.od-reschedule svg { color: #fff; }
 .od-actions-card { display: grid; gap: 10px; }
 .od-actions-chair { margin: 0; font-weight: 700; color: #314a51; }
+
+/* Carregando os dados da Isa: fundo escuro e a bolinha girando no meio da tela. */
+.mo-loading { position: fixed; inset: 0; z-index: 80; background: rgba(15, 30, 36, 0.72); display: grid; place-items: center; padding: 20px; }
+.mo-loading-box { display: grid; justify-items: center; gap: 10px; max-width: 340px; text-align: center; color: #fff; }
+.mo-loading-box strong { font-size: 18px; }
+.mo-loading-box p { margin: 0; color: #d6e3e6; line-height: 1.45; }
+.mo-spinner { width: 54px; height: 54px; border-radius: 50%; border: 5px solid rgba(255, 255, 255, 0.25); border-top-color: #ffd60a; animation: mo-spin 0.9s linear infinite; }
+@keyframes mo-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .mo-spinner { animation-duration: 2.5s; } }
+
+/* Observação na coluna da direita: o card ocupa a largura toda. */
+.od-note-side > .panel { width: 100%; }

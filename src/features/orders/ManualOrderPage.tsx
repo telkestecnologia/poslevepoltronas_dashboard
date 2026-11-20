@@ -1,15 +1,20 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ArrowRight } from 'lucide-react'
-import { api, type Branch, type ManualOrderPrefill, type Order } from '../../api'
+import { api, type Branch, type Order } from '../../api'
 import { dateLabel, orderStatusLabel } from '../../data/orders'
+import { replaceQuery } from '../../router'
 import { branchLabel, chairName } from '../../utils/branches'
 import { getMessage } from '../../utils/errors'
+import { clearDraft, draftFromPrefill, draftIsOpen, readDraft, writeDraft } from '../../utils/manualDraft'
 import { ManualOrderWizard } from './ManualOrderWizard'
 import { OrderFlags } from './OrderExtras'
 
+/** Tempo mínimo da tela de carregamento, para a equipe ver que os dados da Isa estão sendo trazidos. */
+const MIN_LOADING_MS = 900
+
 /**
  * Menu "Pedido manual": cadastro dos clientes de antes do sistema e das exceções, e os últimos pedidos cadastrados à mão.
- * Os pedidos que chegam pelo site e pela Isa ficam em "Pedido automático".
+ * Vindo do botão da conversa, carrega o que a Isa coletou e guarda como rascunho até o cadastro ser concluído.
  */
 export function ManualOrderPage({ credentials, onOpenOrder, conversationId }: {
   credentials: string; onOpenOrder: (id: string) => void
@@ -19,7 +24,8 @@ export function ManualOrderPage({ credentials, onOpenOrder, conversationId }: {
   const [branches, setBranches] = useState<Branch[] | null>(null)
   const [recent, setRecent] = useState<Order[] | null>(null)
   const [error, setError] = useState('')
-  const [prefill, setPrefill] = useState<{ id: string; data: ManualOrderPrefill | null } | null>(null)
+  const [loadingFrom, setLoadingFrom] = useState<string | null>(conversationId ?? null)
+  const [version, setVersion] = useState(0)
 
   const loadRecent = useCallback(() => api.orderPage(credentials, { source: 'MANUAL' }, 0, 10)
     .then(page => setRecent(page.items)).catch(cause => setError(getMessage(cause))), [credentials])
@@ -28,24 +34,51 @@ export function ManualOrderPage({ credentials, onOpenOrder, conversationId }: {
     let active = true
     api.branches(credentials).then(list => { if (active) setBranches(list) }).catch(cause => { if (active) setError(getMessage(cause)) })
     void loadRecent()
-    if (conversationId) api.manualOrderPrefill(credentials, conversationId)
-      .then(data => { if (active) setPrefill({ id: conversationId, data }) })
-      .catch(() => { if (active) setPrefill({ id: conversationId, data: null }) })
     return () => { active = false }
-  }, [credentials, loadRecent, conversationId])
+  }, [credentials, loadRecent])
 
-  const waitingPrefill = Boolean(conversationId) && prefill?.id !== conversationId
+  // Vindo da conversa: traz o que a Isa coletou para o rascunho (com a tela de carregamento) e tira o ?conversa da URL,
+  // para um F5 não buscar de novo por cima do que já foi digitado.
+  useEffect(() => {
+    if (!conversationId) return
+    let active = true
+    const started = Date.now()
+    const existing = readDraft()
+    const keep = draftIsOpen(existing) && existing?.conversationId !== conversationId
+      && !window.confirm('Já existe um pedido manual em aberto. Substituir pelos dados desta conversa?')
+    const finish = () => {
+      window.setTimeout(() => {
+        if (!active) return
+        replaceQuery({ conversa: undefined })
+        setLoadingFrom(null)
+        setVersion(value => value + 1)
+      }, Math.max(0, MIN_LOADING_MS - (Date.now() - started)))
+    }
+    if (keep || existing?.conversationId === conversationId) { finish(); return () => { active = false } }
+    api.manualOrderPrefill(credentials, conversationId)
+      .then(data => { if (active) writeDraft(draftFromPrefill(conversationId, data)) })
+      .catch(() => { if (active) writeDraft(draftFromPrefill(conversationId, null)) })
+      .finally(finish)
+    return () => { active = false }
+  }, [credentials, conversationId])
 
   return <div className="mo-area">
+    {loadingFrom && <div className="mo-loading" role="status" aria-live="polite">
+      <div className="mo-loading-box">
+        <span className="mo-spinner" aria-hidden="true" />
+        <strong>Carregando as informações</strong>
+        <p>Trazendo o que a Isa coletou na conversa para você concluir o cadastro manual.</p>
+      </div>
+    </div>}
     <div className="page-heading">
       <div><span className="eyebrow">OPERAÇÃO • PEDIDO MANUAL</span><h1>Pedido manual</h1>
         <p className="page-subtitle">Clientes de antes do sistema e exceções. O pedido ocupa a poltrona e segue para entrega e retirada.</p></div>
     </div>
     {error && <div className="form-error" role="alert">{error}</div>}
-    {conversationId && prefill?.data && <div className="od-notice info"><p>Dados trazidos da conversa com a Isa. Confira e complete antes de cadastrar.</p></div>}
-    {branches === null || waitingPrefill ? <div className="empty-state" role="status"><p>Carregando...</p></div>
-      : <ManualOrderWizard key={conversationId ?? 'novo'} credentials={credentials} branches={branches}
-        initial={prefill?.data} onCreated={order => onOpenOrder(order.id)} />}
+    {branches === null || loadingFrom ? <div className="empty-state" role="status"><p>Carregando...</p></div>
+      : <ManualOrderWizard key={version} credentials={credentials} branches={branches}
+        onClear={() => { clearDraft(); setVersion(value => value + 1) }}
+        onCreated={order => { void loadRecent(); onOpenOrder(order.id) }} />}
 
     <section className="panel mo-recent" aria-labelledby="mo-recent-title">
       <h2 id="mo-recent-title">Últimos pedidos manuais</h2>
