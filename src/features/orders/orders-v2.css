@@ -67,3 +67,6 @@
 /* Selos dentro da linha colorida: a tag amarela mantém a letra escura; a observação fica translúcida. */
 .orders-table.tinted .order-flag.manual, .orders-table.tinted .order-flag.manual * { color: #3d2f00 !important; }
 .orders-table.tinted .order-flag.note, .orders-table.tinted .order-flag.due { background: rgba(255, 255, 255, 0.22) !important; }
+
+/* Entregas agendadas: quantas hoje e quantas depois. */
+.order-summary-split { margin-top: -4px; color: var(--c); font-size: 12px; font-style: normal; font-weight: 700; opacity: 0.85; }

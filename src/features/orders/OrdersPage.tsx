@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ArrowRight, ChevronLeft, ChevronRight, ClipboardList, RefreshCw, Search, X, PenLine, Clock, SearchCheck, Truck, Armchair, Undo2, BadgeCheck, XCircle, TriangleAlert, type LucideIcon, Building2, MapPin } from 'lucide-react'
 import './orders.css'
-import { api, type Branch, type Order, type OrderPage, type OrderQuery, type OrderStatus } from '../../api'
+import { api, REAL_SOURCES, type Branch, type Order, type OrderPage, type OrderQuery, type OrderStatus } from '../../api'
 import { EmptyState } from '../../components/common'
-import { dateLabel, orderStatusLabel, usePolling } from '../../data/orders'
+import { dateLabel, fetchAllOrders, orderStatusLabel, usePolling } from '../../data/orders'
 import { replaceQuery } from '../../router'
 import { branchLabel, onlyOfficialBranches, chairName } from '../../utils/branches'
 import './orders-v2.css'
@@ -16,7 +16,7 @@ const summaries: Summary[] = [
   { key: 'contrato', label: 'Aguardando contrato', statuses: ['PENDING_CONTRACT'], tone: 'waiting', icon: PenLine },
   { key: 'pix', label: 'Aguardando pagamento', statuses: ['PENDING_PAYMENT'], tone: 'waiting', icon: Clock },
   { key: 'analise', label: 'Pagamento em análise', statuses: ['PAYMENT_REVIEW'], tone: 'danger', icon: SearchCheck },
-  { key: 'entregar', label: 'Entregar', statuses: ['PAYMENT_CONFIRMED', 'DELIVERY_PENDING'], tone: 'action', icon: Truck },
+  { key: 'entregar', label: 'Entregas agendadas', statuses: ['PAYMENT_CONFIRMED', 'DELIVERY_PENDING'], tone: 'action', icon: Truck },
   { key: 'em-uso', label: 'Em uso', statuses: ['IN_USE'], tone: 'moving', icon: Armchair },
   { key: 'retirar', label: 'Retirar', statuses: ['PICKUP_PENDING'], tone: 'action', icon: Undo2 },
   { key: 'concluidos', label: 'Concluídos', statuses: ['COMPLETED'], tone: 'done', icon: BadgeCheck },
@@ -36,6 +36,20 @@ export function OrdersPage({ credentials, params, onOpenOrder }: Props) {
   const summaryKey = params.get('resumo')
   const branchId = params.get('filial') ?? 'ALL'
   const cityCode = params.get('cidade') ?? 'ALL'
+  // Entregas agendadas: quantas são hoje e quantas ficam para os próximos dias (a poltrona que volta sai de novo).
+  const [deliveryDays, setDeliveryDays] = useState<{ today: number; later: number } | null>(null)
+  useEffect(() => {
+    let active = true
+    const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Fortaleza' })
+    void fetchAllOrders(credentials, { source: REAL_SOURCES, statuses: ['PAYMENT_CONFIRMED', 'DELIVERY_PENDING'],
+      branchId: branchId === 'ALL' ? undefined : branchId, municipalityCode: cityCode === 'ALL' ? undefined : cityCode })
+      .then(list => {
+        if (!active) return
+        const due = list.filter(order => (order.deliveryDate ?? order.start) <= today).length
+        setDeliveryDays({ today: due, later: list.length - due })
+      }, () => {})
+    return () => { active = false }
+  }, [credentials, branchId, cityCode])
   const term = params.get('busca') ?? ''
   const page = Math.max(0, Number(params.get('pagina') ?? '1') - 1 || 0)
 
@@ -146,6 +160,8 @@ export function OrdersPage({ credentials, params, onOpenOrder }: Props) {
           <span className="order-summary-top"><span className="order-summary-icon"><item.icon size={16} /></span>
             <strong>{shown ? value : '—'}</strong></span>
           <small>{item.label}</small>
+          {item.key === 'entregar' && deliveryDays && value > 0 && <em className="order-summary-split">
+            {deliveryDays.today} hoje • {deliveryDays.later} nos próximos dias</em>}
         </button>
       })}
     </div>
