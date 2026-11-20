@@ -26,7 +26,7 @@ const navigation = [
   { page: 'overview', label: 'Visão geral', icon: Home },
   { page: 'finance', label: 'Financeiro', icon: Wallet },
   { page: 'branches', label: 'Filiais', icon: MapPin },
-  { page: 'agenda', label: 'Pedido automático', icon: ClipboardList },
+  { page: 'agenda', label: 'Pedido', icon: ClipboardList },
   { page: 'manualOrder', label: 'Pedido manual', icon: ClipboardPlus },
   { page: 'conversations', label: 'Atendimento', icon: MessagesSquare },
   { page: 'ai', label: 'O que a Isa sabe', icon: Sparkles },
