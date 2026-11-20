@@ -321,3 +321,24 @@
     font-weight: 700; font-size: 14px; transition: transform 0.15s; }
   .od-logistics-where a:hover { transform: translateY(-1px); }
 }
+
+/* Topo do pedido (v2): nome em destaque, selos pequenos numa linha, detalhes discretos; Ficha é a ação principal. */
+.od-header.od-top { align-items: center; gap: 20px; margin-top: 6px; padding: 18px 22px; background: #fff; border: 1px solid #ebe6d4;
+  border-radius: 20px; box-shadow: 0 6px 18px rgba(31, 51, 64, 0.06); }
+.od-top .od-header-main { gap: 10px; }
+.od-top-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.od-top-tags .order-status.od-status { padding: 5px 12px; font-size: 12.5px; font-weight: 700; box-shadow: none; }
+.od .od-top-tags .od-manual-tag { margin: 0; padding: 4px 12px; border-width: 1.5px; font-size: 12.5px; letter-spacing: 0; }
+.od-header.od-top p.od-top-meta { gap: 6px 18px; font-size: 13.5px; color: #6b7a7d; }
+.od-top-meta span { display: inline-flex; align-items: center; gap: 6px; }
+.od-top-actions { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+.od-top-actions .od-ficha-button.od-top-ficha { padding: 12px 22px; border-radius: 14px; background: linear-gradient(135deg, #f0907e, #d65f4b);
+  color: #fff; font-size: 15px; box-shadow: 0 8px 20px rgba(214, 95, 75, 0.28); }
+.od-top-actions .od-ficha-button.od-top-ficha:hover { background: linear-gradient(135deg, #f59a88, #c4532c); }
+.od-top-actions .icon-button.od-top-refresh { width: 40px; height: 40px; border: 0; background: transparent; color: #7a8b8e; border-radius: 12px; }
+.od-top-actions .icon-button.od-top-refresh:hover { background: #eef5f4; color: #12727d; }
+@media (max-width: 640px) {
+  .od-header.od-top { padding: 14px; }
+  .od-top-actions { width: 100%; }
+  .od-top-actions .od-ficha-button.od-top-ficha { flex: 1; justify-content: center; }
+}

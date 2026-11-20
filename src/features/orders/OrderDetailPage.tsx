@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { timeLabel } from '../../utils/time'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  Ban, FileText, AlertCircle, ArrowLeft, ArrowRight, CalendarClock, Check, ChevronDown, ChevronUp, CheckCircle2, Info, MapPin, Megaphone, MessageCircle, Phone, RefreshCw, Truck, X, Images,
+  Armchair, Ban, FileText, AlertCircle, ArrowLeft, ArrowRight, CalendarClock, Check, ChevronDown, ChevronUp, CheckCircle2, Info, MapPin, Megaphone, MessageCircle, Phone, RefreshCw, Truck, X, Images,
 } from 'lucide-react'
 import './order-detail.css'
 import { api, ApiError, type Courier, type Order } from '../../api'
@@ -41,7 +41,6 @@ function noticesOf(order: Order): Notice[] {
   else if (order.status === 'PENDING_CONTRACT') list.push({ tone: 'info', text: `Pedido ainda sem pagamento confirmado. Válido até ${until ?? 'o prazo da reserva'}; ao expirar, os dias bloqueados são liberados automaticamente.` })
   if (order.status === 'PENDING_PAYMENT' && !order.paymentMock) list.push({ tone: 'info', text: `Aguardando a confirmação do ${paymentName(order)} pelo Asaas. Reserva válida até ${until ?? 'o prazo informado'}.` })
   if (order.source === 'MANUAL') {
-    list.push({ tone: 'info', text: 'Pedido manual cadastrado pela equipe: o contrato foi assinado fora do sistema.' })
     const due = balanceCents(order)
     if (due > 0) list.push({ tone: 'warning', text: `Falta receber ${currency(due)} deste cliente. Lance o pagamento em “Pagamentos” quando ele pagar.` })
   }
@@ -163,14 +162,11 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
   ]
   const displayStep = order.status === 'PAYMENT_CONFIRMED' ? 1 : displayRows.findIndex(row => row.key === order.status)
   // Ações de cada etapa, mostradas na janela da bolinha da jornada (no computador).
-  function stepActions(key: string, { done }: { done: boolean; current: boolean }) {
+  function stepActions(key: string) {
     if (!order) return null
     const phase = key === 'DEPARTURE' ? 'DEPARTURE' : key === 'DELIVERY_PENDING' ? 'DELIVERY' : key === 'PICKUP_PENDING' ? 'PICKUP' : null
-    const scheduleKind = phase === 'DEPARTURE' || phase === 'DELIVERY' ? 'delivery' : phase === 'PICKUP' ? 'pickup' : null
     const parts: ReactNode[] = []
     if (phase && step >= 0 && !contractOnly) {
-      if (canChangeSchedule && scheduleKind && !done) parts.push(<div key="schedule" className="oj-action oj-schedule">
-        <InlineSchedule order={order} kind={scheduleKind} busy={busy} onSave={saveSchedule} /></div>)
       if (phase === 'DEPARTURE') parts.push(<div key="departure" className="od-notice" role="note">
         <span className="od-notice-icon"><Megaphone size={16} /></span>
         <div><strong>Comunicado ao cliente</strong>
@@ -189,6 +185,13 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
     // "Saindo para retirada": com a poltrona com o cliente (Em uso) ou aguardando a retirada.
     if ((key === 'IN_USE' || key === 'PICKUP_PENDING') && order.status === key && !contractOnly) parts.push(pickupNotice(`pickup-${key}`))
     return parts.length ? parts : null
+  }
+  // Dia e horário da etapa com Reagendar: aparece no alto da janela, logo abaixo de "Esta é a etapa em andamento agora".
+  function stepSchedule(key: string, { done }: { done: boolean; current: boolean }) {
+    if (!order || step < 0 || contractOnly || done || !canChangeSchedule) return null
+    const scheduleKind = key === 'DEPARTURE' || key === 'DELIVERY_PENDING' ? 'delivery' : key === 'PICKUP_PENDING' ? 'pickup' : null
+    if (!scheduleKind) return null
+    return <div className="oj-action oj-schedule"><InlineSchedule order={order} kind={scheduleKind} busy={busy} onSave={saveSchedule} /></div>
   }
   function pickupNotice(id: string) {
     return <div key={id} className="od-notice" role="note">
@@ -333,23 +336,25 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
 
   return <div className={`od${order.source === 'MANUAL' ? ' od-manual' : ''}`}>
     <BackLink onBack={onBack} />
-    {order.source === 'MANUAL' && <div className="od-manual-tag" role="note">⚠ {manualTagText(order.manualReason).toUpperCase()}</div>}
-
-    <header className="od-header">
+    {/* Topo em três níveis: nome (o mais forte), selos de situação e uma linha de detalhes; à direita, a Ficha em destaque e Atualizar discreto. */}
+    <header className="od-header od-top">
       <div className="od-header-main">
-        <span className="eyebrow">PEDIDO • {chairName(order.chairCode, order.branchName).toUpperCase()}</span>
         <h1 className="od-name"><img src={logoSymbol} alt="" aria-hidden="true" />{order.customerName}</h1>
-        <p><MapPin size={14} /> {order.municipalityName}/{order.municipalityUf} • {branchLabel(order.branchName)}
-          <span className="od-dot" aria-hidden="true">•</span> Entrada em {dateTimeLabel(order.createdAt)}</p>
+        <div className="od-top-tags">
+          <span className={`order-status od-status status-${order.status.toLowerCase()}`}>{orderStatusLabel(order)}</span>
+          {order.source === 'MANUAL' && <span className="od-manual-tag" role="note">⚠ {manualTagText(order.manualReason)}</span>}
+          {openIssues.length > 0 && <span className="order-status status-issue_open od-status">
+            {openIssues.length} {openIssues.length === 1 ? 'problema em aberto' : 'problemas em aberto'}</span>}
+        </div>
+        <p className="od-top-meta"><span><Armchair size={14} /> {chairName(order.chairCode, order.branchName)}</span>
+          <span><MapPin size={14} /> {order.municipalityName}/{order.municipalityUf}</span>
+          <span>Entrada em {dateTimeLabel(order.createdAt)}</span></p>
       </div>
-      <div className="od-header-side">
-        <span className={`order-status od-status status-${order.status.toLowerCase()}`}>{orderStatusLabel(order)}</span>
+      <div className="od-top-actions">
+        <button className="icon-button od-top-refresh" aria-label="Atualizar pedido" title="Atualizar pedido" onClick={() => void load()}>
+          <RefreshCw size={16} /></button>
         {/* Ficha do cliente (igual ao app): tudo do pedido numa janela só. */}
-        <button type="button" className="od-ficha-button" onClick={() => setFichaOpen(true)}><FileText size={16} /> Ficha do cliente</button>
-        {openIssues.length > 0 && <span className="order-status status-issue_open od-status">
-          {openIssues.length} {openIssues.length === 1 ? 'problema em aberto' : 'problemas em aberto'}</span>}
-        <button className="icon-button" aria-label="Atualizar pedido" title="Atualizar pedido" onClick={() => void load()}>
-          <RefreshCw size={17} /></button>
+        <button type="button" className="od-ficha-button od-top-ficha" onClick={() => setFichaOpen(true)}><FileText size={17} /> Ficha do cliente</button>
       </div>
     </header>
     {fichaOpen && <div className="modal-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) setFichaOpen(false) }}>
@@ -405,7 +410,7 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
       })}
     </ol>}
     {/* No computador: a jornada inteira numa linha ligada (substitui as etapas acima). */}
-    {step >= 0 && <OrderJourney order={order} couriers={couriers} onOpenMedia={setMediaPhase} renderActions={stepActions}
+    {step >= 0 && <OrderJourney order={order} couriers={couriers} onOpenMedia={setMediaPhase} renderActions={stepActions} renderSchedule={stepSchedule}
       advance={nextStatus && !contractOnly ? { label: 'Concluir etapa', blocked: missingEvidence, busy, run: advance } : null}
       renderSide={key => ['DEPARTURE', 'DELIVERY_PENDING', 'PICKUP_PENDING'].includes(key)
         ? <img className="oj-window-art" src="/entregador.webp" alt="Entregador da Pós Leve colocando a poltrona embalada na caminhonete" /> : null} />}

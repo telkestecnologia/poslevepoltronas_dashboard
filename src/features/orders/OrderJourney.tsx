@@ -39,12 +39,14 @@ function currentIndex(order: Order) {
  * Jornada do pedido (só no computador): todas as etapas numa linha, ligadas por um traço que vai se preenchendo.
  * Cada etapa diz o que é, quando aconteceu (ou quando está prevista) e quem fez.
  */
-export function OrderJourney({ order, couriers, onOpenMedia, renderActions, renderSide, advance }: {
+export function OrderJourney({ order, couriers, onOpenMedia, renderActions, renderSchedule, renderSide, advance }: {
   order: Order; couriers: Pick<Courier, 'id' | 'name'>[]
   /** Abre as fotos e vídeos da entrega ou da retirada. */
   onOpenMedia?: (phase: 'DELIVERY' | 'PICKUP') => void
   /** O que dá para fazer em cada etapa (avançar, dia e horário, fotos...), mostrado dentro da janela da bolinha. */
   renderActions?: (key: string, state: { done: boolean; current: boolean }) => ReactNode
+  /** Dia e horário da etapa (com Reagendar), logo abaixo de "Esta é a etapa em andamento agora". */
+  renderSchedule?: (key: string, state: { done: boolean; current: boolean }) => ReactNode
   /** Card ao lado do título da janela (registro de problemas na saída, na entrega e na retirada). */
   renderSide?: (key: string) => ReactNode
   /** Concluir a etapa atual (avança o pedido); blocked explica por que ainda não dá. */
@@ -88,14 +90,15 @@ export function OrderJourney({ order, couriers, onOpenMedia, renderActions, rend
     {opened !== null && <StepWindow order={order} couriers={couriers} steps={steps} index={opened} now={now}
       onOpenMedia={onOpenMedia} onClose={() => setOpened(null)} side={renderSide?.(steps[opened].key)}
       actions={renderActions?.(steps[opened].key, { done: opened < now, current: opened === now })}
+      schedule={renderSchedule?.(steps[opened].key, { done: opened < now, current: opened === now })}
       advance={opened === now ? advance : null} />}
   </section>
 }
 
 /** Janela de uma etapa: o que ela significa, quando aconteceu e tudo o que foi feito nela (pelo histórico). */
-function StepWindow({ order, couriers, steps, index, now, onOpenMedia, onClose, actions, side, advance }: {
+function StepWindow({ order, couriers, steps, index, now, onOpenMedia, onClose, actions, schedule, side, advance }: {
   order: Order; couriers: Pick<Courier, 'id' | 'name'>[]; steps: Step[]; index: number; now: number
-  onOpenMedia?: (phase: 'DELIVERY' | 'PICKUP') => void; onClose: () => void; actions?: ReactNode; side?: ReactNode
+  onOpenMedia?: (phase: 'DELIVERY' | 'PICKUP') => void; onClose: () => void; actions?: ReactNode; schedule?: ReactNode; side?: ReactNode
   advance?: { label: string; blocked: string; busy: boolean; run: () => void } | null
 }) {
   const step = steps[index]
@@ -116,9 +119,10 @@ function StepWindow({ order, couriers, steps, index, now, onOpenMedia, onClose, 
       </header>
       <div className="oj-window-facts">
         {doneEvent && <div><CheckCircle2 size={16} /><span>Concluída em <b>{dateTimeLabel(doneEvent.at)}</b> por <b>{actorLabel(doneEvent.actor, couriers)}</b></span></div>}
-        {!done && step.planned && <div><CalendarClock size={16} /><span>Prevista para <b>{weekdayDateLabel(step.planned)}</b></span></div>}
+        {!done && step.planned && !schedule && <div><CalendarClock size={16} /><span>Prevista para <b>{weekdayDateLabel(step.planned)}</b></span></div>}
         {current && <div><span className="oj-live" />Esta é a etapa em andamento agora.</div>}
       </div>
+      {schedule && <div className="oj-window-schedule">{schedule}</div>}
       </div>
       {side && <div className="oj-window-side">{side}</div>}
       </div>

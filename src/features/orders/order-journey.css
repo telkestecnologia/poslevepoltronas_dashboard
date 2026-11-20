@@ -175,3 +175,10 @@
   .oj-schedule .od-inline-fields .button { min-height: 38px; padding: 0 14px; font-size: 13px; background: #fff; color: #12727d; box-shadow: inset 0 0 0 1.5px #cfe6e3; }
   .oj-schedule .od-extend-help, .oj-schedule .od-time-error, .oj-schedule .form-error, .oj-schedule .od-inline-done { grid-column: 1 / -1; margin: 0; font-size: 12.5px; }
 }
+
+/* Reagendar fechado: só o botão; dia e horário aparecem depois do clique. */
+.od-reschedule-open { justify-self: start; width: fit-content; }
+
+/* Dia e horário da etapa logo abaixo de "Esta é a etapa em andamento agora". */
+.oj-window-schedule { margin-top: 10px; }
+.oj-window-schedule .oj-action.oj-schedule { margin: 0; }

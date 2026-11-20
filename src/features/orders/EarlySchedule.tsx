@@ -96,6 +96,8 @@ export function InlineSchedule({ order, kind, busy, onSave }: {
   const [hour, setHour] = useState('')
   const [error, setError] = useState('')
   const [done, setDone] = useState('')
+  // Dia e horário novos só aparecem depois de clicar em Reagendar.
+  const [editing, setEditing] = useState(false)
   const today = todayIso()
   const min = delivery ? today : [order.deliveryDate ?? order.start, today].sort()[1]
   const max = delivery ? order.pickupDate ?? order.end : undefined
@@ -111,11 +113,14 @@ export function InlineSchedule({ order, kind, busy, onSave }: {
     setDone(`Reagendado para ${dayLabel(changedDate ?? day)}${hourOk ? ` às ${hour}` : ''}.`)
     setDate('')
     setHour('')
+    setEditing(false)
   }
 
   return <div className="od-inline-schedule">
     <div className="od-inline-now"><CalendarClock size={18} />
       <span>{moved ? 'Combinada' : 'Prevista'} para <b>{dayLabel(day)}</b>{time ? <> às <b>{time.slice(0, 5)}</b></> : ' (sem horário)'}</span></div>
+    {!editing ? <button type="button" className="button secondary od-reschedule-open" disabled={busy}
+      onClick={() => { setEditing(true); setDone('') }}><CalendarClock size={16} /> Reagendar</button> : <>
     {!delivery && <p className="field-help od-extend-help">Para <strong>prorrogar</strong>, escolha um dia depois de {shortDay(day)}.
       A poltrona fica bloqueada nos dias a mais (se estiver livre). O valor não muda sozinho: combine a cobrança com o cliente.</p>}
     <div className="od-inline-fields">
@@ -125,10 +130,13 @@ export function InlineSchedule({ order, kind, busy, onSave }: {
         <input type="text" inputMode="numeric" placeholder={time ? time.slice(0, 5) : '14:00'} maxLength={5} value={hour}
           onChange={event => { setHour(maskTime(event.target.value)); setDone('') }} aria-invalid={hour !== '' && !hourOk} /></label>
       <button type="button" className="button primary od-reschedule" disabled={busy || (hour !== '' && !hourOk) || (!changedDate && !hourOk)}
-        onClick={() => void save()}><CalendarClock size={16} /> Reagendar</button>
+        onClick={() => void save()}><CalendarClock size={16} /> Salvar</button>
+      <button type="button" className="button secondary" disabled={busy}
+        onClick={() => { setEditing(false); setDate(''); setHour(''); setError('') }}>Cancelar</button>
     </div>
     {hour !== '' && !hourOk && <p className="field-help od-time-error">Use o formato 24 h, por exemplo 14:30.</p>}
     {error && <div className="form-error" role="alert">{error}</div>}
+    </>}
     {done && <p className="od-inline-done" role="status">✓ {done}</p>}
   </div>
 }
