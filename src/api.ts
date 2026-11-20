@@ -631,6 +631,8 @@ export const api = {
     (await request<SaleDetails | undefined>(credentials, `/orders/${encodeURIComponent(id)}/sale-details`)) ?? null,
   saveSaleDetails: (credentials: string, id: string, data: SaleDetails) =>
     request<SaleDetails>(credentials, `/orders/${encodeURIComponent(id)}/sale-details`, { method: 'PUT', body: JSON.stringify(data) }),
+  updateOrderCustomer: (credentials: string, id: string, data: { customerName: string; customerPhone: string; address: string; cep: string }) =>
+    request<Order>(credentials, `/orders/${encodeURIComponent(id)}/customer`, { method: 'PATCH', body: JSON.stringify(data) }),
   updateOrderNote: (credentials: string, id: string, note: string) =>
     request<Order>(credentials, `/orders/${encodeURIComponent(id)}/note`, { method: 'PATCH', body: JSON.stringify({ note }) }),
   addOrderPayment: (credentials: string, id: string, data: ManualPaymentInput) =>

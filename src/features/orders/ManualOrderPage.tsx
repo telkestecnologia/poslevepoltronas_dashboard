@@ -90,8 +90,8 @@ export function ManualOrderPage({ credentials, onOpenOrder, conversationId, edit
     </div>
     {error && <div className="form-error" role="alert">{error}</div>}
     {editOrderId && <section className="panel mo-edit" aria-labelledby="mo-edit-title">
-      <h2 id="mo-edit-title">Alterar ficha e venda{editing ? ` • ${editing.customerName}` : ''}</h2>
-      <p className="page-subtitle">CPF, e-mail, quem recebe, local, forma de pagamento, desconto, plano, indicação e nota fiscal. Ao salvar, você volta para o pedido.</p>
+      <h2 id="mo-edit-title">Alterar dados da cliente e venda{editing ? ` • ${editing.customerName}` : ''}</h2>
+      <p className="page-subtitle">Nome, WhatsApp, endereço, CPF, e-mail, quem recebe, local e os detalhes da venda. Ao salvar, você volta para o pedido.</p>
       {editing ? <OrderFichaEditor credentials={credentials} order={editing} onDone={() => onOpenOrder(editing.id)} /> : <p className="order-muted">Carregando...</p>}
     </section>}
     {open && !loadingFrom && <div className="modal-backdrop mo-dialog-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) setOpen(false) }}>

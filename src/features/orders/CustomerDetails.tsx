@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { api, type CustomerDetails, type Order, type SaleDetails } from '../../api'
 import { getMessage } from '../../utils/errors'
 import { toCents } from '../../utils/money'
-import { formatPhone } from '../../utils/phone'
+import { brazilPhoneDigits, formatPhone } from '../../utils/phone'
 import { centsText, EMPTY_SALE, SaleDetailsFields, summaryRows, usePlanNames } from './SaleDetailsCard'
 import './manual-order.css'
 
@@ -11,6 +11,11 @@ export const EMPTY_CUSTOMER: CustomerDetails = {
 }
 
 export const placeLabels = { CASA: 'Casa', CONDOMINIO: 'Condomínio', APARTAMENTO: 'Apartamento' } as const
+
+const formatCep = (value: string) => {
+  const digits = value.replace(/\D/g, '').slice(0, 8)
+  return digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits
+}
 
 export const formatCpf = (value: string) => {
   const digits = value.replace(/\D/g, '').slice(0, 11)
@@ -89,6 +94,11 @@ export function OrderFichaEditor({ credentials, order, onDone }: { credentials: 
   const [discount, setDiscount] = useState('')
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
+  // Nome, WhatsApp, endereço e CEP do pedido: também podem ser corrigidos aqui.
+  const [name, setName] = useState(order.customerName)
+  const [phone, setPhone] = useState(formatPhone(brazilPhoneDigits(order.customerPhone)))
+  const [address, setAddress] = useState(order.address)
+  const [cep, setCep] = useState(formatCep(order.postalCode ?? ''))
 
   useEffect(() => {
     let active = true
@@ -101,9 +111,16 @@ export function OrderFichaEditor({ credentials, order, onDone }: { credentials: 
   }, [credentials, order.id])
 
   async function save() {
+    const digits = phone.replace(/\D/g, '')
+    if (name.trim().length < 3) { setMessage('Informe o nome completo da cliente.'); return }
+    if (digits.length !== 10 && digits.length !== 11) { setMessage('Informe o WhatsApp com DDD.'); return }
+    if (!address.trim()) { setMessage('Informe o endereço de entrega.'); return }
     setBusy(true)
     setMessage('')
     try {
+      const sameCustomer = name.trim() === order.customerName && digits === brazilPhoneDigits(order.customerPhone)
+        && address.trim() === order.address && cep.replace(/\D/g, '') === (order.postalCode ?? '').replace(/\D/g, '')
+      if (!sameCustomer) await api.updateOrderCustomer(credentials, order.id, { customerName: name.trim(), customerPhone: digits, address: address.trim(), cep })
       await api.saveCustomerDetails(credentials, order.id, customer)
       await api.saveSaleDetails(credentials, order.id, { ...sale, discountCents: sale.discount ? toCents(discount) : null })
       onDone()
@@ -117,9 +134,21 @@ export function OrderFichaEditor({ credentials, order, onDone }: { credentials: 
   const changeCustomer = (changes: Partial<CustomerDetails>) => { setCustomer(current => ({ ...current, ...changes })); setMessage('') }
   return <div className="sd-card">
     <p className="mw-question">Cliente</p>
-    <div className="mw-grid"><CustomerIdFields value={customer} onChange={changeCustomer} /></div>
+    <div className="mw-grid">
+      <label>Nome completo<input value={name} maxLength={120} onChange={event => { setName(event.target.value); setMessage('') }} /></label>
+      <label>WhatsApp com DDD<input type="tel" inputMode="numeric" value={phone} maxLength={15} placeholder="(85) 99999-9999"
+        onChange={event => { setPhone(formatPhone(event.target.value)); setMessage('') }} /></label>
+      <CustomerIdFields value={customer} onChange={changeCustomer} />
+    </div>
     <p className="mw-question">Entrega e local</p>
-    <div className="mw-grid"><DeliveryPlaceFields value={customer} onChange={changeCustomer} /></div>
+    <div className="mw-grid">
+      <label className="mw-wide">Endereço de entrega <em>(rua, número, complemento e bairro)</em><input value={address} maxLength={300}
+        onChange={event => { setAddress(event.target.value); setMessage('') }} /></label>
+      <label>CEP <em>(opcional)</em><input inputMode="numeric" value={cep} placeholder="00000-000"
+        onChange={event => setCep(formatCep(event.target.value))} /></label>
+      <label>Cidade<input value={`${order.municipalityName}/${order.municipalityUf}`} disabled /></label>
+      <DeliveryPlaceFields value={customer} onChange={changeCustomer} />
+    </div>
     <p className="mw-question">Detalhes da venda</p>
     <SaleDetailsFields value={sale} discount={discount} plans={plans} onChange={changes => { setSale(current => ({ ...current, ...changes })); setMessage('') }}
       onDiscount={setDiscount} />

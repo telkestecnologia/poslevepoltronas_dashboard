@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { ArrowRight, Armchair, CalendarClock, CheckCircle2, ClipboardCheck, CreditCard, Images, PackageCheck, Truck, Undo2, X, type LucideIcon } from 'lucide-react'
 import type { Courier, Order } from '../../api'
-import { actorLabel, dateTimeLabel, eventKind, eventKinds, eventLabel, weekdayDateLabel } from '../../data/orders'
+import { actorLabel, balanceCents, currency, dateTimeLabel, eventKind, eventKinds, eventLabel, weekdayDateLabel } from '../../data/orders'
 import './order-journey.css'
 
 type Step = { key: string; label: string; hint: string; icon: LucideIcon; actions: string[]; planned?: string }
@@ -123,6 +123,18 @@ function StepWindow({ order, couriers, steps, index, now, onOpenMedia, onClose, 
         {current && <div><span className="oj-live" />Esta é a etapa em andamento agora.</div>}
       </div>
       {schedule && <div className="oj-window-schedule">{schedule}</div>}
+      {/* Pendências e anotações importantes (pedido manual e automático): o que falta receber, problemas em aberto e a observação. */}
+      {(() => {
+        const due = balanceCents(order)
+        const open = (order.issues ?? []).filter(issue => issue.status === 'OPEN')
+        if (!due && !open.length && !order.internalNote) return null
+        return <div className="oj-window-notes" role="note">
+          <span className="oj-window-notes-title">Pendências e anotações</span>
+          {due > 0 && <p className="due"><b>Falta receber {currency(due)}</b> — lance em “Pagamentos” quando a cliente pagar.</p>}
+          {open.map(issue => <p key={issue.id} className="issue"><b>Problema em aberto:</b> {issue.title}</p>)}
+          {order.internalNote && <p className="note"><b>Observação:</b> {order.internalNote}</p>}
+        </div>
+      })()}
       </div>
       {side && <div className="oj-window-side">{side}</div>}
       </div>

@@ -182,3 +182,10 @@
 /* Dia e horário da etapa logo abaixo de "Esta é a etapa em andamento agora". */
 .oj-window-schedule { margin-top: 10px; }
 .oj-window-schedule .oj-action.oj-schedule { margin: 0; }
+
+/* Pendências e anotações na janela da etapa: ocupa o espaço ao lado da ilustração. */
+.oj-window-notes { display: grid; gap: 6px; margin-top: 10px; padding: 12px 14px; border-radius: 12px; background: #fff8e1; border: 1px solid #f3dd7a; }
+.oj-window-notes-title { color: #8a6a00; font-size: 11.5px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+.oj-window-notes p { margin: 0; color: #3e4e53; font-size: 13.5px; line-height: 1.4; white-space: pre-line; }
+.oj-window-notes p.due b { color: #c4532c; }
+.oj-window-notes p.issue b { color: #d4412d; }
