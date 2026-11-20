@@ -3,7 +3,7 @@
 const officialBranches = [
   { label: 'Fortaleza e região metropolitana', pattern: /\bfortaleza\b/ },
   // Ibiapaba e Sobral viraram uma filial só (a antiga Região de Sobral também cai aqui).
-  { label: 'Ibiapaba, Sobral e regiões vizinhas', pattern: /\bserra\b|\bibiapaba\b|\bsobral\b/ },
+  { label: 'Ibiapaba, Sobral e Regiões Vizinhas', pattern: /\bserra\b|\bibiapaba\b|\bsobral\b/ },
 ]
 
 export const OFFICIAL_BRANCH_COUNT = officialBranches.length
@@ -58,4 +58,25 @@ export function chairName(code: string, branchName?: string | null) {
   const number = code.match(/(\d+)\D*$/)?.[1]
   if (!prefix || !number) return `Poltrona ${code}`
   return `Poltrona ${prefix}-${number.padStart(2, '0')}`
+}
+
+/** Cidades da Serra da Ibiapaba; as demais da filial unida ficam em "Sobral e Regiões Vizinhas". */
+const IBIAPABA_CITIES = ['carnaubal', 'croata', 'guaraciaba do norte', 'ibiapina', 'ipu', 'sao benedito', 'tiangua', 'ubajara', 'vicosa do ceara']
+
+/**
+ * Na filial Ibiapaba, Sobral e Regiões Vizinhas as cidades aparecem em dois lados: Serra da Ibiapaba e Sobral e
+ * Regiões Vizinhas. Nas outras filiais, um grupo só (title vazio).
+ */
+export function cityRegions<T extends { name: string }>(branchName: string, cities: T[]): { title: string; cities: T[] }[] {
+  const plain = (text: string) => text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+  if (!/\bsobral\b/.test(plain(branchName)) || !/\bibiapaba\b/.test(plain(branchName))) return [{ title: '', cities }]
+  const serra = cities.filter(city => IBIAPABA_CITIES.includes(plain(city.name)))
+  const sobral = cities.filter(city => !IBIAPABA_CITIES.includes(plain(city.name)))
+  return [{ title: 'Serra da Ibiapaba', cities: serra }, { title: 'Sobral e Regiões Vizinhas', cities: sobral }]
+}
+
+/** Número da filial oficial: 1 = Fortaleza e região metropolitana, 2 = Ibiapaba, Sobral e Regiões Vizinhas. */
+export function branchNumber(name: string): number | null {
+  const index = officialIndex(name)
+  return index < 0 ? null : index + 1
 }

@@ -3,7 +3,7 @@ import { ArrowLeft, Armchair, CheckCircle2, ChevronRight, MapPin, PauseCircle, P
 import { api, type Branch, type BranchInput, type BranchMunicipality, type Chair, type Municipality } from '../../api'
 import { BranchModal } from './BranchModal'
 import { EmptyState } from '../../components/common'
-import { branchLabel, chairName } from '../../utils/branches'
+import { branchLabel, branchNumber, chairName, cityRegions } from '../../utils/branches'
 import { getMessage } from '../../utils/errors'
 import './branches.css'
 
@@ -39,6 +39,7 @@ export function BranchesPage({ branches, activeCounts, onNewBranch, credentials,
       <button type="button" className="branch-back" onClick={() => setEnteredId(null)}><ArrowLeft size={16} /> Todas as filiais</button>
       <section className="branch-enter" style={{ backgroundImage: `url(${branchPhoto(entered.name)})` }}>
         <div className="branch-enter-body">
+          {branchNumber(entered.name) && <span className="branch-number">Filial {branchNumber(entered.name)}</span>}
           <h1>{branchLabel(entered.name)}</h1>
           <div className="branch-enter-status">
             <p>{activeCounts[entered.id] ?? 0} poltronas ativas • {entered.municipalities.length} cidades</p>
@@ -118,7 +119,8 @@ export function BranchesPage({ branches, activeCounts, onNewBranch, credentials,
                         <span className="row-icon">
                           <MapPin size={18} />
                         </span>
-                        <strong>{branchLabel(branch.name)}</strong>
+                        <span className="branch-name-stack">{branchNumber(branch.name) && <small className="branch-number-small">Filial {branchNumber(branch.name)}</small>}
+                          <strong>{branchLabel(branch.name)}</strong></span>
                       </div>
                     </td>
                     <td>
@@ -158,8 +160,9 @@ const freightLabel = (cents: number) => cents === 0 ? 'Grátis'
 /** Cidades da filial com o frete de cada uma (só leitura). Filial com frete grátis geral mostra Grátis em todas. */
 function BranchCities({ branch }: { branch: Branch }) {
   if (branch.municipalities.length === 0) return <p className="branch-muted">Nenhuma cidade cadastrada nesta filial.</p>
-  return <ul className="branch-cities">
-    {sortedCities(branch.municipalities).map(city => {
+  const groups = cityRegions(branch.name, sortedCities(branch.municipalities))
+  const list = (cities: typeof branch.municipalities) => <ul className="branch-cities">
+    {cities.map(city => {
       const free = branch.freeShipping || city.freightCents === 0
       return <li key={city.code}>
         <MapPin size={15} aria-hidden="true" />
@@ -168,6 +171,14 @@ function BranchCities({ branch }: { branch: Branch }) {
       </li>
     })}
   </ul>
+  if (groups.length === 1) return list(groups[0].cities)
+  // Filial unida: Serra da Ibiapaba de um lado, Sobral e Regiões Vizinhas do outro.
+  return <div className="branch-regions">
+    {groups.map(group => <div key={group.title} className="branch-region">
+      <h3>{group.title} <small>({group.cities.length})</small></h3>
+      {group.cities.length ? list(group.cities) : <p className="branch-muted">Nenhuma cidade.</p>}
+    </div>)}
+  </div>
 }
 
 function branchPhoto(name: string) {

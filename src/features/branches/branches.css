@@ -175,3 +175,15 @@ button.branch-chair:hover { filter: brightness(0.98); }
   .municipality-picker .municipality-fee { grid-template-columns: minmax(150px, 1fr) 140px auto 34px; grid-template-areas: "name price free remove"; }
   .municipality-picker .municipality-fee > label:not(.municipality-free) { max-width: none; }
 }
+
+/* Número da filial e as duas regiões da filial unida. */
+.branch-number { display: inline-block; background: rgba(255, 255, 255, 0.92); color: #0f5c66; border-radius: 999px; padding: 4px 12px;
+  font-size: 12px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 6px; }
+.branch-name-stack { display: grid; gap: 2px; }
+.branch-number-small { color: #1a9baa; font-size: 11px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+.branch-regions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.branch-region { display: grid; gap: 10px; align-content: start; border: 1px solid #e3ecec; border-radius: 14px; padding: 14px; }
+.branch-region h3 { margin: 0; font-size: 16px; color: #14262f; }
+.branch-region h3 small { color: #6b7d84; font-weight: 600; }
+.branch-region .branch-cities { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 900px) { .branch-regions { grid-template-columns: 1fr; } .branch-region .branch-cities { grid-template-columns: 1fr; } }

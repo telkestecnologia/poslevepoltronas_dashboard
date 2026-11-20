@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { ArrowRight, PlusCircle, X } from 'lucide-react'
 import { FormIntro } from '../../components/FormIntro'
 import type { Branch, Chair, ChairStatus } from '../../api'
-import { branchLabel, isOfficialBranch } from '../../utils/branches'
+import { branchLabel, onlyOfficialBranches } from '../../utils/branches'
 
 export function ChairModal({
   modal,
@@ -35,7 +35,14 @@ export function ChairModal({
   const [status, setStatus] = useState<ChairStatus>(chair?.status ?? 'ACTIVE')
   // Nova poltrona aberta de dentro da filial: a filial já vem escolhida e não aparece o seletor.
   const fixedBranch = modal.kind === 'newChair' && modal.branchId ? branches.find(branch => branch.id === modal.branchId) : undefined
-  const [branchId, setBranchId] = useState(chair?.branchId ?? fixedBranch?.id ?? '')
+  // Poltrona ligada a uma filial antiga (ex.: Região de Sobral, juntada à Ibiapaba) abre na filial ativa da mesma região.
+  const [branchId, setBranchId] = useState(() => {
+    const current = chair?.branchId ?? fixedBranch?.id ?? ''
+    const shown = onlyOfficialBranches(branches, branch => branch.name)
+    if (!current || shown.some(branch => branch.id === current)) return current
+    const old = branches.find(branch => branch.id === current)
+    return old ? shown.find(branch => branchLabel(branch.name) === branchLabel(old.name))?.id ?? current : current
+  })
   const title = chair ? 'Editar poltrona' : 'Nova poltrona'
 
   function submit(event: FormEvent) {
@@ -109,7 +116,8 @@ export function ChairModal({
               Filial
               <select value={branchId} onChange={(e) => setBranchId(e.target.value)} required>
                 <option value="">Selecione uma filial</option>
-                {branches.filter((branch) => isOfficialBranch(branch.name) || branch.id === chair?.branchId).map((branch) => (
+                {/* Uma filial por região (a antiga Região de Sobral, juntada à Ibiapaba, não aparece). */}
+                {onlyOfficialBranches(branches, (branch) => branch.name).map((branch) => (
                   <option key={branch.id} value={branch.id}>
                     {branchLabel(branch.name)}
                     {!branch.active ? ' (inativa)' : ''}
