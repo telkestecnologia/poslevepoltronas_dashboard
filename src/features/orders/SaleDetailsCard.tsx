@@ -96,7 +96,7 @@ export function SaleDetailsSummary({ credentials, order, onEdit }: { credentials
     {ficha === null ? <p className="order-muted">Carregando...</p>
       : rows.length === 0 ? <p className="order-muted">Ainda não preenchido.</p>
         : <dl className="od-facts sd-summary">{rows.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>}
-    <button type="button" className="button secondary sd-edit" onClick={onEdit}><PenLine size={15} /> Alterar no Pedido manual</button>
+    <button type="button" className="button secondary sd-edit" onClick={onEdit}><PenLine size={15} /> Alterar no Cadastro Manual</button>
   </section>
 }
 

@@ -181,7 +181,7 @@ export function OrdersPage({ credentials, params, onOpenOrder }: Props) {
       {!shown ? <div className="empty-state" role="status"><p>{error ? 'Não foi possível carregar os pedidos.' : 'Carregando pedidos...'}</p></div>
         : shown.items.length === 0 ? (unfiltered
           ? <EmptyState icon={ClipboardList} title="Nenhum pedido registrado"
-            text="Os pedidos do site aparecerão aqui após a reserva e o aceite do contrato. Clientes de antes do sistema entram em “Pedido manual”." />
+            text="Os pedidos do site aparecerão aqui após a reserva e o aceite do contrato. Clientes de antes do sistema entram em “Cadastro Manual”." />
           : <EmptyState icon={Search} title="Nenhum pedido encontrado" text="Ajuste a busca, o resumo, a filial ou a cidade." />)
           : <div className={`table-scroll${stale ? ' is-stale' : ''}`} aria-busy={stale}><table className={`orders-table${active ? ` tinted tone-${active.tone}` : ''}`}><thead><tr>
             <th>CLIENTE</th><th>PERÍODO</th><th>POLTRONA</th><th>STATUS</th><th>PROBLEMAS</th><th><span className="sr-only">Ação</span></th>

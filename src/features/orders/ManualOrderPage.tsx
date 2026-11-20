@@ -58,7 +58,7 @@ export function ManualOrderPage({ credentials, onOpenOrder, conversationId, edit
     const started = Date.now()
     const existing = readDraft()
     const keep = draftIsOpen(existing) && existing?.conversationId !== conversationId
-      && !window.confirm('Já existe um pedido manual em aberto. Substituir pelos dados desta conversa?')
+      && !window.confirm('Já existe um cadastro manual em aberto. Substituir pelos dados desta conversa?')
     const finish = () => {
       window.setTimeout(() => {
         if (!active) return
@@ -84,7 +84,7 @@ export function ManualOrderPage({ credentials, onOpenOrder, conversationId, edit
       </div>
     </div>}
     <div className="page-heading with-action">
-      <div><span className="eyebrow">OPERAÇÃO • PEDIDO MANUAL</span><h1>Lista de pedidos manuais</h1>
+      <div><span className="eyebrow">OPERAÇÃO • CADASTRO MANUAL</span><h1>Lista de pedidos manuais</h1>
         <p className="page-subtitle">Clientes de antes do sistema e exceções. O pedido ocupa a poltrona e segue para entrega e retirada.</p></div>
       <button type="button" className="button mo-open" onClick={() => setOpen(true)}>Cadastrar manualmente</button>
     </div>
@@ -97,7 +97,7 @@ export function ManualOrderPage({ credentials, onOpenOrder, conversationId, edit
     {open && !loadingFrom && <div className="modal-backdrop mo-dialog-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) setOpen(false) }}>
       <section className="mo-dialog" role="dialog" aria-modal="true" aria-labelledby="mo-dialog-title">
         <header className="mo-dialog-head">
-          <div><span className="eyebrow">PEDIDO MANUAL</span><h2 id="mo-dialog-title">Cadastrar manualmente</h2></div>
+          <div><span className="eyebrow">CADASTRO MANUAL</span><h2 id="mo-dialog-title">Cadastrar manualmente</h2></div>
           <button type="button" className="icon-button" aria-label="Fechar (o rascunho continua salvo)" title="Fechar (o rascunho continua salvo)"
             onClick={() => setOpen(false)}><X size={20} /></button>
         </header>

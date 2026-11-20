@@ -27,7 +27,7 @@ const navigation = [
   { page: 'finance', label: 'Financeiro', icon: Wallet },
   { page: 'branches', label: 'Frete e Poltronas', icon: MapPin },
   { page: 'agenda', label: 'Pedidos Hoje', icon: ClipboardList },
-  { page: 'manualOrder', label: 'Pedido manual', icon: ClipboardPlus },
+  { page: 'manualOrder', label: 'Cadastro Manual', icon: ClipboardPlus },
   { page: 'conversations', label: 'Atendimento', icon: MessagesSquare },
   { page: 'ai', label: 'O que a Isa sabe', icon: Sparkles },
   { page: 'payments', label: 'Pagamentos e preços', icon: BadgeDollarSign },
