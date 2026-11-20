@@ -13,7 +13,7 @@ function stepsOf(order: Order): Step[] {
     { key: 'PAYMENT_CONFIRMED', label: 'Pagamento confirmado', hint: 'O pagamento caiu e a reserva está garantida', icon: CreditCard,
       actions: ['STATUS_PAYMENT_CONFIRMED', 'PIX_CONFIRMED', 'CARD_CONFIRMED', 'MOCK_PAYMENT_CONFIRMED'] },
     { key: 'DEPARTURE', label: 'Saindo para entrega', hint: 'O cliente é avisado que a poltrona está a caminho', icon: Truck,
-      actions: ['DELIVERY_DEPARTURE_NOTIFIED', 'STATUS_DELIVERY_PENDING'] },
+      actions: ['DELIVERY_DEPARTURE_NOTIFIED', 'STATUS_DELIVERY_PENDING'], planned: order.deliveryDate ?? order.start },
     { key: 'DELIVERY_PENDING', label: 'Entrega', hint: 'O entregador leva e instala a poltrona', icon: PackageCheck,
       actions: ['STATUS_IN_USE'], planned: order.deliveryDate ?? order.start },
     { key: 'IN_USE', label: 'Em uso', hint: 'A poltrona está com o cliente', icon: Armchair, actions: ['STATUS_IN_USE'] },
@@ -63,7 +63,7 @@ export function OrderJourney({ order, couriers, onOpenMedia, renderActions, rend
     <header className="oj-head">
       <div><span className="eyebrow">JORNADA DO PEDIDO</span>
         <h2>{now >= steps.length ? 'Pedido concluído do início ao fim' : <>Agora: <em>{steps[now].label}</em></>}</h2>
-        <p>{now >= steps.length ? 'Todas as etapas foram cumpridas.' : steps[now].hint}.</p>
+        {now >= steps.length && <p>Todas as etapas foram cumpridas.</p>}
         <p className="oj-tip">👆 Clique numa bolinha para ver o que foi feito e agir na etapa.</p></div>
       <div className="oj-progress" aria-label={`${percent}% concluído`}>
         <strong>{percent}%</strong><span>{doneCount} de {steps.length} etapas</span>
