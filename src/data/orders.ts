@@ -62,6 +62,7 @@ const eventLabels: Record<string, string> = {
   MOCK_PAYMENT_CONFIRMED: 'Pagamento confirmado',
   CREATED_MANUAL: 'Pedido manual cadastrado', NOTE_UPDATED: 'Observação interna', MANUAL_PAYMENT: 'Pagamento lançado',
   MANUAL_PAYMENT_REMOVED: 'Pagamento desfeito', CHAIR_CHANGED: 'Poltrona trocada',
+  SALE_DETAILS_UPDATED: 'Detalhes da venda', CUSTOMER_DETAILS_UPDATED: 'Ficha do cliente', CONTRACT_FILE_UPLOADED: 'Contrato anexado',
 }
 
 /** Texto da linha do tempo para cada código de evento gravado pelo backend no histórico do pedido. */
@@ -84,7 +85,7 @@ export function eventTone(action: string): EventTone {
 export const eventKinds = {
   order: { label: 'Pedido', emoji: '📝' }, payment: { label: 'Pagamento', emoji: '💰' }, delivery: { label: 'Entrega', emoji: '🚚' },
   problem: { label: 'Problema', emoji: '⚠️' }, done: { label: 'Concluído', emoji: '✅' }, closed: { label: 'Encerrado', emoji: '⛔' },
-  step: { label: 'Andamento', emoji: '➡️' },
+  step: { label: 'Alteração', emoji: '✏️' },
 } as const
 
 export function eventKind(action: string): keyof typeof eventKinds {

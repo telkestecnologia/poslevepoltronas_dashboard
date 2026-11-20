@@ -1,8 +1,9 @@
 /** Horário de entrega/retirada: fixo ("14:00") ou faixa ("08:00-12:00", combinada pela Isa no WhatsApp). */
 export function timeLabel(time: string | null | undefined) {
   if (!time) return ''
+  // Faixa escolhida pela cliente vira o turno (de manhã / à tarde); horário marcado aparece como está.
   const [start, end] = time.split('-')
-  return end ? `entre ${start} e ${end}` : `às ${start}`
+  return end ? (Number(start.slice(0, 2)) < 12 ? 'de manhã' : 'à tarde') : `às ${start}`
 }
 
 /** Na agenda: horário marcado ("14:00"); se for só a faixa, o turno ("Manhã" ou "Tarde"); sem nada, "A combinar". */

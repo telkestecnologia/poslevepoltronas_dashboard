@@ -486,9 +486,9 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
         <section className="od-logistics-statement" aria-label="Entrega e retirada">
           <small><Truck size={15} /> Entrega e retirada</small>
           <p>A poltrona chega <mark>{weekdayDateLabel(order.deliveryDate ?? order.start)}</mark>
-            {order.deliveryTime ? <> <mark>{timeLabel(order.deliveryTime)}</mark></> : ' (sem horário combinado)'}
+            {order.deliveryTime ? <> <mark>{timeLabel(order.deliveryTime)}</mark></> : ' (horário a combinar)'}
             {' '}em <mark>{order.municipalityName}/{order.municipalityUf}</mark> e volta <mark className="back">{weekdayDateLabel(order.pickupDate ?? order.end)}</mark>
-            {order.pickupTime ? <> <mark className="back">{timeLabel(order.pickupTime)}</mark></> : ' (sem horário combinado)'}.</p>
+            {order.pickupTime ? <> <mark className="back">{timeLabel(order.pickupTime)}</mark></> : ' (horário a combinar)'}.</p>
           {stockDiffers && <em className="od-logistics-stock"><CalendarClock size={14} /> Estoque bloqueado de {dateLabel(order.stockStart!)} a {dateLabel(order.stockEnd!)}.</em>}
           <div className="od-logistics-where">
             <span><MapPin size={15} /> {order.address}{order.postalCode ? ` • CEP ${order.postalCode}` : ''}</span>
@@ -501,13 +501,13 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
             <div className="od-schedule-item delivery">
               <small>Entrega</small>
               <strong>{weekdayDateLabel(order.deliveryDate ?? order.start)}</strong>
-              <span>{order.deliveryTime ? timeLabel(order.deliveryTime) : 'Sem horário combinado'}</span>
+              <span>{order.deliveryTime ? timeLabel(order.deliveryTime) : 'Horário a combinar'}</span>
             </div>
             <ArrowRight size={18} className="od-schedule-arrow" aria-hidden="true" />
             <div className="od-schedule-item pickup">
               <small>Retirada</small>
               <strong>{weekdayDateLabel(order.pickupDate ?? order.end)}</strong>
-              <span>{order.pickupTime ? timeLabel(order.pickupTime) : 'Sem horário combinado'}</span>
+              <span>{order.pickupTime ? timeLabel(order.pickupTime) : 'Horário a combinar'}</span>
             </div>
           </div>
           {stockDiffers && <p className="od-stock-note"><CalendarClock size={15} />

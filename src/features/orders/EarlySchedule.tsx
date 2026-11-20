@@ -1,3 +1,4 @@
+import { timeLabel } from '../../utils/time'
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { CalendarClock, X } from 'lucide-react'
@@ -118,7 +119,7 @@ export function InlineSchedule({ order, kind, busy, onSave }: {
 
   return <div className="od-inline-schedule">
     <div className="od-inline-now"><CalendarClock size={18} />
-      <span>{moved ? 'Combinada' : 'Prevista'} para <b>{dayLabel(day)}</b>{time ? <> às <b>{time.slice(0, 5)}</b></> : ' (sem horário)'}</span></div>
+      <span>{moved ? 'Combinada' : 'Prevista'} para <b>{dayLabel(day)}</b>{time ? <> <b>{timeLabel(time)}</b></> : ' (horário a combinar)'}</span></div>
     {!editing ? <button type="button" className="button secondary od-reschedule-open" disabled={busy}
       onClick={() => { setEditing(true); setDone('') }}><CalendarClock size={16} /> Reagendar</button> : <>
     {!delivery && <p className="field-help od-extend-help">Para <strong>prorrogar</strong>, escolha um dia depois de {shortDay(day)}.

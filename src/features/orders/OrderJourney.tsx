@@ -153,7 +153,7 @@ export function OrderHistoryFull({ order, couriers }: { order: Order; couriers: 
     <header className="oh-head">
       <div><span className="eyebrow">HISTÓRICO</span><h2 id="oh-title">Tudo o que aconteceu neste pedido</h2>
         <p>Do mais recente para o mais antigo. Cada cor é um tipo de acontecimento.</p></div>
-      <div className="oh-legend">{(['order', 'payment', 'delivery', 'problem', 'done'] as const).map(key =>
+      <div className="oh-legend">{(['order', 'payment', 'delivery', 'step', 'problem', 'done'] as const).map(key =>
         <span key={key} className={`oh-chip kind-${key}`}>{eventKinds[key].emoji} {eventKinds[key].label}</span>)}</div>
     </header>
     {[...days.entries()].map(([day, list]) => <div key={day} className="oh-day">
@@ -165,7 +165,7 @@ export function OrderHistoryFull({ order, couriers }: { order: Order; couriers: 
           <span className="oh-dot" aria-hidden="true">{eventKinds[kind].emoji}</span>
           <div className="oh-card"><strong>{eventLabel(event.action)}</strong>
             <small>{eventKinds[kind].label} • por {actorLabel(event.actor, couriers)}</small>
-            {event.note && <p>{event.note}</p>}</div>
+            {event.note && <p>{event.note.replace(/à mão/g, 'manualmente')}</p>}</div>
         </li>
       })}</ol>
     </div>)}

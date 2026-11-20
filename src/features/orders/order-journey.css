@@ -64,12 +64,12 @@
   .oh-legend { display: flex; flex-wrap: wrap; gap: 6px; }
   .oh-chip, .oh-list li { --kind: #127a84; --kind-soft: #e5f4f5; }
   .oh-chip { padding: 4px 10px; border-radius: 99px; background: var(--kind-soft); color: var(--kind); font-size: 12px; font-weight: 700; }
-  .kind-order { --kind: #e0703f; --kind-soft: #fdeee6; }
-  .kind-payment { --kind: #2e9b5f; --kind-soft: #e5f5ec; }
-  .kind-delivery { --kind: #2f7fd0; --kind-soft: #e6f0fb; }
-  .kind-problem { --kind: #d4412d; --kind-soft: #fde8e4; }
-  .kind-done { --kind: #1f8a5b; --kind-soft: #e3f3ea; }
-  .kind-closed { --kind: #7b8a8f; --kind-soft: #eef1f2; }
+  .kind-order, .oh-list li.kind-order, .oj-window-list li.kind-order { --kind: #e0703f; --kind-soft: #fdeee6; }
+  .kind-payment, .oh-list li.kind-payment, .oj-window-list li.kind-payment { --kind: #2e9b5f; --kind-soft: #e5f5ec; }
+  .kind-delivery, .oh-list li.kind-delivery, .oj-window-list li.kind-delivery { --kind: #2f7fd0; --kind-soft: #e6f0fb; }
+  .kind-problem, .oh-list li.kind-problem, .oj-window-list li.kind-problem { --kind: #d4412d; --kind-soft: #fde8e4; }
+  .kind-done, .oh-list li.kind-done, .oj-window-list li.kind-done { --kind: #1f8a5b; --kind-soft: #e3f3ea; }
+  .kind-closed, .oh-list li.kind-closed, .oj-window-list li.kind-closed { --kind: #7b8a8f; --kind-soft: #eef1f2; }
 
   .oh-day h3 { margin: 0 0 10px; color: #12727d; font-family: 'Inter', sans-serif; font-size: 12.5px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; }
   .oh-list { position: relative; display: grid; gap: 10px; margin: 0 0 6px; padding: 0; list-style: none; }
