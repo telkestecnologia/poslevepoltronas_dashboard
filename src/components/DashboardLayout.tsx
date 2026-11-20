@@ -25,7 +25,7 @@ import { Brand } from './common'
 const navigation = [
   { page: 'overview', label: 'Visão geral', icon: Home },
   { page: 'finance', label: 'Financeiro', icon: Wallet },
-  { page: 'branches', label: 'Filiais', icon: MapPin },
+  { page: 'branches', label: 'Frete e Poltronas', icon: MapPin },
   { page: 'agenda', label: 'Pedidos Hoje', icon: ClipboardList },
   { page: 'manualOrder', label: 'Pedido manual', icon: ClipboardPlus },
   { page: 'conversations', label: 'Atendimento', icon: MessagesSquare },

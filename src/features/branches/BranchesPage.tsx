@@ -80,7 +80,7 @@ export function BranchesPage({ branches, activeCounts, onNewBranch, credentials,
       <div className="page-heading with-action">
         <div>
           <span className="eyebrow">FILIAIS • PÓS LEVE</span>
-          <h1>Filiais</h1>
+          <h1>Frete e Poltronas</h1>
         </div>
         {/* Só o administrador cadastra filiais. */}
         <button className="button primary admin-only branch-new-small" onClick={onNewBranch}>

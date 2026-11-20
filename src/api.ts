@@ -121,6 +121,8 @@ export type Order = {
 export type OrderQuery = {
   statuses?: OrderStatus[]; source?: OrderSource | OrderSource[]; branchId?: string; municipalityCode?: string; courierId?: string
   from?: string; to?: string; openIssues?: boolean; search?: string
+  /** delivery: pelo dia da entrega, a mais perto de hoje em cima e as já passadas no fim. */
+  sort?: 'delivery'
 }
 /** counts e openIssues ignoram os filtros de status e de problemas (servem para os cartões de resumo). */
 export type OrderPage = {
@@ -472,6 +474,7 @@ function orderParams(query: OrderQuery, page: number, size: number) {
   if (query.to) params.set('to', query.to)
   if (query.openIssues) params.set('openIssues', 'true')
   if (query.search?.trim()) params.set('search', query.search.trim())
+  if (query.sort) params.set('sort', query.sort)
   return params
 }
 

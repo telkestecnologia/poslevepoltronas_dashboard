@@ -86,6 +86,8 @@ export function OrdersPage({ credentials, params, onOpenOrder }: Props) {
     branchId: branchId === 'ALL' ? undefined : branchId,
     municipalityCode: cityCode === 'ALL' ? undefined : cityCode,
     statuses: active?.statuses, openIssues: active?.issues,
+    // Pelo dia da entrega: a mais perto de hoje em cima.
+    sort: 'delivery',
   } satisfies OrderQuery)
 
   const load = useCallback(async () => {
