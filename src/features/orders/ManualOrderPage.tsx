@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, ChevronDown, ChevronUp } from 'lucide-react'
 import { api, type Branch, type Order } from '../../api'
 import { dateLabel, orderStatusLabel } from '../../data/orders'
 import { replaceQuery } from '../../router'
@@ -26,6 +26,10 @@ export function ManualOrderPage({ credentials, onOpenOrder, conversationId }: {
   const [error, setError] = useState('')
   const [loadingFrom, setLoadingFrom] = useState<string | null>(conversationId ?? null)
   const [version, setVersion] = useState(0)
+  // Abrir e fechar o formulário (lembrado neste navegador). Vindo da conversa, abre sempre.
+  const [open, setOpen] = useState(() => { try { return localStorage.getItem('posleve.manualFormOpen') !== 'no' } catch { return true } })
+  const toggle = () => setOpen(value => { const next = !value; try { localStorage.setItem('posleve.manualFormOpen', next ? 'yes' : 'no') } catch { /* sem armazenamento */ } return next })
+  useEffect(() => { if (conversationId) setOpen(true) }, [conversationId])
 
   const loadRecent = useCallback(() => api.orderPage(credentials, { source: 'MANUAL' }, 0, 10)
     .then(page => setRecent(page.items)).catch(cause => setError(getMessage(cause))), [credentials])
@@ -75,7 +79,11 @@ export function ManualOrderPage({ credentials, onOpenOrder, conversationId }: {
         <p className="page-subtitle">Clientes de antes do sistema e exceções. O pedido ocupa a poltrona e segue para entrega e retirada.</p></div>
     </div>
     {error && <div className="form-error" role="alert">{error}</div>}
-    {branches === null || loadingFrom ? <div className="empty-state" role="status"><p>Carregando...</p></div>
+    <button type="button" className="mo-toggle" aria-expanded={open} onClick={toggle}>
+      <span>{open ? 'Fechar cadastro' : 'Abrir cadastro de pedido manual'}</span>
+      {open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+    </button>
+    {!open ? null : branches === null || loadingFrom ? <div className="empty-state" role="status"><p>Carregando...</p></div>
       : <ManualOrderWizard key={version} credentials={credentials} branches={branches}
         onClear={() => { clearDraft(); setVersion(value => value + 1) }}
         onCreated={order => { void loadRecent(); onOpenOrder(order.id) }} />}
