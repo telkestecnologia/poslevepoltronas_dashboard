@@ -1,4 +1,4 @@
-import { timeShort } from '../../utils/time'
+import { agendaTime } from '../../utils/time'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowRight, Building2, CalendarCheck, ChevronLeft, ChevronRight, MapPin, RefreshCw, Truck, Undo2, CalendarDays } from 'lucide-react'
 import { api, REAL_SOURCES, type Branch, type Courier, type Order, type OrderQuery, type OrderStatus } from '../../api'
@@ -82,19 +82,6 @@ export function AgendaPage({ credentials, onOpenOrder }: Props) {
   // Sem filtro de entregador na tela: a agenda mostra todos.
   const [calendarOpen, setCalendarOpen] = useState(false)
   const [kindFilter, setKindFilter] = useState<Kind | null>(null)
-  const [openOrders, setOpenOrders] = useState<{ delivery: Order[]; pickup: Order[] } | null>(null)
-  useEffect(() => {
-    let active = true
-    const branchId = branch === 'ALL' ? undefined : branch
-    void Promise.all([
-      fetchAllOrders(credentials, { source: REAL_SOURCES, statuses: ['PAYMENT_CONFIRMED', 'DELIVERY_PENDING'], branchId }),
-      fetchAllOrders(credentials, { source: REAL_SOURCES, statuses: ['IN_USE', 'PICKUP_PENDING'], branchId }),
-    ]).then(([delivery, pickup]) => { if (active) setOpenOrders({ delivery, pickup }) }, () => {})
-    return () => { active = false }
-  }, [credentials, branch])
-  const inCity = (order: Order) => city === 'ALL' || order.municipalityCode === city
-  const kindTotals = { delivery: openOrders?.delivery.filter(inCity).length, pickup: openOrders?.pickup.filter(inCity).length }
-  const kindOrders = kindFilter === null || !openOrders ? null : openOrders[kindFilter]
   const courier = 'ALL' as string
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState('')
@@ -196,21 +183,12 @@ export function AgendaPage({ credentials, onOpenOrder }: Props) {
     counts.set(item.date, count)
   }
 
-  // Com Entregas ou Retiradas escolhido, a lista mostra todas as pendentes daquele tipo, agrupadas por dia (igual ao app).
-  const kindItems: AgendaItem[] | null = kindFilter === null || kindOrders === null ? null : kindOrders
-    .filter(order => (branch === 'ALL' || order.branchId === branch) && (city === 'ALL' || order.municipalityCode === city))
-    .map((order): AgendaItem => kindFilter === 'delivery'
-      ? { key: `${order.id}:delivery`, kind: 'delivery', date: order.deliveryDate ?? order.start, time: order.deliveryTime, done: false, order }
-      : { key: `${order.id}:pickup`, kind: 'pickup', date: order.pickupDate ?? order.end, time: order.pickupTime, done: false, order })
-    .sort((a, b) => a.date.localeCompare(b.date) || (a.time ?? '99:99').localeCompare(b.time ?? '99:99'))
-  const selectedItems = kindItems ?? items.filter(item => item.date === selectedDate)
+  // Com Entregas ou Retiradas escolhido, a lista do dia mostra só aquele tipo. As outras datas ficam no calendário.
+  const selectedItems = items.filter(item => item.date === selectedDate && (kindFilter === null || item.kind === kindFilter))
     .sort((a, b) => (a.time ?? '99:99').localeCompare(b.time ?? '99:99')
       || cityLabel(a.order).localeCompare(cityLabel(b.order), 'pt-BR')
       || a.order.customerName.localeCompare(b.order.customerName, 'pt-BR'))
-  const grouped = kindItems
-    ? [...new Set(kindItems.map(item => item.date))].map(date => ({ code: date, label: dayFormatter.format(dateFromIso(date)),
-      items: kindItems.filter(item => item.date === date) }))
-    : [...new Map(selectedItems.map(item => [item.order.municipalityCode, cityLabel(item.order)]))]
+  const grouped = [...new Map(selectedItems.map(item => [item.order.municipalityCode, cityLabel(item.order)]))]
       .sort((a, b) => a[1].localeCompare(b[1], 'pt-BR'))
       .map(([code, label]) => ({ code, label, items: selectedItems.filter(item => item.order.municipalityCode === code) }))
   const deliveryCount = selectedItems.filter(item => item.kind === 'delivery').length
@@ -223,6 +201,7 @@ export function AgendaPage({ credentials, onOpenOrder }: Props) {
   }
 
   const todayCount = counts.get(today)
+  const todayLoading = !result
 
   return <>
     <div className="page-heading with-action">
@@ -247,15 +226,15 @@ export function AgendaPage({ credentials, onOpenOrder }: Props) {
           {cities.map(item => <option key={item.code} value={item.code}>{item.name}/{item.uf}</option>)}
         </select></label>
     </div>
-    {/* Hoje em dois cartões coloridos (igual ao app): entregas e retiradas. */}
-    {/* Clicar em Entregas mostra todas as entregas a fazer; em Retiradas, todas as retiradas. Clicar de novo volta para o dia. */}
+    {/* Só o dia de hoje nos dois cartões (muda sozinho a cada dia): entregas e retiradas de hoje. */}
+    {/* Clicar mostra só as entregas (ou retiradas) de hoje; clicar de novo mostra tudo do dia. As outras datas ficam no calendário. */}
     <div className="agenda-today-tiles" aria-live="polite">
       {(['delivery', 'pickup'] as const).map(kind => <button type="button" key={kind} aria-pressed={kindFilter === kind}
-        className={`${kind}${kindFilter === kind ? ' selected' : ''}`} onClick={() => setKindFilter(kindFilter === kind ? null : kind)}>
+        className={`${kind}${kindFilter === kind ? ' selected' : ''}`} onClick={() => { setSelectedDate(today); setKindFilter(kindFilter === kind ? null : kind) }}>
         <span className="agenda-today-icon">{kind === 'delivery' ? <Truck size={18} /> : <Undo2 size={18} />}</span>
-        <strong>{(kind === 'delivery' ? kindTotals.delivery : kindTotals.pickup) ?? '—'}</strong>
-        <small>{kind === 'delivery' ? 'Entregas a fazer' : 'Retiradas a fazer'} • {(kind === 'delivery' ? todayCount?.deliveries : todayCount?.pickups) ?? 0} hoje</small>
-        <em>{kindFilter === kind ? 'Clique para voltar ao dia' : 'Clique para ver todas'}</em>
+        <strong>{todayLoading ? '—' : (kind === 'delivery' ? todayCount?.deliveries : todayCount?.pickups) ?? 0}</strong>
+        <small>{kind === 'delivery' ? 'Entregas hoje' : 'Retiradas hoje'}</small>
+        <em>{kindFilter === kind ? 'Clique para ver tudo do dia' : kind === 'delivery' ? 'Clique para ver as entregas de hoje' : 'Clique para ver as retiradas de hoje'}</em>
       </button>)}
     </div>
 
@@ -266,7 +245,7 @@ export function AgendaPage({ credentials, onOpenOrder }: Props) {
         <div className="agenda-day-heading">
           <span className="eyebrow">DIA SELECIONADO</span>
           {/* Dia escolhido com o ícone do calendário ao lado (igual ao Financeiro); o calendário abre num modal. */}
-          <div className="agenda-day-title"><h2>{kindFilter ? (kindFilter === 'delivery' ? 'Todas as entregas' : 'Todas as retiradas') : dayFormatter.format(dateFromIso(selectedDate))}</h2>
+          <div className="agenda-day-title"><h2>{kindFilter ? `${kindFilter === 'delivery' ? 'Entregas' : 'Retiradas'} • ` : ''}{dayFormatter.format(dateFromIso(selectedDate))}</h2>
             <button type="button" className="finance-date-icon" aria-label="Abrir calendário" title="Abrir calendário"
               onClick={() => setCalendarOpen(true)}><CalendarDays size={19} /></button></div>
           <p>{selectedItems.length} {selectedItems.length === 1 ? 'serviço previsto' : 'serviços previstos'}
@@ -283,7 +262,7 @@ export function AgendaPage({ credentials, onOpenOrder }: Props) {
               aria-label={`${item.kind === 'delivery' ? 'Entrega' : 'Retirada'} de ${item.order.customerName}: abrir pedido`}
               onClick={() => onOpenOrder(item.order.id)}
               onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onOpenOrder(item.order.id) } }}>
-              <div className="agenda-item-time"><strong>{timeShort(item.time) || '--:--'}</strong>
+              <div className="agenda-item-time"><strong>{agendaTime(item.time)}</strong>
                 <span className={`agenda-kind-icon ${item.kind}`}>{item.kind === 'delivery' ? <Truck size={16} /> : <Undo2 size={16} />}</span></div>
               <div className="agenda-item-body">
               <div className="agenda-item-top">
