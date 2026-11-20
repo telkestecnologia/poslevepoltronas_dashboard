@@ -64,8 +64,8 @@ export function BranchesPage({ branches, activeCounts, onNewBranch, credentials,
         <h2>Cidades atendidas ({entered.municipalities.length})</h2>
         <BranchCities branch={entered} />
       </section>
-      {/* Tudo da filial numa página só (igual ao app): os dados (administrador) e as poltronas dela. */}
-      <section className="panel branch-section admin-only">
+      {/* Tudo da filial numa página só (igual ao app): cidades e frete (administrador e quem é da filial) e as poltronas. */}
+      <section className="panel branch-section">
         <BranchModal key={`${entered.id}:${entered.active}`} inline modal={{ kind: 'editBranch', branch: entered }} municipalities={municipalities}
           saving={saving} error={formError} onClose={() => {}} onSave={data => onUpdateBranch(entered, data)} />
       </section>
