@@ -93,7 +93,7 @@ function MonthlyChart({ report }: { report: FinancialReport | null }) {
       <div><span>Entrou este mês</span><strong className="in">{money.format((last?.inflowCents ?? 0) / 100)}</strong>
         {change !== null && <em className={change >= 0 ? 'up' : 'down'}>{change >= 0 ? '▲' : '▼'} {Math.abs(change)}% vs mês passado</em>}</div>
       <div><span>Saiu este mês</span><strong className="out">{money.format((last?.outflowCents ?? 0) / 100)}</strong></div>
-      <div><span>Sobrou este mês</span><strong>{money.format(((last?.inflowCents ?? 0) - (last?.outflowCents ?? 0)) / 100)}</strong></div>
+      <div><span>Resultado do mês</span><strong>{money.format(((last?.inflowCents ?? 0) - (last?.outflowCents ?? 0)) / 100)}</strong></div>
     </div>
     {months.length === 0 ? <div className="oc-skeleton" /> : <div className="oc-bars">
       {months.map((month, index) => {
@@ -104,7 +104,7 @@ function MonthlyChart({ report }: { report: FinancialReport | null }) {
             <b>{monthName.format(new Date(`${month.start}T00:00:00Z`)).replace('.', '')}</b>
             <span className="in">Entrou {money.format(month.inflowCents / 100)}</span>
             <span className="out">Saiu {money.format(month.outflowCents / 100)}</span>
-            <span>Sobrou {money.format(net / 100)}</span>
+            <span>Resultado {money.format(net / 100)}</span>
           </div>
           <div className="oc-plot">
             <i className="in" style={{ height: `${(month.inflowCents / max) * 100}%`, animationDelay: `${index * 70}ms` }} />
