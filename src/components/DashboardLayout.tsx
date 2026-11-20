@@ -26,7 +26,7 @@ const navigation = [
   { page: 'overview', label: 'Visão geral', icon: Home },
   { page: 'finance', label: 'Financeiro', icon: Wallet },
   { page: 'branches', label: 'Frete e Poltronas', icon: MapPin },
-  { page: 'agenda', label: 'Pedidos Hoje', icon: ClipboardList },
+  { page: 'agenda', label: 'Agenda e Pedidos', icon: ClipboardList },
   { page: 'manualOrder', label: 'Cadastro Manual', icon: ClipboardPlus },
   { page: 'conversations', label: 'Atendimento', icon: MessagesSquare },
   { page: 'ai', label: 'O que a Isa sabe', icon: Sparkles },
@@ -65,7 +65,7 @@ export function DashboardLayout({
   const hasNews = !!badges && badges.size > 0
   const [mobileOpen, setMobileOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
-  // Páginas sem item no menu acendem o item a que pertencem: pedido e lista de pedidos → Pedidos Hoje; poltronas → Frete e Poltronas.
+  // Páginas sem item no menu acendem o item a que pertencem: pedido e lista de pedidos → Agenda e Pedidos; poltronas → Frete e Poltronas.
   const menuPage: Page = page === 'orders' ? 'agenda' : page === 'chairs' ? 'branches' : page
   const currentPage = navigation.find((item) => item.page === page)
 

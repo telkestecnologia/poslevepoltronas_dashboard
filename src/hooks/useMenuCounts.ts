@@ -28,7 +28,7 @@ export function useMenuCounts(credentials: string | null): Partial<Record<Page, 
     async function check() {
       const [conversations, deliveries, unanswered] = await Promise.allSettled([
         api.conversations(auth),
-        // Pedidos Hoje: entregas e retiradas marcadas para hoje (muda sozinho a cada dia).
+        // Agenda e Pedidos: entregas e retiradas marcadas para hoje (muda sozinho a cada dia).
         fetchAllOrders(auth, { source: REAL_SOURCES, statuses: ['PAYMENT_CONFIRMED', 'DELIVERY_PENDING', 'IN_USE', 'PICKUP_PENDING'] }),
         api.aiUnanswered(auth),
       ])
