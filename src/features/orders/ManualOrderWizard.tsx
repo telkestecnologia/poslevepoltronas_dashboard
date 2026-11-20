@@ -14,7 +14,7 @@ import { toCents, todayIso } from '../../utils/money'
 import { formatPhone } from '../../utils/phone'
 import { toJpeg } from './OrderEvidencePanel'
 import { EMPTY_SALE, SaleDetailsFields, usePlanNames } from './SaleDetailsCard'
-import { CustomerIdFields, DeliveryPlaceFields, EMPTY_CUSTOMER, customerRows } from './CustomerDetails'
+import { CustomerIdFields, DeliveryPlaceFields, EMPTY_CUSTOMER, customerRows, saleRows } from './CustomerDetails'
 import { clearDraft, readDraft, writeDraft, type ManualDraft } from '../../utils/manualDraft'
 import './manual-wizard.css'
 
@@ -363,6 +363,7 @@ export function ManualOrderWizard({ credentials, branches, onCreated, onClear }:
           <Row label="Cliente" value={`${name.trim() || '—'} • ${phone || 'sem WhatsApp'}`} />
           <Row label="Endereço" value={`${[street, number || 's/n', complement, district].filter(Boolean).join(', ')} • ${city?.name ?? ''}${branch ? ` (${branchLabel(branch.name)})` : ''}`} />
           {customerRows(customer).map(([label, value]) => <Row key={label} label={label} value={value} />)}
+          {saleRows({ ...sale, discountCents: sale.discount ? toCents(saleDiscount) : null }).map(([label, value]) => <Row key={label} label={label} value={value} />)}
           <Row label="Período" value={start && end ? `${dateLabel(start)} a ${dateLabel(end)} • ${delivered ? 'já está com a cliente' : 'ainda vai receber'}` : '—'} />
           <Row label="Poltrona" value={chair ? `${chair.code}${chair.model ? ` • ${chair.model}` : ''}` : '—'} />
           <Row label="Valores" value={`${currency(totalCents)} • ${paidState === 'ALL' ? 'quitado' : paidState === 'PART' ? `pago ${currency(paidCents)}, falta ${currency(totalCents - paidCents)}` : 'ainda não pagou'}`} />

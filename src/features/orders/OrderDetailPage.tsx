@@ -28,6 +28,9 @@ import { SaleDetailsSummary } from './SaleDetailsCard'
 import { customerRows, saleRows, useFicha } from './CustomerDetails'
 import { go } from '../../router'
 
+/** 60150000 → 60150-000 */
+const cepLabel = (value: string) => value.replace(/\D/g, '').replace(/^(\d{5})(\d{3})$/, '$1-$2')
+
 type Props = { credentials: string; id: string; onBack: () => void }
 
 type Notice = { tone: 'info' | 'warning' | 'danger'; text: string }
@@ -368,7 +371,7 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
           <p><b>Nome:</b><span>{order.customerName}</span></p>
           <p><b>Telefone:</b><span><a href={`tel:${phoneDigits}`}>{displayPhone(order.customerPhone)}</a>
             <a className="od-ficha-wa" href={`https://wa.me/55${phoneDigits}`} target="_blank" rel="noopener noreferrer"><MessageCircle size={14} /> WhatsApp</a></span></p>
-          <p><b>Endereço:</b><span>{order.address} • {order.municipalityName}/{order.municipalityUf}{order.postalCode ? ` • CEP ${order.postalCode}` : ''}
+          <p><b>Endereço:</b><span>{order.address} • {order.municipalityName}/{order.municipalityUf}{order.postalCode ? ` • CEP ${cepLabel(order.postalCode)}` : ''}
             <a className="od-ficha-map" target="_blank" rel="noopener noreferrer" href={mapUrl}><MapPin size={14} /> mapa</a></span></p>
           {fichaRows.map(([label, value]) => <p key={label}><b>{label}:</b><span>{value}</span></p>)}
           {order.internalNote && <p className="od-ficha-note"><b>Observação:</b><span>{order.internalNote}</span></p>}
@@ -491,7 +494,7 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
             {order.pickupTime ? <> <mark className="back">{timeLabel(order.pickupTime)}</mark></> : ' (horário a combinar)'}.</p>
           {stockDiffers && <em className="od-logistics-stock"><CalendarClock size={14} /> Estoque bloqueado de {dateLabel(order.stockStart!)} a {dateLabel(order.stockEnd!)}.</em>}
           <div className="od-logistics-where">
-            <span><MapPin size={15} /> {order.address}{order.postalCode ? ` • CEP ${order.postalCode}` : ''}</span>
+            <span><MapPin size={15} /> {order.address}{order.postalCode ? ` • CEP ${cepLabel(order.postalCode)}` : ''}</span>
             <a target="_blank" rel="noopener noreferrer" href={mapUrl}><MapPin size={15} /> Abrir mapa</a>
           </div>
         </section>
@@ -516,7 +519,7 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
           <div className="od-address">
             <div><small>Local de entrega</small>
               <strong>{order.address}</strong>
-              <span>{order.municipalityName}/{order.municipalityUf} • {order.postalCode ? `CEP ${order.postalCode}` : 'sem CEP'}</span></div>
+              <span>{order.municipalityName}/{order.municipalityUf} • {order.postalCode ? `CEP ${cepLabel(order.postalCode)}` : 'sem CEP'}</span></div>
             {/* Com a localização do WhatsApp abre o ponto exato; sem ela, busca pelo endereço. */}
             <a className="order-map-button" target="_blank" rel="noopener noreferrer" href={mapUrl}><MapPin size={16} /> Abrir mapa</a>
           </div>
