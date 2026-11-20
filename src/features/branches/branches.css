@@ -187,3 +187,13 @@ button.branch-chair:hover { filter: brightness(0.98); }
 .branch-region h3 small { color: #6b7d84; font-weight: 600; }
 .branch-region .branch-cities { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (max-width: 900px) { .branch-regions { grid-template-columns: 1fr; } .branch-region .branch-cities { grid-template-columns: 1fr; } }
+
+/* Cada lado da Filial 2 com a sua cor: Serra da Ibiapaba em verde, Sobral e Regiões Vizinhas em coral. */
+.branch-region.serra { background: #f3faf5; border-color: #bfe3cb; }
+.branch-region.serra h3 { color: #2f7a4a; }
+.branch-region.serra .branch-cities li { background: #e2f3e8; }
+.branch-region.serra .branch-cities svg { color: #3f9a62; }
+.branch-region.sobral { background: #fff6f3; border-color: #f6c9bd; }
+.branch-region.sobral h3 { color: #b8513c; }
+.branch-region.sobral .branch-cities li { background: #fde8e2; }
+.branch-region.sobral .branch-cities svg { color: #e87461; }

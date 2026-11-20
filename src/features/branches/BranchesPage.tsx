@@ -174,7 +174,7 @@ function BranchCities({ branch }: { branch: Branch }) {
   if (groups.length === 1) return list(groups[0].cities)
   // Filial unida: Serra da Ibiapaba de um lado, Sobral e Regiões Vizinhas do outro.
   return <div className="branch-regions">
-    {groups.map(group => <div key={group.title} className="branch-region">
+    {groups.map((group, index) => <div key={group.title} className={`branch-region ${index === 0 ? 'serra' : 'sobral'}`}>
       <h3>{group.title} <small>({group.cities.length})</small></h3>
       {group.cities.length ? list(group.cities) : <p className="branch-muted">Nenhuma cidade.</p>}
     </div>)}
