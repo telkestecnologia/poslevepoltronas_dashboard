@@ -75,7 +75,9 @@
 .finance-day .out { color: #b8321f; }
 
 /* Resultado por filial simples: três lado a lado, mês (3 letras) e valor. */
-.finance-branch-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+/* Cards das filiais centralizados (hoje são duas: Fortaleza e Ibiapaba e Sobral). */
+.finance-branch-tiles { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.finance-branch-tiles > * { flex: 0 1 calc((100% - 20px) / 3); min-width: 150px; }
 .finance-branch-tile { --c: #1f78b4; --soft: #e9f3fb; display: grid; justify-items: center; gap: 4px; padding: 16px 8px; border-radius: 12px; background: var(--soft); text-align: center; }
 .finance-branch-tile.region-serra { --c: #2e8b57; --soft: #eaf6ee; }
 .finance-branch-tile.region-sobral { --c: #c4702c; --soft: #fcf1e6; }

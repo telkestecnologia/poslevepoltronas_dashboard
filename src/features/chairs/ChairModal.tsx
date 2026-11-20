@@ -68,7 +68,7 @@ export function ChairModal({
         <div className="chair-modal-photo" aria-hidden="true">
           <img src="/poltrona.webp" alt="" />
           <div><strong>{chair ? `Poltrona ${code}` : code.trim() ? `Poltrona ${code.trim()}` : 'Nova poltrona'}</strong>
-            <span className={`chair-modal-pill ${status.toLowerCase()}`}>{status === 'ACTIVE' ? 'Ativa' : status === 'MAINTENANCE' ? 'Em manutenção' : 'Inativa'}</span></div>
+            <span className={`chair-modal-pill ${status.toLowerCase()}`}>{status === 'MAINTENANCE' ? 'Em manutenção' : 'Disponível'}</span></div>
         </div>
         <div className="chair-modal-main">
         <div className="modal-head">
@@ -129,9 +129,8 @@ export function ChairModal({
               <label>
                 Estado operacional
                 <select value={status} onChange={(e) => setStatus(e.target.value as ChairStatus)}>
-                  <option value="ACTIVE">Ativa</option>
+                  <option value="ACTIVE">Disponível</option>
                   <option value="MAINTENANCE">Em manutenção</option>
-                  <option value="INACTIVE">Inativa</option>
                 </select>
               </label>
             )}
@@ -155,7 +154,7 @@ export function ChairModal({
           <div className="modal-actions">
             {chair && onDelete && <button type="button" className="button chair-delete" disabled={saving}
               onClick={() => {
-                const reason = window.prompt(`Excluir a poltrona ${chair.code}? Ela sai do site e do WhatsApp e fica como Inativa, com o motivo registrado na observação.\n\nMotivo da exclusão:`)
+                const reason = window.prompt(`Excluir a poltrona ${chair.code}? Ela sai do sistema (site, WhatsApp e listas); o motivo fica registrado no histórico.\n\nMotivo da exclusão:`)
                 if (reason && reason.trim().length >= 3) void onDelete(chair, reason)
                 else if (reason !== null) window.alert('Informe o motivo da exclusão (pelo menos 3 letras).')
               }}>

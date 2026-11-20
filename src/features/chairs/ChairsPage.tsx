@@ -129,9 +129,8 @@ export function ChairsPage(props: Props) {
             >
               <option value="ALL">Todos os estados</option>
               <option value="AVAILABLE">Disponíveis</option>
-              <option value="IN_USE">Em uso</option>
+              <option value="IN_USE">Alugadas</option>
               <option value="MAINTENANCE">Em manutenção</option>
-              <option value="INACTIVE">Inativas</option>
             </select>
           </div>
         </div>

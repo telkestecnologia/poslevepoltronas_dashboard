@@ -343,7 +343,7 @@ export function useDashboard() {
     setFormError('')
     try {
       await api.deleteChair(credentials, chair.id, reason)
-      showNotice('Poltrona excluída: ficou como Inativa, com o motivo na observação.')
+      showNotice('Poltrona excluída.')
       setModal(null)
       applyPageData(await loadPage(credentials, page === 'branches' ? 'branches' : 'chairs', chairQuery, rentalDate))
     } catch (error) {
