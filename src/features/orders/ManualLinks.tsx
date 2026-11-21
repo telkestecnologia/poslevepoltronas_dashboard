@@ -53,7 +53,7 @@ export function SignedContract({ state, open = false }: { state: ContractLinkSta
 
 /**
  * Etapa do contrato do pedido manual: gera o contrato do site com os dados do pedido e o link para a cliente assinar,
- * ou recebe o arquivo do contrato assinado fora do sistema. Assinado, chama onSigned (o pedido vai para o pagamento).
+ * ou recebe o arquivo do contrato assinado fora do sistema. Assinado, chama onSigned (a equipe segue para o pagamento quando quiser).
  */
 export function ContractLinkPanel({ credentials, order, onSigned, allowLink = true }: {
   credentials: string; order: Order; onSigned: (order: Order) => void; allowLink?: boolean
@@ -113,7 +113,8 @@ export function ContractLinkPanel({ credentials, order, onSigned, allowLink = tr
   }
 
   if (state?.status === 'ACCEPTED') return <div className="ml-box ml-done">
-    <p className="ml-ok"><Check size={18} /> Contrato assinado pela cliente{state.acceptedAt ? ` em ${when(state.acceptedAt)}` : ''}. Etapa salva.</p>
+    <p className="ml-ok"><Check size={18} /> Contrato assinado pela cliente{state.acceptedAt ? ` em ${when(state.acceptedAt)}` : ''}. Etapa salva.
+      Quando for combinar o pagamento, siga para a próxima etapa.</p>
     <SignedContract state={state} open />
   </div>
   // Contrato já resolvido fora do link (arquivo anexado).
@@ -134,7 +135,7 @@ export function ContractLinkPanel({ credentials, order, onSigned, allowLink = tr
     {mode === 'link' && <>
       {!state || state.status === 'NONE' ? <>
         <p className="ml-help">O sistema gera o mesmo contrato do site, com os dados deste pedido. A cliente lê no celular e toca em “Aceito”.
-          Assim que ela assinar, esta etapa é salva sozinha e o pedido segue para o pagamento.</p>
+          Assim que ela assinar, esta etapa é salva sozinha. O pagamento fica com a equipe: na próxima etapa você envia o link ou registra o que ela pagou.</p>
         {needsCpf && <label className="ml-field">CPF da cliente (vai no contrato)
           <input inputMode="numeric" value={formatCpf(cpf)} maxLength={14} placeholder="000.000.000-00" onChange={event => setCpf(event.target.value)} /></label>}
         <button type="button" className="button primary" disabled={busy || !state} onClick={() => void generate()}>

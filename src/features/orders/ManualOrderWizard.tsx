@@ -384,10 +384,10 @@ export function ManualOrderWizard({ credentials, branches, onCreated, onClear }:
 
       {step === 'contract' && <Panel icon={FileSignature} title="Contrato"
         why={delivered ? 'A poltrona já está com a cliente: anexe o contrato assinado fora do sistema, se tiver. Pode seguir e anexar depois.'
-          : 'O mesmo contrato do site, com os dados deste pedido. Envie o link para o celular da cliente; quando ela assinar, a etapa é salva sozinha.'}>
+          : 'O mesmo contrato do site, com os dados deste pedido. Envie o link para o celular da cliente; quando ela assinar, a etapa é salva sozinha e você segue para o pagamento quando quiser.'}>
         {!order ? <p className="mw-soft">Carregando o pedido...</p>
           : <ContractLinkPanel key={order.id} credentials={credentials} order={order} allowLink={!delivered}
-            onSigned={fresh => order.status === 'PENDING_CONTRACT' ? advanceFrom('contract', fresh) : setOrder(fresh)} />}
+            onSigned={setOrder} />}
       </Panel>}
 
       {step === 'payment' && <Panel icon={CreditCard} title="Pagamento"

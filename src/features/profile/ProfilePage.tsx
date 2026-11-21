@@ -6,8 +6,7 @@ import { PasswordInput } from '../../components/PasswordInput'
 import owners from '../../assets/fundadoras-capa.webp'
 import renata from '../../assets/renata.webp'
 import isadora from '../../assets/isadora.webp'
-import { api, type AccessLevel, type Account, type Branch, type BranchInput, type Municipality, type TeamMember, type TeamMemberInput } from '../../api'
-import { BranchModal } from '../branches/BranchModal'
+import { api, type AccessLevel, type Account, type Branch, type TeamMember, type TeamMemberInput } from '../../api'
 import { branchLabel, onlyOfficialBranches } from '../../utils/branches'
 import { EmptyState } from '../../components/common'
 import { getMessage } from '../../utils/errors'
@@ -30,7 +29,6 @@ export function ProfilePage({ credentials, onCredentialsChanged, partner = false
 }) {
   const [account, setAccount] = useState<Account | null>(null)
   const [team, setTeam] = useState<TeamMember[] | null>(null)
-  const [areas, setAreas] = useState<string[]>([])
   const [branches, setBranches] = useState<Branch[]>([])
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
@@ -38,8 +36,8 @@ export function ProfilePage({ credentials, onCredentialsChanged, partner = false
 
   const load = useCallback(() => (partner
     ? api.account(credentials).then(me => { setAccount(me); setError('') })
-    : Promise.all([api.account(credentials), api.team(credentials), api.teamAreas(credentials), api.branches(credentials)])
-      .then(([me, members, areaList, branchList]) => { setAccount(me); setTeam(members); setAreas(areaList); setBranches(branchList); setError('') }))
+    : Promise.all([api.account(credentials), api.team(credentials), api.branches(credentials)])
+      .then(([me, members, branchList]) => { setAccount(me); setTeam(members); setBranches(branchList); setError('') }))
     .catch(failure => { setTeam(current => current ?? []); setError(getMessage(failure)) }), [credentials, partner])
   const branchNames = (ids?: string[]) => {
     const names = (ids ?? []).map(id => branches.find(item => item.id === id)).filter(branch => branch !== undefined)
@@ -92,13 +90,12 @@ export function ProfilePage({ credentials, onCredentialsChanged, partner = false
         {!team ? <p className="profile-loading">Carregando equipe…</p>
           : team.length === 0 ? <EmptyState icon={Users} title="Nenhum usuário" text="Cadastre quem usa o painel, o cargo, onde atua e o que pode ver." />
             : <div className="table-scroll"><table><thead><tr>
-              <th>NOME</th><th>ÁREA</th><th>WHATSAPP</th><th>ACESSO</th><th><span className="sr-only">Ação</span></th>
+              <th>NOME</th><th>ÁREA DE ATUAÇÃO</th><th>WHATSAPP</th><th>ACESSO</th><th><span className="sr-only">Ação</span></th>
             </tr></thead><tbody>{team.map(member => <tr key={member.id}>
               <td><div className="courier-identity"><strong>{member.name}{member.self ? ' (você)' : ''}</strong><small>{member.email}</small></div></td>
-              <td>{member.area || '—'}</td>
+              <td>{member.access === 'ALL' ? 'Todas as filiais' : branchNames(member.branchIds)}</td>
               <td>{member.phone ? formatPhone(member.phone) : '—'}</td>
-              <td><span className={`courier-access ${member.enabled && member.access === 'ALL' ? 'active' : 'inactive'}`}>
-                {!member.enabled ? 'Desativado' : member.access === 'ALL' ? accessLabels.ALL.label : `Parceiro • ${branchNames(member.branchIds)}`}</span></td>
+              <td><span className={`courier-access ${member.enabled ? 'active' : 'inactive'}`}>{member.enabled ? 'Ativo' : 'Desativado'}</span></td>
               <td><button className="table-action" onClick={() => setDialog({ kind: 'member', member })}>Editar <ChevronRight size={16} /></button></td>
             </tr>)}</tbody></table></div>}
       </section>}
@@ -110,8 +107,8 @@ export function ProfilePage({ credentials, onCredentialsChanged, partner = false
     {dialog?.kind === 'email' && <EmailDialog credentials={credentials} current={account?.email ?? ''} onClose={() => setDialog(null)}
       onCredentialsChanged={onCredentialsChanged}
       onDone={() => { setDialog(null); setNotice('E-mail alterado. Use o novo e-mail para entrar, aqui e no app.') }} />}
-    {dialog?.kind === 'member' && <MemberDialog credentials={credentials} member={dialog.member} areas={areas} branches={branches} onAreas={setAreas}
-      onClose={() => setDialog(null)} onSaved={() => { setDialog(null); void load() }} onBranchesChanged={() => void load()} />}
+    {dialog?.kind === 'member' && <MemberDialog credentials={credentials} member={dialog.member} branches={branches}
+      onClose={() => setDialog(null)} onSaved={() => { setDialog(null); void load() }} />}
   </>
 }
 
@@ -197,53 +194,20 @@ function EmailDialog({ credentials, current, onClose, onDone, onCredentialsChang
   </Modal>
 }
 
-function MemberDialog({ credentials, member, areas, branches, onAreas, onClose, onSaved, onBranchesChanged }: {
-  credentials: string; member: TeamMember | null; areas: string[]; branches: Branch[]; onAreas: (areas: string[]) => void
-  onClose: () => void; onSaved: () => void; onBranchesChanged: () => void
+function MemberDialog({ credentials, member, branches, onClose, onSaved }: {
+  credentials: string; member: TeamMember | null; branches: Branch[]; onClose: () => void; onSaved: () => void
 }) {
-  const [newBranch, setNewBranch] = useState<{ municipalities: Municipality[]; saving: boolean; error: string } | null>(null)
   const officialBranches = onlyOfficialBranches(branches, branch => branch.name)
-  async function openNewBranch() {
-    try {
-      setNewBranch({ municipalities: await api.municipalities(credentials), saving: false, error: '' })
-    } catch (failure) {
-      setError(getMessage(failure))
-    }
-  }
-  async function saveBranch(data: BranchInput) {
-    setNewBranch(current => current && { ...current, saving: true, error: '' })
-    try {
-      await api.createBranch(credentials, data)
-      setNewBranch(null)
-      onBranchesChanged()
-    } catch (failure) {
-      setNewBranch(current => current && { ...current, saving: false, error: getMessage(failure) })
-    }
-  }
   const [form, setForm] = useState<TeamMemberInput>({
-    name: member?.name ?? '', email: member?.email ?? '', phone: member?.phone ?? '', area: member?.area ?? areas[0] ?? '',
+    name: member?.name ?? '', email: member?.email ?? '', phone: member?.phone ?? '',
     jobTitle: member?.jobTitle ?? roles[2], access: member?.access ?? 'NONE', password: '', enabled: member?.enabled ?? true,
     branchIds: member?.branchIds ?? [],
   })
   const [confirm, setConfirm] = useState('')
-  const [newCity, setNewCity] = useState('')
-  const [addingCity, setAddingCity] = useState(false)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const set = <K extends keyof TeamMemberInput>(field: K, value: TeamMemberInput[K]) => setForm(current => ({ ...current, [field]: value }))
-
-  async function saveCity() {
-    if (newCity.trim().length < 3) return setError('Informe o nome da cidade.')
-    try {
-      onAreas(await api.addTeamArea(credentials, newCity.trim()))
-      set('area', newCity.trim())
-      setNewCity('')
-      setAddingCity(false)
-      setError('')
-    } catch (failure) {
-      setError(getMessage(failure))
-    }
-  }
+  const chosenNames = officialBranches.filter(branch => form.branchIds.includes(branch.id)).map(branch => branchLabel(branch.name))
 
   async function submit(event: FormEvent) {
     event.preventDefault()
@@ -289,18 +253,12 @@ function MemberDialog({ credentials, member, areas, branches, onAreas, onClose, 
       <label>E-mail<input type="email" value={form.email} onChange={event => set('email', event.target.value)} required autoComplete="off" placeholder="nome@poslevepoltronas.com.br" /></label>
       <label>Celular com WhatsApp<input type="tel" inputMode="numeric" value={formatPhone(form.phone)} onChange={event => set('phone', event.target.value.replace(/\D/g, '').slice(0, 11))} required placeholder="(85) 99999-9999" /></label>
       <small className="field-help">É para este número que vai o código de “Esqueci minha senha”.</small>
-      <label>Área de atuação<select value={form.area} onChange={event => set('area', event.target.value)}>
-        {areas.map(area => <option key={area} value={area}>{area}</option>)}</select></label>
-      {addingCity ? <div className="profile-city">
-        <input value={newCity} onChange={event => setNewCity(event.target.value)} placeholder="Ex.: Crateús/CE" aria-label="Nova cidade" />
-        <button type="button" className="button secondary" onClick={() => void saveCity()}>Adicionar</button>
-      </div> : <button type="button" className="profile-link" onClick={() => setAddingCity(true)}>+ Cadastrar nova cidade</button>}
-      {/* Nível de acesso: todos os dados ou só os de uma ou mais filiais (pedidos, poltronas, agenda, financeiro e conversas delas). */}
+      {/* Área de atuação: todas as filiais ou uma ou mais delas. É o que define o que a pessoa vê (pedidos, poltronas, agenda, financeiro e conversas). */}
       <fieldset className="profile-branches">
-        <legend>Nível de acesso</legend>
+        <legend>Área de atuação</legend>
         <label className="branch-option"><input type="checkbox" checked={form.access === 'ALL'}
           onChange={event => setForm(current => ({ ...current, access: event.target.checked ? 'ALL' : 'NONE', branchIds: [] }))} />
-          <span>Vê todos os dados (todas as filiais)</span></label>
+          <span>Todas as filiais</span></label>
         {officialBranches.map(branch => <label key={branch.id} className="branch-option">
           <input type="checkbox" checked={form.access === 'NONE' && form.branchIds.includes(branch.id)}
             onChange={event => setForm(current => ({ ...current, access: 'NONE', branchIds: event.target.checked
@@ -309,10 +267,8 @@ function MemberDialog({ credentials, member, areas, branches, onAreas, onClose, 
           <span>{branchLabel(branch.name)}</span></label>)}
       </fieldset>
       <small className="field-help">{form.access === 'ALL' ? 'Vê pedidos, poltronas, agenda, financeiro e conversas de todas as filiais.'
-        : form.branchIds.length ? `Vê só o que é de ${officialBranches.filter(branch => form.branchIds.includes(branch.id)).map(branch => branchLabel(branch.name)).join(', ')}: pedidos, poltronas, agenda, financeiro e conversas do WhatsApp. Não vê as outras filiais.`
-          : 'Marque as filiais em que a pessoa trabalha. Sem nenhuma, ela entra sem ver dados.'}</small>
-      {/* Só o administrador chega aqui (a equipe é dele); a filial nova entra na lista ao salvar. */}
-      <button type="button" className="profile-link" onClick={() => void openNewBranch()}>+ Cadastrar nova filial</button>
+        : chosenNames.length ? `Vê só o que é de ${chosenNames.join(', ')}: pedidos, poltronas, agenda, financeiro e conversas do WhatsApp. Não vê as outras filiais.`
+          : 'Marque onde a pessoa trabalha. Sem nenhuma filial, ela entra sem ver dados.'}</small>
       {member && !member.self && <label className="branch-option"><input type="checkbox" checked={form.enabled ?? true}
         onChange={event => set('enabled', event.target.checked)} /><span>Acesso ativo</span></label>}
       <label>{member ? 'Nova senha' : 'Senha'} {member && <span className="optional">(opcional)</span>}
@@ -326,7 +282,5 @@ function MemberDialog({ credentials, member, areas, branches, onAreas, onClose, 
         <button type="submit" className="button primary" disabled={busy}>{busy ? 'Salvando...' : member ? 'Salvar alterações' : 'Cadastrar usuário'} <ArrowRight size={17} /></button>
       </div>
     </form>
-    {newBranch && <BranchModal modal={{ kind: 'newBranch' }} municipalities={newBranch.municipalities} saving={newBranch.saving}
-      error={newBranch.error} onClose={() => setNewBranch(null)} onSave={saveBranch} />}
   </Modal>
 }

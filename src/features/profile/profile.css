@@ -16,9 +16,6 @@
 .profile-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 .profile-team-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 20px; }
 .profile-loading { padding: 24px; color: #6b7378; }
-.profile-city { display: flex; gap: 8px; }
-.profile-city input { flex: 1; }
-.profile-link { justify-self: start; padding: 0; border: 0; background: none; color: #127a84; font-weight: 600; cursor: pointer; }
 .profile-remove { margin-right: auto; background: #fde8e4; color: #b03a2e; }
 .profile-notice {
   display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px;

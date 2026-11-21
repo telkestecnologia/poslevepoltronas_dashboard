@@ -153,16 +153,16 @@ export type OrderEvidence = {
 
 export type AccessLevel = 'ALL' | 'NONE'
 export type TeamMember = {
-  id: string; name: string; email: string; phone: string | null; area: string | null; jobTitle: string | null
+  id: string; name: string; email: string; phone: string | null; jobTitle: string | null
   access: AccessLevel; enabled: boolean; self: boolean; branchIds?: string[]
 }
 export type TeamMemberInput = {
-  name: string; email: string; phone: string; area: string; jobTitle: string; access: AccessLevel; password: string; enabled?: boolean
+  name: string; email: string; phone: string; jobTitle: string; access: AccessLevel; password: string; enabled?: boolean
   /** Filiais do parceiro (access NONE); vazio para quem vê todos os dados. */
   branchIds: string[]
 }
 export type Account = {
-  id: string; name: string; email: string; phone: string | null; area: string | null; jobTitle: string | null; access: AccessLevel
+  id: string; name: string; email: string; phone: string | null; jobTitle: string | null; access: AccessLevel
 }
 
 export type ConversationState = 'AI' | 'HUMAN' | 'PAUSED' | 'CLOSED'
@@ -429,9 +429,7 @@ async function request<T>(credentials: string, path: string, init: RequestInit =
               : response.status === 400 && path.startsWith('/account')
                 ? 'Senha atual incorreta, ou a nova senha não tem de 6 a 72 caracteres.'
               : response.status === 409
-                ? path.startsWith('/team/areas')
-                  ? 'Essa cidade já está na lista.'
-                  : path.startsWith('/team')
+                ? path.startsWith('/team')
                     ? 'Já existe um usuário com este e-mail ou celular, ou a alteração deixaria a locadora sem administrador.'
                   : path.startsWith('/account')
                     ? 'Já existe um usuário com este e-mail.'
@@ -574,9 +572,6 @@ export const api = {
     request<TeamMember>(credentials, `/team/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(data) }),
   removeTeamMember: (credentials: string, id: string) =>
     request<void>(credentials, `/team/${encodeURIComponent(id)}`, { method: 'DELETE' }),
-  teamAreas: (credentials: string) => request<string[]>(credentials, '/team/areas'),
-  addTeamArea: (credentials: string, name: string) =>
-    request<string[]>(credentials, '/team/areas', { method: 'POST', body: JSON.stringify({ name }) }),
   account: (credentials: string) => request<Account>(credentials, '/account'),
   changePassword: (credentials: string, currentPassword: string, newPassword: string) =>
     request<void>(credentials, '/account/password', { method: 'PUT', body: JSON.stringify({ currentPassword, newPassword }) }),
