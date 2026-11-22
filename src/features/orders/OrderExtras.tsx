@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Armchair, FileSignature, StickyNote, Trash2, Wallet } from 'lucide-react'
 import { api, uploadOrderContractFile, type Chair, type ContractFile, type Order, type PaymentMethod } from '../../api'
 import { getMessage } from '../../utils/errors'
-import { balanceCents, currency, dateLabel, manualTagText, paymentMethodLabels } from '../../data/orders'
+import { balanceCents, currency, dateLabel, manualTagText, paymentAlert, paymentMethodLabels } from '../../data/orders'
 import { toCents, todayIso } from '../../utils/money'
 import './manual-order.css'
 
@@ -112,10 +112,12 @@ export function ManualPaymentsCard({ credentials, order, busy, perform }: {
 /** Selos do pedido na lista e na agenda: cadastrado à mão, quanto falta pagar e a observação interna. */
 export function OrderFlags({ order }: { order: Order }) {
   const due = balanceCents(order)
+  const alert = paymentAlert(order, todayIso())
   const note = order.internalNote?.trim()
   if (order.source !== 'MANUAL' && !note) return null
   return <span className="order-flags">
     {order.source === 'MANUAL' && <span className="order-flag manual">⚠ {manualTagText(order.manualReason)}</span>}
+    {alert && <span className="order-flag alert" title={alert.text}>⚠️ Pagamento pendente • {alert.when.replace(/,.*/, '')}</span>}
     {due > 0 && <span className="order-flag due">Falta {currency(due)}</span>}
     {note && <span className="order-flag note" title={note}><StickyNote size={12} />
       {note.length > 40 ? `${note.slice(0, 40).trimEnd()}…` : note}</span>}

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { chairName } from '../../utils/branches'
 import { AlertTriangle, Armchair, Check, ChevronRight, MessagesSquare, Sparkles } from 'lucide-react'
 import { api, REAL_SOURCES, type Conversation, type Order, type OrderStatus } from '../../api'
-import { fetchAllOrders, isRealOrder, orderStatusLabel, paymentName, usePolling } from '../../data/orders'
+import { fetchAllOrders, isRealOrder, orderStatusLabel, paymentAlert, paymentName, usePolling } from '../../data/orders'
 
 const capitalized = (text: string) => text.charAt(0).toUpperCase() + text.slice(1)
 import type { Page } from '../../types'
@@ -92,6 +92,12 @@ function buildAlerts({ orders, conversations, unanswered, maintenance }: {
     } else if (order.status === 'PICKUP_PENDING') {
       items.push({ key: `pickup-${order.id}`, level: 'warning', title: 'Retirar poltrona', target: toOrder(order),
         detail: `${who(order)}: retirada em ${shortDate((order.pickupDate ?? order.end))}${order.pickupTime ? ` ${timeLabel(order.pickupTime)}` : ''}.` })
+    }
+    // Cadastro Manual com valor a receber e entrega amanhã: a cliente já recebeu os lembretes do restante pelo WhatsApp.
+    const pending = paymentAlert(order, now)
+    if (pending) {
+      items.push({ key: `balance-${order.id}`, level: 'urgent', title: 'Pagamento pendente', target: toOrder(order),
+        detail: `${order.customerName}: ${pending.text}.` })
     }
     if (order.status === 'PENDING_PAYMENT' && order.expiresAt) {
       const left = new Date(order.expiresAt).getTime() - Date.now()

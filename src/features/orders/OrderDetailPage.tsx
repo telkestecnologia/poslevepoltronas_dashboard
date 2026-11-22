@@ -7,11 +7,12 @@ import {
 import './order-detail.css'
 import { api, ApiError, type Courier, type Order } from '../../api'
 import {
-  actorLabel, balanceCents, manualTagText, currency, dateLabel, dateTimeLabel, eventKind, eventKinds, eventLabel, isRealOrder, orderStatusLabel, paymentName,
+  actorLabel, balanceCents, paymentAlert, manualTagText, currency, dateLabel, dateTimeLabel, eventKind, eventKinds, eventLabel, isRealOrder, orderStatusLabel, paymentName,
   statusFlow, statusLabels, usePolling, weekdayDateLabel,
 } from '../../data/orders'
 import { branchLabel, chairName } from '../../utils/branches'
 import { getMessage } from '../../utils/errors'
+import { todayIso } from '../../utils/money'
 import { brazilPhoneDigits, displayPhone } from '../../utils/phone'
 import { OrderEvidencePanel } from './OrderEvidencePanel'
 import { announceSaved } from '../../components/SavedToast'
@@ -47,7 +48,9 @@ function noticesOf(order: Order): Notice[] {
   if (order.status === 'PENDING_PAYMENT' && !order.paymentMock) list.push({ tone: 'info', text: `Aguardando a confirmação do ${paymentName(order)} pelo Asaas. Reserva válida até ${until ?? 'o prazo informado'}.` })
   if (order.source === 'MANUAL') {
     const due = balanceCents(order)
-    if (due > 0) list.push({ tone: 'warning', text: `Falta receber ${currency(due)} deste cliente. Lance o pagamento em “Pagamentos” quando ele pagar.` })
+    const alert = paymentAlert(order, todayIso())
+    if (alert) list.push({ tone: 'danger', text: `⚠️ Pagamento pendente: ${alert.text}. Confirme com a cliente antes de sair para a entrega; quando ela pagar pelo link, o aviso some sozinho.` })
+    else if (due > 0) list.push({ tone: 'warning', text: `Falta receber ${currency(due)} deste cliente. Lance o pagamento em “Pagamentos” quando ele pagar.` })
   }
   if (order.status === 'EXPIRED' || order.status === 'CANCELLED') list.push({ tone: 'info', text: `Pedido ${order.status === 'EXPIRED' ? 'expirado' : 'cancelado'}. A poltrona já está livre para outros aluguéis.` })
   return list

@@ -62,6 +62,8 @@ const eventLabels: Record<string, string> = {
   MOCK_PAYMENT_CONFIRMED: 'Pagamento confirmado',
   CREATED_MANUAL: 'Pedido manual cadastrado', NOTE_UPDATED: 'Observação interna', MANUAL_PAYMENT: 'Pagamento lançado',
   MANUAL_PAYMENT_REMOVED: 'Pagamento desfeito', CHAIR_CHANGED: 'Poltrona trocada',
+  BALANCE_REMINDER_SENT: 'Lembrete do pagamento (2 dias antes da entrega)',
+  BALANCE_EVE_REMINDER_SENT: 'Lembrete do pagamento (véspera da entrega)',
   SALE_DETAILS_UPDATED: 'Detalhes da venda', CUSTOMER_DETAILS_UPDATED: 'Ficha do cliente', CONTRACT_FILE_UPLOADED: 'Contrato anexado',
 }
 
@@ -93,7 +95,7 @@ export function eventKind(action: string): keyof typeof eventKinds {
   if (/CANCEL|EXPIRE/.test(action)) return 'closed'
   if (action === 'STATUS_COMPLETED' || action === 'ISSUE_RESOLVED') return 'done'
   if (action.startsWith('CREATED') || /CONTRACT/.test(action)) return 'order'
-  if (/PIX|CARD|PAYMENT/.test(action)) return 'payment'
+  if (/PIX|CARD|PAYMENT|BALANCE/.test(action)) return 'payment'
   if (/COURIER|DEPARTURE|STOCK|DELIVERY|PICKUP|IN_USE/.test(action)) return 'delivery'
   return 'step'
 }
@@ -157,6 +159,43 @@ export const isRealOrder = (order: Pick<Order, 'source'>) => order.source === 'C
 export function balanceCents(order: Pick<Order, 'source' | 'status' | 'totalCents' | 'totalPaidCents'>) {
   if (order.source !== 'MANUAL' || order.status === 'CANCELLED') return 0
   return Math.max(0, order.totalCents - (order.totalPaidCents ?? 0))
+}
+
+const beforeDelivery: OrderStatus[] = ['PENDING_PAYMENT', 'PAYMENT_CONFIRMED', 'DELIVERY_PENDING']
+/** Lembretes do restante que o backend envia à cliente pelo WhatsApp (2 dias antes e na véspera da entrega). */
+export const BALANCE_REMINDER = 'BALANCE_REMINDER_SENT'
+export const BALANCE_EVE_REMINDER = 'BALANCE_EVE_REMINDER_SENT'
+
+function plusDays(iso: string, days: number) {
+  const date = new Date(`${iso}T12:00:00Z`)
+  date.setUTCDate(date.getUTCDate() + days)
+  return date.toISOString().slice(0, 10)
+}
+
+export type PaymentAlert = { dueCents: number; deliveryDay: string; when: string; reminders: string; text: string }
+
+/**
+ * Pagamento pendente: pedido do Cadastro Manual com valor a receber e entrega amanhã (ou já passada) sem ter sido
+ * entregue. A cliente recebe os lembretes pelo WhatsApp; a equipe vê este aviso no dia do segundo lembrete. Some
+ * sozinho quando o pagamento é confirmado. Mesma regra no app.
+ */
+export function paymentAlert(order: Pick<Order, 'source' | 'status' | 'totalCents' | 'totalPaidCents' | 'deliveryDate' | 'start'
+  | 'deliveryTime' | 'history'>, today: string): PaymentAlert | null {
+  const dueCents = balanceCents(order)
+  if (dueCents <= 0 || !beforeDelivery.includes(order.status)) return null
+  // Aguardando pagamento sem nada pago: a venda ainda está sendo fechada, os lembretes não saem.
+  if (order.status === 'PENDING_PAYMENT' && !(order.totalPaidCents ?? 0)) return null
+  const deliveryDay = order.deliveryDate ?? order.start
+  if (deliveryDay > plusDays(today, 1)) return null
+  const day = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', timeZone: 'UTC' }).format(new Date(`${deliveryDay}T12:00:00Z`))
+  const shift = order.deliveryTime === '08:00-12:00' ? ' (manhã)' : order.deliveryTime === '13:00-18:00' ? ' (tarde)'
+    : order.deliveryTime ? ` (${order.deliveryTime.replace('-', ' às ')})` : ''
+  const when = deliveryDay === today ? `entrega hoje, ${day}${shift}` : deliveryDay < today ? `entrega era em ${day}${shift}`
+    : `entrega amanhã, ${day}${shift}`
+  const sent = [order.history.some(event => event.action === BALANCE_REMINDER) && '2 dias antes',
+    order.history.some(event => event.action === BALANCE_EVE_REMINDER) && 'na véspera'].filter(Boolean) as string[]
+  const reminders = sent.length ? `lembretes enviados: ${sent.join(' e ')}` : 'nenhum lembrete enviado pelo WhatsApp'
+  return { dueCents, deliveryDay, when, reminders, text: `${when} • falta ${currency(dueCents)} • ${reminders}` }
 }
 
 /** Motivo do pedido manual, como aparece na tag amarela. */
