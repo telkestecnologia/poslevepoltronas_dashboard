@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { ArrowLeft, Armchair, CheckCircle2, ChevronRight, MapPin, Plus, Search, Wrench } from 'lucide-react'
 import { api, type Branch, type BranchInput, type BranchMunicipality, type Chair, type Municipality } from '../../api'
 import { BranchModal } from './BranchModal'
+import { FORTALEZA_DISTRICTS } from './fortalezaDistricts'
 import { EmptyState } from '../../components/common'
 import { branchLabel, branchNumber, chairName, cityRegions } from '../../utils/branches'
 import { getMessage } from '../../utils/errors'
@@ -176,18 +177,23 @@ export function BranchCities({ branch }: { branch: Branch }) {
       </li>
     })}
   </ul>
-  // Filial de Fortaleza: Fortaleza, os bairros de Fortaleza e a Região metropolitana, nessa ordem, todos com o frete.
+  // Filial de Fortaleza: Fortaleza e todos os bairros de Fortaleza, cada um com o frete que o cliente paga hoje (o valor
+  // do bairro, se cadastrado; senão, o da cidade). As cidades da Região metropolitana ficam no bloco de editar.
   const capital = branch.municipalities.find(city => city.name === 'Fortaleza')
   if (groups.length === 1 && capital) {
-    const metro = sortedCities(branch.municipalities.filter(city => city.code !== capital.code))
-    const districts = branch.freeShipping ? [] : [...(capital.districts ?? [])].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
+    const key = (text: string) => text.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()
+    const saved = new Map((capital.districts ?? []).map(item => [key(item.name), item]))
+    const cityCents = branch.freeShipping ? 0 : capital.freightCents
+    const names = [...FORTALEZA_DISTRICTS.map(item => item.name),
+      ...(capital.districts ?? []).filter(item => !FORTALEZA_DISTRICTS.some(row => key(row.name) === key(item.name))).map(item => item.name)]
+      .sort((a, b) => a.localeCompare(b, 'pt-BR'))
+    const districts = names.map(name => ({ name, freightCents: branch.freeShipping ? 0 : saved.get(key(name))?.freightCents ?? cityCents }))
     return <div className="branch-groups">
       <div className="branch-group"><h3>Fortaleza</h3>{list([{ ...capital, districts: [] }])}</div>
-      {districts.length > 0 && <div className="branch-group"><h3>Bairros de Fortaleza <small>({districts.length})</small></h3>
+      <div className="branch-group"><h3>Bairros de Fortaleza <small>({districts.length})</small></h3>
         <ul className="branch-cities">{districts.map(item => <li key={item.name}>
-          <MapPin size={15} aria-hidden="true" /><span>{item.name}</span><strong>{freightLabel(item.freightCents)}</strong></li>)}</ul>
-      </div>}
-      {metro.length > 0 && <div className="branch-group"><h3>Região metropolitana <small>({metro.length})</small></h3>{list(metro)}</div>}
+          <MapPin size={15} aria-hidden="true" /><span>{item.name}</span><strong className={item.freightCents === 0 ? 'free' : ''}>{freightLabel(item.freightCents)}</strong></li>)}</ul>
+      </div>
     </div>
   }
   if (groups.length === 1) return list(groups[0].cities)
