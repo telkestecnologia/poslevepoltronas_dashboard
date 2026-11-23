@@ -334,7 +334,7 @@ export function FinancePage({ credentials }: { credentials: string }) {
                   {entry.id.startsWith('out:')
                     ? <small className="finance-ref">Registrado por {entry.reference}
                       <button type="button" className="finance-delete" onClick={() => removeOutflow(entry)}><Trash2 size={13} /> Excluir</button></small>
-                    : entry.reference && <small className="finance-ref">Ref. {entry.reference} <CopyButton text={entry.reference} /></small>}</span></td>
+                    : entry.reference && <small className="finance-ref"><span className="finance-ref-text" title={entry.reference}>Ref. {entry.reference}</span> <CopyButton text={entry.reference} /></small>}</span></td>
               <td>{branchLabel(entry.branchName)}</td><td>{methodLabel(entry.paymentMethod)}
                 {entry.payerName && <small className="finance-payer">Pago por {entry.payerName}</small>}</td>
               <td className={entry.kind === 'INFLOW' ? 'finance-positive' : 'finance-negative'}>

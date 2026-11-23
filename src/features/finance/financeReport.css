@@ -209,3 +209,8 @@
 /* Recebimento lançado pela equipe no pedido manual. */
 .finance-tag-manual { display: inline-block; width: fit-content; margin: 3px 0 1px; padding: 2px 9px; border-radius: 99px; background: #ffd60a;
   color: #3d2f00; border: 1px solid #e0b800; font-size: 11.5px; font-weight: 800; }
+
+/* Referência longa: o texto encurta com reticências e o botão Copiar fica sempre inteiro ao lado. */
+.finance-entry-description small.finance-ref { display: flex; align-items: center; gap: 6px; min-width: 0; max-width: 100%; overflow: visible; white-space: nowrap; }
+.finance-ref-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.finance-copy { flex: none; white-space: nowrap; }
