@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { ArrowRight, X } from 'lucide-react'
+import { ArrowRight, Search, X } from 'lucide-react'
 import { api, type Branch, type Order } from '../../api'
 import { dateLabel, orderStatusLabel } from '../../data/orders'
 import { replaceQuery } from '../../router'
@@ -40,7 +40,11 @@ export function ManualOrderPage({ credentials, onOpenOrder, conversationId, edit
   // Fechar a janela não apaga nada: o rascunho continua para terminar depois.
   const [open, setOpen] = useState(Boolean(conversationId))
 
-  const loadRecent = useCallback(() => api.orderPage(credentials, { source: 'MANUAL' }, 0, 10)
+  // Busca por nome, telefone, poltrona ou cidade (no servidor), depois que a pessoa para de digitar.
+  const [search, setSearch] = useState('')
+  const [term, setTerm] = useState('')
+  useEffect(() => { const timer = window.setTimeout(() => setTerm(search.trim()), 300); return () => window.clearTimeout(timer) }, [search])
+  const loadRecent = useCallback(() => api.orderPage(credentials, { source: 'MANUAL', search: term || undefined }, 0, 10)
     .then(page => setRecent(page.items)).catch(cause => setError(getMessage(cause))), [credentials])
 
   useEffect(() => {
@@ -109,9 +113,16 @@ export function ManualOrderPage({ credentials, onOpenOrder, conversationId, edit
     </div>}
 
     <section className="panel mo-recent" aria-labelledby="mo-recent-title">
-      <h2 id="mo-recent-title">Últimos pedidos manuais</h2>
+      <div className="mo-recent-head">
+        <h2 id="mo-recent-title">{term ? 'Pedidos manuais encontrados' : 'Últimos pedidos manuais'}</h2>
+        <label className="mo-search"><Search size={16} aria-hidden="true" />
+          <input type="search" value={search} onChange={event => setSearch(event.target.value)}
+            placeholder="Buscar por nome, telefone, poltrona ou cidade" aria-label="Buscar pedido manual" />
+          {search && <button type="button" aria-label="Limpar busca" onClick={() => setSearch('')}><X size={15} /></button>}
+        </label>
+      </div>
       {recent === null ? <p className="order-muted">Carregando...</p>
-        : recent.length === 0 ? <p className="order-muted">Nenhum pedido manual cadastrado ainda.</p>
+        : recent.length === 0 ? <p className="order-muted">{term ? `Nenhum pedido manual encontrado para “${term}”.` : 'Nenhum pedido manual cadastrado ainda.'}</p>
           : <ul>{recent.map(order => <li key={order.id}>
             <button type="button" onClick={() => onOpenOrder(order.id)}>
               <span><strong>{order.customerName}</strong>

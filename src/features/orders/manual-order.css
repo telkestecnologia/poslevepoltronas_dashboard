@@ -146,3 +146,14 @@
 .mo-dialog-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .mo-dialog-head h2 { margin: 4px 0 0; font-size: 24px; color: #314a51; }
 @media (max-width: 640px) { .mo-dialog { padding: 14px; border-radius: 16px; } .mo-dialog-backdrop { padding: 12px 8px; } }
+
+/* Últimos pedidos manuais: título e busca na mesma linha (no celular, a busca embaixo). */
+.mo-recent-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+.mo-recent .mo-recent-head h2 { margin: 0; }
+.mo-search { display: flex; align-items: center; gap: 8px; flex: 0 1 360px; min-width: 0; height: 42px; padding: 0 12px; border: 1px solid #dce6e5;
+  border-radius: 12px; background: #fff; color: #8fa2a5; }
+.mo-search:focus-within { border-color: #1a9baa; box-shadow: 0 0 0 3px rgba(26, 155, 170, 0.12); }
+.mo-search input { flex: 1; min-width: 0; height: 100%; border: 0; outline: none; background: none; font: inherit; color: #1f3340; }
+.mo-search input::-webkit-search-cancel-button { display: none; }
+.mo-search button { display: grid; place-items: center; border: 0; background: none; color: #8fa2a5; cursor: pointer; padding: 2px; }
+@media (max-width: 640px) { .mo-search { flex: 1 1 100%; } }
