@@ -50,7 +50,7 @@ export function BranchesPage({ branches, activeCounts, onNewBranch, credentials,
                 const next = !entered.active
                 if (!next && !window.confirm(`Pausar ${branchLabel(entered.name)}?\n\nO site e a Isa deixam de oferecer aluguel nesta filial até ela ser ligada de novo.`)) return
                 void onUpdateBranch(entered, { name: entered.name, active: next,
-                  municipalities: entered.municipalities.map(city => ({ code: city.code, freightCents: city.freightCents })) })
+                  municipalities: entered.municipalities.map(city => ({ code: city.code, freightCents: city.freightCents, districts: city.districts ?? [] })) })
               }}>
               <span className="branch-switch-track"><span className="branch-switch-thumb" /></span>
               <span>{entered.active ? 'Atendendo' : 'Pausada'}</span>
@@ -163,10 +163,16 @@ function BranchCities({ branch }: { branch: Branch }) {
   const list = (cities: typeof branch.municipalities) => <ul className="branch-cities">
     {cities.map(city => {
       const free = branch.freeShipping || city.freightCents === 0
+      const districts = city.districts ?? []
       return <li key={city.code}>
         <MapPin size={15} aria-hidden="true" />
         <span>{city.name} <small>– {city.uf}</small></span>
         <strong className={free ? 'free' : ''}>{free ? 'Grátis' : freightLabel(city.freightCents)}</strong>
+        {/* Bairros com frete próprio: os demais bairros pagam o valor da cidade. */}
+        {districts.length > 0 && !branch.freeShipping && <details className="branch-districts">
+          <summary>{districts.length} {districts.length === 1 ? 'bairro' : 'bairros'} com frete próprio</summary>
+          <ul>{districts.map(item => <li key={item.name}><span>{item.name}</span><b>{freightLabel(item.freightCents)}</b></li>)}</ul>
+        </details>}
       </li>
     })}
   </ul>

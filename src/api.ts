@@ -34,7 +34,9 @@ export type CourierInput = {
 }
 
 export type Municipality = { code: string; name: string; uf: string }
-export type BranchMunicipality = Municipality & { freightCents: number }
+/** Bairro com frete próprio (ex.: em Fortaleza cada bairro tem um valor); os demais usam o frete da cidade. */
+export type DistrictFreight = { name: string; freightCents: number }
+export type BranchMunicipality = Municipality & { freightCents: number; districts?: DistrictFreight[] }
 export type Branch = {
   id: string
   name: string
@@ -44,7 +46,7 @@ export type Branch = {
 }
 export type BranchInput = {
   name: string
-  municipalities: { code: string; freightCents: number }[]
+  municipalities: { code: string; freightCents: number; districts?: DistrictFreight[] }[]
   active: boolean
 }
 export type ManualBlock = {
