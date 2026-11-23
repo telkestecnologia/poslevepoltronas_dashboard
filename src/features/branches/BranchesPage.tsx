@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { ArrowLeft, Armchair, CheckCircle2, ChevronRight, MapPin, Plus, Search, Wrench } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { ArrowLeft, Armchair, CheckCircle2, ChevronRight, MapPin, Pencil, Plus, Search, Wrench } from 'lucide-react'
 import { api, type Branch, type BranchInput, type BranchMunicipality, type Chair, type Municipality } from '../../api'
 import { BranchModal } from './BranchModal'
 import { EmptyState } from '../../components/common'
@@ -28,6 +28,12 @@ type Props = {
 export function BranchesPage({ branches, activeCounts, onNewBranch, credentials, municipalities, saving, formError, onUpdateBranch, onEditChair, onNewChair, modalOpen }: Props) {
   const [enteredId, setEnteredId] = useState<string | null>(null)
   const entered = branches.find(branch => branch.id === enteredId)
+  const [editingCities, setEditingCities] = useState(false)
+  // Fecha a janela quando o salvamento termina sem erro.
+  const savedRef = useRef(false)
+  useEffect(() => {
+    if (!saving && savedRef.current) { savedRef.current = false; if (!formError) setEditingCities(false) }
+  }, [saving, formError])
   const busyId = null as string | null
   const error = ''
 
@@ -60,14 +66,16 @@ export function BranchesPage({ branches, activeCounts, onNewBranch, credentials,
       </section>
       {/* Cidades atendidas e o frete de cada uma, sempre à vista (também para o parceiro). Editar fica logo abaixo. */}
       <section className="panel branch-section">
-        <h2>Cidades atendidas ({entered.municipalities.length})</h2>
+        <div className="branch-section-head">
+          <h2>Cidades atendidas</h2>
+          {/* Incluir ou retirar cidades e bairros e mudar o frete: numa janela no meio da tela. */}
+          <button type="button" className="button secondary" onClick={() => setEditingCities(true)}><Pencil size={15} /> Editar cidades, bairros e frete</button>
+        </div>
         <BranchCities branch={entered} />
       </section>
-      {/* Tudo da filial numa página só (igual ao app): cidades e frete (administrador e quem é da filial) e as poltronas. */}
-      <section className="panel branch-section">
-        <BranchModal key={`${entered.id}:${entered.active}`} inline modal={{ kind: 'editBranch', branch: entered }} municipalities={municipalities}
-          saving={saving} error={formError} onClose={() => {}} onSave={data => onUpdateBranch(entered, data)} />
-      </section>
+      {editingCities && <BranchModal modal={{ kind: 'editBranch', branch: entered }} municipalities={municipalities}
+        saving={saving} error={formError} onClose={() => setEditingCities(false)}
+        onSave={async data => { savedRef.current = true; await onUpdateBranch(entered, data) }} />}
       <section className="panel branch-section">
         <h2>Poltronas da filial</h2>
         <BranchChairs credentials={credentials} branchId={entered.id} branchName={entered.name} reload={modalOpen} onEdit={onEditChair} onNew={() => onNewChair(entered.id)} />
@@ -157,7 +165,7 @@ const freightLabel = (cents: number) => cents === 0 ? 'Grátis'
   : (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
 /** Cidades da filial com o frete de cada uma (só leitura). Filial com frete grátis geral mostra Grátis em todas. */
-function BranchCities({ branch }: { branch: Branch }) {
+export function BranchCities({ branch }: { branch: Branch }) {
   if (branch.municipalities.length === 0) return <p className="branch-muted">Nenhuma cidade cadastrada nesta filial.</p>
   const groups = cityRegions(branch.name, sortedCities(branch.municipalities))
   const list = (cities: typeof branch.municipalities) => <ul className="branch-cities">
@@ -176,29 +184,18 @@ function BranchCities({ branch }: { branch: Branch }) {
       </li>
     })}
   </ul>
-  // Filial de Fortaleza: a capital e os bairros com frete próprio em destaque no topo; as outras cidades embaixo,
-  // como Região metropolitana.
+  // Filial de Fortaleza: Fortaleza, os bairros de Fortaleza e a Região metropolitana, nessa ordem, todos com o frete.
   const capital = branch.municipalities.find(city => city.name === 'Fortaleza')
   if (groups.length === 1 && capital) {
-    const districts = [...(capital.districts ?? [])].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
+    const districts = branch.freeShipping ? [] : [...(capital.districts ?? [])].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
     const metro = sortedCities(branch.municipalities.filter(city => city.code !== capital.code))
-    const capitalFree = branch.freeShipping || capital.freightCents === 0
-    return <div className="branch-capital-wrap">
-      <div className="branch-capital">
-        <div className="branch-capital-head">
-          <h3><MapPin size={17} aria-hidden="true" /> Fortaleza <small>– {capital.uf}</small></h3>
-          <span>{capitalFree ? 'Grátis' : `${freightLabel(capital.freightCents)}`}<small> frete da cidade</small></span>
-        </div>
-        {districts.length > 0 && !branch.freeShipping ? <>
-          <p className="branch-capital-note">Bairros com frete próprio ({districts.length}); os demais pagam o frete da cidade.</p>
-          <ul className="branch-capital-districts">{districts.map(item => <li key={item.name}>
-            <span>{item.name}</span><b>{freightLabel(item.freightCents)}</b></li>)}</ul>
-        </> : <p className="branch-capital-note">Nenhum bairro com frete próprio ainda: todos pagam o frete da cidade. Inclua em “Cidades atendidas e frete”.</p>}
-      </div>
-      {metro.length > 0 && <div className="branch-metro">
-        <h3>Região metropolitana <small>({metro.length})</small></h3>
-        {list(metro)}
+    return <div className="branch-groups">
+      <div className="branch-group"><h3>Fortaleza</h3>{list([{ ...capital, districts: [] }])}</div>
+      {districts.length > 0 && <div className="branch-group"><h3>Bairros de Fortaleza <small>({districts.length})</small></h3>
+        <ul className="branch-cities">{districts.map(item => <li key={item.name}>
+          <MapPin size={15} aria-hidden="true" /><span>{item.name}</span><strong>{freightLabel(item.freightCents)}</strong></li>)}</ul>
       </div>}
+      {metro.length > 0 && <div className="branch-group"><h3>Região metropolitana <small>({metro.length})</small></h3>{list(metro)}</div>}
     </div>
   }
   if (groups.length === 1) return list(groups[0].cities)

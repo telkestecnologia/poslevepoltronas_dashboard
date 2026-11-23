@@ -1,10 +1,11 @@
-import { useRef, useState, type FormEvent } from 'react'
+import { useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { ArrowRight, Plus, Store, X } from 'lucide-react'
 import { FormIntro } from '../../components/FormIntro'
 import type { Branch, BranchInput, Municipality } from '../../api'
 
 type Area = { code: string; freight: string; free: boolean; districts: { name: string; freight: string }[] }
 const reaisText = (cents: number) => (cents / 100).toFixed(2).replace('.', ',')
+const plain = (text: string) => text.normalize('NFD').replace(/[̀-ͯ]/g, '').toLocaleLowerCase('pt-BR').trim()
 /** "120" ou "120,50" em centavos; null se não for um valor válido. */
 function toCents(text: string) {
   const input = text.trim()
@@ -14,6 +15,11 @@ function toCents(text: string) {
   return Number.isSafeInteger(cents) && cents <= 2147483647 ? cents : null
 }
 
+/**
+ * Cadastro da filial (nova) ou só das cidades, bairros e frete (editar, aberto pelo botão da página da filial).
+ * Esquerda: adicionar cidade ou bairro. Direita: a lista com o frete de cada um, na ordem Fortaleza, bairros de
+ * Fortaleza e Região metropolitana (nas outras filiais, as cidades com os bairros embaixo de cada uma).
+ */
 export function BranchModal({
   modal,
   municipalities,
@@ -21,7 +27,6 @@ export function BranchModal({
   error,
   onClose,
   onSave,
-  inline,
 }: {
   modal: { kind: 'newBranch' } | { kind: 'editBranch'; branch: Branch }
   municipalities: Municipality[]
@@ -29,14 +34,13 @@ export function BranchModal({
   error: string
   onClose: () => void
   onSave: (data: BranchInput) => Promise<void>
-  /** Dentro da página da filial: o formulário aparece direto, sem a janela por cima. */
+  /** Mantido por compatibilidade: a edição agora é sempre na janela. */
   inline?: boolean
 }) {
   const branch = modal.kind === 'editBranch' ? modal.branch : null
   const [name, setName] = useState(branch?.name ?? '')
-  // free: frete grátis nesta cidade (o preço fica desligado e vai como R$ 0,00). O frete grátis da filial inteira
-  // (o antigo) aparece como grátis em todas as cidades dela.
-  // districts: bairros com frete próprio da cidade (os outros bairros usam o frete da cidade).
+  const [active, setActive] = useState(branch?.active ?? true)
+  // free: frete grátis nesta cidade (vai como R$ 0,00); o frete grátis da filial inteira (o antigo) aparece em todas.
   const [areas, setAreas] = useState<Area[]>(
     branch?.municipalities.map((city) => ({
       code: city.code,
@@ -45,311 +49,179 @@ export function BranchModal({
       districts: (city.districts ?? []).map(item => ({ name: item.name, freight: reaisText(item.freightCents) })),
     })) ?? [],
   )
-  // Passo 1: bairro novo (cidade da filial + nome); o valor é digitado no passo 2, embaixo da cidade.
-  const [districtCity, setDistrictCity] = useState('')
-  const [districtName, setDistrictName] = useState('')
-  const districtCityCode = areas.some(area => area.code === districtCity) ? districtCity
-    : (areas.find(area => (municipalities.find(item => item.code === area.code)?.name ?? '') === 'Fortaleza') ?? areas[0])?.code ?? ''
-  function addDistrict() {
-    const name = districtName.trim().replace(/\s+/g, ' ')
-    if (!name || !districtCityCode) return
-    const key = (text: string) => text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim()
-    const area = areas.find(item => item.code === districtCityCode)
-    if (area?.districts.some(item => key(item.name) === key(name))) { setLocalError(`O bairro ${name} já está na lista.`); return }
-    editDistricts(districtCityCode, list => [...list, { name, freight: '' }])
-    setDistrictName('')
-    setLocalError('')
-  }
-  const editDistricts = (code: string, change: (list: Area['districts']) => Area['districts']) =>
-    setAreas(current => current.map(item => item.code === code ? { ...item, districts: change(item.districts) } : item))
+  const [tab, setTab] = useState<'city' | 'district'>('city')
   const [uf, setUf] = useState(branch?.municipalities[0]?.uf ?? 'CE')
   const [search, setSearch] = useState('')
-  const [active, setActive] = useState(branch?.active ?? true)
+  const [districtCity, setDistrictCity] = useState('')
+  const [districtName, setDistrictName] = useState('')
   const [localError, setLocalError] = useState('')
   const searchRef = useRef<HTMLInputElement>(null)
-  const normalizedSearch = search
-    .trim()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLocaleLowerCase('pt-BR')
-  const available = municipalities.filter(
-    (city) =>
-      city.uf === uf &&
-      !areas.some((area) => area.code === city.code) &&
-      (city.name
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .toLocaleLowerCase('pt-BR')
-        .includes(normalizedSearch) ||
-        city.code.includes(normalizedSearch)),
-  )
+  const districtRef = useRef<HTMLInputElement>(null)
+
+  const cityOf = (code: string) => municipalities.find(item => item.code === code) ?? branch?.municipalities.find(item => item.code === code)
+  const cityName = (code: string) => cityOf(code)?.name ?? code
+  const capital = areas.find(area => cityName(area.code) === 'Fortaleza')
+  const others = areas.filter(area => area !== capital)
+  const districtCityCode = areas.some(area => area.code === districtCity) ? districtCity : (capital ?? areas[0])?.code ?? ''
+
+  const term = plain(search)
+  const available = municipalities.filter(city => city.uf === uf && !areas.some(area => area.code === city.code)
+    && (plain(city.name).includes(term) || city.code.includes(term)))
+
+  const update = (code: string, change: (area: Area) => Area) =>
+    setAreas(current => current.map(item => item.code === code ? change(item) : item))
 
   function addMunicipality(code: string) {
-    setAreas((current) =>
-      current.some((area) => area.code === code) ? current : [...current, { code, freight: '', free: false, districts: [] }],
-    )
+    setAreas(current => current.some(area => area.code === code) ? current : [...current, { code, freight: '', free: false, districts: [] }])
     setSearch('')
     setLocalError('')
     searchRef.current?.focus()
   }
 
+  function addDistrict() {
+    const value = districtName.trim().replace(/\s+/g, ' ')
+    if (!value || !districtCityCode) return
+    const area = areas.find(item => item.code === districtCityCode)
+    if (area?.districts.some(item => plain(item.name) === plain(value))) { setLocalError(`${value} já está na lista.`); return }
+    update(districtCityCode, item => ({ ...item, districts: [...item.districts, { name: value, freight: '' }]
+      .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')) }))
+    setDistrictName('')
+    setLocalError('')
+    districtRef.current?.focus()
+  }
+
   function submit(event: FormEvent) {
     event.preventDefault()
-    if (areas.length === 0) {
-      setLocalError('Selecione pelo menos um município do catálogo.')
-      return
-    }
+    if (areas.length === 0) { setLocalError('Adicione pelo menos uma cidade.'); return }
     const priced: BranchInput['municipalities'] = []
     for (const area of areas) {
       const districts: { name: string; freightCents: number }[] = []
       for (const item of area.districts) {
-        if (!item.name.trim() && !item.freight.trim()) continue
         const cents = toCents(item.freight)
-        if (!item.name.trim() || cents === null) {
-          setLocalError('Informe o nome e um frete válido para cada bairro (ex.: Aldeota, 60,00).')
-          return
-        }
-        districts.push({ name: item.name.trim(), freightCents: cents })
+        if (cents === null) { setLocalError(`Informe o frete do bairro ${item.name} (ex.: 60,00).`); return }
+        districts.push({ name: item.name, freightCents: cents })
       }
       if (area.free) { priced.push({ code: area.code, freightCents: 0, districts }); continue }
       const freightCents = toCents(area.freight)
-      if (freightCents === null) {
-        setLocalError('Informe um frete válido em reais para cada município (ex.: 120,00).')
-        return
-      }
+      if (freightCents === null) { setLocalError(`Informe o frete de ${cityName(area.code)} (ex.: 120,00).`); return }
       priced.push({ code: area.code, freightCents, districts })
     }
     setLocalError('')
     void onSave({ name: name.trim(), municipalities: priced, active })
   }
 
-  const form = (
-        <form onSubmit={submit} className="modal-form">
-          {!inline && !branch && <FormIntro icon={<Store size={24} />} title="Nova filial">
-            Dê um nome à filial e escolha as cidades que ela atende, com o valor do frete.</FormIntro>}
-          {/* Na página da filial fica só o Atendendo; no cadastro aparece o nome. */}
-          {!inline && (
-          <label>
-            Nome da filial
-            <input
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              maxLength={100}
-              placeholder="Ex.: Serra da Ibiapaba"
-              required
-              autoFocus={!inline}
-            />
-          </label>
-          )}
-          {/* Na página da filial, cidades e frete abre e fecha (começa fechado). */}
-          <details className="municipality-picker" open={!inline}>
-            <summary><strong>Cidades atendidas e frete ({areas.length})</strong></summary>
-            {/* No computador: dois passos lado a lado (adicionar cidades | frete de cada uma). No celular fica como antes. */}
-            <div className="mp-body">
-            <div className="mp-add">
-            <div className="mp-step"><b>1</b><div><strong>Adicione as cidades e bairros</strong><small>Escolha o estado, busque a cidade e clique no + para incluir. Embaixo, inclua os bairros com frete próprio.</small></div></div>
-            <div className="municipality-picker-row">
-              <label>
-                UF
-                <select
-                  value={uf}
-                  onChange={(event) => {
-                    setUf(event.target.value)
-                    setSearch('')
-                  }}
-                >
-                  {[...new Set(municipalities.map((city) => city.uf))].sort().map((value) => (
-                    <option key={value} value={value}>
-                      {value}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Buscar município
-                <input
-                  ref={searchRef}
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter') {
-                      event.preventDefault()
-                      if (normalizedSearch && available.length > 0)
-                        addMunicipality(available[0].code)
-                    }
-                  }}
-                  placeholder="Digite o nome ou código IBGE"
-                />
-              </label>
-            </div>
-            <div className="municipality-results" role="region" aria-label="Municípios encontrados">
-              {available.length > 0 ? (
-                <ul>
-                  {available.map((city) => (
-                    <li key={city.code}>
-                      <button
-                        type="button"
-                        onClick={() => addMunicipality(city.code)}
-                        aria-label={`Adicionar ${city.name}, ${city.uf}`}
-                      >
-                        <span>
-                          {city.name} <small>– {city.uf}</small>
-                        </span>
-                        <Plus size={16} aria-hidden="true" />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p>Nenhum município encontrado nesta UF.</p>
-              )}
-            </div>
-            {/* Bairros com frete próprio (ex.: Fortaleza): escolha a cidade, digite o bairro e clique no +. */}
-            <div className="mp-districts">
-              <strong>Bairros</strong>
-              <small>Os bairros que não estiverem na lista pagam o frete da cidade.</small>
-              {areas.length === 0 ? <p className="mp-empty">Adicione uma cidade primeiro.</p> : <div className="mp-district-row">
-                <label>Cidade
-                  <select value={districtCityCode} onChange={event => setDistrictCity(event.target.value)}>
-                    {areas.map(area => <option key={area.code} value={area.code}>
-                      {municipalities.find(item => item.code === area.code)?.name ?? branch?.municipalities.find(item => item.code === area.code)?.name ?? area.code}</option>)}
-                  </select>
-                </label>
-                <label>Bairro
-                  <input value={districtName} maxLength={80} placeholder="Ex.: Aldeota" onChange={event => setDistrictName(event.target.value)}
-                    onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); addDistrict() } }} />
-                </label>
-                <button type="button" className="mp-district-add" aria-label="Adicionar bairro" disabled={!districtName.trim()} onClick={addDistrict}>
-                  <Plus size={16} /></button>
-              </div>}
-            </div>
-            </div>
-            <div className="mp-fees">
-            <div className="mp-step"><b>2</b><div><strong>Frete de cada cidade e bairro ({areas.length})</strong><small>Digite o valor da entrega ou marque Frete grátis.</small></div></div>
-            {areas.length === 0 && <p className="mp-empty">Nenhuma cidade ainda. Adicione no passo 1.</p>}
-            {areas.length > 0 && (
-              <div className="municipality-selected">
-                <strong>Frete de entrega por município</strong>
-                {areas.map((area) => {
-                  // Nome pelo catálogo; se ele ainda não carregou, pelo que já vem na própria filial.
-                  const city = municipalities.find((item) => item.code === area.code)
-                    ?? branch?.municipalities.find((item) => item.code === area.code)
-                  return (
-                    <div className="municipality-fee" key={area.code}>
-                      <span>{city ? `${city.name} – ${city.uf}` : area.code}</span>
-                      <label>
-                        R${' '}
-                        <input
-                          type="text"
-                          inputMode="decimal"
-                          value={area.free ? '0,00' : area.freight}
-                          disabled={area.free}
-                          onChange={(event) =>
-                            setAreas((current) =>
-                              current.map((item) =>
-                                item.code === area.code
-                                  ? { ...item, freight: event.target.value }
-                                  : item,
-                              ),
-                            )
-                          }
-                          placeholder="120,00"
-                          aria-label={`Frete para ${city?.name ?? area.code} em reais`}
-                          required={!area.free}
-                        />
-                      </label>
-                      {/* Frete grátis nesta cidade: o preço fica desligado. */}
-                      <label className="municipality-free">
-                        <input type="checkbox" checked={area.free}
-                          onChange={(event) => setAreas((current) => current.map((item) =>
-                            item.code === area.code ? { ...item, free: event.target.checked } : item))} />
-                        Frete grátis
-                      </label>
-                      <button
-                        type="button"
-                        aria-label={`Remover ${city?.name ?? area.code}`}
-                        onClick={() =>
-                          setAreas((current) => current.filter((item) => item.code !== area.code))
-                        }
-                      >
-                        <X size={16} />
-                      </button>
-                      {/* Bairros com frete diferente do valor da cidade (ex.: Fortaleza). */}
-                      {area.districts.length > 0 && <div className="district-fees">
-                        {area.districts.map((item, index) => <div className="district-fee" key={item.name}>
-                          <span>{item.name}</span>
-                          <label>R$ <input inputMode="decimal" value={item.freight} placeholder="60,00" aria-label={`Frete do bairro ${item.name}`}
-                            onChange={event => editDistricts(area.code, list => list.map((row, at) => at === index ? { ...row, freight: event.target.value } : row))} /></label>
-                          <button type="button" aria-label={`Remover bairro ${item.name}`}
-                            onClick={() => editDistricts(area.code, list => list.filter((_, at) => at !== index))}><X size={14} /></button>
-                        </div>)}
-                      </div>}
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-            </div>
-            </div>
-            <small className="field-help">
-              A cobertura inclui todos os CEPs dos municípios escolhidos, inclusive zona rural.
-              Use 0,00 para zerar apenas este município; o botão na lista de filiais zera todos temporariamente.
-            </small>
-            {inline && <button type="submit" className="button primary branch-inline-save" disabled={saving}>
-              {saving ? 'Salvando...' : 'Salvar alterações'}</button>}
-          </details>
-          {/* Na página da filial, ligar e desligar fica no botão ao lado de "Atendendo", no topo. */}
-          {!inline && <label className="branch-option">
-            <input
-              type="checkbox"
-              checked={active}
-              onChange={(event) => setActive(event.target.checked)}
-            />
-            <span>Filial ativa</span>
-          </label>}
-          {(localError || error) && (
-            <div className="form-error" role="alert">
-              {localError || error}
-            </div>
-          )}
-          {!inline && <div className="modal-actions">
-            {!inline && <button type="button" className="button secondary" onClick={onClose} disabled={saving}>
-              Cancelar
-            </button>}
-            <button type="submit" className="button primary" disabled={saving}>
-              {saving ? 'Salvando...' : branch ? 'Salvar alterações' : 'Criar filial'}{' '}
-              <ArrowRight size={17} />
-            </button>
-          </div>}
-        </form>
-  )
+  const cityRow = (area: Area) => <div className="bm-row" key={area.code}>
+    <span className="bm-name">{cityName(area.code)}</span>
+    <label className="bm-price">R$
+      <input inputMode="decimal" value={area.free ? '0,00' : area.freight} disabled={area.free} placeholder="0,00" required={!area.free}
+        aria-label={`Frete para ${cityName(area.code)}`} onChange={event => update(area.code, item => ({ ...item, freight: event.target.value }))} />
+    </label>
+    <label className="bm-free"><input type="checkbox" checked={area.free}
+      onChange={event => update(area.code, item => ({ ...item, free: event.target.checked }))} /> Grátis</label>
+    <button type="button" className="bm-remove" aria-label={`Remover ${cityName(area.code)}`}
+      onClick={() => setAreas(current => current.filter(item => item.code !== area.code))}><X size={15} /></button>
+  </div>
 
-  if (inline) return <div className="branch-inline-form">{form}</div>
+  const districtRows = (area: Area) => area.districts.map((item, index) => <div className="bm-row" key={item.name}>
+    <span className="bm-name">{item.name}</span>
+    <label className="bm-price">R$
+      <input inputMode="decimal" value={item.freight} placeholder="0,00" aria-label={`Frete do bairro ${item.name}`}
+        onChange={event => update(area.code, current => ({ ...current,
+          districts: current.districts.map((row, at) => at === index ? { ...row, freight: event.target.value } : row) }))} />
+    </label>
+    <span className="bm-free-empty" />
+    <button type="button" className="bm-remove" aria-label={`Remover bairro ${item.name}`}
+      onClick={() => update(area.code, current => ({ ...current, districts: current.districts.filter((_, at) => at !== index) }))}><X size={15} /></button>
+  </div>)
 
-  return (
-    <div
-      className="modal-backdrop"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose()
-      }}
-    >
-      <section
-        className="modal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="branch-modal-title"
-      >
-        <div className="modal-head">
-          <div>
-            <span className="eyebrow">PÓS LEVE • FILIAIS</span>
-            <h2 id="branch-modal-title">{branch ? 'Editar filial' : 'Nova filial'}</h2>
-          </div>
-          <button className="icon-button" aria-label="Fechar" onClick={onClose}>
-            <X size={20} />
-          </button>
+  const group = (title: string, count: number, rows: ReactNode) => <div className="bm-group">
+    <h4>{title} <small>({count})</small></h4>{rows}</div>
+
+  const form = <form onSubmit={submit} className="modal-form bm-form">
+    {!branch && <FormIntro icon={<Store size={24} />} title="Nova filial">
+      Dê um nome à filial e escolha as cidades e os bairros que ela atende, com o valor do frete.</FormIntro>}
+    {!branch && <label>Nome da filial
+      <input value={name} onChange={event => setName(event.target.value)} maxLength={100} placeholder="Ex.: Fortaleza" required autoFocus />
+    </label>}
+
+    <div className="bm-body">
+      {/* 1. Adicionar cidade ou bairro. */}
+      <section className="bm-card">
+        <header className="bm-step"><b>1</b><div><strong>Adicione cidades e bairros</strong>
+          <small>{tab === 'city' ? 'Busque a cidade e clique no + para incluir.' : 'Escolha a cidade, digite o bairro e clique em Adicionar.'}</small></div></header>
+        <div className="bm-tabs" role="tablist">
+          <button type="button" role="tab" aria-selected={tab === 'city'} className={tab === 'city' ? 'on' : ''} onClick={() => setTab('city')}>Cidade</button>
+          <button type="button" role="tab" aria-selected={tab === 'district'} className={tab === 'district' ? 'on' : ''}
+            onClick={() => { setTab('district'); setTimeout(() => districtRef.current?.focus(), 0) }}>Bairro</button>
         </div>
-        {form}
+        {tab === 'city' ? <>
+          <div className="bm-fields city">
+            <label>UF
+              <select value={uf} onChange={event => { setUf(event.target.value); setSearch('') }}>
+                {[...new Set(municipalities.map(city => city.uf))].sort().map(value => <option key={value} value={value}>{value}</option>)}
+              </select>
+            </label>
+            <label>Cidade
+              <input ref={searchRef} value={search} onChange={event => setSearch(event.target.value)} placeholder="Digite o nome da cidade"
+                onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); if (term && available.length) addMunicipality(available[0].code) } }} />
+            </label>
+          </div>
+          <ul className="bm-results" aria-label="Cidades encontradas">
+            {available.length ? available.map(city => <li key={city.code}>
+              <button type="button" onClick={() => addMunicipality(city.code)} aria-label={`Adicionar ${city.name}`}>
+                <span>{city.name} <small>– {city.uf}</small></span><Plus size={16} aria-hidden="true" /></button>
+            </li>) : <li className="bm-none">Nenhuma cidade encontrada.</li>}
+          </ul>
+        </> : areas.length === 0 ? <p className="bm-none">Adicione uma cidade primeiro.</p> : <>
+          <div className="bm-fields district">
+            <label>Cidade
+              <select value={districtCityCode} onChange={event => setDistrictCity(event.target.value)}>
+                {[...(capital ? [capital] : []), ...others].map(area => <option key={area.code} value={area.code}>{cityName(area.code)}</option>)}
+              </select>
+            </label>
+            <label>Bairro
+              <input ref={districtRef} value={districtName} maxLength={80} placeholder="Ex.: Aldeota" onChange={event => setDistrictName(event.target.value)}
+                onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); addDistrict() } }} />
+            </label>
+          </div>
+          <button type="button" className="button secondary bm-add" disabled={!districtName.trim()} onClick={addDistrict}><Plus size={16} /> Adicionar bairro</button>
+          <p className="bm-hint">Bairro fora da lista paga o frete da cidade.</p>
+        </>}
+      </section>
+
+      {/* 2. Frete de cada cidade e bairro, na ordem Fortaleza, bairros de Fortaleza e Região metropolitana. */}
+      <section className="bm-card bm-list-card">
+        <header className="bm-step"><b className="coral">2</b><div><strong>Frete</strong><small>Digite o valor da entrega de cada um.</small></div></header>
+        {areas.length === 0 ? <p className="bm-none">Nenhuma cidade ainda.</p> : <div className="bm-list">
+          {capital ? <>
+            {group('Fortaleza', 1, cityRow(capital))}
+            {capital.districts.length > 0 && group('Bairros de Fortaleza', capital.districts.length, districtRows(capital))}
+            {others.length > 0 && group('Região metropolitana', others.length, others.map(area => <div key={area.code}>{cityRow(area)}{districtRows(area)}</div>))}
+          </> : group('Cidades', areas.length, areas.map(area => <div key={area.code}>{cityRow(area)}{districtRows(area)}</div>))}
+        </div>}
       </section>
     </div>
-  )
+
+    {!branch && <label className="branch-option"><input type="checkbox" checked={active} onChange={event => setActive(event.target.checked)} />
+      <span>Filial ativa</span></label>}
+    {(localError || error) && <div className="form-error" role="alert">{localError || error}</div>}
+    <div className="modal-actions">
+      <button type="button" className="button secondary" onClick={onClose} disabled={saving}>Cancelar</button>
+      <button type="submit" className="button primary" disabled={saving}>
+        {saving ? 'Salvando...' : branch ? 'Salvar alterações' : 'Criar filial'} <ArrowRight size={17} /></button>
+    </div>
+  </form>
+
+  return <div className="modal-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) onClose() }}>
+    <section className="modal bm-modal" role="dialog" aria-modal="true" aria-labelledby="branch-modal-title">
+      <div className="modal-head">
+        <div>
+          <span className="eyebrow">PÓS LEVE • FILIAIS</span>
+          <h2 id="branch-modal-title">{branch ? 'Cidades, bairros e frete' : 'Nova filial'}</h2>
+        </div>
+        <button type="button" className="icon-button" aria-label="Fechar" onClick={onClose}><X size={20} /></button>
+      </div>
+      {form}
+    </section>
+  </div>
 }
