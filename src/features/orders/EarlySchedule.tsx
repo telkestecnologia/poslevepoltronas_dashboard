@@ -117,7 +117,7 @@ export function InlineSchedule({ order, kind, busy, onSave }: {
     setEditing(false)
   }
 
-  return <div className="od-inline-schedule">
+  return <div className={`od-inline-schedule${editing ? ' editing' : ''}`}>
     <div className="od-inline-now"><CalendarClock size={18} />
       <span>{moved ? 'Combinada' : 'Prevista'} para <b>{dayLabel(day)}</b>{time ? <> <b>{timeLabel(time)}</b></> : ' (horário a combinar)'}</span></div>
     {!editing ? <button type="button" className="button secondary od-reschedule-open" disabled={busy}

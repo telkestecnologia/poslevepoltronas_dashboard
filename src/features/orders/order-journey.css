@@ -189,3 +189,13 @@
 .oj-window-notes p { margin: 0; color: #3e4e53; font-size: 13.5px; line-height: 1.4; white-space: pre-line; }
 .oj-window-notes p.due b { color: #c4532c; }
 .oj-window-notes p.issue b { color: #d4412d; }
+
+/* Reagendando: a data atual numa linha e, embaixo, dia, horário, Salvar e Cancelar lado a lado, sem se sobrepor. */
+.od-inline-schedule.editing { grid-template-columns: minmax(0, 1fr) !important; }
+.od-inline-schedule.editing .od-inline-fields { grid-template-columns: minmax(150px, 1fr) 110px auto auto !important; align-items: end; }
+.od-inline-schedule.editing .od-inline-fields > * { min-width: 0; }
+.od-inline-schedule.editing .od-inline-fields .button { white-space: nowrap; }
+@media (max-width: 560px) {
+  .od-inline-schedule.editing .od-inline-fields { grid-template-columns: minmax(0, 1fr) 100px !important; }
+  .od-inline-schedule.editing .od-inline-fields .button { width: 100%; justify-content: center; }
+}
