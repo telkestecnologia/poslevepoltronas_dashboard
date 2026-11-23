@@ -290,6 +290,12 @@ export function AgendaPage({ credentials, onOpenOrder }: Props) {
           <div className="agenda-day-title"><h2>{kindFilter ? `${kindFilter === 'delivery' ? 'Entregas' : 'Retiradas'} • ` : ''}{dayFormatter.format(dateFromIso(selectedDate))}</h2>
             <button type="button" className="finance-date-icon" aria-label="Abrir calendário" title="Abrir calendário"
               onClick={() => setCalendarOpen(true)}><CalendarDays size={19} /></button></div>
+          {/* No celular, a agenda em destaque: botão grande para abrir o calendário (no computador ele já fica ao lado). */}
+          <button type="button" className="agenda-open-button" onClick={() => setCalendarOpen(true)}>
+            <span className="agenda-open-icon"><CalendarDays size={20} /></span>
+            <span><strong>Abrir agenda</strong><small>Toque para ver o calendário e escolher outro dia</small></span>
+            <ChevronRight size={16} />
+          </button>
           <p>{selectedItems.length} {selectedItems.length === 1 ? 'serviço previsto' : 'serviços previstos'}
             {grouped.length > 0 ? ` em ${grouped.length} ${grouped.length === 1 ? 'cidade' : 'cidades'}` : ''}</p>
         </div>

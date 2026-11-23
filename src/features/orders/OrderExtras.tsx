@@ -113,7 +113,8 @@ export function ManualPaymentsCard({ credentials, order, busy, perform }: {
 export function OrderFlags({ order }: { order: Order }) {
   const due = balanceCents(order)
   const alert = paymentAlert(order, todayIso())
-  const note = order.internalNote?.trim()
+  // Pedido de antes do sistema: a observação "cliente de antes do sistema" repetiria a tag amarela; fica só a tag.
+  const note = order.manualReason === 'ANTES_DO_SISTEMA' && /antes do sistema/i.test(order.internalNote ?? '') ? '' : order.internalNote?.trim()
   if (order.source !== 'MANUAL' && !note) return null
   return <span className="order-flags">
     {order.source === 'MANUAL' && <span className="order-flag manual">⚠ {manualTagText(order.manualReason)}</span>}

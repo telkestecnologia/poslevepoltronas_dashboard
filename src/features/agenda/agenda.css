@@ -176,3 +176,12 @@
 .agenda-calendar-day.selected .agenda-calendar-number { color: #fff !important; }
 .agenda-calendar-day.selected .agenda-count.delivery { background: #fff !important; color: var(--teal-dark) !important; }
 .agenda-calendar-day.selected .agenda-count.pickup { background: #fff !important; color: #c4532c !important; }
+
+/* Agenda em destaque no celular (igual ao app). */
+.agenda-open-button { display: flex; align-items: center; gap: 12px; width: 100%; margin-top: 10px; padding: 12px 14px; border-radius: 16px;
+  border: 1.5px solid var(--teal); background: #eaf6f6; color: var(--teal-dark); text-align: left; cursor: pointer; }
+.agenda-open-button > span:nth-child(2) { flex: 1; display: grid; gap: 2px; }
+.agenda-open-button strong { font-size: 15px; }
+.agenda-open-button small { color: #6b7280; font-size: 12.5px; }
+.agenda-open-icon { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: var(--teal-dark); color: #fff; }
+@media (min-width: 1101px) { .agenda-open-button { display: none; } }
