@@ -4,7 +4,7 @@ import { FormIntro } from '../../components/FormIntro'
 import type { Branch, BranchInput, Municipality } from '../../api'
 import { FORTALEZA_DISTRICTS } from './fortalezaDistricts'
 
-type Area = { code: string; freight: string; free: boolean; districts: { name: string; freight: string }[] }
+type Area = { code: string; freight: string; free: boolean; districts: { name: string; freight: string; free?: boolean }[] }
 const reaisText = (cents: number) => (cents / 100).toFixed(2).replace('.', ',')
 const plain = (text: string) => text.normalize('NFD').replace(/[̀-ͯ]/g, '').toLocaleLowerCase('pt-BR').trim()
 /** "120" ou "120,50" em centavos; null se não for um valor válido. */
@@ -48,7 +48,8 @@ export function BranchModal({
       code: city.code,
       freight: reaisText(city.freightCents),
       free: branch.freeShipping || city.freightCents === 0,
-      districts: (city.districts ?? []).map(item => ({ name: item.name, freight: reaisText(item.freightCents) })),
+      // Bairro com frete R$ 0,00 = frete grátis naquele bairro.
+      districts: (city.districts ?? []).map(item => ({ name: item.name, freight: item.freightCents === 0 ? '' : reaisText(item.freightCents), free: item.freightCents === 0 })),
     })) ?? [],
   )
   const [tab, setTab] = useState<'city' | 'district'>('city')
@@ -110,7 +111,7 @@ export function BranchModal({
     for (const area of areas) {
       const districts: { name: string; freightCents: number }[] = []
       for (const item of area.districts) {
-        const cents = toCents(item.freight)
+        const cents = item.free ? 0 : toCents(item.freight)
         if (cents === null) { setLocalError(`Informe o frete do bairro ${item.name} (ex.: 60,00).`); return }
         districts.push({ name: item.name, freightCents: cents })
       }
@@ -138,11 +139,14 @@ export function BranchModal({
   const districtRows = (area: Area) => area.districts.map((item, index) => <div className="bm-row" key={item.name}>
     <span className="bm-name">{item.name}</span>
     <label className="bm-price">R$
-      <input inputMode="decimal" value={item.freight} placeholder="0,00" aria-label={`Frete do bairro ${item.name}`}
+      <input inputMode="decimal" value={item.free ? '0,00' : item.freight} disabled={item.free} placeholder="0,00" aria-label={`Frete do bairro ${item.name}`}
         onChange={event => update(area.code, current => ({ ...current,
           districts: current.districts.map((row, at) => at === index ? { ...row, freight: event.target.value } : row) }))} />
     </label>
-    <span className="bm-free-empty" />
+    {/* Frete grátis só neste bairro. */}
+    <label className="bm-free"><input type="checkbox" checked={!!item.free} aria-label={`Frete grátis no bairro ${item.name}`}
+      onChange={event => update(area.code, current => ({ ...current,
+        districts: current.districts.map((row, at) => at === index ? { ...row, free: event.target.checked } : row) }))} /> Grátis</label>
     <button type="button" className="bm-remove" aria-label={`Remover bairro ${item.name}`}
       onClick={() => update(area.code, current => ({ ...current, districts: current.districts.filter((_, at) => at !== index) }))}><X size={15} /></button>
   </div>)
