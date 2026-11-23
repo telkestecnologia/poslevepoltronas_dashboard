@@ -111,7 +111,7 @@ function App() {
             {/* A lista de avisos saiu da tela; o painel segue escondido só para as notificações do computador. */}
             <div hidden><AttentionPanel credentials={session.credentials}
               onOpen={target => navigate(target.page, { id: target.id, chairStatus: target.chairStatus })} /></div>
-            <OrdersPage credentials={session.credentials} params={params}
+            <OrdersPage credentials={session.credentials} params={params} pageSize={10}
               onOpenOrder={id => navigate('orders', { id, fromList: true })} />
           </OverviewPage>
         )}

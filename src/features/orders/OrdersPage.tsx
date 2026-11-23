@@ -29,9 +29,10 @@ type Loaded = { key: string; page: number; items: Order[]; total: number; counts
 
 const openIssuesOf = (order: Order) => order.issues.filter(issue => issue.status === 'OPEN').length
 
-type Props = { credentials: string; params: URLSearchParams; onOpenOrder: (id: string) => void }
+/** pageSize: pedidos por página (Visão geral: 10; lista de pedidos: 20). */
+type Props = { credentials: string; params: URLSearchParams; onOpenOrder: (id: string) => void; pageSize?: number }
 
-export function OrdersPage({ credentials, params, onOpenOrder }: Props) {
+export function OrdersPage({ credentials, params, onOpenOrder, pageSize = PAGE_SIZE }: Props) {
   // Filtros ficam na URL: ao voltar do pedido, a lista aparece igual.
   const summaryKey = params.get('resumo')
   const branchId = params.get('filial') ?? 'ALL'
@@ -93,7 +94,7 @@ export function OrdersPage({ credentials, params, onOpenOrder }: Props) {
   const load = useCallback(async () => {
     const id = ++request.current
     try {
-      const result = await api.orderPage(credentials, JSON.parse(key) as OrderQuery, page, PAGE_SIZE)
+      const result = await api.orderPage(credentials, JSON.parse(key) as OrderQuery, page, pageSize)
       if (id !== request.current) return
       // A página pode deixar de existir quando pedidos saem do filtro.
       if (result.items.length === 0 && page > 0) {
@@ -105,7 +106,7 @@ export function OrdersPage({ credentials, params, onOpenOrder }: Props) {
     } catch (cause) {
       if (id === request.current) setError(getMessage(cause))
     }
-  }, [credentials, key, page])
+  }, [credentials, key, page, pageSize])
 
   usePolling(load, 30_000)
 
@@ -123,7 +124,7 @@ export function OrdersPage({ credentials, params, onOpenOrder }: Props) {
   const stale = !current && data !== null
   const shown = current ?? data
   const total = shown?.total ?? 0
-  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE))
+  const pages = Math.max(1, Math.ceil(total / pageSize))
   const countOf = (item: Summary) => item.issues ? shown?.openIssues ?? 0
     : item.statuses!.reduce((sum, value) => sum + (shown?.counts[value] ?? 0), 0)
   const unfiltered = !term && branchId === 'ALL' && !active
