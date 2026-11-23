@@ -45,6 +45,21 @@ export function BranchModal({
       districts: (city.districts ?? []).map(item => ({ name: item.name, freight: reaisText(item.freightCents) })),
     })) ?? [],
   )
+  // Passo 1: bairro novo (cidade da filial + nome); o valor é digitado no passo 2, embaixo da cidade.
+  const [districtCity, setDistrictCity] = useState('')
+  const [districtName, setDistrictName] = useState('')
+  const districtCityCode = areas.some(area => area.code === districtCity) ? districtCity
+    : (areas.find(area => (municipalities.find(item => item.code === area.code)?.name ?? '') === 'Fortaleza') ?? areas[0])?.code ?? ''
+  function addDistrict() {
+    const name = districtName.trim().replace(/\s+/g, ' ')
+    if (!name || !districtCityCode) return
+    const key = (text: string) => text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim()
+    const area = areas.find(item => item.code === districtCityCode)
+    if (area?.districts.some(item => key(item.name) === key(name))) { setLocalError(`O bairro ${name} já está na lista.`); return }
+    editDistricts(districtCityCode, list => [...list, { name, freight: '' }])
+    setDistrictName('')
+    setLocalError('')
+  }
   const editDistricts = (code: string, change: (list: Area['districts']) => Area['districts']) =>
     setAreas(current => current.map(item => item.code === code ? { ...item, districts: change(item.districts) } : item))
   const [uf, setUf] = useState(branch?.municipalities[0]?.uf ?? 'CE')
@@ -132,7 +147,7 @@ export function BranchModal({
             {/* No computador: dois passos lado a lado (adicionar cidades | frete de cada uma). No celular fica como antes. */}
             <div className="mp-body">
             <div className="mp-add">
-            <div className="mp-step"><b>1</b><div><strong>Adicione as cidades</strong><small>Escolha o estado, busque e clique no + para incluir.</small></div></div>
+            <div className="mp-step"><b>1</b><div><strong>Adicione as cidades e bairros</strong><small>Escolha o estado, busque a cidade e clique no + para incluir. Embaixo, inclua os bairros com frete próprio.</small></div></div>
             <div className="municipality-picker-row">
               <label>
                 UF
@@ -189,9 +204,28 @@ export function BranchModal({
                 <p>Nenhum município encontrado nesta UF.</p>
               )}
             </div>
+            {/* Bairros com frete próprio (ex.: Fortaleza): escolha a cidade, digite o bairro e clique no +. */}
+            <div className="mp-districts">
+              <strong>Bairros</strong>
+              <small>Os bairros que não estiverem na lista pagam o frete da cidade.</small>
+              {areas.length === 0 ? <p className="mp-empty">Adicione uma cidade primeiro.</p> : <div className="mp-district-row">
+                <label>Cidade
+                  <select value={districtCityCode} onChange={event => setDistrictCity(event.target.value)}>
+                    {areas.map(area => <option key={area.code} value={area.code}>
+                      {municipalities.find(item => item.code === area.code)?.name ?? branch?.municipalities.find(item => item.code === area.code)?.name ?? area.code}</option>)}
+                  </select>
+                </label>
+                <label>Bairro
+                  <input value={districtName} maxLength={80} placeholder="Ex.: Aldeota" onChange={event => setDistrictName(event.target.value)}
+                    onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); addDistrict() } }} />
+                </label>
+                <button type="button" className="mp-district-add" aria-label="Adicionar bairro" disabled={!districtName.trim()} onClick={addDistrict}>
+                  <Plus size={16} /></button>
+              </div>}
+            </div>
             </div>
             <div className="mp-fees">
-            <div className="mp-step"><b>2</b><div><strong>Frete de cada cidade ({areas.length})</strong><small>Digite o valor da entrega ou marque Frete grátis.</small></div></div>
+            <div className="mp-step"><b>2</b><div><strong>Frete de cada cidade e bairro ({areas.length})</strong><small>Digite o valor da entrega ou marque Frete grátis.</small></div></div>
             {areas.length === 0 && <p className="mp-empty">Nenhuma cidade ainda. Adicione no passo 1.</p>}
             {areas.length > 0 && (
               <div className="municipality-selected">
@@ -241,20 +275,15 @@ export function BranchModal({
                         <X size={16} />
                       </button>
                       {/* Bairros com frete diferente do valor da cidade (ex.: Fortaleza). */}
-                      <details className="district-fees">
-                        <summary>Frete por bairro{area.districts.length ? ` (${area.districts.length})` : ''}</summary>
-                        <p className="district-help">Os bairros que não estiverem aqui pagam o frete da cidade.</p>
-                        {area.districts.map((item, index) => <div className="district-fee" key={index}>
-                          <input value={item.name} maxLength={80} placeholder="Bairro (ex.: Aldeota)" aria-label="Nome do bairro"
-                            onChange={event => editDistricts(area.code, list => list.map((row, at) => at === index ? { ...row, name: event.target.value } : row))} />
+                      {area.districts.length > 0 && <div className="district-fees">
+                        {area.districts.map((item, index) => <div className="district-fee" key={item.name}>
+                          <span>{item.name}</span>
                           <label>R$ <input inputMode="decimal" value={item.freight} placeholder="60,00" aria-label={`Frete do bairro ${item.name}`}
                             onChange={event => editDistricts(area.code, list => list.map((row, at) => at === index ? { ...row, freight: event.target.value } : row))} /></label>
                           <button type="button" aria-label={`Remover bairro ${item.name}`}
                             onClick={() => editDistricts(area.code, list => list.filter((_, at) => at !== index))}><X size={14} /></button>
                         </div>)}
-                        <button type="button" className="district-add" onClick={() => editDistricts(area.code, list => [...list, { name: '', freight: '' }])}>
-                          <Plus size={14} /> Adicionar bairro</button>
-                      </details>
+                      </div>}
                     </div>
                   )
                 })}

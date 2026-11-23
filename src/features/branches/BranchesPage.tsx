@@ -176,6 +176,31 @@ function BranchCities({ branch }: { branch: Branch }) {
       </li>
     })}
   </ul>
+  // Filial de Fortaleza: a capital e os bairros com frete próprio em destaque no topo; as outras cidades embaixo,
+  // como Região metropolitana.
+  const capital = branch.municipalities.find(city => city.name === 'Fortaleza')
+  if (groups.length === 1 && capital) {
+    const districts = [...(capital.districts ?? [])].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
+    const metro = sortedCities(branch.municipalities.filter(city => city.code !== capital.code))
+    const capitalFree = branch.freeShipping || capital.freightCents === 0
+    return <div className="branch-capital-wrap">
+      <div className="branch-capital">
+        <div className="branch-capital-head">
+          <h3><MapPin size={17} aria-hidden="true" /> Fortaleza <small>– {capital.uf}</small></h3>
+          <span>{capitalFree ? 'Grátis' : `${freightLabel(capital.freightCents)}`}<small> frete da cidade</small></span>
+        </div>
+        {districts.length > 0 && !branch.freeShipping ? <>
+          <p className="branch-capital-note">Bairros com frete próprio ({districts.length}); os demais pagam o frete da cidade.</p>
+          <ul className="branch-capital-districts">{districts.map(item => <li key={item.name}>
+            <span>{item.name}</span><b>{freightLabel(item.freightCents)}</b></li>)}</ul>
+        </> : <p className="branch-capital-note">Nenhum bairro com frete próprio ainda: todos pagam o frete da cidade. Inclua em “Cidades atendidas e frete”.</p>}
+      </div>
+      {metro.length > 0 && <div className="branch-metro">
+        <h3>Região metropolitana <small>({metro.length})</small></h3>
+        {list(metro)}
+      </div>}
+    </div>
+  }
   if (groups.length === 1) return list(groups[0].cities)
   // Filial unida: Serra da Ibiapaba de um lado, Sobral e Regiões Vizinhas do outro.
   return <div className="branch-regions">

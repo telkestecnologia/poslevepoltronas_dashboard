@@ -198,17 +198,40 @@ button.branch-chair:hover { filter: brightness(0.98); }
 .branch-region.sobral .branch-cities li { background: #fde8e2; }
 .branch-region.sobral .branch-cities svg { color: #e87461; }
 
-/* Frete por bairro dentro de cada cidade (ex.: Fortaleza). */
-.municipality-fee { flex-wrap: wrap; }
-.district-fees { flex-basis: 100%; margin: 2px 0 6px; font-size: 13px; }
-.district-fees summary { cursor: pointer; color: #1f6f78; font-weight: 600; }
-.district-help { margin: 6px 0; color: #6b7280; font-size: 12px; }
-.district-fee { display: grid; grid-template-columns: minmax(0, 1fr) 120px 28px; gap: 6px; align-items: center; margin-bottom: 6px; }
-.district-fee input { width: 100%; min-width: 0; }
-.district-fee label { display: flex; align-items: center; gap: 4px; }
-.district-fee button, .district-add { border: 0; background: none; color: #1f6f78; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; padding: 4px; }
+/* Frete por bairro: incluir no passo 1; valor de cada bairro embaixo da cidade no passo 2. */
+.mp-districts { display: grid; gap: 6px; margin-top: 14px; padding-top: 14px; border-top: 1px solid #e6eeee; }
+.mp-districts > strong { font-size: 14px; color: #14262f; }
+.mp-districts > small { color: #6b7280; font-size: 12.5px; }
+.mp-district-row { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1fr) 40px; gap: 8px; align-items: end; }
+.mp-district-row label { display: grid; gap: 4px; font-size: 13px; font-weight: 600; min-width: 0; }
+.mp-district-row select, .mp-district-row input { width: 100%; min-width: 0; }
+.mp-district-add { width: 40px; height: 40px; border: 0; border-radius: 10px; background: #e3f3f2; color: var(--teal-dark); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+.mp-district-add:disabled { opacity: 0.45; cursor: default; }
+.municipality-picker .municipality-fee .district-fees { grid-column: 1 / -1; grid-area: auto; display: grid; gap: 6px; margin-top: 4px; padding: 8px 0 0 14px; border-left: 2px solid #d5ecea; }
+.district-fee { display: grid; grid-template-columns: minmax(0, 1fr) 140px 28px; gap: 8px; align-items: center; font-size: 13.5px; color: #14262f; }
+.district-fee label { display: flex; align-items: center; gap: 6px; color: #5f7d86; font-weight: 600; }
+.district-fee input { width: 100%; min-width: 0; text-align: right; }
+.district-fee button { border: 0; background: none; color: #8a979c; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 4px; }
 .branch-districts { flex-basis: 100%; margin-left: 23px; font-size: 13px; color: #4b5d64; }
 .branch-districts summary { cursor: pointer; }
 .branch-districts ul { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 4px; }
 .branch-districts li { display: flex; justify-content: space-between; gap: 8px; }
-@media (max-width: 560px) { .district-fee { grid-template-columns: minmax(0, 1fr) 96px 28px; } }
+@media (max-width: 560px) { .district-fee { grid-template-columns: minmax(0, 1fr) 104px 28px; } .mp-district-row { grid-template-columns: 1fr 40px; } .mp-district-row label:first-child { grid-column: 1 / -1; } }
+
+/* Filial de Fortaleza: capital e bairros em destaque, Região metropolitana embaixo. */
+.branch-capital-wrap { display: grid; gap: 16px; }
+.branch-capital { display: grid; gap: 10px; padding: 16px; border-radius: 16px; background: #eaf6f6; border: 1.5px solid #bfe3e0; }
+.branch-capital-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; }
+.branch-capital-head h3 { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-size: 18px; color: var(--teal-dark); }
+.branch-capital-head h3 small { color: #6b7d84; font-weight: 600; font-size: 13px; }
+.branch-capital-head > span { font-size: 18px; font-weight: 800; color: #14262f; }
+.branch-capital-head > span small { font-size: 12px; font-weight: 600; color: #6b7d84; }
+.branch-capital-note { margin: 0; font-size: 12.5px; color: #5f7d86; }
+.branch-capital-districts { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.branch-capital-districts li { display: flex; justify-content: space-between; gap: 8px; padding: 8px 12px; border-radius: 10px; background: #fff; font-size: 13.5px; }
+.branch-capital-districts li span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.branch-metro { display: grid; gap: 10px; }
+.branch-metro h3 { margin: 0; font-size: 15px; color: #14262f; }
+.branch-metro h3 small { color: #6b7d84; font-weight: 600; }
+@media (max-width: 1100px) { .branch-capital-districts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .branch-capital-districts { grid-template-columns: 1fr; } }
