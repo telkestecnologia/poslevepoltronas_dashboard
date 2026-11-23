@@ -176,10 +176,10 @@ export function BranchCities({ branch }: { branch: Branch }) {
       </li>
     })}
   </ul>
-  // Filial de Fortaleza: só Fortaleza e os bairros, com o frete. As cidades da Região metropolitana continuam atendidas
-  // e aparecem na janela de editar.
+  // Filial de Fortaleza: Fortaleza, os bairros de Fortaleza e a Região metropolitana, nessa ordem, todos com o frete.
   const capital = branch.municipalities.find(city => city.name === 'Fortaleza')
   if (groups.length === 1 && capital) {
+    const metro = sortedCities(branch.municipalities.filter(city => city.code !== capital.code))
     const districts = branch.freeShipping ? [] : [...(capital.districts ?? [])].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
     return <div className="branch-groups">
       <div className="branch-group"><h3>Fortaleza</h3>{list([{ ...capital, districts: [] }])}</div>
@@ -187,6 +187,7 @@ export function BranchCities({ branch }: { branch: Branch }) {
         <ul className="branch-cities">{districts.map(item => <li key={item.name}>
           <MapPin size={15} aria-hidden="true" /><span>{item.name}</span><strong>{freightLabel(item.freightCents)}</strong></li>)}</ul>
       </div>}
+      {metro.length > 0 && <div className="branch-group"><h3>Região metropolitana <small>({metro.length})</small></h3>{list(metro)}</div>}
     </div>
   }
   if (groups.length === 1) return list(groups[0].cities)
