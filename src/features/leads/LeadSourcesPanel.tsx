@@ -14,6 +14,9 @@ const COLORS: Record<string, string> = {
   INDICACAO: '#1a9baa', MEDICO: '#c2563b', WHATSAPP: '#25a35a', SITE_DIRETO: '#5f7d86', OUTRO: '#9aa6ab', NAO_INFORMADO: '#cfd6d8',
 }
 
+/** Fontes que não aparecem no quadro. */
+const HIDDEN = ['META_ADS', 'GOOGLE_ADS']
+
 type Metric = 'contacts' | 'orders'
 
 type Part = { key: string; value: number; color: string; name: string }
@@ -83,15 +86,12 @@ export function LeadSourcesPanel({ credentials, className }: { credentials: stri
 
   if (hidden) return null
   const rows = data?.rows ?? []
-  const totals = rows.reduce((sum, row) => ({ contacts: sum.contacts + row.contacts, orders: sum.orders + row.orders,
-    revenue: sum.revenue + row.revenueCents }), { contacts: 0, orders: 0, revenue: 0 })
-  const total = metric === 'contacts' ? totals.contacts : totals.orders
-  const parts = [...rows].map(row => ({ key: row.source, name: leadSourceLabel(row.source), value: metric === 'contacts' ? row.contacts : row.orders,
-    color: COLORS[row.source] ?? '#9aa6ab', row }))
-    // Anúncio Google saiu da lista (a Pós Leve não anuncia no Google); só volta se algum contato chegar por ele.
-    .filter(part => part.key !== 'GOOGLE_ADS' || part.value > 0).sort((a, b) => b.value - a.value)
-  // Na pizza só quem tem contato; na lista, todas as fontes (Instagram, Facebook, anúncios, Google, indicação, médico, WhatsApp, site...).
-  const slices = parts.filter(part => part.value > 0)
+  // Lista curta: só as fontes com contato no mês, sem os anúncios (a Pós Leve não usa esses nomes na equipe).
+  const parts = rows.filter(row => !HIDDEN.includes(row.source)).map(row => ({ key: row.source, name: leadSourceLabel(row.source),
+    value: metric === 'contacts' ? row.contacts : row.orders, color: COLORS[row.source] ?? '#9aa6ab', row }))
+    .filter(part => part.value > 0).sort((a, b) => b.value - a.value)
+  const slices = parts
+  const total = parts.reduce((sum, part) => sum + part.value, 0)
 
   return <section className={`panel lead-sources${className ? ` ${className}` : ''}`} aria-labelledby="lead-sources-title">
     <header className="lead-sources-head">
@@ -111,10 +111,9 @@ export function LeadSourcesPanel({ credentials, className }: { credentials: stri
         <ul className="lead-pie-legend">{parts.map(part => <li key={part.key} className={active === part.key ? 'active' : ''}
           onMouseEnter={() => setActive(part.key)} onMouseLeave={() => setActive(null)}>
           <i style={{ background: part.color }} /><b>{part.name}</b>
-          <span>{part.value}{metric === 'orders' && part.row.revenueCents ? ` • ${money.format(part.row.revenueCents / 100)}` : ''}</span>
-          <em>{total ? Math.round((part.value / total) * 100) : 0}%</em>
+          <span>{part.value}{metric === 'orders' && part.row.revenueCents ? ` • ${money.format(part.row.revenueCents / 100)}` : ''}
+            <small> · {total ? Math.round((part.value / total) * 100) : 0}%</small></span>
         </li>)}</ul>
       </div>}
-    <p className="lead-sources-note">Pessoas que chegaram no mês (site, WhatsApp, Instagram, Facebook, anúncios, Google, indicação e médico), pela fonte de onde vieram.</p>
   </section>
 }

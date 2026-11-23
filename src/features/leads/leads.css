@@ -30,19 +30,20 @@
 .lead-metric button { border: 0; background: none; border-radius: 999px; padding: 6px 12px; font: inherit; font-size: 13px; font-weight: 600; color: #4b5d64; cursor: pointer; }
 .lead-metric button.selected { background: #fff; color: #14262f; box-shadow: 0 1px 4px rgba(20, 38, 47, 0.12); }
 .lead-pie-wrap { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
-.lead-pie { width: 150px; height: 150px; flex: 0 0 150px; }
+.lead-pie { width: 120px; height: 120px; flex: 0 0 120px; }
 .lead-pie-total { font-size: 26px; font-weight: 800; fill: #14262f; }
 .lead-pie-caption { font-size: 11px; fill: #6b7280; }
-.lead-pie-legend { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; flex: 1; min-width: 180px; }
-.lead-pie-legend li { display: grid; grid-template-columns: 12px 1fr auto auto; align-items: center; gap: 8px; font-size: 14px; }
-.lead-pie-legend i { width: 12px; height: 12px; border-radius: 4px; }
-.lead-pie-legend b { font-weight: 600; color: #14262f; }
+.lead-pie-legend { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; flex: 1; min-width: 160px; }
+.lead-pie-legend li { display: grid; grid-template-columns: 8px 1fr auto; align-items: center; gap: 8px; font-size: 13px; }
+.lead-pie-legend i { width: 8px; height: 8px; border-radius: 50%; }
+.lead-pie-legend b { font-weight: 500; color: #14262f; }
+.lead-pie-legend small { color: #8a979c; font-size: 12px; }
 .lead-pie-legend span { color: #4b5d64; font-variant-numeric: tabular-nums; }
 .lead-pie-legend em { font-style: normal; font-weight: 700; font-size: 12px; background: #f1f5f5; border-radius: 999px; padding: 2px 8px; }
 @media (max-width: 900px) { .lead-sources-desktop { display: none; } }
 
 /* Balão ao passar o mouse na pizza. */
-.lead-pie-box { position: relative; flex: 0 0 150px; }
+.lead-pie-box { position: relative; flex: 0 0 120px; }
 .lead-pie-tip { position: absolute; z-index: 5; pointer-events: none; display: grid; grid-template-columns: 10px auto; column-gap: 6px; row-gap: 2px;
   align-items: center; background: #14262f; color: #fff; border-radius: 10px; padding: 8px 10px; font-size: 13px; white-space: nowrap;
   box-shadow: 0 8px 24px rgba(20, 38, 47, 0.25); }
