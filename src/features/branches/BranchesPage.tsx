@@ -191,8 +191,7 @@ export function BranchCities({ branch }: { branch: Branch }) {
     return <div className="branch-groups">
       <div className="branch-group"><h3>Fortaleza</h3>{list([{ ...capital, districts: [] }])}</div>
       <div className="branch-group"><h3>Bairros de Fortaleza <small>({districts.length})</small></h3>
-        <ul className="branch-cities">{districts.map(item => <li key={item.name}>
-          <MapPin size={15} aria-hidden="true" /><span>{item.name}</span><strong className={item.freightCents === 0 ? 'free' : ''}>{freightLabel(item.freightCents)}</strong></li>)}</ul>
+        <DistrictList districts={districts} />
       </div>
     </div>
   }
@@ -204,6 +203,18 @@ export function BranchCities({ branch }: { branch: Branch }) {
       {group.cities.length ? list(group.cities) : <p className="branch-muted">Nenhuma cidade.</p>}
     </div>)}
   </div>
+}
+
+/** Bairros de Fortaleza: 15 à vista e "Ver mais bairros" para abrir o resto. */
+function DistrictList({ districts }: { districts: { name: string; freightCents: number }[] }) {
+  const [all, setAll] = useState(false)
+  const shown = all ? districts : districts.slice(0, 15)
+  return <>
+    <ul className="branch-cities">{shown.map(item => <li key={item.name}>
+      <MapPin size={15} aria-hidden="true" /><span>{item.name}</span><strong className={item.freightCents === 0 ? 'free' : ''}>{freightLabel(item.freightCents)}</strong></li>)}</ul>
+    {districts.length > 15 && <button type="button" className="button secondary branch-more" onClick={() => setAll(value => !value)}>
+      {all ? 'Ver menos bairros' : `Ver mais bairros (${districts.length - 15})`}</button>}
+  </>
 }
 
 function branchPhoto(name: string) {
