@@ -270,3 +270,7 @@ button.branch-chair:hover { filter: brightness(0.98); }
 /* Bloco que abre e fecha na página da filial: o formulário com espaço dentro da borda. */
 .branch-inline-form .bm-form { padding: 16px 0 18px; }
 .branch-inline-form .bm-form .modal-actions { justify-content: flex-end; }
+
+.bm-all { display: grid; gap: 6px; padding-top: 10px; border-top: 1px solid #e6eeee; }
+.bm-all .button { justify-self: start; display: inline-flex; align-items: center; gap: 6px; }
+.bm-all small { color: #6b7f86; font-size: 12.5px; }

@@ -2,6 +2,7 @@ import { useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { ArrowRight, Plus, Store, X } from 'lucide-react'
 import { FormIntro } from '../../components/FormIntro'
 import type { Branch, BranchInput, Municipality } from '../../api'
+import { FORTALEZA_DISTRICTS } from './fortalezaDistricts'
 
 type Area = { code: string; freight: string; free: boolean; districts: { name: string; freight: string }[] }
 const reaisText = (cents: number) => (cents / 100).toFixed(2).replace('.', ',')
@@ -90,6 +91,17 @@ export function BranchModal({
     setLocalError('')
     districtRef.current?.focus()
   }
+
+  /** Fortaleza: inclui de uma vez todos os bairros que faltam, com o frete sugerido da região (a equipe confere antes de salvar). */
+  function addAllFortaleza() {
+    if (!capital) return
+    const have = new Set(capital.districts.map(item => plain(item.name)))
+    const missing = FORTALEZA_DISTRICTS.filter(item => !have.has(plain(item.name)))
+    update(capital.code, item => ({ ...item, districts: [...item.districts, ...missing.map(row => ({ name: row.name, freight: reaisText(row.freightCents) }))]
+      .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')) }))
+    setLocalError('')
+  }
+  const fortalezaMissing = capital ? FORTALEZA_DISTRICTS.filter(item => !capital.districts.some(row => plain(row.name) === plain(item.name))).length : 0
 
   function submit(event: FormEvent) {
     event.preventDefault()
@@ -187,6 +199,10 @@ export function BranchModal({
           </div>
           <button type="button" className="button secondary bm-add" disabled={!districtName.trim()} onClick={addDistrict}><Plus size={16} /> Adicionar bairro</button>
           <p className="bm-hint">Bairro fora da lista paga o frete da cidade.</p>
+          {capital && districtCityCode === capital.code && fortalezaMissing > 0 && <div className="bm-all">
+            <button type="button" className="button secondary" onClick={addAllFortaleza}><Plus size={16} /> Adicionar todos os bairros de Fortaleza ({fortalezaMissing})</button>
+            <small>Entram com um frete sugerido por região (R$ 150 a R$ 260). Confira os valores na lista e clique em Salvar.</small>
+          </div>}
         </>}
       </section>
 
