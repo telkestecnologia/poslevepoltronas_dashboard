@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
-import { ArrowLeft, Armchair, CheckCircle2, ChevronRight, MapPin, Pencil, Plus, Search, Wrench } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { ArrowLeft, Armchair, CheckCircle2, ChevronRight, MapPin, Plus, Search, Wrench } from 'lucide-react'
 import { api, type Branch, type BranchInput, type BranchMunicipality, type Chair, type Municipality } from '../../api'
 import { BranchModal } from './BranchModal'
 import { EmptyState } from '../../components/common'
@@ -28,12 +28,6 @@ type Props = {
 export function BranchesPage({ branches, activeCounts, onNewBranch, credentials, municipalities, saving, formError, onUpdateBranch, onEditChair, onNewChair, modalOpen }: Props) {
   const [enteredId, setEnteredId] = useState<string | null>(null)
   const entered = branches.find(branch => branch.id === enteredId)
-  const [editingCities, setEditingCities] = useState(false)
-  // Fecha a janela quando o salvamento termina sem erro.
-  const savedRef = useRef(false)
-  useEffect(() => {
-    if (!saving && savedRef.current) { savedRef.current = false; if (!formError) setEditingCities(false) }
-  }, [saving, formError])
   const busyId = null as string | null
   const error = ''
 
@@ -66,16 +60,14 @@ export function BranchesPage({ branches, activeCounts, onNewBranch, credentials,
       </section>
       {/* Cidades atendidas e o frete de cada uma, sempre à vista (também para o parceiro). Editar fica logo abaixo. */}
       <section className="panel branch-section">
-        <div className="branch-section-head">
-          <h2>Cidades atendidas</h2>
-          {/* Incluir ou retirar cidades e bairros e mudar o frete: numa janela no meio da tela. */}
-          <button type="button" className="button secondary" onClick={() => setEditingCities(true)}><Pencil size={15} /> Editar cidades, bairros e frete</button>
-        </div>
+        <h2>Cidades atendidas</h2>
         <BranchCities branch={entered} />
       </section>
-      {editingCities && <BranchModal modal={{ kind: 'editBranch', branch: entered }} municipalities={municipalities}
-        saving={saving} error={formError} onClose={() => setEditingCities(false)}
-        onSave={async data => { savedRef.current = true; await onUpdateBranch(entered, data) }} />}
+      {/* Editar cidades, bairros e frete logo abaixo, num bloco que abre e fecha (como antes). */}
+      <section className="panel branch-section">
+        <BranchModal key={`${entered.id}:${entered.active}:${JSON.stringify(entered.municipalities)}`} inline modal={{ kind: 'editBranch', branch: entered }}
+          municipalities={municipalities} saving={saving} error={formError} onClose={() => {}} onSave={data => onUpdateBranch(entered, data)} />
+      </section>
       <section className="panel branch-section">
         <h2>Poltronas da filial</h2>
         <BranchChairs credentials={credentials} branchId={entered.id} branchName={entered.name} reload={modalOpen} onEdit={onEditChair} onNew={() => onNewChair(entered.id)} />

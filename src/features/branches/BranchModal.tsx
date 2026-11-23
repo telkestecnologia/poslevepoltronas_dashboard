@@ -27,6 +27,7 @@ export function BranchModal({
   error,
   onClose,
   onSave,
+  inline,
 }: {
   modal: { kind: 'newBranch' } | { kind: 'editBranch'; branch: Branch }
   municipalities: Municipality[]
@@ -34,7 +35,7 @@ export function BranchModal({
   error: string
   onClose: () => void
   onSave: (data: BranchInput) => Promise<void>
-  /** Mantido por compatibilidade: a edição agora é sempre na janela. */
+  /** Na página da filial: o formulário fica embaixo da lista, num bloco que abre e fecha (sem janela por cima). */
   inline?: boolean
 }) {
   const branch = modal.kind === 'editBranch' ? modal.branch : null
@@ -206,11 +207,18 @@ export function BranchModal({
       <span>Filial ativa</span></label>}
     {(localError || error) && <div className="form-error" role="alert">{localError || error}</div>}
     <div className="modal-actions">
-      <button type="button" className="button secondary" onClick={onClose} disabled={saving}>Cancelar</button>
+      {!inline && <button type="button" className="button secondary" onClick={onClose} disabled={saving}>Cancelar</button>}
       <button type="submit" className="button primary" disabled={saving}>
         {saving ? 'Salvando...' : branch ? 'Salvar alterações' : 'Criar filial'} <ArrowRight size={17} /></button>
     </div>
   </form>
+
+  if (inline) return <div className="branch-inline-form">
+    <details className="municipality-picker">
+      <summary><strong>Cidades, bairros e frete ({areas.length})</strong></summary>
+      {form}
+    </details>
+  </div>
 
   return <div className="modal-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) onClose() }}>
     <section className="modal bm-modal" role="dialog" aria-modal="true" aria-labelledby="branch-modal-title">

@@ -266,3 +266,7 @@ button.branch-chair:hover { filter: brightness(0.98); }
 .modal-form .bm-row label.bm-free input { width: 15px; height: 15px; padding: 0; margin: 0; flex: none; }
 .modal-form .bm-fields select, .modal-form .bm-fields input { height: 42px; }
 @media (max-width: 480px) { .bm-row .bm-free-empty { display: none; } }
+
+/* Bloco que abre e fecha na página da filial: o formulário com espaço dentro da borda. */
+.branch-inline-form .bm-form { padding: 16px 0 18px; }
+.branch-inline-form .bm-form .modal-actions { justify-content: flex-end; }
