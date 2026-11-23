@@ -57,3 +57,8 @@
 .od-ficha-fields p.od-ficha-note { align-items: start; }
 .od-ficha-fields p.od-ficha-note b { padding-top: 2px; }
 .od-ficha-fields p.od-ficha-note span { display: block; white-space: pre-line; line-height: 1.5; }
+
+/* Botão Editar ficha, logo abaixo do título da ficha. */
+.od-ficha-edit { display: inline-flex; align-items: center; gap: 6px; margin: 0 0 14px auto; position: relative; z-index: 1; }
+.modal.od-ficha .od-ficha-edit { float: right; }
+.modal.od-ficha .sd-card { position: relative; z-index: 1; clear: both; }

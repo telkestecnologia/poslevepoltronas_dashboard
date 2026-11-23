@@ -86,7 +86,11 @@ export function useFicha(credentials: string, orderId: string, enabled: boolean)
  * Alterar a ficha do pedido dentro do Pedido manual: dados do cliente, do local e da venda, num formulário só.
  * Ao salvar, volta para o pedido.
  */
-export function OrderFichaEditor({ credentials, order, onDone }: { credentials: string; order: Order; onDone: () => void }) {
+export function OrderFichaEditor({ credentials, order, onDone, onCancel, inFicha }: {
+  credentials: string; order: Order; onDone: () => void
+  /** Na janela da Ficha do cliente: Cancelar volta para a ficha sem salvar. */
+  onCancel?: () => void; inFicha?: boolean
+}) {
   const plans = usePlanNames(credentials)
   const [loaded, setLoaded] = useState(false)
   const [customer, setCustomer] = useState<CustomerDetails>(EMPTY_CUSTOMER)
@@ -154,8 +158,8 @@ export function OrderFichaEditor({ credentials, order, onDone }: { credentials: 
       onDiscount={setDiscount} />
     {message && <p className="mo-warn" role="alert">{message}</p>}
     <div className="od-actions sd-actions">
-      <button type="button" className="button secondary" disabled={busy} onClick={onDone}>Voltar ao pedido</button>
-      <button type="button" className="button primary" disabled={busy} onClick={() => void save()}>{busy ? 'Salvando...' : 'Salvar e voltar ao pedido'}</button>
+      <button type="button" className="button secondary" disabled={busy} onClick={onCancel ?? onDone}>{inFicha ? 'Cancelar' : 'Voltar ao pedido'}</button>
+      <button type="button" className="button primary" disabled={busy} onClick={() => void save()}>{busy ? 'Salvando...' : inFicha ? 'Salvar ficha' : 'Salvar e voltar ao pedido'}</button>
     </div>
   </div>
 }

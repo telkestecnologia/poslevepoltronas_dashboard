@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { timeLabel } from '../../utils/time'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  Armchair, Ban, FileText, AlertCircle, ArrowLeft, ArrowRight, CalendarClock, Check, ChevronDown, ChevronUp, CheckCircle2, Info, MapPin, Megaphone, MessageCircle, Phone, RefreshCw, Truck, X, Images,
+  Armchair, Ban, FileText, AlertCircle, ArrowLeft, ArrowRight, CalendarClock, Check, ChevronDown, ChevronUp, CheckCircle2, Info, MapPin, Megaphone, MessageCircle, Pencil, Phone, RefreshCw, Truck, X, Images,
 } from 'lucide-react'
 import './order-detail.css'
 import { api, ApiError, type Courier, type Order } from '../../api'
@@ -28,7 +28,7 @@ import { ChairSwap, ContractFileCard, ManualPaymentsCard, OrderNoteCard } from '
 import { ManualLinksCard } from './ManualLinks'
 import { StepDocument } from './StepDocuments'
 import { SaleDetailsSummary } from './SaleDetailsCard'
-import { customerRows, saleRows, useFicha } from './CustomerDetails'
+import { customerRows, OrderFichaEditor, saleRows, useFicha } from './CustomerDetails'
 import { go } from '../../router'
 
 /** 60150000 → 60150-000 */
@@ -65,6 +65,8 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
   const [mediaPhase, setMediaPhase] = useState<'DELIVERY' | 'PICKUP' | null>(null)
   const [timelineAll, setTimelineAll] = useState(false)
   const [fichaOpen, setFichaOpen] = useState(false)
+  // Editar a ficha dentro da própria janela: nome, WhatsApp, endereço, CPF, e-mail, quem recebe, local e venda.
+  const [fichaEditing, setFichaEditing] = useState(false)
   const fichaData = useFicha(credentials, id, fichaOpen)
   const fichaRows = fichaData ? [...customerRows(fichaData.customer), ...saleRows(fichaData.sale)] : []
   const [openPhase, setOpenPhase] = useState<'DEPARTURE' | 'DELIVERY' | 'PICKUP' | null>(null)
@@ -365,13 +367,17 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
         <button type="button" className="od-ficha-button od-top-ficha" onClick={() => setFichaOpen(true)}><FileText size={17} /> Ficha do cliente</button>
       </div>
     </header>
-    {fichaOpen && <div className="modal-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) setFichaOpen(false) }}>
+    {fichaOpen && <div className="modal-backdrop" onMouseDown={event => { if (event.target === event.currentTarget && !fichaEditing) setFichaOpen(false) }}>
       {/* Ficha do cliente com cara de ficha de atendimento: papel claro, folhas da logo, campos sublinhados e a tabela do pedido. */}
       <section className="modal od-ficha" role="dialog" aria-modal="true" aria-label={`Ficha de ${order.customerName}`}>
         <img className="od-ficha-leaf top" src={leaves} alt="" aria-hidden="true" />
         <img className="od-ficha-leaf bottom" src={leaves} alt="" aria-hidden="true" />
-        <button className="icon-button od-ficha-close" aria-label="Fechar" onClick={() => setFichaOpen(false)}><X size={20} /></button>
+        <button className="icon-button od-ficha-close" aria-label="Fechar" onClick={() => { setFichaOpen(false); setFichaEditing(false) }}><X size={20} /></button>
         <header className="od-ficha-title"><span>Ficha de</span><em>atendimento</em></header>
+        {!fichaEditing && <button type="button" className="button secondary od-ficha-edit" onClick={() => setFichaEditing(true)}>
+          <Pencil size={15} /> Editar ficha</button>}
+        {fichaEditing ? <OrderFichaEditor credentials={credentials} order={order} inFicha onCancel={() => setFichaEditing(false)}
+          onDone={() => { setFichaEditing(false); setFichaOpen(false); void load(); announceSaved('Ficha salva.') }} /> : <>
         <div className="od-ficha-fields">
           <p><b>Nome:</b><span>{order.customerName}</span></p>
           <p><b>Telefone:</b><span><a href={`tel:${phoneDigits}`}>{displayPhone(order.customerPhone)}</a>
@@ -398,6 +404,7 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
           {isRealOrder(order) && <tfoot><tr><td /><td>Total{balanceCents(order) > 0 ? ` (falta ${currency(balanceCents(order))})` : ''}</td>
             <td>{currency(order.totalCents)}</td></tr></tfoot>}
         </table>
+        </>}
         <footer className="od-ficha-foot">@poslevepoltronas</footer>
       </section>
     </div>}
