@@ -9,6 +9,10 @@ import './chair-occupancy.css'
 // Pedidos que seguram a poltrona (mesma regra do Cadastro Manual) e os concluídos, para os dias que já passaram.
 const HOLDING: OrderStatus[] = ['PAYMENT_CONFIRMED', 'DELIVERY_PENDING', 'IN_USE', 'PICKUP_PENDING', 'COMPLETED']
 const WITH_CLIENT: OrderStatus[] = ['IN_USE', 'PICKUP_PENDING']
+// Pedidos ainda em andamento (de hoje em diante), sem limite de data: dizem até quando a poltrona livre continua livre.
+const ACTIVE: OrderStatus[] = ['PAYMENT_CONFIRMED', 'DELIVERY_PENDING', 'IN_USE', 'PICKUP_PENDING']
+// Quantos dias antes do mês olhar para saber desde quando a poltrona está livre.
+const LOOKBACK_DAYS = 120
 const weekdayInitials = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
 const monthFormatter = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric', timeZone: 'UTC' })
 
@@ -49,6 +53,18 @@ function segmentsOf(days: string[], busy: Busy[], maintenance: boolean): Segment
         period: found.start === found.end ? dayLabel(found.start) : `${dayLabel(found.start)} a ${dayLabel(found.end)}` }
       : { from: index, length: 1, free: true, label: 'Livre' })
   })
+  // Trecho livre: o período inteiro, mesmo passando do mês (do dia depois do aluguel anterior ao dia antes do próximo).
+  for (const segment of segments) {
+    if (!segment.free) continue
+    const first = days[segment.from]
+    const lastDay = days[segment.from + segment.length - 1]
+    const before = busy.filter(item => item.end < first).map(item => item.end).sort().pop()
+    const after = busy.filter(item => item.start > lastDay).map(item => item.start).sort()[0]
+    const start = before ? shiftDay(before, 1) : null
+    const end = after ? shiftDay(after, -1) : null
+    segment.period = start && end ? (start === end ? dayLabel(start) : `${dayLabel(start)} a ${dayLabel(end)}`)
+      : start ? `a partir de ${dayLabel(start)}` : end ? `até ${dayLabel(end)}` : 'sem aluguel marcado'
+  }
   return segments
 }
 
@@ -61,6 +77,12 @@ function monthDays(month: string) {
 function shiftMonth(month: string, offset: number) {
   const [year, value] = month.split('-').map(Number)
   return new Date(Date.UTC(year, value - 1 + offset, 1)).toISOString().slice(0, 7)
+}
+
+function shiftDay(iso: string, offset: number) {
+  const date = new Date(`${iso}T12:00:00Z`)
+  date.setUTCDate(date.getUTCDate() + offset)
+  return date.toISOString().slice(0, 10)
 }
 
 function dayLabel(iso: string) {
@@ -93,9 +115,10 @@ export function ChairOccupancy({ credentials, branches, agendaBranchId, admin, t
         if (result.items.length < 100 || chairs.length >= result.total) break
       }
       const [inRange, withClient, blocks] = await Promise.all([
-        fetchAllOrders(credentials, { source: REAL_SOURCES, statuses: HOLDING, branchId: branch, from, to }),
-        // Retiradas atrasadas de antes do período também ocupam a poltrona hoje.
-        fetchAllOrders(credentials, { source: REAL_SOURCES, statuses: WITH_CLIENT, branchId: branch }),
+        // O mês e alguns meses antes (para saber desde quando a poltrona livre está livre).
+        fetchAllOrders(credentials, { source: REAL_SOURCES, statuses: HOLDING, branchId: branch, from: shiftDay(from, -LOOKBACK_DAYS), to }),
+        // Pedidos em andamento de qualquer data: retiradas atrasadas e os próximos aluguéis depois do mês.
+        fetchAllOrders(credentials, { source: REAL_SOURCES, statuses: ACTIVE, branchId: branch }),
         api.blocks(credentials),
       ])
       if (id !== request.current) return
