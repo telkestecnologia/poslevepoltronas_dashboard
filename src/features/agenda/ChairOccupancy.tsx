@@ -14,7 +14,8 @@ const monthFormatter = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: '
 
 type Busy = { start: string; end: string; label: string; orderId?: string }
 /** Trecho da linha: dias seguidos no mesmo estado (livre, o mesmo aluguel, o mesmo bloqueio ou manutenção). */
-type Segment = { from: number; length: number; free: boolean; label: string; orderId?: string }
+/** period: o período inteiro do aluguel ou do bloqueio, mesmo quando passa do mês na tela (ex.: 25/11 a 15/12). */
+type Segment = { from: number; length: number; free: boolean; label: string; orderId?: string; period?: string }
 /** agendaBranchId: filial escolhida no topo da Agenda. admin: o administrador também escolhe a filial no próprio gráfico. */
 type Props = { credentials: string; branches: Branch[]; agendaBranchId: string; admin: boolean; today: string; onOpenOrder: (id: string) => void }
 
@@ -44,7 +45,8 @@ function segmentsOf(days: string[], busy: Busy[], maintenance: boolean): Segment
     if (previous && found === last) { previous.length += 1; return }
     last = found
     segments.push(maintenance ? { from: index, length: 1, free: false, label: 'Em manutenção' }
-      : found ? { from: index, length: 1, free: false, label: found.label, orderId: found.orderId }
+      : found ? { from: index, length: 1, free: false, label: found.label, orderId: found.orderId,
+        period: found.start === found.end ? dayLabel(found.start) : `${dayLabel(found.start)} a ${dayLabel(found.end)}` }
       : { from: index, length: 1, free: true, label: 'Livre' })
   })
   return segments
@@ -184,7 +186,7 @@ export function ChairOccupancy({ credentials, branches, agendaBranchId, admin, t
               {group.rows.map(row => <div key={row.chair.id} className="occupancy-row">
                 <div className="occupancy-line">
                   {row.segments.map(segment => {
-                    const text = `${row.name} • ${dayLabel(shownDays[segment.from])}${segment.length > 1 ? ` a ${dayLabel(shownDays[segment.from + segment.length - 1])}` : ''}: ${segment.label}`
+                    const text = `${row.name} • ${segment.period ?? `${dayLabel(shownDays[segment.from])}${segment.length > 1 ? ` a ${dayLabel(shownDays[segment.from + segment.length - 1])}` : ''}`}: ${segment.label}`
                     const style = { width: `${(segment.length / shownDays.length) * 100}%` }
                     const className = `occupancy-segment ${segment.free ? 'free' : 'busy'}`
                     const orderId = segment.orderId
