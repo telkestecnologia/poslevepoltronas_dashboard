@@ -631,5 +631,6 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
 }
 
 function BackLink({ onBack }: { onBack: () => void }) {
-  return <button type="button" className="od-back" onClick={onBack}><ArrowLeft size={16} /> Voltar para pedidos</button>
+  const fromAgenda = Boolean(window.history.state?.fromAgenda)
+  return <button type="button" className="od-back" onClick={onBack}><ArrowLeft size={16} /> {fromAgenda ? 'Voltar para a agenda' : 'Voltar para pedidos'}</button>
 }

@@ -511,7 +511,8 @@ export function useDashboard() {
   }
 
   /** Abre uma tela (ou um pedido/conversa pelo id). chairStatus abre Poltronas já filtrada. */
-  function navigate(nextPage: Page, options: { id?: string; chairStatus?: ChairFilter; branchId?: string; replace?: boolean; fromList?: boolean } = {}) {
+  /** fromList: o pedido foi aberto de uma lista (Pedidos ou a Agenda, fromAgenda); o Voltar do pedido volta para ela. */
+  function navigate(nextPage: Page, options: { id?: string; chairStatus?: ChairFilter; branchId?: string; replace?: boolean; fromList?: boolean; fromAgenda?: boolean } = {}) {
     if (nextPage === 'chairs' && (options.chairStatus !== undefined || options.branchId !== undefined)) {
       setSearch('')
       setAppliedSearch('')
@@ -520,7 +521,7 @@ export function useDashboard() {
       setStatusFilter(options.chairStatus ?? 'ALL')
     }
     const changesPage = nextPage !== page
-    go(routePath({ page: nextPage, id: options.id }), { replace: options.replace, state: options.fromList ? { fromOrders: true } : undefined })
+    go(routePath({ page: nextPage, id: options.id }), { replace: options.replace, state: options.fromAgenda ? { fromOrders: true, fromAgenda: true } : options.fromList ? { fromOrders: true } : undefined })
     if (!changesPage) return
     rentalRequestId.current += 1
     revenueRequestId.current += 1

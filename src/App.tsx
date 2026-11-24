@@ -64,7 +64,7 @@ function App() {
   const showLoading = !selfLoading && (pageLoading || (loadedPage !== page && !pageError)
     || (page === 'overview' && (!overviewPage.rentals || !overviewPage.revenue) && !pageError))
   const openOrder = (id: string) => navigate('orders', { id })
-  // Volta para a lista com os mesmos filtros quando o pedido foi aberto dela; senão, abre a lista.
+  // Volta para a lista (ou a Agenda) com os mesmos filtros quando o pedido foi aberto dela; senão, abre a lista.
   const backToOrders = () => {
     if (window.history.state?.fromOrders) window.history.back()
     else navigate('orders', { replace: true })
@@ -119,7 +119,8 @@ function App() {
         {page === 'chairs' && !showLoading && !pageError && <ChairsPage {...chairsPage} />}
         {page === 'branches' && !showLoading && !pageError && <BranchesPage {...branchesPage} />}
         {page === 'couriers' && !showLoading && !pageError && <CouriersPage {...couriersPage} />}
-        {page === 'agenda' && <AgendaPage credentials={session.credentials} admin={!partner} onOpenOrder={openOrder} />}
+        {/* Pedido aberto pela Agenda (lista do dia ou gráfico das poltronas): o Voltar do pedido volta para a Agenda. */}
+        {page === 'agenda' && <AgendaPage credentials={session.credentials} admin={!partner} onOpenOrder={id => navigate('orders', { id, fromAgenda: true })} />}
         {page === 'manualOrder' && <ManualOrderPage credentials={session.credentials} onOpenOrder={openOrder}
           conversationId={params.get('conversa')} editOrderId={params.get('pedido')} />}
         {page === 'orders' && !route.id && <OrdersPage credentials={session.credentials} params={params}
