@@ -119,7 +119,7 @@ function App() {
         {page === 'chairs' && !showLoading && !pageError && <ChairsPage {...chairsPage} />}
         {page === 'branches' && !showLoading && !pageError && <BranchesPage {...branchesPage} />}
         {page === 'couriers' && !showLoading && !pageError && <CouriersPage {...couriersPage} />}
-        {page === 'agenda' && <AgendaPage credentials={session.credentials} onOpenOrder={openOrder} />}
+        {page === 'agenda' && <AgendaPage credentials={session.credentials} admin={!partner} onOpenOrder={openOrder} />}
         {page === 'manualOrder' && <ManualOrderPage credentials={session.credentials} onOpenOrder={openOrder}
           conversationId={params.get('conversa')} editOrderId={params.get('pedido')} />}
         {page === 'orders' && !route.id && <OrdersPage credentials={session.credentials} params={params}

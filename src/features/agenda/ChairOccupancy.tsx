@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { Building2, ChevronLeft, ChevronRight } from 'lucide-react'
 import { api, REAL_SOURCES, type Branch, type Chair, type ManualBlock, type Order, type OrderStatus } from '../../api'
 import { fetchAllOrders, usePolling } from '../../data/orders'
 import { branchLabel, chairName } from '../../utils/branches'
@@ -15,7 +15,8 @@ const monthFormatter = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: '
 type Busy = { start: string; end: string; label: string; orderId?: string }
 /** Trecho da linha: dias seguidos no mesmo estado (livre, o mesmo aluguel, o mesmo bloqueio ou manutenção). */
 type Segment = { from: number; length: number; free: boolean; label: string; orderId?: string }
-type Props = { credentials: string; branches: Branch[]; branchId: string; today: string; onOpenOrder: (id: string) => void }
+/** agendaBranchId: filial escolhida no topo da Agenda. admin: o administrador também escolhe a filial no próprio gráfico. */
+type Props = { credentials: string; branches: Branch[]; agendaBranchId: string; admin: boolean; today: string; onOpenOrder: (id: string) => void }
 
 /** Dias em que cada poltrona está ocupada: do estoque bloqueado (ou do aluguel) até a retirada, e os bloqueios manuais. */
 export function busyByChair(orders: Order[], blocks: ManualBlock[], today: string) {
@@ -65,7 +66,11 @@ function dayLabel(iso: string) {
 }
 
 /** Linha do tempo das poltronas no mês: verde = livre, vermelho = ocupada (alugada, bloqueada ou em manutenção). */
-export function ChairOccupancy({ credentials, branches, branchId, today, onOpenOrder }: Props) {
+export function ChairOccupancy({ credentials, branches, agendaBranchId, admin, today, onOpenOrder }: Props) {
+  // Filial do gráfico: segue o filtro do topo da Agenda até o administrador escolher outra aqui (trocar o do topo volta a
+  // seguir). O parceiro só recebe do servidor as filiais dele.
+  const [picked, setPicked] = useState<{ from: string; id: string } | null>(null)
+  const branchId = admin && picked && picked.from === agendaBranchId ? picked.id : agendaBranchId
   const [month, setMonth] = useState(() => today.slice(0, 7))
   const [data, setData] = useState<{ key: string; days: string[]; chairs: Chair[]; orders: Order[]; blocks: ManualBlock[] } | null>(null)
   const [error, setError] = useState('')
@@ -139,11 +144,18 @@ export function ChairOccupancy({ credentials, branches, branchId, today, onOpenO
       <div><span className="eyebrow">OCUPAÇÃO DAS POLTRONAS</span>
         <h2>Poltronas livres e ocupadas por dia</h2>
         <p>{todayIndex >= 0 && rows.length ? `Hoje: ${freeOn[todayIndex]} de ${rows.length} livres` : `${rows.length} poltronas`}{stale ? ' • carregando...' : ''}</p></div>
+      <div className="occupancy-controls">
+      {admin && <label className="order-pill occupancy-branch-pill"><span className="order-pill-icon"><Building2 size={15} /></span>
+        <select aria-label="Filial do gráfico" value={branchId} onChange={event => setPicked({ from: agendaBranchId, id: event.target.value })}>
+          <option value="ALL">Todas as filiais</option>
+          {branches.map(item => <option key={item.id} value={item.id}>{branchLabel(item.name)}</option>)}
+        </select></label>}
       <div className="occupancy-month" role="group" aria-label="Mês do gráfico">
         <button type="button" aria-label="Mês anterior" onClick={() => setMonth(value => shiftMonth(value, -1))}><ChevronLeft size={18} /></button>
         <strong>{monthFormatter.format(new Date(`${month}-01T12:00:00Z`))}</strong>
         <button type="button" aria-label="Próximo mês" onClick={() => setMonth(value => shiftMonth(value, 1))}><ChevronRight size={18} /></button>
         {month !== today.slice(0, 7) && <button type="button" className="occupancy-today" onClick={() => setMonth(today.slice(0, 7))}>Este mês</button>}
+      </div>
       </div>
     </div>
     <div className="occupancy-legend"><span><i className="free" /> Livre</span><span><i className="busy" /> Ocupada</span></div>

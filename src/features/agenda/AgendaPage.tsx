@@ -15,7 +15,7 @@ import { brazilPhoneDigits, displayPhone } from '../../utils/phone'
 type Kind = 'delivery' | 'pickup'
 type View = 'week' | 'month'
 type AgendaItem = { key: string; kind: Kind; date: string; time: string | null; done: boolean; order: Order }
-type Props = { credentials: string; onOpenOrder: (id: string) => void }
+type Props = { credentials: string; admin: boolean; onOpenOrder: (id: string) => void }
 
 const operationalStatuses = new Set<OrderStatus>([
   'PAYMENT_CONFIRMED', 'DELIVERY_PENDING', 'IN_USE', 'PICKUP_PENDING', 'COMPLETED',
@@ -75,7 +75,7 @@ function weekBounds(iso: string) {
   return { from: start.toISOString().slice(0, 10), to: end.toISOString().slice(0, 10) }
 }
 
-export function AgendaPage({ credentials, onOpenOrder }: Props) {
+export function AgendaPage({ credentials, admin, onOpenOrder }: Props) {
   const [selectedDate, setSelectedDate] = useState(todayInFortaleza)
   const [view, setView] = useState<View>('month')
   const [city, setCity] = useState('ALL')
@@ -351,7 +351,7 @@ export function AgendaPage({ credentials, onOpenOrder }: Props) {
       </div>
     </div>}
     {/* Poltronas livres (verde) e ocupadas (vermelho) em cada dia do mês, com o mês escolhido no próprio gráfico. */}
-    <ChairOccupancy credentials={credentials} branches={branches} branchId={branch} today={today} onOpenOrder={onOpenOrder} />
+    <ChairOccupancy credentials={credentials} branches={branches} agendaBranchId={branch} admin={admin} today={today} onOpenOrder={onOpenOrder} />
     <p className="agenda-note">As datas e os horários vêm dos pedidos. Dias extras de estoque bloqueado não alteram esta agenda. Pedidos sem pagamento confirmado não aparecem.</p>
   </>
 }
