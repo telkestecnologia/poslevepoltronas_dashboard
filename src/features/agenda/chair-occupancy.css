@@ -21,7 +21,9 @@
 .occupancy-empty { color: var(--muted); margin: 8px 0; }
 
 /* Nomes fixos à esquerda; a linha do tempo ocupa o resto e rola para o lado quando não cabe. */
-.occupancy-chart { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 10px; }
+/* Mês novo carregando: o anterior fica apagado no lugar (sem mudar o tamanho do cartão). */
+.occupancy-chart.is-stale { opacity: 0.45; pointer-events: none; }
+.occupancy-chart { transition: opacity 0.15s; display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 10px; }
 .occupancy-names { display: flex; flex-direction: column; }
 .occupancy-names > div { display: flex; flex-direction: column; }
 .occupancy-axis-spacer { height: 32px; }

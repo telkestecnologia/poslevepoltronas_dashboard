@@ -67,7 +67,7 @@ function dayLabel(iso: string) {
 /** Linha do tempo das poltronas no mês: verde = livre, vermelho = ocupada (alugada, bloqueada ou em manutenção). */
 export function ChairOccupancy({ credentials, branches, branchId, today, onOpenOrder }: Props) {
   const [month, setMonth] = useState(() => today.slice(0, 7))
-  const [data, setData] = useState<{ key: string; chairs: Chair[]; orders: Order[]; blocks: ManualBlock[] } | null>(null)
+  const [data, setData] = useState<{ key: string; days: string[]; chairs: Chair[]; orders: Order[]; blocks: ManualBlock[] } | null>(null)
   const [error, setError] = useState('')
   const request = useRef(0)
   const days = useMemo(() => monthDays(month), [month])
@@ -93,16 +93,20 @@ export function ChairOccupancy({ credentials, branches, branchId, today, onOpenO
       ])
       if (id !== request.current) return
       const orders = new Map([...inRange, ...withClient].map(order => [order.id, order]))
-      setData({ key, chairs, orders: [...orders.values()], blocks })
+      setData({ key, days, chairs, orders: [...orders.values()], blocks })
       setError('')
     } catch (cause) {
       if (id === request.current) setError(getMessage(cause))
     }
-  }, [credentials, branchId, from, to, key])
+  }, [credentials, branchId, from, to, key, days])
 
   usePolling(load, 30_000)
 
-  const current = data?.key === key ? data : null
+  // Trocando o mês (ou a filial), o gráfico anterior continua na tela, apagado, até o novo chegar: o cartão não
+  // muda de tamanho e a página não pula para cima.
+  const current = data
+  const stale = !!data && data.key !== key
+  const shownDays = current?.days ?? days
   const groups = useMemo(() => {
     if (!current) return []
     const busy = busyByChair(current.orders, current.blocks, today)
@@ -110,16 +114,16 @@ export function ChairOccupancy({ credentials, branches, branchId, today, onOpenO
       branch,
       rows: current.chairs.filter(chair => chair.branchId === branch.id && chair.status !== 'INACTIVE')
         .sort((a, b) => a.code.localeCompare(b.code, 'pt-BR', { numeric: true }))
-        .map(chair => ({ chair, name: chairName(chair.code, branch.name), segments: segmentsOf(days, busy.get(chair.id) ?? [], chair.status === 'MAINTENANCE') })),
+        .map(chair => ({ chair, name: chairName(chair.code, branch.name), segments: segmentsOf(current.days, busy.get(chair.id) ?? [], chair.status === 'MAINTENANCE') })),
     })).filter(group => group.rows.length > 0)
-  }, [current, branches, branchId, days, today])
+  }, [current, branches, branchId, today])
 
   const rows = groups.flatMap(group => group.rows)
-  const freeOn = days.map((_, index) => rows.filter(row => row.segments.some(segment => segment.free
+  const freeOn = shownDays.map((_, index) => rows.filter(row => row.segments.some(segment => segment.free
     && segment.from <= index && index < segment.from + segment.length)).length)
-  const todayIndex = days.indexOf(today)
+  const todayIndex = shownDays.indexOf(today)
   // Marca de hoje: no meio da coluna do dia, em porcentagem da linha.
-  const todayLeft = todayIndex >= 0 ? `${((todayIndex + 0.5) / days.length) * 100}%` : null
+  const todayLeft = todayIndex >= 0 ? `${((todayIndex + 0.5) / shownDays.length) * 100}%` : null
 
   // Na tela pequena a linha rola para o lado: abre já perto de hoje.
   const scroller = useRef<HTMLDivElement>(null)
@@ -127,14 +131,14 @@ export function ChairOccupancy({ credentials, branches, branchId, today, onOpenO
   useEffect(() => {
     const box = scroller.current
     if (!box || todayIndex < 0 || box.scrollWidth <= box.clientWidth) return
-    box.scrollLeft = Math.max(0, (box.scrollWidth * (todayIndex - 3)) / days.length)
-  }, [loaded, todayIndex, days.length])
+    box.scrollLeft = Math.max(0, (box.scrollWidth * (todayIndex - 3)) / shownDays.length)
+  }, [loaded, todayIndex, shownDays.length, current?.key])
 
   return <section className="panel occupancy" aria-label="Poltronas livres e ocupadas por dia">
     <div className="occupancy-heading">
       <div><span className="eyebrow">OCUPAÇÃO DAS POLTRONAS</span>
         <h2>Poltronas livres e ocupadas por dia</h2>
-        <p>{todayIndex >= 0 && rows.length ? `Hoje: ${freeOn[todayIndex]} de ${rows.length} livres` : `${rows.length} poltronas`}</p></div>
+        <p>{todayIndex >= 0 && rows.length ? `Hoje: ${freeOn[todayIndex]} de ${rows.length} livres` : `${rows.length} poltronas`}{stale ? ' • carregando...' : ''}</p></div>
       <div className="occupancy-month" role="group" aria-label="Mês do gráfico">
         <button type="button" aria-label="Mês anterior" onClick={() => setMonth(value => shiftMonth(value, -1))}><ChevronLeft size={18} /></button>
         <strong>{monthFormatter.format(new Date(`${month}-01T12:00:00Z`))}</strong>
@@ -146,7 +150,7 @@ export function ChairOccupancy({ credentials, branches, branchId, today, onOpenO
     {error && <div className="form-error" role="alert">{error}</div>}
     {!current ? (error ? null : <p className="occupancy-empty">Carregando poltronas...</p>)
       : rows.length === 0 ? <p className="occupancy-empty">Nenhuma poltrona nesta filial.</p>
-      : <div className="occupancy-chart" style={{ ['--days' as string]: days.length }}>
+      : <div className={`occupancy-chart${stale ? ' is-stale' : ''}`} aria-busy={stale} style={{ ['--days' as string]: shownDays.length }}>
         {/* Nomes fixos à esquerda; dias e linhas rolam juntos para o lado na tela pequena. */}
         <div className="occupancy-names">
           <span className="occupancy-axis-spacer" />
@@ -160,7 +164,7 @@ export function ChairOccupancy({ credentials, branches, branchId, today, onOpenO
           <div className="occupancy-track">
             {todayLeft && <span className="occupancy-now" style={{ left: todayLeft }} aria-hidden="true" />}
             <div className="occupancy-axis">
-              {days.map(day => <span key={day} className={day === today ? 'today' : undefined}>
+              {shownDays.map(day => <span key={day} className={day === today ? 'today' : undefined}>
                 <small>{weekdayInitials[new Date(`${day}T12:00:00Z`).getUTCDay()]}</small>{day.slice(8)}</span>)}
             </div>
             {groups.map(group => <div key={group.branch.id}>
@@ -168,8 +172,8 @@ export function ChairOccupancy({ credentials, branches, branchId, today, onOpenO
               {group.rows.map(row => <div key={row.chair.id} className="occupancy-row">
                 <div className="occupancy-line">
                   {row.segments.map(segment => {
-                    const text = `${row.name} • ${dayLabel(days[segment.from])}${segment.length > 1 ? ` a ${dayLabel(days[segment.from + segment.length - 1])}` : ''}: ${segment.label}`
-                    const style = { width: `${(segment.length / days.length) * 100}%` }
+                    const text = `${row.name} • ${dayLabel(shownDays[segment.from])}${segment.length > 1 ? ` a ${dayLabel(shownDays[segment.from + segment.length - 1])}` : ''}: ${segment.label}`
+                    const style = { width: `${(segment.length / shownDays.length) * 100}%` }
                     const className = `occupancy-segment ${segment.free ? 'free' : 'busy'}`
                     const orderId = segment.orderId
                     return orderId
@@ -181,7 +185,7 @@ export function ChairOccupancy({ credentials, branches, branchId, today, onOpenO
               </div>)}
             </div>)}
             <div className="occupancy-axis occupancy-free">
-              {freeOn.map((count, index) => <span key={days[index]}>{count}</span>)}
+              {freeOn.map((count, index) => <span key={shownDays[index]}>{count}</span>)}
             </div>
           </div>
         </div>
