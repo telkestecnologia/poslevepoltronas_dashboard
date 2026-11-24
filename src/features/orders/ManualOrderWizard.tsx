@@ -19,6 +19,16 @@ import { CustomerIdFields, DeliveryPlaceFields, EMPTY_CUSTOMER, customerRows, sa
 import { clearDraft, readDraft, writeDraft, type ManualDraft } from '../../utils/manualDraft'
 import './manual-wizard.css'
 
+/** Locação atual ou futura de uma poltrona (pedido ativo). late: passou da devolução e ainda está com a cliente. */
+type ChairPeriod = { chairId: string; start: string; end: string; late: boolean }
+const OCCUPYING: Order['status'][] = ['PAYMENT_CONFIRMED', 'DELIVERY_PENDING', 'IN_USE', 'PICKUP_PENDING']
+const shortDate = (iso: string) => iso.slice(8, 10) + '/' + iso.slice(5, 7)
+/** Texto das locações de uma poltrona: "alugada de 01/12 a 10/12" ou "com cliente desde 10/11, devolução atrasada". */
+function periodText(list: ChairPeriod[]) {
+  return list.map(period => period.late ? `com cliente desde ${shortDate(period.start)} (devolução atrasada)`
+    : `alugada de ${shortDate(period.start)} a ${shortDate(period.end)}`).join(' • ')
+}
+
 const SHIFTS = [
   { value: '', label: 'Combinar depois' },
   { value: '08:00-12:00', label: 'Manhã (08h às 12h)' },
@@ -96,6 +106,8 @@ export function ManualOrderWizard({ credentials, branches, onCreated, onClear }:
   const [pickupTime, setPickupTime] = useState(draft.pickupTime ?? '')
   const [chairs, setChairs] = useState<{ key: string; list: Chair[]; error?: string } | null>(null)
   const [chairChoice, setChairChoice] = useState(draft.chairChoice ?? '')
+  // Todas as poltronas ativas da filial e as locações de cada uma, para mostrar o período em que estão alugadas.
+  const [branchChairs, setBranchChairs] = useState<{ branchId: string; chairs: Chair[]; periods: ChairPeriod[] } | null>(null)
   const [rental, setRental] = useState(draft.rental ?? '')
   const [freight, setFreight] = useState(draft.freight ?? '')
   const [paidState, setPaidState] = useState<PaidState | ''>((draft.paidState as PaidState) ?? '')
@@ -144,7 +156,37 @@ export function ManualOrderWizard({ credentials, branches, onCreated, onClear }:
     return () => { active = false }
   }, [credentials, chairKey])
 
+  useEffect(() => {
+    if (!branchId) return
+    let active = true
+    const today = todayIso()
+    void (async () => {
+      try {
+        const chairPage = await api.chairs(credentials, { page: 0, size: 100, search: '', status: 'ACTIVE', branchId })
+        const orders: Order[] = []
+        for (let page = 0; page < 10; page++) {
+          const result = await api.orderPage(credentials, { statuses: OCCUPYING, source: ['CHECKOUT', 'MANUAL'], branchId }, page, 100)
+          orders.push(...result.items)
+          if (orders.length >= result.total || result.items.length === 0) break
+        }
+        const periods = orders.filter(order => order.chairId).map(order => {
+          const first = order.stockStart ?? order.start
+          const planned = order.stockEnd ?? order.end
+          const last = order.pickupDate && order.pickupDate > planned ? order.pickupDate : planned
+          const late = (order.status === 'IN_USE' || order.status === 'PICKUP_PENDING') && last < today
+          return { chairId: order.chairId, start: first, end: last, late }
+        }).filter(period => period.late || period.end >= today).sort((a, b) => a.start.localeCompare(b.start))
+        if (active) setBranchChairs({ branchId, chairs: chairPage.items, periods })
+      } catch { /* sem as datas, a lista de livres continua funcionando */ }
+    })()
+    return () => { active = false }
+  }, [credentials, branchId])
+  const periodsOf = (chairId: string) => branchChairs?.branchId === branchId ? branchChairs.periods.filter(period => period.chairId === chairId) : []
   const available = chairs && chairs.key === chairKey ? chairs : null
+  // Poltronas da filial que não estão livres no período escolhido (aparecem desabilitadas, com as datas).
+  const rentedInPeriod = available && branchChairs?.branchId === branchId
+    ? branchChairs.chairs.filter(item => !available.list.some(free => free.id === item.id))
+      .sort((a, b) => a.code.localeCompare(b.code, 'pt-BR', { numeric: true })) : []
   const chairId = available?.list.some(chair => chair.id === chairChoice) ? chairChoice : available?.list[0]?.id ?? ''
   const chair = available?.list.find(item => item.id === chairId)
   const totalCents = toCents(rental) + toCents(freight)
@@ -348,9 +390,21 @@ export function ManualOrderWizard({ credentials, branches, onCreated, onClear }:
             {!chairKey && <option value="">Escolha a filial (etapa anterior) e as datas</option>}
             {chairKey && !available && <option value="">Procurando poltronas livres...</option>}
             {available && available.list.length === 0 && <option value="">Nenhuma poltrona livre em todo o período</option>}
-            {available?.list.map(item => <option key={item.id} value={item.id}>Poltrona {item.code}{item.model ? ` • ${item.model}` : ''}</option>)}
+            {available && available.list.length > 0 && <optgroup label="Livres em todo o período">
+              {available.list.map(item => {
+                const next = periodsOf(item.id)
+                return <option key={item.id} value={item.id}>Poltrona {item.code}{item.model ? ` • ${item.model}` : ''}{next.length ? ` — próxima locação: ${periodText(next.slice(0, 1))}` : ''}</option>
+              })}
+            </optgroup>}
+            {rentedInPeriod.length > 0 && <optgroup label="Alugadas nesse período (não podem ser escolhidas)">
+              {rentedInPeriod.map(item => {
+                const busy = periodsOf(item.id)
+                return <option key={item.id} value={item.id} disabled>Poltrona {item.code}{item.model ? ` • ${item.model}` : ''} — {busy.length ? periodText(busy) : 'reservada nessas datas'}</option>
+              })}
+            </optgroup>}
           </select>
-            {available && available.list.length > 0 && <small>{available.list.length} {available.list.length === 1 ? 'poltrona livre' : 'poltronas livres'} em todo o período. Pedido especial (bege, com massagem)? Escolha aqui a certa.</small>}
+            {available && available.list.length > 0 && <small>{available.list.length} {available.list.length === 1 ? 'poltrona livre' : 'poltronas livres'} em todo o período{rentedInPeriod.length ? ` e ${rentedInPeriod.length} alugada${rentedInPeriod.length === 1 ? '' : 's'} (aparece${rentedInPeriod.length === 1 ? '' : 'm'} no fim da lista, com as datas)` : ''}. Pedido especial (bege, com massagem)? Escolha aqui a certa.</small>}
+            {chair && periodsOf(chair.id).length > 0 && <small className="mw-chair-periods">Poltrona {chair.code}: {periodText(periodsOf(chair.id))}.</small>}
             {available?.error && <small className="mw-warn">{available.error}</small>}</label>
         </div>
       </Panel>}
