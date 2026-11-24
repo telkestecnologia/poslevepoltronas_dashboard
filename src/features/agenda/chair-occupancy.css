@@ -1,29 +1,54 @@
-/* Grade de ocupação das poltronas na Agenda: uma linha por poltrona, uma coluna por dia. */
+/* Linha do tempo das poltronas na Agenda: uma linha por poltrona, verde nos dias livres e vermelha nos ocupados. */
 .occupancy { margin-top: 18px; padding: 18px; }
-.occupancy-heading { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+.occupancy-heading { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 10px; }
 .occupancy-heading h2 { margin: 2px 0; font-size: 18px; }
 .occupancy-heading p { margin: 0; color: var(--muted); font-size: 13px; }
-.occupancy-legend { display: flex; gap: 14px; color: var(--muted); font-size: 13px; }
+
+/* Mês do gráfico: anterior, nome do mês e próximo. */
+.occupancy-month { display: flex; align-items: center; gap: 6px; }
+.occupancy-month strong { min-width: 150px; text-align: center; font-size: 15px; color: var(--ink); }
+.occupancy-month strong::first-letter { text-transform: uppercase; }
+.occupancy-month button { display: inline-flex; align-items: center; justify-content: center; height: 32px; min-width: 32px; padding: 0 8px;
+  border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--teal-dark); cursor: pointer; }
+.occupancy-month button:hover { background: #eef6f5; }
+.occupancy-month .occupancy-today { font-size: 13px; font-weight: 600; }
+
+.occupancy-legend { display: flex; gap: 14px; margin: 10px 0 8px; color: var(--muted); font-size: 13px; }
 .occupancy-legend span { display: inline-flex; align-items: center; gap: 6px; }
-.occupancy-legend i { width: 14px; height: 14px; border-radius: 4px; display: inline-block; }
-.occupancy-legend i.free, .occupancy-cell.free { background: #3f9a62; }
-.occupancy-legend i.busy, .occupancy-cell.busy { background: #d64545; }
+.occupancy-legend i { width: 22px; height: 6px; border-radius: 3px; display: inline-block; }
+.occupancy-legend i.free, .occupancy-segment.free { background: #3f9a62; }
+.occupancy-legend i.busy, .occupancy-segment.busy { background: #d64545; }
 .occupancy-empty { color: var(--muted); margin: 8px 0; }
 
-/* A grade rola para o lado dentro do quadro; a coluna das poltronas fica fixa. */
-.occupancy-scroll { overflow-x: auto; max-width: 100%; }
-.occupancy-table { border-collapse: separate; border-spacing: 3px; font-size: 12px; }
-.occupancy-table th, .occupancy-table td { padding: 0; text-align: center; font-weight: 600; }
-.occupancy-table thead th { color: var(--muted); min-width: 22px; line-height: 1.2; padding-bottom: 2px; }
-.occupancy-table thead th small { display: block; font-size: 10px; font-weight: 500; }
-.occupancy-table thead th.today { color: var(--teal-dark); }
-.occupancy-table td.today { outline: 2px solid var(--teal-dark); outline-offset: 1px; border-radius: 5px; }
-.occupancy-chair { position: sticky; left: 0; background: var(--surface); text-align: left !important; padding-right: 8px !important;
-  white-space: nowrap; color: var(--ink); z-index: 1; }
-.occupancy-branch th { text-align: left; padding: 8px 0 2px !important; color: var(--teal-dark); font-size: 13px; position: sticky; left: 0; }
-.occupancy-cell { display: block; width: 22px; height: 22px; border-radius: 4px; border: 0; padding: 0; }
-button.occupancy-cell { cursor: pointer; }
-button.occupancy-cell:hover, button.occupancy-cell:focus-visible { filter: brightness(0.85); outline: 2px solid var(--ink); outline-offset: 1px; }
-.occupancy-table tfoot td { color: #2f7a4c; padding-top: 4px; }
-.occupancy-table tfoot th { padding-top: 4px; color: var(--muted); }
+/* Nomes fixos à esquerda; a linha do tempo ocupa o resto e rola para o lado quando não cabe. */
+.occupancy-chart { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 10px; }
+.occupancy-names { display: flex; flex-direction: column; }
+.occupancy-names > div { display: flex; flex-direction: column; }
+.occupancy-axis-spacer { height: 32px; }
+.occupancy-name { height: 26px; line-height: 26px; font-size: 12px; font-weight: 700; color: var(--ink); white-space: nowrap; }
+.occupancy-name.muted { height: 24px; line-height: 24px; color: var(--muted); }
+/* Nome da filial por cima da linha toda, sem alargar a coluna dos nomes das poltronas. */
+.occupancy-branch { height: 26px; width: 0; overflow: visible; line-height: 30px; font-size: 13px; font-weight: 700; color: var(--teal-dark);
+  white-space: nowrap; position: relative; z-index: 2; }
+.occupancy-branch-spacer { display: block; height: 26px; }
+
+.occupancy-scroll { overflow-x: auto; }
+.occupancy-track { position: relative; min-width: calc(var(--days) * 20px); }
+.occupancy-axis { display: grid; grid-template-columns: repeat(var(--days), minmax(0, 1fr)); height: 32px; align-items: end;
+  text-align: center; font-size: 11px; font-weight: 600; color: var(--muted); line-height: 1.15; }
+.occupancy-axis small { display: block; font-size: 9px; font-weight: 500; }
+.occupancy-axis .today { color: var(--teal-dark); font-weight: 800; }
+.occupancy-row { height: 26px; display: flex; align-items: center; }
+
+/* A linha de cada poltrona: um traço reto que muda de verde para vermelho nos dias ocupados. */
+.occupancy-line { display: flex; width: 100%; height: 8px; border-radius: 4px; overflow: hidden; }
+.occupancy-segment { display: block; height: 100%; border: 0; padding: 0; margin: 0; border-radius: 0; flex: none; }
+button.occupancy-segment { cursor: pointer; }
+.occupancy-segment:hover, .occupancy-segment:focus-visible { filter: brightness(0.82); outline: none; }
+
+/* Hoje: traço vertical por cima de todas as linhas. */
+.occupancy-now { position: absolute; top: 28px; bottom: 22px; width: 2px; margin-left: -1px; background: var(--teal-dark);
+  border-radius: 1px; opacity: 0.55; pointer-events: none; z-index: 1; }
+
+.occupancy-free { height: 24px; align-items: center; color: #2f7a4c; font-weight: 700; }
 .occupancy-note { margin: 10px 0 0; color: var(--muted); font-size: 12px; }

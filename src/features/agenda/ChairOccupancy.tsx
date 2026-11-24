@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { api, REAL_SOURCES, type Branch, type Chair, type ManualBlock, type Order, type OrderStatus } from '../../api'
 import { fetchAllOrders, usePolling } from '../../data/orders'
 import { branchLabel, chairName } from '../../utils/branches'
@@ -9,10 +10,12 @@ import './chair-occupancy.css'
 const HOLDING: OrderStatus[] = ['PAYMENT_CONFIRMED', 'DELIVERY_PENDING', 'IN_USE', 'PICKUP_PENDING', 'COMPLETED']
 const WITH_CLIENT: OrderStatus[] = ['IN_USE', 'PICKUP_PENDING']
 const weekdayInitials = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
+const monthFormatter = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric', timeZone: 'UTC' })
 
 type Busy = { start: string; end: string; label: string; orderId?: string }
-type Cell = { busy: Busy | null; maintenance: boolean }
-type Props = { credentials: string; branches: Branch[]; branchId: string; days: string[]; today: string; onOpenOrder: (id: string) => void }
+/** Trecho da linha: dias seguidos no mesmo estado (livre, o mesmo aluguel, o mesmo bloqueio ou manutenção). */
+type Segment = { from: number; length: number; free: boolean; label: string; orderId?: string }
+type Props = { credentials: string; branches: Branch[]; branchId: string; today: string; onOpenOrder: (id: string) => void }
 
 /** Dias em que cada poltrona está ocupada: do estoque bloqueado (ou do aluguel) até a retirada, e os bloqueios manuais. */
 export function busyByChair(orders: Order[], blocks: ManualBlock[], today: string) {
@@ -30,15 +33,44 @@ export function busyByChair(orders: Order[], blocks: ManualBlock[], today: strin
   return busy
 }
 
+/** Junta os dias seguidos no mesmo estado num trecho só da linha. */
+function segmentsOf(days: string[], busy: Busy[], maintenance: boolean): Segment[] {
+  const segments: Segment[] = []
+  let last: Busy | null | undefined
+  days.forEach((day, index) => {
+    const found = maintenance ? null : busy.find(item => item.start <= day && day <= item.end) ?? null
+    const previous = segments[segments.length - 1]
+    if (previous && found === last) { previous.length += 1; return }
+    last = found
+    segments.push(maintenance ? { from: index, length: 1, free: false, label: 'Em manutenção' }
+      : found ? { from: index, length: 1, free: false, label: found.label, orderId: found.orderId }
+      : { from: index, length: 1, free: true, label: 'Livre' })
+  })
+  return segments
+}
+
+function monthDays(month: string) {
+  const [year, value] = month.split('-').map(Number)
+  const count = new Date(Date.UTC(year, value, 0)).getUTCDate()
+  return Array.from({ length: count }, (_, index) => `${month}-${String(index + 1).padStart(2, '0')}`)
+}
+
+function shiftMonth(month: string, offset: number) {
+  const [year, value] = month.split('-').map(Number)
+  return new Date(Date.UTC(year, value - 1 + offset, 1)).toISOString().slice(0, 7)
+}
+
 function dayLabel(iso: string) {
   return `${iso.slice(8)}/${iso.slice(5, 7)}`
 }
 
-/** Grade das poltronas por dia: verde = livre, vermelho = ocupada (alugada, bloqueada ou em manutenção). */
-export function ChairOccupancy({ credentials, branches, branchId, days, today, onOpenOrder }: Props) {
+/** Linha do tempo das poltronas no mês: verde = livre, vermelho = ocupada (alugada, bloqueada ou em manutenção). */
+export function ChairOccupancy({ credentials, branches, branchId, today, onOpenOrder }: Props) {
+  const [month, setMonth] = useState(() => today.slice(0, 7))
   const [data, setData] = useState<{ key: string; chairs: Chair[]; orders: Order[]; blocks: ManualBlock[] } | null>(null)
   const [error, setError] = useState('')
   const request = useRef(0)
+  const days = useMemo(() => monthDays(month), [month])
   const from = days[0]
   const to = days[days.length - 1]
   const key = JSON.stringify({ branchId, from, to })
@@ -78,77 +110,83 @@ export function ChairOccupancy({ credentials, branches, branchId, days, today, o
       branch,
       rows: current.chairs.filter(chair => chair.branchId === branch.id && chair.status !== 'INACTIVE')
         .sort((a, b) => a.code.localeCompare(b.code, 'pt-BR', { numeric: true }))
-        .map(chair => ({
-          chair,
-          cells: days.map((day): Cell => ({
-            busy: (busy.get(chair.id) ?? []).find(item => item.start <= day && day <= item.end) ?? null,
-            maintenance: chair.status === 'MAINTENANCE',
-          })),
-        })),
+        .map(chair => ({ chair, name: chairName(chair.code, branch.name), segments: segmentsOf(days, busy.get(chair.id) ?? [], chair.status === 'MAINTENANCE') })),
     })).filter(group => group.rows.length > 0)
   }, [current, branches, branchId, days, today])
 
-  // Mês na tela pequena: a grade já abre rolada até hoje (a coluna das poltronas fica fixa à esquerda).
+  const rows = groups.flatMap(group => group.rows)
+  const freeOn = days.map((_, index) => rows.filter(row => row.segments.some(segment => segment.free
+    && segment.from <= index && index < segment.from + segment.length)).length)
+  const todayIndex = days.indexOf(today)
+  // Marca de hoje: no meio da coluna do dia, em porcentagem da linha.
+  const todayLeft = todayIndex >= 0 ? `${((todayIndex + 0.5) / days.length) * 100}%` : null
+
+  // Na tela pequena a linha rola para o lado: abre já perto de hoje.
   const scroller = useRef<HTMLDivElement>(null)
   const loaded = !!current
   useEffect(() => {
     const box = scroller.current
-    const column = box?.querySelector<HTMLElement>('thead th.today')
-    const names = box?.querySelector<HTMLElement>('thead th.occupancy-chair')
-    if (box && column && names) box.scrollLeft = Math.max(0, column.offsetLeft - names.offsetWidth - 2 * column.offsetWidth)
-  }, [loaded, from, to])
-
-  const rows = groups.flatMap(group => group.rows)
-  const freeOn = days.map((_, index) => rows.filter(row => !row.cells[index].busy && !row.cells[index].maintenance).length)
-  const todayIndex = days.indexOf(today)
+    if (!box || todayIndex < 0 || box.scrollWidth <= box.clientWidth) return
+    box.scrollLeft = Math.max(0, (box.scrollWidth * (todayIndex - 3)) / days.length)
+  }, [loaded, todayIndex, days.length])
 
   return <section className="panel occupancy" aria-label="Poltronas livres e ocupadas por dia">
     <div className="occupancy-heading">
       <div><span className="eyebrow">OCUPAÇÃO DAS POLTRONAS</span>
         <h2>Poltronas livres e ocupadas por dia</h2>
-        <p>{dayLabel(from)} a {dayLabel(to)}{todayIndex >= 0 && rows.length ? ` • hoje: ${freeOn[todayIndex]} de ${rows.length} livres` : ''}</p></div>
-      <div className="occupancy-legend"><span><i className="free" /> Livre</span><span><i className="busy" /> Ocupada</span></div>
+        <p>{todayIndex >= 0 && rows.length ? `Hoje: ${freeOn[todayIndex]} de ${rows.length} livres` : `${rows.length} poltronas`}</p></div>
+      <div className="occupancy-month" role="group" aria-label="Mês do gráfico">
+        <button type="button" aria-label="Mês anterior" onClick={() => setMonth(value => shiftMonth(value, -1))}><ChevronLeft size={18} /></button>
+        <strong>{monthFormatter.format(new Date(`${month}-01T12:00:00Z`))}</strong>
+        <button type="button" aria-label="Próximo mês" onClick={() => setMonth(value => shiftMonth(value, 1))}><ChevronRight size={18} /></button>
+        {month !== today.slice(0, 7) && <button type="button" className="occupancy-today" onClick={() => setMonth(today.slice(0, 7))}>Este mês</button>}
+      </div>
     </div>
+    <div className="occupancy-legend"><span><i className="free" /> Livre</span><span><i className="busy" /> Ocupada</span></div>
     {error && <div className="form-error" role="alert">{error}</div>}
     {!current ? (error ? null : <p className="occupancy-empty">Carregando poltronas...</p>)
       : rows.length === 0 ? <p className="occupancy-empty">Nenhuma poltrona nesta filial.</p>
-      : <div className="occupancy-scroll" ref={scroller}>
-        <table className="occupancy-table">
-          <thead><tr>
-            <th scope="col" className="occupancy-chair">Poltrona</th>
-            {days.map(day => <th scope="col" key={day} className={day === today ? 'today' : undefined}>
-              <small>{weekdayInitials[new Date(`${day}T12:00:00Z`).getUTCDay()]}</small>{day.slice(8)}</th>)}
-          </tr></thead>
-          <tbody>
-            {groups.map(group => [
-              branchId === 'ALL' && <tr key={`b-${group.branch.id}`} className="occupancy-branch">
-                <th scope="colgroup" colSpan={days.length + 1}>{branchLabel(group.branch.name)}</th></tr>,
-              ...group.rows.map(row => {
-                const name = chairName(row.chair.code, group.branch.name)
-                return <tr key={row.chair.id}>
-                  <th scope="row" className="occupancy-chair">{name.replace('Poltrona ', '')}</th>
-                  {row.cells.map((cell, index) => {
-                    const free = !cell.busy && !cell.maintenance
-                    const text = `${name} • ${dayLabel(days[index])}: ${free ? 'Livre' : cell.busy?.label ?? 'Em manutenção'}`
-                    const orderId = cell.busy?.orderId
-                    return <td key={days[index]} className={days[index] === today ? 'today' : undefined}>
-                      {orderId
-                        ? <button type="button" className="occupancy-cell busy" title={`${text} (clique para abrir o pedido)`}
-                          aria-label={text} onClick={() => onOpenOrder(orderId)} />
-                        : <span className={`occupancy-cell ${free ? 'free' : 'busy'}`} title={text} aria-label={text} role="img" />}
-                    </td>
+      : <div className="occupancy-chart" style={{ ['--days' as string]: days.length }}>
+        {/* Nomes fixos à esquerda; dias e linhas rolam juntos para o lado na tela pequena. */}
+        <div className="occupancy-names">
+          <span className="occupancy-axis-spacer" />
+          {groups.map(group => <div key={group.branch.id}>
+            {branchId === 'ALL' && <span className="occupancy-branch">{branchLabel(group.branch.name)}</span>}
+            {group.rows.map(row => <span key={row.chair.id} className="occupancy-name">{row.name.replace('Poltrona ', '')}</span>)}
+          </div>)}
+          <span className="occupancy-name muted">Livres</span>
+        </div>
+        <div className="occupancy-scroll" ref={scroller}>
+          <div className="occupancy-track">
+            {todayLeft && <span className="occupancy-now" style={{ left: todayLeft }} aria-hidden="true" />}
+            <div className="occupancy-axis">
+              {days.map(day => <span key={day} className={day === today ? 'today' : undefined}>
+                <small>{weekdayInitials[new Date(`${day}T12:00:00Z`).getUTCDay()]}</small>{day.slice(8)}</span>)}
+            </div>
+            {groups.map(group => <div key={group.branch.id}>
+              {branchId === 'ALL' && <span className="occupancy-branch-spacer" />}
+              {group.rows.map(row => <div key={row.chair.id} className="occupancy-row">
+                <div className="occupancy-line">
+                  {row.segments.map(segment => {
+                    const text = `${row.name} • ${dayLabel(days[segment.from])}${segment.length > 1 ? ` a ${dayLabel(days[segment.from + segment.length - 1])}` : ''}: ${segment.label}`
+                    const style = { width: `${(segment.length / days.length) * 100}%` }
+                    const className = `occupancy-segment ${segment.free ? 'free' : 'busy'}`
+                    const orderId = segment.orderId
+                    return orderId
+                      ? <button type="button" key={segment.from} className={className} style={style} title={`${text} (clique para abrir o pedido)`}
+                        aria-label={text} onClick={() => onOpenOrder(orderId)} />
+                      : <span key={segment.from} className={className} style={style} title={text} aria-label={text} role="img" />
                   })}
-                </tr>
-              }),
-            ])}
-          </tbody>
-          <tfoot><tr>
-            <th scope="row" className="occupancy-chair">Livres</th>
-            {freeOn.map((count, index) => <td key={days[index]} className={days[index] === today ? 'today' : undefined}>{count}</td>)}
-          </tr></tfoot>
-        </table>
+                </div>
+              </div>)}
+            </div>)}
+            <div className="occupancy-axis occupancy-free">
+              {freeOn.map((count, index) => <span key={days[index]}>{count}</span>)}
+            </div>
+          </div>
+        </div>
       </div>}
-    <p className="occupancy-note">Passe o mouse num dia para ver quem está com a poltrona; clique no vermelho para abrir o pedido. Vermelho também
+    <p className="occupancy-note">Passe o mouse na linha para ver quem está com a poltrona; clique no vermelho para abrir o pedido. Vermelho também
       para bloqueio e manutenção. Pedidos sem pagamento confirmado não ocupam a poltrona.</p>
   </section>
 }
