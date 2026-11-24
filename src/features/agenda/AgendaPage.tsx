@@ -6,6 +6,7 @@ import { fetchAllOrders, isRealOrder, usePolling } from '../../data/orders'
 import { OrderFlags } from '../orders/OrderExtras'
 import { branchLabel, onlyOfficialBranches, chairName } from '../../utils/branches'
 import { getMessage } from '../../utils/errors'
+import { ChairOccupancy } from './ChairOccupancy'
 import '../orders/orders-v2.css'
 import '../finance/financeReport.css'
 import './agenda.css'
@@ -349,6 +350,9 @@ export function AgendaPage({ credentials, onOpenOrder }: Props) {
         <button type="button" className="button secondary" onClick={() => setCalendarOpen(false)}>Fechar</button>
       </div>
     </div>}
+    {/* Poltronas livres (verde) e ocupadas (vermelho) em cada dia da semana ou do mês do calendário. */}
+    <ChairOccupancy credentials={credentials} branches={branches} branchId={branch} today={today} onOpenOrder={onOpenOrder}
+      days={cells.filter((day): day is string => !!day)} />
     <p className="agenda-note">As datas e os horários vêm dos pedidos. Dias extras de estoque bloqueado não alteram esta agenda. Pedidos sem pagamento confirmado não aparecem.</p>
   </>
 }
