@@ -114,6 +114,8 @@
 /* Botão Saídas abre o "Registrar saída". */
 .finance-register { display: inline-block; margin-top: 4px; padding: 1px 8px; border: 1px solid currentColor; border-radius: 99px;
   color: #b8321f; font-size: 11px; font-style: normal; font-weight: 600; }
+/* Nas Entradas o "+ Registrar" é verde (está entrando dinheiro). */
+.finance-month-figures .inflow .finance-register { color: #1f7a4a; }
 .outflow-modal .outflow-amount { color: #b8321f; font-size: 22px; font-weight: 600; }
 .outflow-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; border: 0; }
 .outflow-chips legend { margin-bottom: 6px; padding: 0; font-weight: 600; }
