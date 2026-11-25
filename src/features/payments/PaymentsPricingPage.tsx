@@ -8,7 +8,7 @@ import { PriceRuler, planTone } from './PriceRuler'
 import './payments.css'
 import { announceSaved } from '../../components/SavedToast'
 
-/** Até 12x sem juros na fatura do Asaas (o mesmo limite do backend). */
+/** Até 12x na fatura do Asaas (o mesmo limite do backend); parcelado tem os acréscimos da maquininha. */
 const MAX_INSTALLMENTS = 12
 const MAX_DAYS = 90
 
@@ -178,7 +178,7 @@ export function PaymentsPricingPage({ credentials }: { credentials: string }) {
         </label>
 
         <label className="pay-field">
-          <span>Parcelamento do cartão (sem juros)</span>
+          <span>Parcelamento do cartão (1x sem acréscimos; parcelado com acréscimos da maquininha)</span>
           <select value={options.maxInstallments} disabled={paymentBusy || !options.card}
             onChange={event => { setOptions({ ...options, maxInstallments: Number(event.target.value) }); setPaymentNote(null) }}>
             {Array.from({ length: MAX_INSTALLMENTS }, (_, index) => index + 1).map(count =>
