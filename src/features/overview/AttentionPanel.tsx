@@ -100,8 +100,8 @@ function buildAlerts({ orders, conversations, unanswered, maintenance }: {
     if (order.status === 'AWAITING_NEW_DATE') {
       const hold = order.rescheduleHold
       if (!hold) {
-        items.push({ key: `reschedule-${order.id}`, level: 'urgent', title: 'Remarcação sem poltrona bloqueada', target: toOrder(order),
-          detail: `${who(order)}: o pedido aguarda a nova data sem bloqueio. Bloqueie uma poltrona ou marque a data.` })
+        items.push({ key: `reschedule-${order.id}`, level: 'warning', title: 'Remarcação sem poltrona bloqueada', target: toOrder(order),
+          detail: `${who(order)}: o pedido aguarda a nova data sem poltrona bloqueada. Marque a data quando a cliente tiver.` })
       } else if (hold.end < now) {
         items.push({ key: `reschedule-${order.id}`, level: 'urgent', title: 'Bloqueio da remarcação venceu', target: toOrder(order),
           detail: `${who(order)}: a poltrona ${hold.chairCode} ficou bloqueada até ${shortDate(hold.end)} e a nova data não foi marcada.` })

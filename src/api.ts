@@ -654,6 +654,9 @@ export const api = {
   /** Com a data certa: o pedido vai para o novo período, com o mesmo número de dias já pago. */
   rescheduleConfirm: (credentials: string, id: string, data: { chairId: string; start: string; note?: string }) =>
     request<Order>(credentials, `/orders/${encodeURIComponent(id)}/reschedule/confirm`, { method: 'POST', body: JSON.stringify(data) }),
+  /** Solta a poltrona bloqueada da remarcação; o pedido continua aguardando a nova data. */
+  rescheduleRelease: (credentials: string, id: string, note?: string) =>
+    request<Order>(credentials, `/orders/${encodeURIComponent(id)}/reschedule/release`, { method: 'POST', body: JSON.stringify({ note }) }),
   /** Troca a poltrona antes da entrega (os dias reservados vão para a nova poltrona). */
   changeOrderChair: (credentials: string, id: string, chairId: string, note: string) =>
     request<Order>(credentials, `/orders/${encodeURIComponent(id)}/chair`, { method: 'PATCH', body: JSON.stringify({ chairId, note }) }),

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Armchair, CalendarClock, CalendarSearch, Check } from 'lucide-react'
+import { Armchair, CalendarClock, CalendarSearch, Check, Unlock } from 'lucide-react'
 import { api, type Order, type RescheduleAvailability } from '../../api'
 import { dateLabel } from '../../data/orders'
 import { getMessage } from '../../utils/errors'
@@ -83,6 +83,16 @@ export function RescheduleCard({ credentials, order, busy, perform }: {
     }
   }
 
+  function release() {
+    if (!hold) return
+    const reason = window.prompt(`Liberar a poltrona ${hold.chairCode} (bloqueada de ${dateLabel(hold.start)} a ${dateLabel(hold.end)})?\n\n`
+      + 'Ela volta a ficar livre para outras clientes. O pedido continua aguardando a nova data e o pagamento não muda.\n\n'
+      + 'Motivo (opcional):', '')
+    if (reason === null) return
+    void perform(() => api.rescheduleRelease(credentials, order.id, reason.trim() || undefined),
+      `Poltrona ${hold.chairCode} liberada. O pedido continua aguardando a nova data.`)
+  }
+
   const paid = availability?.paidChair
   return <section className={`panel od-card rs-card${waiting ? ' waiting' : ''}`} aria-labelledby="rs-title">
     <div className="od-card-head"><div>
@@ -92,6 +102,8 @@ export function RescheduleCard({ credentials, order, busy, perform }: {
         ? <p>Poltrona <b>{hold.chairCode}</b> bloqueada de <b>{dateLabel(hold.start)}</b> a <b>{dateLabel(hold.end)}</b>.
           Período pago antes: {dateLabel(paidStart)} a {dateLabel(paidEnd)} ({paidDays} dias), que já foi liberado.
           {hold.note ? <> Motivo: {hold.note}.</> : null}</p>
+        : waiting ? <p>Nenhuma poltrona bloqueada. Período pago antes: {dateLabel(paidStart)} a {dateLabel(paidEnd)} ({paidDays} dias).
+          Marque a nova data quando a cliente tiver, ou bloqueie um período.</p>
         : <p>A cliente precisa de outra data (ex.: cirurgia remarcada)? O pagamento continua valendo para {paidDays} dias.</p>}
     </div></div>
 
@@ -99,7 +111,9 @@ export function RescheduleCard({ credentials, order, busy, perform }: {
       <button type="button" className="button primary" disabled={busy} onClick={() => open('confirm')}>
         <Check size={16} /> {waiting ? 'Marcar a nova data' : 'Já tem a nova data'}</button>
       <button type="button" className="button secondary" disabled={busy} onClick={() => open('hold')}>
-        <CalendarSearch size={16} /> {waiting ? 'Mudar o bloqueio' : 'Ainda sem data: bloquear um período'}</button>
+        <CalendarSearch size={16} /> {hold ? 'Mudar o bloqueio' : waiting ? 'Bloquear um período' : 'Ainda sem data: bloquear um período'}</button>
+      {hold && <button type="button" className="button secondary rs-release" disabled={busy} onClick={release}>
+        <Unlock size={16} /> Liberar poltrona</button>}
     </div>}
 
     {mode && <div className="rs-form">
