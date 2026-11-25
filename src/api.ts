@@ -530,6 +530,11 @@ export const api = {
     })}`),
   registerOutflow: (credentials: string, data: OutflowInput) =>
     request<FinancialEntry[]>(credentials, '/finance/outflows', { method: 'POST', body: JSON.stringify(data) }),
+  /** Entrada lançada pela equipe (aluguel manual, aporte financeiro...): mesmos campos da saída. */
+  registerInflow: (credentials: string, data: OutflowInput) =>
+    request<FinancialEntry[]>(credentials, '/finance/inflows', { method: 'POST', body: JSON.stringify(data) }),
+  deleteInflow: (credentials: string, id: string) =>
+    request<void>(credentials, `/finance/inflows/${encodeURIComponent(id)}`, { method: 'DELETE' }),
   deleteOutflow: (credentials: string, id: string) =>
     request<void>(credentials, `/finance/outflows/${encodeURIComponent(id)}`, { method: 'DELETE' }),
   aiKnowledge: (credentials: string) => request<AiKnowledge[]>(credentials, '/ai/knowledge'),

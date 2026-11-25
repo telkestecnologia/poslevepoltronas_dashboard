@@ -6,7 +6,7 @@ import { getMessage } from '../../utils/errors'
 import { RentalDatePicker } from '../overview/RentalDatePicker'
 import { downloadFinanceReport } from './financeReport'
 import { announceSaved } from '../../components/SavedToast'
-import { OUTFLOW_CATEGORIES, OutflowModal } from './OutflowModal'
+import { INFLOW_CATEGORIES, OUTFLOW_CATEGORIES, OutflowModal } from './OutflowModal'
 import './financeReport.css'
 
 const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -63,6 +63,7 @@ export function FinancePage({ credentials }: { credentials: string }) {
   const [kindFilter, setKindFilter] = useState<'ALL' | 'INFLOW' | 'OUTFLOW'>('ALL')
   const [filterOpen, setFilterOpen] = useState(false)
   const [outflowOpen, setOutflowOpen] = useState(false)
+  const [inflowOpen, setInflowOpen] = useState(false)
   const [draft, setDraft] = useState({ from: '', to: '', branchId: '' })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -166,10 +167,13 @@ export function FinancePage({ credentials }: { credentials: string }) {
   const shownMonth = shownIndex >= 0 ? months[shownIndex] : undefined
 
   function removeOutflow(entry: FinancialEntry) {
+    const inflow = entry.id.startsWith('in:')
+    const noun = inflow ? 'entrada' : 'saída'
     const split = /\(dividido entre \d+ filiais\)$/.test(entry.description)
-    const note = split ? '\n\nA saída foi dividida entre as filiais: todas as partes serão excluídas.' : ''
-    if (!window.confirm(`Excluir esta saída?\n\n${entry.description}\n${currency(entry.amountCents)}${note}`)) return
-    api.deleteOutflow(credentials, entry.id).then(() => { setReloadKey(key => key + 1); announceSaved('Saída excluída.') }).catch(failure => setError(getMessage(failure)))
+    const note = split ? `\n\nA ${noun} foi dividida entre as filiais: todas as partes serão excluídas.` : ''
+    if (!window.confirm(`Excluir esta ${noun}?\n\n${entry.description}\n${currency(entry.amountCents)}${note}`)) return
+    ;(inflow ? api.deleteInflow : api.deleteOutflow)(credentials, entry.id)
+      .then(() => { setReloadKey(key => key + 1); announceSaved(inflow ? 'Entrada excluída.' : 'Saída excluída.') }).catch(failure => setError(getMessage(failure)))
   }
 
   function openFilter() {
@@ -274,7 +278,8 @@ export function FinancePage({ credentials }: { credentials: string }) {
             {/* Um card só (igual ao app): o mês das setas, com Entradas e Saídas que filtram o extrato e o que sobrou. */}
             <div className="finance-month-figures">
               <button type="button" className={`inflow${kindFilter === 'INFLOW' ? ' selected' : ''}`} aria-pressed={kindFilter === 'INFLOW'}
-                onClick={() => setKindFilter(current => current === 'INFLOW' ? 'ALL' : 'INFLOW')}><span>⬆ Entradas</span><strong>{currency(shownMonth.inflowCents)}</strong></button>
+                onClick={() => { setKindFilter('INFLOW'); setInflowOpen(true) }}><span>⬆ Entradas</span><strong>{currency(shownMonth.inflowCents)}</strong>
+                <em className="finance-register">+ Registrar</em></button>
               <button type="button" className={`outflow${kindFilter === 'OUTFLOW' ? ' selected' : ''}`} aria-pressed={kindFilter === 'OUTFLOW'}
                 onClick={() => { setKindFilter('OUTFLOW'); setOutflowOpen(true) }}><span>⬇ Saídas</span><strong>{currency(shownMonth.outflowCents)}</strong>
                 <em className="finance-register">+ Registrar</em></button>
@@ -331,7 +336,7 @@ export function FinancePage({ credentials }: { credentials: string }) {
               <td><span className={`finance-entry-icon ${entry.kind.toLowerCase()}`}><MethodIcon method={entry.paymentMethod} /></span>
                 <span className="finance-entry-description"><strong>{entryTitle(entry.description)}</strong>
                   {entry.id.startsWith('manual:') && <span className="finance-tag-manual">Pagamento registrado manualmente</span>}
-                  {entry.id.startsWith('out:')
+                  {entry.id.startsWith('out:') || entry.id.startsWith('in:')
                     ? <small className="finance-ref">Registrado por {entry.reference}
                       <button type="button" className="finance-delete" onClick={() => removeOutflow(entry)}><Trash2 size={13} /> Excluir</button></small>
                     : entry.reference && <small className="finance-ref"><span className="finance-ref-text" title={entry.reference}>Ref. {entry.reference}</span> <CopyButton text={entry.reference} /></small>}</span></td>
@@ -357,9 +362,9 @@ export function FinancePage({ credentials }: { credentials: string }) {
                 <div><dt>Meio</dt><dd>{methodLabel(entry.paymentMethod)}</dd></div>
                 {entry.payerName && <div><dt>Pago por</dt><dd>{entry.payerName}</dd></div>}
                 <div><dt>Categoria</dt><dd>{categoryLabel(entry.category)}</dd></div>
-                {entry.id.startsWith('out:')
+                {entry.id.startsWith('out:') || entry.id.startsWith('in:')
                   ? <div><dt>Registrado por</dt><dd>{entry.reference} <button type="button" className="finance-delete"
-                    onClick={() => removeOutflow(entry)}><Trash2 size={13} /> Excluir saída</button></dd></div>
+                    onClick={() => removeOutflow(entry)}><Trash2 size={13} /> {entry.id.startsWith('in:') ? 'Excluir entrada' : 'Excluir saída'}</button></dd></div>
                   : entry.reference && <div><dt>Referência</dt><dd>{entry.reference} <CopyButton text={entry.reference} /></dd></div>}
               </dl>
             </details>
@@ -374,7 +379,10 @@ export function FinancePage({ credentials }: { credentials: string }) {
       </section>
     </div>}
     {outflowOpen && <OutflowModal credentials={credentials} branches={onlyOfficialBranches(branches, branch => branch.name)}
-      onClose={() => setOutflowOpen(false)} onSaved={() => setReloadKey(key => key + 1)} />}
+      defaultBranchId={branchId} onClose={() => setOutflowOpen(false)} onSaved={() => setReloadKey(key => key + 1)} />}
+    {/* Registrar entrada (aluguel manual, aporte financeiro...), igual ao app; a filial escolhida já vem marcada. */}
+    {inflowOpen && <OutflowModal kind="INFLOW" credentials={credentials} branches={onlyOfficialBranches(branches, branch => branch.name)}
+      defaultBranchId={branchId} onClose={() => setInflowOpen(false)} onSaved={() => setReloadKey(key => key + 1)} />}
   </>
 }
 
@@ -417,7 +425,7 @@ function methodLabel(method: string) {
 
 function categoryLabel(category: string) {
   if (category === 'RECEBIMENTO_MANUAL') return 'Pagamento registrado manualmente'
-  const known = OUTFLOW_CATEGORIES.find(([value]) => value === category)
+  const known = [...OUTFLOW_CATEGORIES, ...INFLOW_CATEGORIES].find(([value]) => value === category)
   if (known) return known[1]
   const words = category.replace(/_/g, ' ').toLowerCase()
   return words.charAt(0).toUpperCase() + words.slice(1)

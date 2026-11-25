@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { ArrowDownCircle, ArrowRight, X } from 'lucide-react'
+import { ArrowDownCircle, ArrowRight, ArrowUpCircle, X } from 'lucide-react'
 import { FormIntro } from '../../components/FormIntro'
 import { api, type Branch } from '../../api'
 import { branchLabel } from '../../utils/branches'
@@ -10,6 +10,9 @@ export const OUTFLOW_CATEGORIES = [
   ['MANUTENCAO', 'Manutenção'], ['COMBUSTIVEL', 'Combustível'], ['FRETE', 'Frete e entrega'], ['SALARIOS', 'Salários'],
   ['COMPRA_POLTRONA', 'Compra de poltrona'], ['ALUGUEL', 'Aluguel do espaço'], ['IMPOSTOS', 'Impostos e taxas'],
   ['MARKETING', 'Marketing'], ['OUTRAS_DESPESAS', 'Outras despesas'],
+] as const
+export const INFLOW_CATEGORIES = [
+  ['ALUGUEL_MANUAL', 'Aluguel manual'], ['APORTE_FINANCEIRO', 'Aporte financeiro'], ['OUTRAS_ENTRADAS', 'Outras entradas'],
 ] as const
 const METHODS = [['PIX', 'Pix'], ['DINHEIRO', 'Dinheiro'], ['CARTAO', 'Cartão'], ['TRANSFERENCIA', 'Transferência'], ['BOLETO', 'Boleto']] as const
 const ALL = '__todas__'
@@ -24,13 +27,20 @@ function toCents(text: string) {
   return Number(reais || '0') * 100 + Number(centavos.padEnd(2, '0').slice(0, 2))
 }
 
-/** Registrar saída (igual ao app): valor, com o quê, descrição, filial, meio e dia. */
-export function OutflowModal({ credentials, branches, onClose, onSaved }: {
-  credentials: string; branches: Branch[]; onClose: () => void; onSaved: () => void
+/**
+ * Registrar saída (igual ao app): valor, com o quê, descrição, filial, meio e dia. Com kind="INFLOW", o mesmo formulário
+ * registra uma entrada (aluguel manual, aporte financeiro...). defaultBranchId: a filial escolhida no Financeiro já vem marcada.
+ */
+export function OutflowModal({ credentials, branches, onClose, onSaved, kind = 'OUTFLOW', defaultBranchId = '' }: {
+  credentials: string; branches: Branch[]; onClose: () => void; onSaved: () => void; kind?: 'OUTFLOW' | 'INFLOW'; defaultBranchId?: string
 }) {
+  const inflow = kind === 'INFLOW'
+  const noun = inflow ? 'entrada' : 'saída'
+  const categories = inflow ? INFLOW_CATEGORIES : OUTFLOW_CATEGORIES
   const [amount, setAmount] = useState('')
-  const [branchId, setBranchId] = useState(branches.length === 1 ? branches[0].id : '')
-  const [category, setCategory] = useState('MANUTENCAO')
+  const [branchId, setBranchId] = useState(branches.some(branch => branch.id === defaultBranchId) ? defaultBranchId
+    : branches.length === 1 ? branches[0].id : '')
+  const [category, setCategory] = useState<string>(categories[0][0])
   const [method, setMethod] = useState('PIX')
   const [date, setDate] = useState(todayIso)
   const [description, setDescription] = useState('')
@@ -40,15 +50,15 @@ export function OutflowModal({ credentials, branches, onClose, onSaved }: {
 
   async function submit(event: FormEvent) {
     event.preventDefault()
-    if (cents <= 0) { setError('Informe quanto saiu.'); return }
+    if (cents <= 0) { setError(inflow ? 'Informe quanto entrou.' : 'Informe quanto saiu.'); return }
     if (!branchId) { setError('Escolha a filial.'); return }
     setSaving(true)
     setError('')
     try {
       const target = branchId === ALL ? { branchIds: branches.map(branch => branch.id) } : { branchId }
-      await api.registerOutflow(credentials, { ...target, amountCents: cents, category, paymentMethod: method, description: description.trim(), date })
+      await (inflow ? api.registerInflow : api.registerOutflow)(credentials, { ...target, amountCents: cents, category, paymentMethod: method, description: description.trim(), date })
       onSaved()
-      announceSaved(`Saída de ${money.format(cents / 100)} registrada.`)
+      announceSaved(`${inflow ? 'Entrada' : 'Saída'} de ${money.format(cents / 100)} registrada.`)
       onClose()
     } catch (failure) {
       setError(getMessage(failure))
@@ -59,20 +69,22 @@ export function OutflowModal({ credentials, branches, onClose, onSaved }: {
 
   return <div className="modal-backdrop" onMouseDown={event => { if (event.target === event.currentTarget && !saving) onClose() }}>
     <section className="modal outflow-modal" role="dialog" aria-modal="true" aria-labelledby="outflow-modal-title">
-      <div className="modal-head"><div><span className="eyebrow">FINANCEIRO • SAÍDAS</span>
-        <h2 id="outflow-modal-title">Registrar saída</h2></div>
+      <div className="modal-head"><div><span className="eyebrow">FINANCEIRO • {inflow ? 'ENTRADAS' : 'SAÍDAS'}</span>
+        <h2 id="outflow-modal-title">Registrar {noun}</h2></div>
         <button className="icon-button" aria-label="Fechar" onClick={onClose} disabled={saving}><X size={20} /></button></div>
       <form onSubmit={submit} className="modal-form">
-        <FormIntro icon={<ArrowDownCircle size={24} />} title="O que saiu do caixa?">
-          Anote o valor e com o que foi gasto. Entra nas Saídas do Financeiro na hora.</FormIntro>
-        <label>Quanto saiu (R$)<input className="outflow-amount" inputMode="decimal" value={amount} required autoFocus
+        {inflow ? <FormIntro icon={<ArrowUpCircle size={24} />} title="O que entrou no caixa?">
+          Anote o valor e de onde veio (aluguel manual, aporte...). Entra nas Entradas do Financeiro na hora.</FormIntro>
+          : <FormIntro icon={<ArrowDownCircle size={24} />} title="O que saiu do caixa?">
+            Anote o valor e com o que foi gasto. Entra nas Saídas do Financeiro na hora.</FormIntro>}
+        <label>{inflow ? 'Quanto entrou (R$)' : 'Quanto saiu (R$)'}<input className="outflow-amount" inputMode="decimal" value={amount} required autoFocus
           onChange={event => setAmount(event.target.value)} placeholder="0,00" /></label>
-        <fieldset className="outflow-chips"><legend>Com o quê</legend>
-          {OUTFLOW_CATEGORIES.map(([value, label]) => <button type="button" key={value} aria-pressed={category === value}
+        <fieldset className="outflow-chips"><legend>{inflow ? 'De onde veio' : 'Com o quê'}</legend>
+          {categories.map(([value, label]) => <button type="button" key={value} aria-pressed={category === value}
             className={category === value ? 'selected' : ''} onClick={() => setCategory(value)}>{label}</button>)}
         </fieldset>
         <label>Descrição<input value={description} maxLength={200} required onChange={event => setDescription(event.target.value)}
-          placeholder="Ex.: troca do motor da poltrona 12" /></label>
+          placeholder={inflow ? 'Ex.: aluguel da poltrona 12 pago em dinheiro' : 'Ex.: troca do motor da poltrona 12'} /></label>
         <label>Filial<select value={branchId} required onChange={event => setBranchId(event.target.value)}>
           <option value="">Selecione</option>
           {branches.length > 1 && <option value={ALL}>Todas as filiais</option>}
@@ -84,11 +96,11 @@ export function OutflowModal({ credentials, branches, onClose, onSaved }: {
           {METHODS.map(([value, label]) => <button type="button" key={value} aria-pressed={method === value}
             className={method === value ? 'selected' : ''} onClick={() => setMethod(value)}>{label}</button>)}
         </fieldset>
-        <label>Dia da saída<input type="date" value={date} max={todayIso()} required onChange={event => setDate(event.target.value)} /></label>
+        <label>Dia da {noun}<input type="date" value={date} max={todayIso()} required onChange={event => setDate(event.target.value)} /></label>
         {error && <div className="form-error" role="alert">{error}</div>}
         <div className="modal-actions"><button type="button" className="button secondary" onClick={onClose} disabled={saving}>Cancelar</button>
           <button type="submit" className="button primary" disabled={saving}>
-            {saving ? 'Salvando...' : cents > 0 ? `Registrar saída de ${money.format(cents / 100)}` : 'Registrar saída'} <ArrowRight size={17} />
+            {saving ? 'Salvando...' : cents > 0 ? `Registrar ${noun} de ${money.format(cents / 100)}` : `Registrar ${noun}`} <ArrowRight size={17} />
           </button></div>
       </form>
     </section>
