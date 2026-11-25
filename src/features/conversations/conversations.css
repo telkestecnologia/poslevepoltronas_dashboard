@@ -352,3 +352,16 @@
 /* "Veio de" no cabeçalho verde da conversa: sem fundo branco, só a letra branca. */
 .wa-chat-head .lead-origin-chip, .wa-chat-head .lead-origin-chip.unknown { background: transparent; color: #fff; border-color: transparent; padding-left: 0; }
 .wa-chat-head .lead-origin-chip * { color: #fff; }
+
+/* Topo da conversa enxuto (computador, 25/11/2026): mais estreito, tudo numa linha abaixo do nome. */
+@media (min-width: 901px) {
+  .wa-chat-head { gap: 12px; padding: 8px 18px; }
+  .wa-chat-title { gap: 3px; }
+  .wa-chat-title strong { font-size: 16px; }
+  .wa-chat-title strong .wa-number { font-size: 13px; }
+  .wa-chat-title .wa-chat-meta { flex-wrap: nowrap; gap: 8px; font-size: 12.5px; }
+  .wa-chat-head .wa-state-link { padding: 2px 10px; font-size: 12px; }
+  .wa-chat-title .wa-stage { padding: 2px 10px; font-size: 12px; white-space: nowrap; }
+  .wa-chat-head .lead-origin-chip { margin: 0; padding: 0; font-size: 12px; white-space: nowrap; }
+  .wa-assign { padding: 7px 14px; font-size: 13px; }
+}

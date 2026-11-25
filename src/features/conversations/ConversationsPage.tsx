@@ -214,11 +214,11 @@ export function ConversationsPage({ credentials, selectedId, onSelect }: Props) 
           <header className="wa-chat-head">
             <button type="button" className="wa-back" aria-label="Voltar para a lista" onClick={() => onSelect(null)}><ArrowLeft size={20} /></button>
             <div className="wa-chat-title"><strong>{customerLabel(selected)}{customerNumber(selected) && <small className="wa-number"> {customerNumber(selected)}</small>}</strong>
+              {/* Topo enxuto (25/11/2026): situação, etapa e origem numa linha só; canal e data ficam no resumo (ⓘ). */}
               <small className="wa-chat-meta"><button type="button" className={`wa-state wa-state-link ${state.tone}`} onClick={() => openSummary()}
                 title="Ver o resumo do atendimento">{state.label} ⓘ</button>
-                {` • ${selected.channel === 'WHATSAPP' ? 'WhatsApp' : 'Site'} • desde ${new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(selected.startedAt))}`}</small>
-              <span className={`wa-stage ${stageTone(selected.stage ?? 'Primeiro contato').tone}`}>{stageTone(selected.stage ?? 'Primeiro contato').icon} Etapa: {selected.stage ?? 'Primeiro contato'}</span>
-              <LeadOriginChip credentials={credentials} conversationId={selected.id} phone={selected.customerPhone} /></div>
+                <span className={`wa-stage ${stageTone(selected.stage ?? 'Primeiro contato').tone}`}>{stageTone(selected.stage ?? 'Primeiro contato').icon} {selected.stage ?? 'Primeiro contato'}</span>
+              <LeadOriginChip credentials={credentials} conversationId={selected.id} phone={selected.customerPhone} /></small></div>
             {/* Venda fechada pela equipe (desconto, sinal, maquininha): pedido manual com o que a cliente já passou para a Isa. */}
             <button type="button" className="wa-assign outline" title="Cadastro Manual com os dados desta conversa"
               onClick={() => go(`/pedido-manual?conversa=${encodeURIComponent(selected.id)}`)}>Cadastro Manual</button>
