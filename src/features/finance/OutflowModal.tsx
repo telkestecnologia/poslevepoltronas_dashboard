@@ -77,7 +77,7 @@ export function OutflowModal({ credentials, branches, onClose, onSaved, kind = '
           Anote o valor e de onde veio (aluguel manual, aporte...). Entra nas Entradas do Financeiro na hora.</FormIntro>
           : <FormIntro icon={<ArrowDownCircle size={24} />} title="O que saiu do caixa?">
             Anote o valor e com o que foi gasto. Entra nas Saídas do Financeiro na hora.</FormIntro>}
-        <label>{inflow ? 'Quanto entrou (R$)' : 'Quanto saiu (R$)'}<input className="outflow-amount" inputMode="decimal" value={amount} required autoFocus
+        <label>{inflow ? 'Quanto entrou (R$)' : 'Quanto saiu (R$)'}<input className={`outflow-amount${inflow ? ' inflow-amount' : ''}`} inputMode="decimal" value={amount} required autoFocus
           onChange={event => setAmount(event.target.value)} placeholder="0,00" /></label>
         <fieldset className="outflow-chips"><legend>{inflow ? 'De onde veio' : 'Com o quê'}</legend>
           {categories.map(([value, label]) => <button type="button" key={value} aria-pressed={category === value}

@@ -117,6 +117,7 @@
 /* Nas Entradas o "+ Registrar" é verde (está entrando dinheiro). */
 .finance-month-figures .inflow .finance-register { color: #1f7a4a; }
 .outflow-modal .outflow-amount { color: #b8321f; font-size: 22px; font-weight: 600; }
+.outflow-modal .outflow-amount.inflow-amount { color: #1f7a4a; }
 .outflow-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; border: 0; }
 .outflow-chips legend { margin-bottom: 6px; padding: 0; font-weight: 600; }
 .outflow-chips button { padding: 7px 12px; border: 1px solid #e6e0d3; border-radius: 16px; background: #f4f1ea; color: inherit;
