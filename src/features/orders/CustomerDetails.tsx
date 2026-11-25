@@ -13,8 +13,10 @@ export const EMPTY_CUSTOMER: CustomerDetails = {
 export const placeLabels = { CASA: 'Casa', CONDOMINIO: 'Condomínio', APARTAMENTO: 'Apartamento' } as const
 
 const formatCep = (value: string) => {
+  // CEP sempre com ponto e traço: 62.360-000.
   const digits = value.replace(/\D/g, '').slice(0, 8)
-  return digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits
+  return digits.length > 5 ? `${digits.slice(0, 2)}.${digits.slice(2, 5)}-${digits.slice(5)}`
+    : digits.length > 2 ? `${digits.slice(0, 2)}.${digits.slice(2)}` : digits
 }
 
 export const formatCpf = (value: string) => {
@@ -148,7 +150,7 @@ export function OrderFichaEditor({ credentials, order, onDone, onCancel, inFicha
     <div className="mw-grid">
       <label className="mw-wide">Endereço de entrega <em>(rua, número, complemento e bairro)</em><input value={address} maxLength={300}
         onChange={event => { setAddress(event.target.value); setMessage('') }} /></label>
-      <label>CEP <em>(opcional)</em><input inputMode="numeric" value={cep} placeholder="00000-000"
+      <label>CEP <em>(opcional)</em><input inputMode="numeric" value={cep} placeholder="00.000-000"
         onChange={event => setCep(formatCep(event.target.value))} /></label>
       <label>Cidade<input value={`${order.municipalityName}/${order.municipalityUf}`} disabled /></label>
       <DeliveryPlaceFields value={customer} onChange={changeCustomer} />

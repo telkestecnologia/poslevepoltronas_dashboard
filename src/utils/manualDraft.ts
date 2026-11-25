@@ -51,8 +51,10 @@ export function draftIsOpen(draft: ManualDraft | null) {
 
 const centsText = (cents: number | null | undefined) => cents == null ? '' : (cents / 100).toFixed(2).replace('.', ',')
 const formatCep = (value: string) => {
+  // CEP sempre com ponto e traço: 62.360-000.
   const digits = value.replace(/\D/g, '').slice(0, 8)
-  return digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits
+  return digits.length > 5 ? `${digits.slice(0, 2)}.${digits.slice(2, 5)}-${digits.slice(5)}`
+    : digits.length > 2 ? `${digits.slice(0, 2)}.${digits.slice(2)}` : digits
 }
 const formatPhone = (value: string) => {
   const digits = value.replace(/\D/g, '').replace(/^55(?=\d{10,11}$)/, '').slice(0, 11)

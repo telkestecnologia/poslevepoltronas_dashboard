@@ -61,8 +61,10 @@ const SAVED_FROM = STEPS.findIndex(item => item.key === 'contract')
 type PaidState = 'ALL' | 'PART' | 'NONE'
 
 const formatCep = (value: string) => {
+  // CEP sempre com ponto e traço: 62.360-000.
   const digits = value.replace(/\D/g, '').slice(0, 8)
-  return digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits
+  return digits.length > 5 ? `${digits.slice(0, 2)}.${digits.slice(2, 5)}-${digits.slice(5)}`
+    : digits.length > 2 ? `${digits.slice(0, 2)}.${digits.slice(2)}` : digits
 }
 const centsText = (cents: number | null | undefined) => cents == null ? '' : (cents / 100).toFixed(2).replace('.', ',')
 const sizeLabel = (bytes: number) => bytes < 1024 * 1024 ? `${Math.round(bytes / 1024)} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`
@@ -363,7 +365,7 @@ export function ManualOrderWizard({ credentials, branches, onCreated, onClear }:
           <label>Bairro<input value={district} onChange={event => setDistrict(event.target.value)} maxLength={100} /></label>
           <label>Complemento <em>(opcional)</em><input value={complement} onChange={event => setComplement(event.target.value)} maxLength={160}
             placeholder="Apto, bloco, referência" /></label>
-          <label>CEP <em>(opcional)</em><input inputMode="numeric" value={cep} onChange={event => setCep(formatCep(event.target.value))} placeholder="00000-000" /></label>
+          <label>CEP <em>(opcional)</em><input inputMode="numeric" value={cep} onChange={event => setCep(formatCep(event.target.value))} placeholder="00.000-000" /></label>
         </div>
         <p className="mw-question">Quem recebe e como é o local</p>
         <div className="mw-grid"><DeliveryPlaceFields value={customer} onChange={changeCustomer} /></div>
