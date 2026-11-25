@@ -1548,6 +1548,10 @@ tbody tr:hover {
   background: #fff2e9;
   color: #a86736;
 }
+.order-status.status-awaiting_new_date {
+  background: #f1ecff;
+  color: #5b3fb0;
+}
 .order-status.status-expired, .order-status.status-cancelled {
   background: #f3f3f3;
   color: #68727a;

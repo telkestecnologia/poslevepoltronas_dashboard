@@ -10,7 +10,7 @@ import './chair-occupancy.css'
 const HOLDING: OrderStatus[] = ['PAYMENT_CONFIRMED', 'DELIVERY_PENDING', 'IN_USE', 'PICKUP_PENDING', 'COMPLETED']
 const WITH_CLIENT: OrderStatus[] = ['IN_USE', 'PICKUP_PENDING']
 // Pedidos ainda em andamento (de hoje em diante), sem limite de data: dizem até quando a poltrona livre continua livre.
-const ACTIVE: OrderStatus[] = ['PAYMENT_CONFIRMED', 'DELIVERY_PENDING', 'IN_USE', 'PICKUP_PENDING']
+const ACTIVE: OrderStatus[] = ['PAYMENT_CONFIRMED', 'DELIVERY_PENDING', 'IN_USE', 'PICKUP_PENDING', 'AWAITING_NEW_DATE']
 // Quantos dias antes do mês olhar para saber desde quando a poltrona está livre.
 const LOOKBACK_DAYS = 120
 const weekdayInitials = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
@@ -28,6 +28,12 @@ export function busyByChair(orders: Order[], blocks: ManualBlock[], today: strin
   const busy = new Map<string, Busy[]>()
   const add = (chairId: string, item: Busy) => busy.set(chairId, [...busy.get(chairId) ?? [], item])
   for (const order of orders) {
+    // Aguardando a nova data: a poltrona fica ocupada pelo bloqueio da remarcação, não pelo período pago antes.
+    if (order.status === 'AWAITING_NEW_DATE') {
+      const hold = order.rescheduleHold
+      if (hold) add(hold.chairId, { start: hold.start, end: hold.end, label: `Bloqueada p/ remarcação • ${order.customerName}`, orderId: order.id })
+      continue
+    }
     if (!order.chairId) continue
     const planned = order.stockEnd ?? order.end
     let end = order.pickupDate && order.pickupDate > planned ? order.pickupDate : planned

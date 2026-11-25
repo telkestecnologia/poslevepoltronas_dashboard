@@ -37,7 +37,10 @@ function time(iso: string) {
 }
 
 /** Pedidos que podem gerar um aviso (regras em buildAlerts). */
-const attentionStatuses: OrderStatus[] = ['PENDING_PAYMENT', 'PAYMENT_REVIEW', 'PAYMENT_CONFIRMED', 'DELIVERY_PENDING', 'IN_USE', 'PICKUP_PENDING']
+const attentionStatuses: OrderStatus[] = ['PENDING_PAYMENT', 'PAYMENT_REVIEW', 'PAYMENT_CONFIRMED', 'DELIVERY_PENDING', 'IN_USE', 'PICKUP_PENDING',
+  'AWAITING_NEW_DATE']
+/** Com o bloqueio da remarcação a até tantos dias de começar, a equipe é lembrada de confirmar a nova data. */
+const RESCHEDULE_WARNING_DAYS = 7
 
 /** Só os pedidos em andamento ou com problema em aberto, já filtrados no servidor. */
 async function fetchAttentionOrders(credentials: string) {
@@ -92,6 +95,22 @@ function buildAlerts({ orders, conversations, unanswered, maintenance }: {
     } else if (order.status === 'PICKUP_PENDING') {
       items.push({ key: `pickup-${order.id}`, level: 'warning', title: 'Retirar poltrona', target: toOrder(order),
         detail: `${who(order)}: retirada em ${shortDate((order.pickupDate ?? order.end))}${order.pickupTime ? ` ${timeLabel(order.pickupTime)}` : ''}.` })
+    }
+    // Remarcação sem data confirmada: avisa quando o bloqueio está perto de começar, já começou ou venceu.
+    if (order.status === 'AWAITING_NEW_DATE') {
+      const hold = order.rescheduleHold
+      if (!hold) {
+        items.push({ key: `reschedule-${order.id}`, level: 'urgent', title: 'Remarcação sem poltrona bloqueada', target: toOrder(order),
+          detail: `${who(order)}: o pedido aguarda a nova data sem bloqueio. Bloqueie uma poltrona ou marque a data.` })
+      } else if (hold.end < now) {
+        items.push({ key: `reschedule-${order.id}`, level: 'urgent', title: 'Bloqueio da remarcação venceu', target: toOrder(order),
+          detail: `${who(order)}: a poltrona ${hold.chairCode} ficou bloqueada até ${shortDate(hold.end)} e a nova data não foi marcada.` })
+      } else if (hold.start <= addDays(now, RESCHEDULE_WARNING_DAYS)) {
+        const started = hold.start <= now
+        items.push({ key: `reschedule-${order.id}`, level: started ? 'urgent' : 'warning', title: 'Remarcação sem data definida', target: toOrder(order),
+          detail: `${who(order)}: a poltrona ${hold.chairCode} está bloqueada ${started ? 'desde' : 'a partir de'} ${shortDate(hold.start)} `
+            + `(até ${shortDate(hold.end)}) e a cliente ainda não confirmou a nova data.` })
+      }
     }
     // Cadastro Manual com valor a receber e entrega amanhã: a cliente já recebeu os lembretes do restante pelo WhatsApp.
     const pending = paymentAlert(order, now)

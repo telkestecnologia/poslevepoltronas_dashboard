@@ -69,6 +69,8 @@ export type OrderStatus =
   | 'IN_USE'
   | 'PICKUP_PENDING'
   | 'COMPLETED'
+  /** Pago, mas a cliente precisa de outra data (ex.: cirurgia remarcada): poltrona bloqueada num período provável. */
+  | 'AWAITING_NEW_DATE'
 export type OrderSource = 'CHECKOUT' | 'MANUAL_PREVIEW' | 'MANUAL'
 /** Pedidos de verdade: do site ou da Isa (CHECKOUT) e cadastrados à mão pela equipe (MANUAL). */
 export const REAL_SOURCES: OrderSource[] = ['CHECKOUT', 'MANUAL']
@@ -132,7 +134,17 @@ export type Order = {
   manualPayments?: ManualPayment[] | null
   /** Por que foi cadastrado à mão. */
   manualReason?: ManualReason | null
+  /** Remarcação: poltrona bloqueada no período provável enquanto a cliente não tem a nova data. */
+  rescheduleHold?: RescheduleHold | null
 }
+/** previousStart/previousEnd: período pago antes da remarcação. */
+export type RescheduleHold = {
+  chairId: string; chairCode: string; start: string; end: string; previousStart: string; previousEnd: string
+  note: string | null; actor: string; at: string
+}
+/** Poltrona livre para a remarcação; current = a poltrona do pedido. */
+export type RescheduleChair = { id: string; code: string; model: string | null; notes: string | null; current: boolean }
+export type RescheduleAvailability = { start: string; end: string; days: number; paidChair: RescheduleChair | null; chairs: RescheduleChair[] }
 /** Filtros da lista de pedidos feitos no servidor. courierId 'NONE' = sem entregador; from/to = aluguel que encosta no período. */
 export type OrderQuery = {
   statuses?: OrderStatus[]; source?: OrderSource | OrderSource[]; branchId?: string; municipalityCode?: string; courierId?: string
@@ -633,6 +645,15 @@ export const api = {
     request<Chair[]>(credentials, `/orders/manual/chairs?${new URLSearchParams({ branchId, start, end })}`),
   manualOrderPrefill: (credentials: string, conversationId: string) =>
     request<ManualOrderPrefill>(credentials, `/orders/manual/prefill?${new URLSearchParams({ conversationId })}`),
+  /** Remarcação: poltronas da filial livres no período (sem end: o mesmo número de dias já pago). */
+  rescheduleChairs: (credentials: string, id: string, start: string, end?: string) =>
+    request<RescheduleAvailability>(credentials, `/orders/${encodeURIComponent(id)}/reschedule/chairs?${new URLSearchParams(end ? { start, end } : { start })}`),
+  /** Sem a data certa: bloqueia a poltrona no período provável (os dias pagos antes são liberados). */
+  rescheduleHold: (credentials: string, id: string, data: { chairId: string; start: string; end: string; note?: string }) =>
+    request<Order>(credentials, `/orders/${encodeURIComponent(id)}/reschedule/hold`, { method: 'POST', body: JSON.stringify(data) }),
+  /** Com a data certa: o pedido vai para o novo período, com o mesmo número de dias já pago. */
+  rescheduleConfirm: (credentials: string, id: string, data: { chairId: string; start: string; note?: string }) =>
+    request<Order>(credentials, `/orders/${encodeURIComponent(id)}/reschedule/confirm`, { method: 'POST', body: JSON.stringify(data) }),
   /** Troca a poltrona antes da entrega (os dias reservados vão para a nova poltrona). */
   changeOrderChair: (credentials: string, id: string, chairId: string, note: string) =>
     request<Order>(credentials, `/orders/${encodeURIComponent(id)}/chair`, { method: 'PATCH', body: JSON.stringify({ chairId, note }) }),

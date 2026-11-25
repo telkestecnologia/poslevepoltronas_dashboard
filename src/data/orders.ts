@@ -12,6 +12,7 @@ export const statusLabels: Record<OrderStatus, string> = {
   IN_USE: 'Em uso',
   PICKUP_PENDING: 'Aguardando retirada',
   COMPLETED: 'Concluído',
+  AWAITING_NEW_DATE: 'Aguardando nova data',
 }
 
 /** Etapas da operação, depois do pagamento confirmado. */

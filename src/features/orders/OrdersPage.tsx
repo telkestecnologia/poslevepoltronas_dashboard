@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ArrowRight, ChevronLeft, ChevronRight, ClipboardList, RefreshCw, Search, X, PenLine, Clock, SearchCheck, Truck, Armchair, Undo2, BadgeCheck, XCircle, TriangleAlert, type LucideIcon, Building2, MapPin } from 'lucide-react'
+import { ArrowRight, ChevronLeft, ChevronRight, ClipboardList, RefreshCw, Search, X, PenLine, Clock, SearchCheck, Truck, Armchair, Undo2, BadgeCheck, XCircle, TriangleAlert, CalendarClock, type LucideIcon, Building2, MapPin } from 'lucide-react'
 import './orders.css'
 import { api, REAL_SOURCES, type Branch, type Order, type OrderPage, type OrderQuery, type OrderStatus } from '../../api'
 import { EmptyState } from '../../components/common'
@@ -17,6 +17,7 @@ const summaries: Summary[] = [
   { key: 'pix', label: 'Aguardando pagamento', statuses: ['PENDING_PAYMENT'], tone: 'waiting', icon: Clock },
   { key: 'analise', label: 'Pagamento em análise', statuses: ['PAYMENT_REVIEW'], tone: 'danger', icon: SearchCheck },
   { key: 'entregar', label: 'Entregas agendadas', statuses: ['PAYMENT_CONFIRMED', 'DELIVERY_PENDING'], tone: 'action', icon: Truck },
+  { key: 'nova-data', label: 'Aguardando nova data', statuses: ['AWAITING_NEW_DATE'], tone: 'waiting', icon: CalendarClock },
   { key: 'em-uso', label: 'Em uso', statuses: ['IN_USE'], tone: 'moving', icon: Armchair },
   { key: 'retirar', label: 'Retirar', statuses: ['PICKUP_PENDING'], tone: 'action', icon: Undo2 },
   { key: 'concluidos', label: 'Concluídos', statuses: ['COMPLETED'], tone: 'done', icon: BadgeCheck },

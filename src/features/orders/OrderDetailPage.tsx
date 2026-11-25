@@ -29,6 +29,7 @@ import { ManualLinksCard } from './ManualLinks'
 import { StepDocument } from './StepDocuments'
 import { SaleDetailsSummary } from './SaleDetailsCard'
 import { customerRows, OrderFichaEditor, saleRows, useFicha } from './CustomerDetails'
+import { canReschedule, RescheduleCard } from './RescheduleCard'
 import { go } from '../../router'
 
 /** 60150000 → 60150-000 */
@@ -450,6 +451,9 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
               Avançar <ArrowRight size={16} /></button>
           </div>
         </section>}
+        {/* Aguardando a nova data: a remarcação vem primeiro (as datas antigas já foram liberadas). */}
+        {order.status === 'AWAITING_NEW_DATE' && isRealOrder(order) && !contractOnly
+          && <RescheduleCard credentials={credentials} order={order} busy={busy} perform={perform} />}
         {order.status === 'COMPLETED' && <section className="panel od-card od-finished">
           <CheckCircle2 size={22} /><div><h2>Pedido concluído</h2><p>A poltrona já foi retirada e o aluguel está encerrado.</p></div>
         </section>}
@@ -500,6 +504,7 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
         {mediaPhase && <MediaCarousel credentials={credentials} orderId={order.id} phase={mediaPhase} couriers={couriers}
           customer={order.customerName} onClose={() => setMediaPhase(null)} />}
         {/* No computador: entrega e retirada contadas numa frase, com os dias e o local em destaque. */}
+        {order.status !== 'AWAITING_NEW_DATE' && <>
         <section className="od-logistics-statement" aria-label="Entrega e retirada">
           <small><Truck size={15} /> Entrega e retirada</small>
           <p>A poltrona chega <mark>{weekdayDateLabel(order.deliveryDate ?? order.start)}</mark>
@@ -539,7 +544,10 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
           </div>
 
         </section>
-
+        </>}
+        {/* Cirurgia remarcada: remarcar a locação paga antes da entrega, com as poltronas livres no novo período. */}
+        {order.status !== 'AWAITING_NEW_DATE' && isRealOrder(order) && !contractOnly && canReschedule(order)
+          && <RescheduleCard credentials={credentials} order={order} busy={busy} perform={perform} />}
 
         {/* Observação interna logo acima de "Encontrou algum problema?" (no celular aqui; no computador, na coluna da direita). */}
         {!contractOnly && order.source !== 'MANUAL' && <div className="od-issues-main"><OrderNoteCard credentials={credentials} order={order} busy={busy} perform={perform} /></div>}

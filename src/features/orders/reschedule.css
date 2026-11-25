@@ -1,0 +1,22 @@
+.rs-card.waiting { border-color: #d9cdfa; background: #fbf9ff; }
+.rs-card .od-card-head h2 { display: flex; align-items: center; gap: 8px; }
+.rs-card .od-card-head p { margin: 6px 0 0; color: #40535e; line-height: 1.5; }
+.rs-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.rs-actions .button { display: inline-flex; align-items: center; gap: 6px; }
+.rs-form { display: grid; gap: 10px; margin-top: 12px; }
+.rs-dates { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; align-items: end; }
+.rs-dates label, .rs-note { display: grid; gap: 4px; font-size: 12px; font-weight: 700; color: #40535e; }
+.rs-dates input, .rs-note input { height: 40px; border: 1px solid #dce6e5; border-radius: 10px; padding: 0 10px; font: inherit; width: 100%; background: #fff; }
+.rs-hint { margin: 0; font-size: 13px; color: #5b6b74; }
+.rs-paid { margin: 0; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 13px; color: #24343d; }
+.rs-paid em { color: #5b6b74; font-style: normal; }
+.rs-chairs { border: 0; padding: 0; margin: 0; display: grid; gap: 6px; }
+.rs-chairs legend { font-size: 12px; font-weight: 700; color: #40535e; margin-bottom: 6px; }
+.rs-chair { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid #dce6e5; border-radius: 12px; background: #fff; cursor: pointer; }
+.rs-chair.selected { border-color: #1f8a8a; background: #eef8f8; }
+.rs-chair input { margin-top: 3px; }
+.rs-chair span { display: grid; gap: 2px; }
+.rs-chair strong { font-size: 14px; color: #1d2b33; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.rs-chair small { font-size: 12px; color: #5b6b74; }
+.rs-tag { font-style: normal; font-size: 11px; font-weight: 700; color: #1f6f6f; background: #dff1f1; border-radius: 999px; padding: 2px 8px; }
+@media (max-width: 560px) { .rs-dates { grid-template-columns: 1fr; } }
