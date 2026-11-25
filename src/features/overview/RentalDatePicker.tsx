@@ -1,4 +1,5 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
 
 type Props = { date: string; onChange: (date: string) => void; label?: string; minDate?: string; maxDate?: string }
@@ -22,28 +23,40 @@ export function RentalDatePicker({ date, onChange, label = 'Data do aluguel', mi
   const selectedDay = useRef<HTMLButtonElement>(null)
   const popover = useRef<HTMLDivElement>(null)
 
-  // Keep the calendar inside the visible content area (never under the sidebar or past the screen edge).
+
+  // O calendário abre por cima de tudo (fora do cartão ou da janela que o cortava), encostado no botão e sempre
+  // inteiro na tela: sem passar da borda nem ficar sob o menu lateral; sem espaço embaixo, abre para cima.
   useLayoutEffect(() => {
     const calendar = popover.current
     if (!open || !calendar) return
     const fit = () => {
-      calendar.style.transform = ''
+      const button = trigger.current?.getBoundingClientRect()
+      if (!button) return
       const area = root.current?.closest('.main-area')?.getBoundingClientRect()
-      const left = Math.max(area?.left ?? 0, 0) + 8
-      const right = Math.min(area?.right ?? window.innerWidth, window.innerWidth) - 8
-      const rect = calendar.getBoundingClientRect()
-      const shift = rect.left < left ? left - rect.left : rect.right > right ? Math.max(right - rect.right, left - rect.left) : 0
-      if (shift) calendar.style.transform = `translateX(${shift}px)`
+      const minLeft = Math.max(area?.left ?? 0, 0) + 8
+      const maxRight = Math.min(area?.right ?? window.innerWidth, window.innerWidth) - 8
+      const width = calendar.offsetWidth
+      const height = calendar.offsetHeight
+      const left = Math.max(minLeft, Math.min(button.right - width, maxRight - width))
+      const below = button.bottom + 8
+      const top = below + height <= window.innerHeight - 8 ? below : Math.max(8, button.top - 8 - height)
+      calendar.style.left = `${left}px`
+      calendar.style.top = `${top}px`
     }
     fit()
     window.addEventListener('resize', fit)
-    return () => window.removeEventListener('resize', fit)
-  }, [open])
+    window.addEventListener('scroll', fit, true)
+    return () => {
+      window.removeEventListener('resize', fit)
+      window.removeEventListener('scroll', fit, true)
+    }
+  }, [open, visibleMonth])
 
   useEffect(() => {
     if (!open) return
     const closeOutside = (event: PointerEvent) => {
-      if (!root.current?.contains(event.target as Node)) setOpen(false)
+      const target = event.target as Node
+      if (!root.current?.contains(target) && !popover.current?.contains(target)) setOpen(false)
     }
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -89,8 +102,9 @@ export function RentalDatePicker({ date, onChange, label = 'Data do aluguel', mi
         <CalendarDays size={16} aria-hidden="true" />
         <span id={`${id}-value`}>{displayDate}</span>
       </button>
-      {open && (
-        <div className="overview-rentals-calendar" ref={popover} role="dialog" aria-label={`Escolher ${label.toLowerCase()}`}>
+      {open && createPortal(
+        <div className="overview-rentals-calendar" ref={popover} role="dialog" aria-label={`Escolher ${label.toLowerCase()}`}
+          style={{ position: 'fixed', right: 'auto', top: 0, left: 0, zIndex: 1000 }}>
           <div className="overview-rentals-calendar-header">
             <button type="button" aria-label="Mês anterior"
               onClick={() => setVisibleMonth(new Date(year, month - 1, 1))}>
@@ -121,7 +135,7 @@ export function RentalDatePicker({ date, onChange, label = 'Data do aluguel', mi
           <button type="button" className="overview-rentals-calendar-today"
             disabled={(minDate !== undefined && today < minDate) || (maxDate !== undefined && today > maxDate)}
             onClick={() => choose(today)}>Ir para hoje</button>
-        </div>
+        </div>, document.body
       )}
     </div>
   )
