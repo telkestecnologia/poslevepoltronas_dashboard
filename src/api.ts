@@ -552,6 +552,9 @@ export const api = {
   overviewRevenue: (credentials: string, period: RevenuePeriod) =>
     request<RevenueOverview>(credentials, `/overview/revenue?period=${period}`),
   anticipations: (credentials: string) => request<AnticipationOverview>(credentials, '/anticipations'),
+  /** Liga ou desliga a antecipação automática do cartão na conta Asaas; devolve o que o Asaas gravou. */
+  setAutomaticAnticipation: (credentials: string, enabled: boolean) =>
+    request<{ enabled: boolean }>(credentials, '/anticipations/automatic', { method: 'PUT', body: JSON.stringify({ enabled }) }),
   orderAnticipation: (credentials: string, orderId: string) =>
     request<OrderAnticipation>(credentials, `/anticipations/orders/${encodeURIComponent(orderId)}`),
   simulateAnticipation: (credentials: string, orderId: string) =>

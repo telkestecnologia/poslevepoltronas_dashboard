@@ -43,6 +43,20 @@
 .ant-order-status small { color: var(--muted); font-size: 12px; }
 .ant-order .button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
 
+.ant-auto { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 13px 16px;
+  border: 1px solid var(--line); border-radius: 13px; }
+.ant-auto > div { display: grid; gap: 3px; min-width: 0; }
+.ant-auto strong { color: var(--ink); font-size: 14px; }
+.ant-auto small { color: var(--muted); font-size: 12px; line-height: 1.4; }
+.ant-switch { flex: none; width: 46px; height: 26px; border-radius: 999px; border: 0; padding: 3px; cursor: pointer;
+  background: #cfd9d8; transition: background 0.15s; display: flex; }
+.ant-switch span { width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s; }
+.ant-switch.on { background: var(--teal); }
+.ant-switch.on span { transform: translateX(20px); }
+.ant-switch:focus-visible { outline: 2px solid var(--teal-dark); outline-offset: 2px; }
+.ant-effects { margin: 0; padding-left: 18px; display: grid; gap: 7px; color: var(--ink); font-size: 14px; line-height: 1.45; }
+
 @media (max-width: 640px) {
   .ant-panel { padding: 19px 16px; }
   .ant-summary { grid-template-columns: 1fr; }

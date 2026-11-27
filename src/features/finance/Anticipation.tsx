@@ -138,6 +138,51 @@ export function OrderAnticipationCard({ credentials, orderId }: { credentials: s
   </section>
 }
 
+/** Confirmação antes de ligar ou desligar a antecipação automática do cartão na conta Asaas. */
+function AutomaticModal({ credentials, enable, onClose, onDone }: {
+  credentials: string; enable: boolean; onClose: () => void; onDone: () => void
+}) {
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+  async function save() {
+    setSaving(true)
+    setError('')
+    try {
+      const saved = await api.setAutomaticAnticipation(credentials, enable)
+      announceSaved(saved.enabled ? 'Antecipação automática ligada.' : 'Antecipação automática desligada.')
+      onDone()
+    } catch (err) {
+      setError(getMessage(err))
+      setSaving(false)
+    }
+  }
+  return <div className="modal-backdrop" onMouseDown={event => { if (event.target === event.currentTarget && !saving) onClose() }}>
+    <section className="modal ant-modal" role="dialog" aria-modal="true" aria-labelledby="ant-auto-title">
+      <div className="modal-head"><div><span className="eyebrow">FINANCEIRO • ASAAS</span>
+        <h2 id="ant-auto-title">{enable ? 'Ligar' : 'Desligar'} antecipação automática</h2></div>
+        <button className="icon-button" aria-label="Fechar" onClick={onClose} disabled={saving}><X size={20} /></button></div>
+      <div className="modal-form">
+        {enable ? <ul className="ant-effects">
+          <li>Os pagamentos <strong>novos</strong> no cartão passam a ser antecipados sozinhos pelo Asaas, enquanto houver limite.</li>
+          <li>Cada antecipação tem a taxa do Asaas. No cartão parcelado, o acréscimo cobrado do cliente passa a incluir essa taxa.</li>
+          <li>O botão de antecipar pedido por pedido deixa de ser usado.</li>
+        </ul> : <ul className="ant-effects">
+          <li>Os pagamentos <strong>novos</strong> no cartão caem na data normal de cada parcela.</li>
+          <li>O que já está sendo antecipado continua; nada é cancelado.</li>
+          <li>O acréscimo do parcelado deixa de incluir a taxa de antecipação. Antecipar pelo botão passa a ter a taxa descontada do valor da loja.</li>
+        </ul>}
+        <p className="ant-note">Muda a configuração da conta inteira no Asaas, para todas as filiais.</p>
+        {error && <div className="form-error" role="alert">{error}</div>}
+        <div className="modal-actions">
+          <button type="button" className="button secondary" onClick={onClose} disabled={saving}>Cancelar</button>
+          <button type="button" className="button primary" onClick={() => void save()} disabled={saving}>
+            {saving ? 'Salvando...' : enable ? 'Ligar' : 'Desligar'}</button>
+        </div>
+      </div>
+    </section>
+  </div>
+}
+
 /** Seção do Financeiro (só administrador): limite, recebíveis do cartão a cair e antecipações pedidas. */
 export function AnticipationPanel({ credentials }: { credentials: string }) {
   const [data, setData] = useState<AnticipationOverview | null>(null)
@@ -145,6 +190,8 @@ export function AnticipationPanel({ credentials }: { credentials: string }) {
   const [error, setError] = useState('')
   const [selected, setSelected] = useState<CardReceivable | null>(null)
   const [forbidden, setForbidden] = useState(false)
+  /** true/false: confirmando ligar/desligar a antecipação automática; null: fechado. */
+  const [confirmAuto, setConfirmAuto] = useState<boolean | null>(null)
 
   const load = useCallback(() => {
     setLoading(true)
@@ -172,7 +219,14 @@ export function AnticipationPanel({ credentials }: { credentials: string }) {
         <div><span>Limite disponível</span><strong>{data.limitAvailableCents < 0 ? '—' : currency(data.limitAvailableCents)}</strong>
           <small>{data.limitTotalCents < 0 ? 'O Asaas não informou o limite' : `de ${currency(data.limitTotalCents)} liberados`}</small></div>
       </div>
-      {data.automatic && <p className="ant-note" role="note">A antecipação automática do cartão está ligada no Asaas: os pagamentos já são antecipados sozinhos.</p>}
+      <div className="ant-auto">
+        <div><strong>Antecipação automática do cartão</strong>
+          <small>{data.automatic
+            ? 'Ligada: o Asaas antecipa sozinho os pagamentos novos no cartão, enquanto houver limite.'
+            : 'Desligada: o cartão cai na data de cada parcela; antecipe pedido por pedido quando precisar.'}</small></div>
+        <button type="button" role="switch" aria-checked={data.automatic} className={`ant-switch${data.automatic ? ' on' : ''}`}
+          onClick={() => setConfirmAuto(!data.automatic)} aria-label="Antecipação automática do cartão"><span /></button>
+      </div>
       {data.receivables.length === 0 ? <p className="order-muted">Nenhum pagamento no cartão esperando crédito.</p>
         : <ul className="ant-list">{data.receivables.map(item => <li key={item.orderId}>
           <button type="button" className="ant-link" onClick={() => go(`/pedidos/${encodeURIComponent(item.orderId)}`)}>
@@ -196,5 +250,7 @@ export function AnticipationPanel({ credentials }: { credentials: string }) {
     </>}
     {selected && <AnticipationModal credentials={credentials} receivable={selected} onClose={() => setSelected(null)}
       onDone={() => { setSelected(null); load() }} />}
+    {confirmAuto !== null && <AutomaticModal credentials={credentials} enable={confirmAuto} onClose={() => setConfirmAuto(null)}
+      onDone={() => { setConfirmAuto(null); load() }} />}
   </section>
 }
