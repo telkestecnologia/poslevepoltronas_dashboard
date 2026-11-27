@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { FastForward, RefreshCw, X } from 'lucide-react'
 import {
   api, ApiError, type Anticipation, type AnticipationOverview, type AnticipationSimulation, type CardReceivable, type OrderAnticipation,
@@ -55,7 +55,11 @@ export function AnticipationModal({ credentials, receivable, onClose, onDone }: 
     return () => { active = false }
   }, [credentials, receivable.orderId])
 
+  // Trava no mesmo instante do clique: o botão desabilitado só vale depois de a tela redesenhar.
+  const busy = useRef(false)
   async function confirm() {
+    if (busy.current) return
+    busy.current = true
     setSending(true)
     setError('')
     try {
@@ -64,6 +68,7 @@ export function AnticipationModal({ credentials, receivable, onClose, onDone }: 
       onDone(created)
     } catch (err) {
       setError(getMessage(err))
+      busy.current = false
       setSending(false)
     }
   }
@@ -140,19 +145,23 @@ export function OrderAnticipationCard({ credentials, orderId }: { credentials: s
 
 /** Confirmação antes de ligar ou desligar a antecipação automática do cartão na conta Asaas. */
 function AutomaticModal({ credentials, enable, onClose, onDone }: {
-  credentials: string; enable: boolean; onClose: () => void; onDone: () => void
+  credentials: string; enable: boolean; onClose: () => void; onDone: (enabled: boolean) => void
 }) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const busy = useRef(false)
   async function save() {
+    if (busy.current) return
+    busy.current = true
     setSaving(true)
     setError('')
     try {
       const saved = await api.setAutomaticAnticipation(credentials, enable)
       announceSaved(saved.enabled ? 'Antecipação automática ligada.' : 'Antecipação automática desligada.')
-      onDone()
+      onDone(saved.enabled)
     } catch (err) {
       setError(getMessage(err))
+      busy.current = false
       setSaving(false)
     }
   }
@@ -193,13 +202,17 @@ export function AnticipationPanel({ credentials }: { credentials: string }) {
   /** true/false: confirmando ligar/desligar a antecipação automática; null: fechado. */
   const [confirmAuto, setConfirmAuto] = useState<boolean | null>(null)
 
+  /** Só a consulta mais recente vale: uma resposta antiga não desfaz o interruptor que acabou de mudar. */
+  const latest = useRef(0)
   const load = useCallback(() => {
+    const call = ++latest.current
     setLoading(true)
     setError('')
-    api.anticipations(credentials).then(setData).catch(err => {
+    api.anticipations(credentials).then(result => { if (call === latest.current) setData(result) }).catch(err => {
+      if (call !== latest.current) return
       if (err instanceof ApiError && err.status === 403) setForbidden(true)
       else setError(getMessage(err))
-    }).finally(() => setLoading(false))
+    }).finally(() => { if (call === latest.current) setLoading(false) })
   }, [credentials])
   useEffect(load, [load])
 
@@ -251,6 +264,11 @@ export function AnticipationPanel({ credentials }: { credentials: string }) {
     {selected && <AnticipationModal credentials={credentials} receivable={selected} onClose={() => setSelected(null)}
       onDone={() => { setSelected(null); load() }} />}
     {confirmAuto !== null && <AutomaticModal credentials={credentials} enable={confirmAuto} onClose={() => setConfirmAuto(null)}
-      onDone={() => { setConfirmAuto(null); load() }} />}
+      onDone={enabled => {
+        // Mostra na hora o que o Asaas gravou; a lista recarrega por trás (resposta antiga é descartada em load).
+        setConfirmAuto(null)
+        setData(current => current && { ...current, automatic: enabled })
+        load()
+      }} />}
   </section>
 }
