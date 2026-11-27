@@ -36,10 +36,13 @@
 .ant-figures .net dd { font-size: 19px; color: var(--teal-dark); }
 .ant-modal .modal-actions .button { display: inline-flex; align-items: center; gap: 6px; }
 
-.ant-order { gap: 10px; }
+/* No detalhe do pedido o card fica numa grade ao lado de cards mais altos: não estica nem espalha o conteúdo. */
+.ant-order { gap: 10px; align-content: start; align-self: start; }
 .ant-order-line { margin: 0; display: grid; gap: 2px; }
+.ant-order-line strong { font-size: 20px; color: var(--ink); }
 .ant-order-line span { color: var(--muted); font-size: 13px; }
-.ant-order-status { display: grid; gap: 4px; justify-items: start; }
+.ant-order-status { display: grid; gap: 4px; justify-items: start; align-content: start; }
+.ant-order-status .ant-tag { align-self: start; }
 .ant-order-status small { color: var(--muted); font-size: 12px; }
 .ant-order .button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
 

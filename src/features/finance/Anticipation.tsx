@@ -127,7 +127,8 @@ export function OrderAnticipationCard({ credentials, orderId }: { credentials: s
   const { receivable, latest } = data
   return <section className="panel od-card ant-order admin-only" aria-labelledby="ant-order-title">
     <h2 id="ant-order-title" className="od-side-title">Antecipação do cartão</h2>
-    {receivable && <p className="ant-order-line"><strong>{currency(receivable.valueCents)}</strong>
+    {receivable && <p className="ant-order-line"><strong>{currency(receivable.netCents)}</strong>
+      <span>a receber (cliente pagou {currency(receivable.valueCents)}, já sem as taxas do cartão)</span>
       <span>{parcelsText(receivable)}{creditText(receivable) ? ` • ${creditText(receivable)}` : ''}</span></p>}
     {latest && <div className="ant-order-status"><AnticipationStatusTag status={latest.status} />
       <small>pedida por {latest.requestedBy ?? 'equipe'} em {dateTimeLabel(latest.requestedAt)}
@@ -218,7 +219,8 @@ export function AnticipationPanel({ credentials }: { credentials: string }) {
 
   if (forbidden || (data && !data.available)) return null
   const anticipable = data?.receivables.filter(item => item.anticipable) ?? []
-  const totalCents = anticipable.reduce((sum, item) => sum + item.valueCents, 0)
+  // Líquido das taxas do cartão: é o valor que o Asaas antecipa (o mesmo do card no pedido).
+  const totalCents = anticipable.reduce((sum, item) => sum + item.netCents, 0)
   return <section className="panel ant-panel admin-only" aria-labelledby="ant-panel-title">
     <div className="finance-panel-heading"><div><span className="eyebrow">CARTÃO • ASAAS{data?.sandbox ? ' (TESTE)' : ''}</span>
       <h2 id="ant-panel-title">Recebíveis a antecipar</h2></div>
@@ -245,7 +247,7 @@ export function AnticipationPanel({ credentials }: { credentials: string }) {
           <button type="button" className="ant-link" onClick={() => go(`/pedidos/${encodeURIComponent(item.orderId)}`)}>
             <strong>{item.customerName ?? 'Pedido'}</strong>
             <small>{[item.chairCode, item.branchName, parcelsText(item), creditText(item)].filter(Boolean).join(' • ')}</small></button>
-          <b>{currency(item.valueCents)}</b>
+          <b title={`Cliente pagou ${currency(item.valueCents)}; líquido das taxas do cartão`}>{currency(item.netCents)}</b>
           {item.anticipable && !data.automatic
             ? <button type="button" className="button secondary ant-action" onClick={() => setSelected(item)}><FastForward size={15} /> Antecipar</button>
             : <span className="ant-tag wait">{item.requested ? 'Já pedida' : data.automatic ? 'Automática' : 'Não liberada'}</span>}

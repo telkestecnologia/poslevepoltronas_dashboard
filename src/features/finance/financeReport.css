@@ -191,6 +191,8 @@
   .dashboard-shell .finance-heading > div:first-child { flex: none; }
   .finance-heading-balance { flex: 1; display: flex; align-items: baseline; justify-content: center; gap: 14px; margin: 0 28px; padding: 18px 28px; border-radius: 16px; }
   .finance-heading-balance strong { font-size: 32px; }
+  /* Em telas de uns 1000 px a faixa encolhe e quebra a linha, em vez de empurrar o Atualizar para fora da tela. */
+  .finance-heading-balance { min-width: 0; flex-wrap: wrap; row-gap: 2px; }
 }
 @media (min-width: 901px) {
   /* Foto só em cima; embaixo, fundo branco com o nome, o mês e o valor em preto. */
@@ -217,3 +219,13 @@
 .finance-entry-description small.finance-ref { display: flex; align-items: center; gap: 6px; min-width: 0; max-width: 100%; overflow: visible; white-space: nowrap; }
 .finance-ref-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .finance-copy { flex: none; white-space: nowrap; }
+
+/* Celular: o card do mês cabe na tela (as três caixas lado a lado passavam da largura e a página rolava para o lado). */
+.finance-month { grid-template-columns: minmax(0, 1fr); }
+.finance-month-nav > * { min-width: 0; }
+@media (max-width: 640px) {
+  .finance-month-figures { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .finance-month-figures > * { min-width: 0; }
+  .finance-month-figures .net { grid-column: 1 / -1; }
+  .finance-month-figures strong { font-size: 17px; overflow-wrap: anywhere; }
+}
