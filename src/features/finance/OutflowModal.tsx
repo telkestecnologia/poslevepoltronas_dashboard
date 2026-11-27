@@ -14,6 +14,23 @@ export const OUTFLOW_CATEGORIES = [
 export const INFLOW_CATEGORIES = [
   ['ALUGUEL_MANUAL', 'Aluguel manual'], ['APORTE_FINANCEIRO', 'Aporte financeiro'], ['OUTRAS_ENTRADAS', 'Outras entradas'],
 ] as const
+/** Lançamentos do sistema (não aparecem no formulário): nome para o extrato e o PDF. */
+const SYSTEM_CATEGORIES: Record<string, string> = {
+  RECEBIMENTO_MANUAL: 'Pagamento registrado manualmente',
+  RECEBIMENTO_PIX: 'Recebimento Pix',
+  RECEBIMENTO_CARTAO: 'Recebimento cartão',
+  TAXA_ASAAS: 'Taxas do Asaas',
+  TAXA_ANTECIPACAO: 'Taxa de antecipação (Asaas)',
+}
+
+export function categoryLabel(category: string) {
+  if (SYSTEM_CATEGORIES[category]) return SYSTEM_CATEGORIES[category]
+  const known = [...OUTFLOW_CATEGORIES, ...INFLOW_CATEGORIES].find(([value]) => value === category)
+  if (known) return known[1]
+  const words = category.replace(/_/g, ' ').toLowerCase()
+  return words.charAt(0).toUpperCase() + words.slice(1)
+}
+
 const METHODS = [['PIX', 'Pix'], ['DINHEIRO', 'Dinheiro'], ['CARTAO', 'Cartão'], ['TRANSFERENCIA', 'Transferência'], ['BOLETO', 'Boleto']] as const
 const ALL = '__todas__'
 const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })

@@ -6,7 +6,7 @@ import { getMessage } from '../../utils/errors'
 import { RentalDatePicker } from '../overview/RentalDatePicker'
 import { downloadFinanceReport } from './financeReport'
 import { announceSaved } from '../../components/SavedToast'
-import { INFLOW_CATEGORIES, OUTFLOW_CATEGORIES, OutflowModal } from './OutflowModal'
+import { OutflowModal, categoryLabel } from './OutflowModal'
 import { AnticipationPanel } from './Anticipation'
 import './financeReport.css'
 
@@ -426,13 +426,7 @@ function methodLabel(method: string) {
   return method
 }
 
-function categoryLabel(category: string) {
-  if (category === 'RECEBIMENTO_MANUAL') return 'Pagamento registrado manualmente'
-  const known = [...OUTFLOW_CATEGORIES, ...INFLOW_CATEGORIES].find(([value]) => value === category)
-  if (known) return known[1]
-  const words = category.replace(/_/g, ' ').toLowerCase()
-  return words.charAt(0).toUpperCase() + words.slice(1)
-}
+
 
 /** Ícone do meio de pagamento: Pix (logo), cartão ou dinheiro. */
 function MethodIcon({ method }: { method: string }) {

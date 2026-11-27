@@ -1,3 +1,4 @@
+import { categoryLabel } from './OutflowModal'
 import type { FinancialEntry, FinancialReport } from '../../api'
 import { branchLabel } from '../../utils/branches'
 
@@ -91,7 +92,7 @@ export async function downloadFinanceReport({ report, entries, from, to, branch 
   table(`Extrato completo (${entries.length} lançamentos)`, ['DATA', 'DESCRIÇÃO', 'FILIAL', 'MEIO', 'VALOR'], entries.length
     ? entries.map(entry => [
       dateTime(entry.occurredAt),
-      `${entry.description}\n${entry.category}${entry.reference ? ` • Ref. ${entry.reference}` : ''}`,
+      `${entry.description}\n${categoryLabel(entry.category)}${entry.reference ? ` • Ref. ${entry.reference}` : ''}`,
       branchLabel(entry.branchName), entry.paymentMethod,
       { content: `${entry.kind === 'INFLOW' ? '+' : '-'} ${currency(entry.amountCents)}`, color: entry.kind === 'INFLOW' ? inflow : outflow },
     ])
