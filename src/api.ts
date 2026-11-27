@@ -380,6 +380,33 @@ export type FinancialReport = {
 }
 export type FinanceQuery = { from: string; to: string; branchId: string; page: number; size: number }
 
+/** Situação da antecipação no Asaas. */
+export type AnticipationStatus = 'PENDING' | 'SCHEDULED' | 'CREDITED' | 'DEBITED' | 'DENIED' | 'CANCELLED' | 'OVERDUE'
+/** Pagamento no cartão aprovado que ainda vai cair na conta (um parcelamento inteiro ou a cobrança à vista). */
+export type CardReceivable = {
+  orderId: string; customerName: string | null; chairCode: string | null; branchName: string | null; parcels: number
+  valueCents: number; netCents: number; firstCreditDate: string | null; lastCreditDate: string | null
+  anticipable: boolean; requested: boolean
+}
+export type Anticipation = {
+  id: string; orderId: string; customerName: string | null; status: AnticipationStatus | string
+  valueCents: number; feeCents: number; netCents: number; requestDate: string | null; anticipationDate: string | null
+  denialObservation: string | null; requestedBy: string | null; requestedAt: string
+}
+/** limitAvailableCents/limitTotalCents = -1 quando o Asaas não informou o limite. */
+export type AnticipationOverview = {
+  available: boolean; sandbox: boolean; automatic: boolean; limitAvailableCents: number; limitTotalCents: number
+  receivables: CardReceivable[]; requests: Anticipation[]
+}
+export type OrderAnticipation = {
+  available: boolean; sandbox: boolean; automatic: boolean; receivable: CardReceivable | null; latest: Anticipation | null
+}
+/** simulated=false no sandbox: o Asaas não simula a taxa lá. */
+export type AnticipationSimulation = {
+  simulated: boolean; valueCents: number; feeCents: number; netCents: number
+  anticipationDate: string | null; anticipationDays: number; documentationRequired: boolean
+}
+
 const baseUrl = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
 export const tenantSlug = import.meta.env.VITE_TENANT_SLUG || 'pos-leve'
 
@@ -524,6 +551,13 @@ export const api = {
     request<RentalOverview>(credentials, `/overview/rentals?date=${encodeURIComponent(date)}`),
   overviewRevenue: (credentials: string, period: RevenuePeriod) =>
     request<RevenueOverview>(credentials, `/overview/revenue?period=${period}`),
+  anticipations: (credentials: string) => request<AnticipationOverview>(credentials, '/anticipations'),
+  orderAnticipation: (credentials: string, orderId: string) =>
+    request<OrderAnticipation>(credentials, `/anticipations/orders/${encodeURIComponent(orderId)}`),
+  simulateAnticipation: (credentials: string, orderId: string) =>
+    request<AnticipationSimulation>(credentials, `/anticipations/orders/${encodeURIComponent(orderId)}/simulate`, { method: 'POST' }),
+  requestAnticipation: (credentials: string, orderId: string) =>
+    request<Anticipation>(credentials, `/anticipations/orders/${encodeURIComponent(orderId)}`, { method: 'POST' }),
   finance: (credentials: string, query: FinanceQuery) =>
     request<FinancialReport>(credentials, `/finance?${new URLSearchParams({
       from: query.from, to: query.to, branchId: query.branchId, page: String(query.page), size: String(query.size),

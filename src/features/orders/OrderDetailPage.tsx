@@ -28,6 +28,7 @@ import { ChairSwap, ContractFileCard, ManualPaymentsCard, OrderNoteCard } from '
 import { ManualLinksCard } from './ManualLinks'
 import { StepDocument } from './StepDocuments'
 import { SaleDetailsSummary } from './SaleDetailsCard'
+import { OrderAnticipationCard } from '../finance/Anticipation'
 import { customerRows, OrderFichaEditor, saleRows, useFicha } from './CustomerDetails'
 import { canReschedule, RescheduleCard } from './RescheduleCard'
 import { go } from '../../router'
@@ -586,6 +587,7 @@ export function OrderDetailPage({ credentials, id, onBack }: Props) {
               <Ban size={15} /> Cancelar pedido</button>}
           </section>
         })()}
+        {isRealOrder(order) && order.totalPaidCents ? <OrderAnticipationCard key={order.id} credentials={credentials} orderId={order.id} /> : null}
         {order.source === 'MANUAL' && <ManualLinksCard credentials={credentials} order={order} onChange={setOrder} />}
         {order.source === 'MANUAL' && <ManualPaymentsCard credentials={credentials} order={order} busy={busy} perform={perform} />}
         {order.source === 'MANUAL' && <SaleDetailsSummary key={order.id} credentials={credentials} order={order}

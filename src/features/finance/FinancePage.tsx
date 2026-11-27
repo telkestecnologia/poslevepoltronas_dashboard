@@ -7,6 +7,7 @@ import { RentalDatePicker } from '../overview/RentalDatePicker'
 import { downloadFinanceReport } from './financeReport'
 import { announceSaved } from '../../components/SavedToast'
 import { INFLOW_CATEGORIES, OUTFLOW_CATEGORIES, OutflowModal } from './OutflowModal'
+import { AnticipationPanel } from './Anticipation'
 import './financeReport.css'
 
 const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -304,6 +305,8 @@ export function FinancePage({ credentials }: { credentials: string }) {
           })}</div>
         </section>
       </div>
+
+      <AnticipationPanel credentials={credentials} />
 
       <section className="panel finance-statement" aria-labelledby="finance-statement-title">
         <div className="finance-panel-heading"><div><span className="eyebrow">EXTRATO</span>

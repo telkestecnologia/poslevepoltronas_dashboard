@@ -1,0 +1,51 @@
+/* Antecipação de recebíveis do cartão (Financeiro e detalhe do pedido). */
+.ant-panel { padding: 23px 25px; min-width: 0; display: grid; gap: 14px; }
+.ant-panel .finance-panel-heading { margin-bottom: 4px; }
+.ant-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.ant-summary > div { display: grid; gap: 3px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 13px; background: var(--page); }
+.ant-summary span { color: var(--muted); font-size: 13px; }
+.ant-summary strong { font-size: 22px; color: var(--ink); letter-spacing: -0.02em; }
+.ant-summary small { color: var(--muted); font-size: 12px; }
+.ant-subtitle { font-size: 15px; color: var(--ink); margin: 6px 0 0; }
+.ant-list { list-style: none; margin: 0; padding: 0; display: grid; }
+.ant-list li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 12px;
+  padding: 11px 0; border-top: 1px solid var(--line); }
+.ant-list li:first-child { border-top: 0; }
+.ant-list b { color: var(--ink); white-space: nowrap; }
+.ant-link { all: unset; cursor: pointer; display: grid; gap: 2px; min-width: 0; }
+.ant-link strong { color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ant-link small { color: var(--muted); font-size: 12px; }
+.ant-link:hover strong, .ant-link:focus-visible strong { color: var(--teal-dark); text-decoration: underline; }
+.ant-link:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; border-radius: 4px; }
+.ant-action { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.ant-tag { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.ant-tag.wait { background: #fff4e0; color: #8a5a00; }
+.ant-tag.ok { background: #e6f3e6; color: #3c6b3c; }
+.ant-tag.bad { background: #fde9e5; color: #a6402f; }
+.ant-note { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
+.ant-denial { color: #a6402f; }
+
+.ant-who { margin: 0; display: grid; gap: 2px; }
+.ant-who span { color: var(--muted); font-size: 13px; }
+.ant-figures { margin: 0; display: grid; gap: 8px; padding: 14px 16px; border-radius: 13px; background: var(--page); }
+.ant-figures div { display: flex; justify-content: space-between; gap: 12px; }
+.ant-figures dt { color: var(--muted); }
+.ant-figures dd { margin: 0; font-weight: 600; color: var(--ink); }
+.ant-figures dd.fee { color: #a6402f; }
+.ant-figures .net { border-top: 1px solid var(--line); padding-top: 8px; }
+.ant-figures .net dd { font-size: 19px; color: var(--teal-dark); }
+.ant-modal .modal-actions .button { display: inline-flex; align-items: center; gap: 6px; }
+
+.ant-order { gap: 10px; }
+.ant-order-line { margin: 0; display: grid; gap: 2px; }
+.ant-order-line span { color: var(--muted); font-size: 13px; }
+.ant-order-status { display: grid; gap: 4px; justify-items: start; }
+.ant-order-status small { color: var(--muted); font-size: 12px; }
+.ant-order .button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+
+@media (max-width: 640px) {
+  .ant-panel { padding: 19px 16px; }
+  .ant-summary { grid-template-columns: 1fr; }
+  .ant-list li { grid-template-columns: minmax(0, 1fr) auto; }
+  .ant-list li > :last-child { grid-column: 1 / -1; justify-self: start; }
+}
